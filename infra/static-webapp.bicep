@@ -23,10 +23,10 @@ resource swa 'Microsoft.Web/staticSites@2022-03-01' = {
   }
 }
 
-resource customDomain 'Microsoft.Web/staticSites/customDomains@2022-03-01' = {
-  parent: swa
-  name: customDomainName
-  properties: {}
-}
+// resource customDomain 'Microsoft.Web/staticSites/customDomains@2022-03-01' = {
+//   parent: swa
+//   name: customDomainName
+//   properties: {}
+// }
 
 output swaDefaultHostname string = swa.properties.defaultHostname
