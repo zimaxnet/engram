@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # ------------------------------------------------------------
+  # Data Stores
+  # ------------------------------------------------------------
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: zep
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  # ------------------------------------------------------------
+  # Zep (Memory Layer)
+  # ------------------------------------------------------------
+  zep:
+    image: getzep/zep:latest
+    depends_on:
+      - postgres
+    environment:
+      ZEP_POSTGRES_DSN: "postgres://postgres:password@postgres:5432/zep?sslmode=disable"
+      ZEP_STORE_TYPE: "postgres"
+    ports:
+      - "8000:8000"
+
+  # ------------------------------------------------------------
+  # Temporal (Orchestration)
+  # ------------------------------------------------------------
+  temporal:
+    image: temporalio/auto-setup:latest
+    environment:
+      DB: postgresql
+      DB_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PWD: password
+    depends_on:
+      - postgres
+    ports:
+      - "7233:7233"
+      - "8233:8233"
+
+  # ------------------------------------------------------------
+  # Unstructured (ETL)
+  # ------------------------------------------------------------
+  unstructured:
+    image: downloads.unstructured.io/unstructured-io/unstructured-api:latest
+    ports:
+      - "8001:8000"
+
+  # ------------------------------------------------------------
+  # Agent Brain (Worker)
+  # ------------------------------------------------------------
+  agent:
+    build: ./agent-brain
+    depends_on:
+      - temporal
+      - zep
+    environment:
+      TEMPORAL_HOST: temporal:7233
+      ZEP_API_URL: http://zep:8000
+    volumes:
+      - ./agent-brain:/app
+
+volumes:
+  postgres-data:
