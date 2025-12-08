@@ -9,11 +9,16 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: zep
+      POSTGRES_DB: engram
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # ------------------------------------------------------------
   # Zep (Memory Layer)
@@ -21,15 +26,21 @@ services:
   zep:
     image: getzep/zep:latest
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
-      ZEP_POSTGRES_DSN: "postgres://postgres:password@postgres:5432/zep?sslmode=disable"
+      ZEP_POSTGRES_DSN: "postgres://postgres:password@postgres:5432/engram?sslmode=disable"
       ZEP_STORE_TYPE: "postgres"
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # ------------------------------------------------------------
-  # Temporal (Orchestration)
+  # Temporal (Orchestration - Spine Layer)
   # ------------------------------------------------------------
   temporal:
     image: temporalio/auto-setup:latest
@@ -38,11 +49,28 @@ services:
       DB_PORT: 5432
       POSTGRES_USER: postgres
       POSTGRES_PWD: password
+      POSTGRES_SEEDS: postgres
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     ports:
-      - "7233:7233"
-      - "8233:8233"
+      - "7233:7233"   # gRPC
+      - "8233:8233"   # Web UI
+    healthcheck:
+      test: ["CMD", "tctl", "--address", "localhost:7233", "cluster", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  temporal-ui:
+    image: temporalio/ui:latest
+    depends_on:
+      - temporal
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+    ports:
+      - "8080:8080"
 
   # ------------------------------------------------------------
   # Unstructured (ETL)
@@ -53,18 +81,119 @@ services:
       - "8001:8000"
 
   # ------------------------------------------------------------
-  # Agent Brain (Worker)
+  # Backend API (FastAPI)
   # ------------------------------------------------------------
-  agent:
-    build: ./agent-brain
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     depends_on:
       - temporal
       - zep
     environment:
+      ENVIRONMENT: development
+      DEBUG: "true"
+      
+      # Database
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: engram
+      
+      # Temporal
       TEMPORAL_HOST: temporal:7233
+      TEMPORAL_NAMESPACE: default
+      TEMPORAL_TASK_QUEUE: engram-agents
+      
+      # Zep
       ZEP_API_URL: http://zep:8000
+      
+      # Azure OpenAI (set these for real functionality)
+      AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT:-}
+      AZURE_OPENAI_KEY: ${AZURE_OPENAI_KEY:-}
+      AZURE_OPENAI_DEPLOYMENT: ${AZURE_OPENAI_DEPLOYMENT:-gpt-4o}
+      
+      # Azure Speech (optional)
+      AZURE_SPEECH_KEY: ${AZURE_SPEECH_KEY:-}
+      AZURE_SPEECH_REGION: ${AZURE_SPEECH_REGION:-eastus}
+      
+      # CORS
+      CORS_ORIGINS: '["http://localhost:5173", "http://localhost:3000", "http://localhost:8080"]'
+    ports:
+      - "8082:8080"
     volumes:
-      - ./agent-brain:/app
+      - ./backend:/app
+    command: uvicorn backend.api.main:app --host 0.0.0.0 --port 8080 --reload
+
+  # ------------------------------------------------------------
+  # Temporal Worker (Workflow Execution - Spine)
+  # ------------------------------------------------------------
+  worker:
+    build:
+      context: ./backend
+      dockerfile: workflows/Dockerfile
+    depends_on:
+      temporal:
+        condition: service_healthy
+      zep:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: development
+      
+      # Database
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: engram
+      
+      # Temporal
+      TEMPORAL_HOST: temporal:7233
+      TEMPORAL_NAMESPACE: default
+      TEMPORAL_TASK_QUEUE: engram-agents
+      
+      # Zep
+      ZEP_API_URL: http://zep:8000
+      
+      # Azure OpenAI
+      AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT:-}
+      AZURE_OPENAI_KEY: ${AZURE_OPENAI_KEY:-}
+      AZURE_OPENAI_DEPLOYMENT: ${AZURE_OPENAI_DEPLOYMENT:-gpt-4o}
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+
+  # ------------------------------------------------------------
+  # ETL Pipeline Worker
+  # ------------------------------------------------------------
+  etl:
+    build: ./etl-pipeline
+    depends_on:
+      - zep
+      - unstructured
+    environment:
+      ZEP_API_URL: http://zep:8000
+      UNSTRUCTURED_API_URL: http://unstructured:8000
+    volumes:
+      - ./etl-pipeline:/app
+
+  # ------------------------------------------------------------
+  # Frontend (Development Server)
+  # ------------------------------------------------------------
+  frontend:
+    image: node:20-slim
+    working_dir: /app
+    depends_on:
+      - api
+    environment:
+      VITE_API_URL: http://localhost:8082
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
 
 volumes:
   postgres-data:
