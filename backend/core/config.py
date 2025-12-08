@@ -79,17 +79,14 @@ class Settings(BaseSettings):
     # ==========================================================================
     # Microsoft Entra ID (Authentication)
     # ==========================================================================
-    entra_tenant_id: Optional[str] = Field(None, alias="ENTRA_TENANT_ID")
-    entra_client_id: Optional[str] = Field(None, alias="ENTRA_CLIENT_ID")
-    entra_client_secret: Optional[str] = Field(None, alias="ENTRA_CLIENT_SECRET")
-    entra_authority: Optional[str] = None
+    azure_tenant_id: Optional[str] = Field(None, alias="AZURE_TENANT_ID")
+    azure_client_id: Optional[str] = Field(None, alias="AZURE_CLIENT_ID")
+    azure_client_secret: Optional[str] = Field(None, alias="AZURE_CLIENT_SECRET")
     
     @property
     def entra_authority_url(self) -> Optional[str]:
-        if self.entra_authority:
-            return self.entra_authority
-        if self.entra_tenant_id:
-            return f"https://login.microsoftonline.com/{self.entra_tenant_id}"
+        if self.azure_tenant_id:
+            return f"https://login.microsoftonline.com/{self.azure_tenant_id}"
         return None
     
     # ==========================================================================
@@ -104,7 +101,7 @@ class Settings(BaseSettings):
     # ==========================================================================
     # Observability
     # ==========================================================================
-    applicationinsights_connection_string: Optional[str] = Field(
+    appinsights_connection_string: Optional[str] = Field(
         None, alias="APPLICATIONINSIGHTS_CONNECTION_STRING"
     )
     log_level: str = Field("INFO", alias="LOG_LEVEL")
@@ -157,9 +154,10 @@ class KeyVaultSettings:
             "azure-openai-key": "azure_openai_key",
             "azure-openai-endpoint": "azure_openai_endpoint",
             "azure-speech-key": "azure_speech_key",
-            "entra-client-secret": "entra_client_secret",
-            "entra-client-id": "entra_client_id",
-            "entra-tenant-id": "entra_tenant_id",
+            "azure-client-secret": "azure_client_secret",
+            "azure-client-id": "azure_client_id",
+            "azure-tenant-id": "azure_tenant_id",
+            "appinsights-connection-string": "appinsights_connection_string",
         }
         
         for secret_name, setting_attr in secret_mappings.items():

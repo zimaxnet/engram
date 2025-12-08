@@ -6,6 +6,7 @@ FastAPI application providing:
 - WebSocket for real-time chat
 - Authentication via Microsoft Entra ID
 - RBAC middleware for authorization
+- OpenTelemetry observability
 """
 
 import logging
@@ -15,15 +16,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.core import get_settings
+from backend.observability import configure_telemetry, configure_logging, TelemetryMiddleware
 
 from .routers import agents, chat, health, memory, voice, workflows
 from .middleware.logging import RequestLoggingMiddleware
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+# Configure structured logging
+configure_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -33,6 +32,9 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
     logger.info(f"Environment: {settings.environment}")
+    
+    # Configure telemetry
+    configure_telemetry(app)
     
     # Startup
     yield
@@ -65,6 +67,7 @@ def create_app() -> FastAPI:
     
     # Custom middleware
     app.add_middleware(RequestLoggingMiddleware)
+    app.add_middleware(TelemetryMiddleware)
     
     # Include routers
     app.include_router(health.router, tags=["Health"])
