@@ -1,5 +1,13 @@
+import { useState } from 'react'
 import type { Agent } from '../../App'
+import AvatarDisplay from '../AvatarDisplay'
+import VoiceChat from '../VoiceChat'
 import './VisualPanel.css'
+
+interface Viseme {
+  time_ms: number;
+  viseme_id: number;
+}
 
 interface VisualPanelProps {
   agent: Agent
@@ -13,38 +21,78 @@ interface VisualPanelProps {
   }
   model: string
   onModelChange: (model: string) => void
+  onVoiceMessage?: (message: { text: string; type: 'user' | 'agent' }) => void
 }
 
-export function VisualPanel({ agent, metrics, model, onModelChange }: VisualPanelProps) {
+export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessage }: VisualPanelProps) {
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [currentVisemes, setCurrentVisemes] = useState<Viseme[]>([])
+  const [expression, setExpression] = useState<'neutral' | 'smile' | 'thinking' | 'listening'>('neutral')
+  const [voiceEnabled, setVoiceEnabled] = useState(true)
+  
+  const handleVisemes = (visemes: Viseme[]) => {
+    setCurrentVisemes(visemes)
+    setIsSpeaking(true)
+    
+    // Calculate total duration and stop speaking when done
+    if (visemes.length > 0) {
+      const lastViseme = visemes[visemes.length - 1]
+      setTimeout(() => {
+        setIsSpeaking(false)
+        setCurrentVisemes([])
+      }, lastViseme.time_ms + 500)
+    }
+  }
+  
+  const handleVoiceMessage = (message: { text: string; type: string }) => {
+    if (message.type === 'user') {
+      setExpression('thinking')
+    } else {
+      setExpression('neutral')
+    }
+    
+    onVoiceMessage?.({
+      text: message.text,
+      type: message.type as 'user' | 'agent'
+    })
+  }
+
   return (
     <div className="visual-panel">
-      {/* Agent Avatar Display */}
+      {/* Agent Avatar Display with Voice */}
       <div className="panel-card avatar-card">
-        <h4 className="card-title">Agent Avatar Display</h4>
-        <div 
-          className="avatar-container"
-          style={{ '--agent-color': agent.accentColor } as React.CSSProperties}
-        >
-          <img 
-            src={agent.avatarUrl} 
-            alt={agent.name}
-            className="agent-avatar"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="%231a1f35" width="200" height="200"/><circle cx="100" cy="80" r="40" fill="%233b82f6"/><ellipse cx="100" cy="180" rx="60" ry="50" fill="%233b82f6"/></svg>'
-            }}
-          />
-          <div className="avatar-waveform">
-            <div className="waveform-bar"></div>
-            <div className="waveform-bar"></div>
-            <div className="waveform-bar"></div>
-            <div className="waveform-bar"></div>
-            <div className="waveform-bar"></div>
+        <div className="card-header">
+          <h4 className="card-title">Active Agent</h4>
+          <button 
+            className={`voice-toggle ${voiceEnabled ? 'enabled' : ''}`}
+            onClick={() => setVoiceEnabled(!voiceEnabled)}
+            title={voiceEnabled ? 'Disable voice' : 'Enable voice'}
+          >
+            {voiceEnabled ? '🔊' : '🔇'}
+          </button>
+        </div>
+        
+        {/* Avatar Component */}
+        <AvatarDisplay
+          agentId={agent.id as 'elena' | 'marcus'}
+          isSpeaking={isSpeaking}
+          expression={expression}
+          visemes={currentVisemes}
+          showName={true}
+          size="lg"
+        />
+        
+        {/* Voice Chat Component */}
+        {voiceEnabled && (
+          <div className="voice-section">
+            <VoiceChat
+              agentId={agent.id}
+              onMessage={handleVoiceMessage}
+              onVisemes={handleVisemes}
+              disabled={!voiceEnabled}
+            />
           </div>
-        </div>
-        <div className="avatar-info">
-          <span className="avatar-name">{agent.name}</span>
-          <span className="avatar-title">{agent.title}</span>
-        </div>
+        )}
       </div>
 
       {/* Session Metrics */}
@@ -139,17 +187,11 @@ export function VisualPanel({ agent, metrics, model, onModelChange }: VisualPane
             </div>
           </div>
           <div className="config-row">
-            <span className="config-label">Top P</span>
-            <div className="config-slider-container">
-              <input 
-                type="range" 
-                min="0" 
-                max="100" 
-                defaultValue="95"
-                className="config-slider"
-              />
-              <span className="config-value">0.95</span>
-            </div>
+            <span className="config-label">Voice</span>
+            <select className="config-select">
+              <option value="jenny">Jenny (Elena)</option>
+              <option value="guy">Guy (Marcus)</option>
+            </select>
           </div>
         </div>
       </div>
@@ -169,4 +211,3 @@ export function VisualPanel({ agent, metrics, model, onModelChange }: VisualPane
     </div>
   )
 }
-

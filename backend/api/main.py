@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.core import get_settings
 
-from .routers import agents, chat, health, memory, workflows
+from .routers import agents, chat, health, memory, voice, workflows
 from .middleware.logging import RequestLoggingMiddleware
 
 # Configure logging
@@ -72,6 +72,7 @@ def create_app() -> FastAPI:
     app.include_router(chat.router, prefix="/api/v1/chat", tags=["Chat"])
     app.include_router(memory.router, prefix="/api/v1/memory", tags=["Memory"])
     app.include_router(workflows.router, prefix="/api/v1/workflows", tags=["Workflows"])
+    app.include_router(voice.router, prefix="/api/v1/voice", tags=["Voice"])
     
     return app
 

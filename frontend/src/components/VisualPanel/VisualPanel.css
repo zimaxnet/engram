@@ -17,13 +17,60 @@
   padding: var(--space-md);
 }
 
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
 .card-title {
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-text-dim);
+  margin-bottom: 0;
+}
+
+.card-header + * {
+  margin-top: 0;
+}
+
+.panel-card > .card-title {
   margin-bottom: var(--space-md);
+}
+
+/* Voice Toggle */
+.voice-toggle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: var(--color-surface);
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.voice-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--color-primary);
+}
+
+.voice-toggle.enabled {
+  background: rgba(0, 212, 255, 0.1);
+  border-color: var(--color-primary);
+}
+
+/* Voice Section */
+.voice-section {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--glass-border);
 }
 
 /* Avatar Card */
