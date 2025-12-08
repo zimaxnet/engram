@@ -21,4 +21,4 @@ The infrastructure is defined in Bicep. See `infra/README.md` for details.
 **Strategy**: Azure Container Apps (Serverless) + Postgres Flexible Server.
 
 ### Documentation
-Full architecture and FinOps details are available in the [Wiki](https://github.com/your-org/cogai/tree/gh-pages) (Switch to `gh-pages` branch).
+Full architecture and FinOps details are available in the [Wiki](https://wiki.engram.work).
