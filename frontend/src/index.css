@@ -3,7 +3,7 @@
   --color-bg-h: 220;
   --color-bg-s: 15%;
   --color-bg-l: 10%;
-  
+
   --color-primary-h: 210;
   --color-primary-s: 100%;
   --color-primary-l: 60%;
@@ -53,8 +53,8 @@ body {
 
 .glass-panel {
   background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
   border-radius: 1rem;
   padding: var(--space-lg);

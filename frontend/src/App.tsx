@@ -37,7 +37,7 @@ function App() {
               top: `${node.y}%`,
               width: `${node.r}px`,
               height: `${node.r}px`
-            }}
+            } as React.CSSProperties}
           />
         ))}
       </div>
