@@ -15,7 +15,7 @@ resource swa 'Microsoft.Web/staticSites@2022-03-01' = {
     tier: 'Standard'
   }
   properties: {
-    repositoryUrl: 'https://github.com/zimaxnet/cogai' // Placeholder, will be linked via GH Actions usually
+    repositoryUrl: 'https://github.com/zimaxnet/engram'
     branch: 'main'
     provider: 'GitHub'
     stagingEnvironmentPolicy: 'Enabled'
