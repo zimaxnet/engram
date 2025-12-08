@@ -1,0 +1,46 @@
+# Engram Backend Dependencies
+
+# API Framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Authentication
+msal>=1.26.0
+python-jose[cryptography]>=3.3.0
+
+# Azure Services
+azure-identity>=1.15.0
+azure-keyvault-secrets>=4.7.0
+openai>=1.12.0
+
+# Agent Framework
+langchain>=0.1.0
+langgraph>=0.0.20
+
+# Memory & Orchestration
+zep-python>=2.0.0
+temporalio>=1.4.0
+
+# Database
+asyncpg>=0.29.0
+sqlalchemy>=2.0.0
+
+# Observability
+opentelemetry-api>=1.22.0
+opentelemetry-sdk>=1.22.0
+opentelemetry-instrumentation-fastapi>=0.43b0
+azure-monitor-opentelemetry>=1.2.0
+
+# Utilities
+httpx>=0.26.0
+python-multipart>=0.0.6
+python-dotenv>=1.0.0
+
+# Development
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+black>=24.1.0
+ruff>=0.1.0
+

@@ -1,0 +1,131 @@
+/* =============================================================================
+   TreeNav Component Styles
+   ============================================================================= */
+
+.tree-nav {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.tree-nav-header {
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.tree-nav-header h3 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-dim);
+}
+
+.tree-nav-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-sm) 0;
+}
+
+/* Sections */
+.tree-section {
+  margin-bottom: var(--space-xs);
+}
+
+.tree-section-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.tree-section-header:hover {
+  background: var(--glass-border);
+}
+
+.tree-expand-icon {
+  font-size: 0.625rem;
+  color: var(--color-text-dim);
+  width: 12px;
+}
+
+.tree-section-icon {
+  font-size: 1rem;
+}
+
+.tree-section-label {
+  flex: 1;
+  text-align: left;
+}
+
+/* Items */
+.tree-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tree-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  padding-left: calc(var(--space-lg) + 24px);
+  background: transparent;
+  border: none;
+  color: var(--color-text-dim);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tree-item:hover {
+  background: var(--glass-border);
+  color: var(--color-text);
+}
+
+.tree-item.active {
+  color: var(--color-primary);
+  background: hsla(var(--color-primary-h), 100%, 60%, 0.1);
+}
+
+.tree-item-icon {
+  font-size: 0.875rem;
+}
+
+.tree-item-label {
+  flex: 1;
+  text-align: left;
+}
+
+/* Status Dot */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot.active {
+  background: var(--color-success);
+  box-shadow: 0 0 6px var(--color-success);
+}
+
+.status-dot.idle {
+  background: var(--color-text-muted);
+}
+
+.status-dot.warning {
+  background: var(--color-warning);
+  box-shadow: 0 0 6px var(--color-warning);
+}
+
