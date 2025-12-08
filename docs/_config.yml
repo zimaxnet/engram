@@ -1,0 +1,40 @@
+title: Engram - Context Engineering Platform
+description: Enterprise AI Memory & Cognition Platform
+baseurl: ""
+url: "https://wiki.engram.work"
+
+theme: jekyll-theme-minimal
+
+# Markdown settings
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+# Plugins
+plugins:
+  - jekyll-relative-links
+  - jekyll-seo-tag
+
+# Navigation
+nav:
+  - title: Home
+    url: /
+  - title: Architecture
+    url: /architecture
+  - title: Agents
+    url: /agents
+  - title: Visual Development
+    url: /visual-development
+  - title: FinOps
+    url: /finops
+  - title: Deployment
+    url: /deployment
+
+# Social
+github:
+  repository_url: https://github.com/zimaxnet/engram
+
+# Footer
+footer_text: "Built with Context Engineering"
+
