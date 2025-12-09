@@ -66,8 +66,8 @@ jobs:
             azureSpeechKey=${{ secrets.AZURE_SPEECH_KEY || '' }}
             azureAiEndpoint=${{ secrets.AZURE_AI_ENDPOINT || '' }}
             azureAiProjectName=${{ secrets.AZURE_AI_PROJECT_NAME || '' }}
-            backendImage=ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
-            workerImage=ghcr.io/${{ github.repository }}/worker:${{ github.sha }}
+            backendImage=ghcr.io/${{ github.repository }}/backend:latest
+            workerImage=ghcr.io/${{ github.repository }}/worker:latest
             registryUsername=${{ github.actor }}
             registryPassword=${{ secrets.GITHUB_TOKEN }}
           deploymentName: engram-infra-${{ github.sha }}
