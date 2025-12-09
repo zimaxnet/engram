@@ -205,6 +205,7 @@ module backendModule 'modules/backend-aca.bicep' = {
     azureAiProjectName: azureAiProjectName
     registryUsername: registryUsername
     registryPassword: registryPassword
+    keyVaultUri: keyVaultModule.outputs.keyVaultUri
     tags: tags
   }
 }
@@ -228,6 +229,7 @@ module workerModule 'modules/worker-aca.bicep' = {
     azureAiProjectName: azureAiProjectName
     registryUsername: registryUsername
     registryPassword: registryPassword
+    keyVaultUri: keyVaultModule.outputs.keyVaultUri
     tags: tags
   }
 }

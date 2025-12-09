@@ -96,6 +96,10 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
               value: 'production'
             }
             {
+              name: 'AZURE_KEYVAULT_URL'
+              value: keyVaultUri
+            }
+            {
               name: 'POSTGRES_HOST'
               value: postgresFqdn
             }
