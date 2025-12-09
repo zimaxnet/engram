@@ -176,6 +176,28 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
   }
 }
 
+@description('Key Vault Name.')
+param keyVaultName string
+
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
+  name: keyVaultName
+}
+
+resource keyVaultSecretUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: '4633458b-17de-408a-b874-0445c86b69e6'
+  scope: subscription()
+}
+
+resource keyVaultRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: keyVault
+  name: guid(keyVault.id, workerApp.id, keyVaultSecretUserRole.id)
+  properties: {
+    roleDefinitionId: keyVaultSecretUserRole.id
+    principalId: workerApp.identity.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 // Outputs
 output workerAppName string = workerApp.name
 output principalId string = workerApp.identity.principalId

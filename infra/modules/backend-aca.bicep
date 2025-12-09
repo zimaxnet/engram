@@ -199,6 +199,28 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
   }
 }
 
+@description('Key Vault Name.')
+param keyVaultName string
+
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
+  name: keyVaultName
+}
+
+resource keyVaultSecretUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: '4633458b-17de-408a-b874-0445c86b69e6'
+  scope: subscription()
+}
+
+resource keyVaultRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: keyVault
+  name: guid(keyVault.id, backendApp.id, keyVaultSecretUserRole.id)
+  properties: {
+    roleDefinitionId: keyVaultSecretUserRole.id
+    principalId: backendApp.identity.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 // Outputs
 output backendFqdn string = backendApp.properties.configuration.ingress.fqdn
 output backendUrl string = 'https://${backendApp.properties.configuration.ingress.fqdn}'

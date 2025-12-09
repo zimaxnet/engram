@@ -206,6 +206,7 @@ module backendModule 'modules/backend-aca.bicep' = {
     registryUsername: registryUsername
     registryPassword: registryPassword
     keyVaultUri: keyVaultModule.outputs.keyVaultUri
+    keyVaultName: keyVaultModule.outputs.keyVaultName
     tags: tags
   }
 }
@@ -230,6 +231,7 @@ module workerModule 'modules/worker-aca.bicep' = {
     registryUsername: registryUsername
     registryPassword: registryPassword
     keyVaultUri: keyVaultModule.outputs.keyVaultUri
+    keyVaultName: keyVaultModule.outputs.keyVaultName
     tags: tags
   }
 }
@@ -242,37 +244,6 @@ module swaModule 'static-webapp.bicep' = {
   params: {
     location: location
     swaName: '${envName}-web'
-  }
-}
-
-// =============================================================================
-// Role Assignments
-// =============================================================================
-resource existingKeyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
-  name: keyVaultModule.outputs.keyVaultName
-}
-
-resource keyVaultSecretUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  name: '4633458b-17de-408a-b874-0445c86b69e6'
-}
-
-resource backendKeyVaultRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: existingKeyVault
-  name: guid(existingKeyVault.id, backendModule.outputs.principalId, keyVaultSecretUserRole.id)
-  properties: {
-    roleDefinitionId: keyVaultSecretUserRole.id
-    principalId: backendModule.outputs.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-resource workerKeyVaultRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: existingKeyVault
-  name: guid(existingKeyVault.id, workerModule.outputs.principalId, keyVaultSecretUserRole.id)
-  properties: {
-    roleDefinitionId: keyVaultSecretUserRole.id
-    principalId: workerModule.outputs.principalId
-    principalType: 'ServicePrincipal'
   }
 }
 
