@@ -4,10 +4,12 @@ Tests for EnterpriseContext
 
 import os
 
-# Set test environment variables before imports
+# Set test environment variables BEFORE any backend imports
 os.environ.setdefault("ENVIRONMENT", "test")
 os.environ.setdefault("AZURE_KEY_VAULT_NAME", "test-vault")
+os.environ.setdefault("AZURE_KEYVAULT_URL", "https://test-vault.vault.azure.net/")
 
+# Import after environment is set
 from backend.core import EnterpriseContext, SecurityContext, Role
 
 
