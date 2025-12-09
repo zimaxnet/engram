@@ -9,7 +9,7 @@ The Engram platform features two specialized AI agent personas designed for ente
 
 ## Dr. Elena Vasquez - Business Analyst
 
-![Dr. Elena Vasquez Portrait](assets/images/elena-portrait.png)
+![Dr. Elena Vasquez Portrait](/assets/images/elena-portrait.png)
 
 ### Background
 
@@ -52,7 +52,7 @@ Elena is known for her:
 
 ## Marcus Chen - Project Manager
 
-![Marcus Chen Portrait](assets/images/marcus-portrait.png)
+![Marcus Chen Portrait](/assets/images/marcus-portrait.png)
 
 ### Background
 
@@ -98,7 +98,7 @@ Marcus is recognized for his:
 
 Elena and Marcus are designed to work together seamlessly:
 
-![Agent Workflow Diagram](assets/images/agent-workflow-diagram.svg)
+![Agent Workflow Diagram](/assets/images/agent-workflow-diagram.svg)
 
 ### Handoff Scenarios
 

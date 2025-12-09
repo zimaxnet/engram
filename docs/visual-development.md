@@ -11,7 +11,7 @@ This guide documents the visual assets for the Engram platform and provides JSON
 
 ### 1. Platform Architecture Diagram
 
-![Engram Platform Architecture](assets/images/engram-platform-architecture.png)
+![Engram Platform Architecture](/assets/images/engram-platform-architecture.png)
 
 **Description**: A comprehensive visual representation of the Engram platform showing the Brain + Spine architecture, data flows, and component interactions.
 
@@ -97,7 +97,7 @@ This guide documents the visual assets for the Engram platform and provides JSON
 
 ### 2. Voice Interaction Flow
 
-![Voice Interaction Flow](assets/images/voice-interaction-flow.png)
+![Voice Interaction Flow](/assets/images/voice-interaction-flow.png)
 
 **Description**: Shows the complete voice interaction pipeline from user speech to avatar response with lip-sync.
 
@@ -161,7 +161,7 @@ This guide documents the visual assets for the Engram platform and provides JSON
 
 ### 3. Agent Workflow Diagram
 
-![Agent Workflow Diagram](assets/images/agent-workflow-diagram.png)
+![Agent Workflow Diagram](/assets/images/agent-workflow-diagram.png)
 
 **Description**: Illustrates how Elena and Marcus collaborate with handoff patterns.
 
@@ -231,7 +231,7 @@ This guide documents the visual assets for the Engram platform and provides JSON
 
 ### 4. Context Schema Visualization
 
-![4-Layer Context Schema](assets/images/context-schema.png)
+![4-Layer Context Schema](/assets/images/context-schema.png)
 
 **Description**: Visual representation of the 4-layer EnterpriseContext schema.
 
@@ -286,7 +286,7 @@ This guide documents the visual assets for the Engram platform and provides JSON
 
 ### 5. Engram Logo
 
-![Engram Logo](assets/images/engram-logo.png)
+![Engram Logo](/assets/images/engram-logo.png)
 
 **Description**: The Engram platform logo representing memory and neural connections.
 
@@ -324,14 +324,14 @@ This guide documents the visual assets for the Engram platform and provides JSON
 
 | Asset | Path | Resolution | Format |
 |-------|------|------------|--------|
-| Platform Architecture | `assets/images/engram-platform-architecture.png` | 1920x1080 | PNG |
-| Voice Interaction Flow | `assets/images/voice-interaction-flow.png` | 1920x600 | PNG |
-| Agent Workflow | `assets/images/agent-workflow-diagram.png` | 1200x800 | PNG |
-| Context Schema | `assets/images/context-schema.png` | 1200x900 | PNG |
-| Elena Portrait | `assets/images/elena-portrait.png` | 512x512 | PNG |
-| Marcus Portrait | `assets/images/marcus-portrait.png` | 512x512 | PNG |
-| Engram Logo | `assets/images/engram-logo.png` | 800x200 | PNG |
-| Logo Icon | `assets/images/engram-icon.png` | 512x512 | PNG |
+| Platform Architecture | `/assets/images/engram-platform-architecture.png` | 1920x1080 | PNG |
+| Voice Interaction Flow | `/assets/images/voice-interaction-flow.png` | 1920x600 | PNG |
+| Agent Workflow | `/assets/images/agent-workflow-diagram.png` | 1200x800 | PNG |
+| Context Schema | `/assets/images/context-schema.png` | 1200x900 | PNG |
+| Elena Portrait | `/assets/images/elena-portrait.png` | 512x512 | PNG |
+| Marcus Portrait | `/assets/images/marcus-portrait.png` | 512x512 | PNG |
+| Engram Logo | `/assets/images/engram-logo.png` | 800x200 | PNG |
+| Logo Icon | `/assets/images/engram-icon.png` | 512x512 | PNG |
 
 ---
 
