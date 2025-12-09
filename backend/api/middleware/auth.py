@@ -10,7 +10,6 @@ Provides:
 
 import logging
 from datetime import datetime, timezone
-from functools import lru_cache
 from typing import Optional
 
 import httpx

@@ -11,8 +11,6 @@ Uses Azure Cognitive Services Speech SDK.
 """
 
 import asyncio
-import base64
-import io
 import logging
 from dataclasses import dataclass
 from enum import Enum

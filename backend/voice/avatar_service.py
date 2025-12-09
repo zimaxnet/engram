@@ -10,7 +10,6 @@ Provides:
 Uses Azure AI Avatar (formerly Azure Communication Services Avatar).
 """
 
-import asyncio
 import logging
 from dataclasses import dataclass
 from enum import Enum

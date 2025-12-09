@@ -65,7 +65,8 @@ async def list_workflows(
     try:
         from backend.workflows import get_temporal_client
         
-        client = await get_temporal_client()
+        # Verify Temporal connection
+        await get_temporal_client()
         
         # Query workflows (simplified - in production, use proper listing)
         # This is a placeholder - Temporal's list API is more complex
@@ -300,9 +301,8 @@ async def send_signal(
                 message=f"Approval signal sent to workflow {workflow_id}"
             )
         
-        # Generic signal handling
-        client = await get_temporal_client()
-        handle = client.get_workflow_handle(workflow_id)
+        # Generic signal handling - would need workflow-specific implementation
+        await get_temporal_client()
         
         # Note: Generic signals would need workflow-specific handling
         return SignalResponse(

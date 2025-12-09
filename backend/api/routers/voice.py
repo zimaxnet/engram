@@ -11,8 +11,6 @@ Provides:
 import base64
 import logging
 import uuid
-from datetime import datetime
-from typing import Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
@@ -326,7 +324,6 @@ async def voice_chat_websocket(websocket: WebSocket, session_id: str):
     
     try:
         from backend.voice import (
-            avatar_speak,
             create_avatar_session,
             get_voice_for_agent,
             recognize_speech,
@@ -336,7 +333,7 @@ async def voice_chat_websocket(websocket: WebSocket, session_id: str):
         from backend.core import EnterpriseContext, Role, SecurityContext
         
         # Create avatar session
-        avatar_session = await create_avatar_session(session_id, "elena")
+        await create_avatar_session(session_id, "elena")
         
         # Create context for agent
         security = SecurityContext(
@@ -350,7 +347,6 @@ async def voice_chat_websocket(websocket: WebSocket, session_id: str):
         
         current_agent = "elena"
         audio_buffer = b""
-        is_listening = False
         
         while True:
             data = await websocket.receive_json()
@@ -363,7 +359,6 @@ async def voice_chat_websocket(websocket: WebSocket, session_id: str):
                 audio_buffer += audio_chunk
                 
             elif msg_type == "start_listening":
-                is_listening = True
                 audio_buffer = b""
                 await websocket.send_json({
                     "type": "status",
@@ -371,8 +366,6 @@ async def voice_chat_websocket(websocket: WebSocket, session_id: str):
                 })
                 
             elif msg_type == "stop_listening":
-                is_listening = False
-                
                 if audio_buffer:
                     # Transcribe
                     result = await recognize_speech(audio_buffer)
@@ -438,7 +431,7 @@ async def voice_chat_websocket(websocket: WebSocket, session_id: str):
                 "type": "error",
                 "message": str(e)
             })
-        except:
+        except Exception:
             pass
 
 

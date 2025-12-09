@@ -158,7 +158,7 @@ class AgentWorkflow:
     @workflow.signal
     async def provide_input(self, signal: UserInputSignal):
         """Receive additional user input"""
-        workflow.logger.info(f"Received additional input")
+        workflow.logger.info("Received additional input")
         self._additional_input = signal.content
     
     # -------------------------------------------------------------------------

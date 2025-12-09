@@ -23,7 +23,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         
         # Log request
         logger.info(
-            f"Request started",
+            "Request started",
             extra={
                 "request_id": request_id,
                 "method": request.method,
@@ -40,7 +40,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         
         # Log response
         logger.info(
-            f"Request completed",
+            "Request completed",
             extra={
                 "request_id": request_id,
                 "method": request.method,

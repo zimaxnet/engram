@@ -13,12 +13,9 @@ Activities run in workers and can be retried automatically by Temporal.
 
 import logging
 from dataclasses import dataclass
-from datetime import timedelta
 from typing import Optional
 
 from temporalio import activity
-
-from backend.core import EnterpriseContext
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +110,7 @@ async def initialize_context_activity(
     """
     activity.logger.info(f"Initializing context for user {user_id}, session {session_id}")
     
-    from backend.core import EnterpriseContext, Role, SecurityContext
+    from backend.core import Role, SecurityContext, EnterpriseContext
     
     # Create security context
     security = SecurityContext(

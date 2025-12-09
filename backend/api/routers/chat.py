@@ -18,7 +18,7 @@ from pydantic import BaseModel
 
 from backend.agents import chat as agent_chat, get_agent
 from backend.api.middleware.auth import get_current_user
-from backend.core import EnterpriseContext, SecurityContext, create_context_from_token
+from backend.core import EnterpriseContext, SecurityContext
 from backend.memory import enrich_context, persist_conversation
 
 logger = logging.getLogger(__name__)
@@ -107,9 +107,9 @@ async def send_message(
         agent_id = message.agent_id or "elena"
         agent = get_agent(agent_id)
         response_text = (
-            f"I apologize, but I encountered an issue processing your request. "
-            f"Could you please try again? If the problem persists, "
-            f"the team can check the logs for more details."
+            "I apologize, but I encountered an issue processing your request. "
+            "Could you please try again? If the problem persists, "
+            "the team can check the logs for more details."
         )
     
     latency_ms = (time.time() - start_time) * 1000

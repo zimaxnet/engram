@@ -65,7 +65,7 @@ def stakeholder_mapping(project_description: str) -> str:
         Stakeholder map with roles and interests
     """
     # TODO: Implement actual stakeholder analysis
-    return f"""
+    return """
 ## Stakeholder Map
 
 ### Primary Stakeholders (Decision Makers)

@@ -9,7 +9,6 @@ import asyncio
 import logging
 import signal
 import sys
-from datetime import timedelta
 
 from temporalio.client import Client
 from temporalio.worker import Worker

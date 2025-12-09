@@ -323,7 +323,7 @@ class EnterpriseContext(BaseModel):
         This is the "RAM" that the LLM sees.
         """
         parts = [
-            f"# Session Context",
+            "# Session Context",
             f"User: {self.security.display_name or self.security.user_id}",
             f"Agent: {self.operational.active_agent.title()}",
             f"Session: {self.episodic.conversation_id[:8]}...",

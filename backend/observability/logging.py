@@ -8,9 +8,9 @@ Provides:
 - Azure Log Analytics integration
 """
 
+import contextvars
 import json
 import logging
-import os
 import sys
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -225,8 +225,6 @@ def get_logger(name: str) -> StructuredLogger:
 
 
 # Context variable for request-scoped logging
-import contextvars
-
 _log_context: contextvars.ContextVar[dict] = contextvars.ContextVar(
     "log_context", default={}
 )

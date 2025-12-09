@@ -8,11 +8,12 @@ Provides distributed tracing and metrics for:
 - Workflow steps
 """
 
+import asyncio
 import logging
 import os
 from contextlib import contextmanager
 from functools import wraps
-from typing import Any, Callable, Optional
+from typing import Callable, Optional
 
 from opentelemetry import metrics, trace
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
@@ -199,10 +200,6 @@ def trace_function(
     return decorator
 
 
-# Import asyncio only if needed
-import asyncio
-
-
 def record_metric(
     name: str,
     value: float,
@@ -235,8 +232,6 @@ class TelemetryMiddleware(BaseHTTPMiddleware):
     """
     
     async def dispatch(self, request: Request, call_next) -> Response:
-        tracer = get_tracer()
-        
         # Extract trace context from headers if present
         # (handled automatically by OpenTelemetry instrumentation)
         

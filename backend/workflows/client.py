@@ -10,7 +10,7 @@ import uuid
 from datetime import timedelta
 from typing import Optional
 
-from temporalio.client import Client, WorkflowHandle
+from temporalio.client import Client
 
 from backend.core import get_settings
 from backend.workflows.agent_workflow import (
@@ -119,7 +119,7 @@ async def start_conversation(
     
     workflow_id = f"conversation-{session_id}"
     
-    handle = await client.start_workflow(
+    await client.start_workflow(
         ConversationWorkflow.run,
         args=[user_id, tenant_id, session_id, initial_agent],
         id=workflow_id,

@@ -15,8 +15,8 @@ from typing import Literal, Optional
 from backend.core import EnterpriseContext
 
 from .base import BaseAgent
-from .elena import elena, ElenaAgent
-from .marcus import marcus, MarcusAgent
+from .elena import elena
+from .marcus import marcus
 
 
 AgentId = Literal["elena", "marcus"]

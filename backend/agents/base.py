@@ -7,9 +7,9 @@ Implements the Brain layer of the Brain + Spine architecture.
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Literal, Optional, TypedDict
+from typing import Literal, Optional, TypedDict
 
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_openai import AzureChatOpenAI
 from langgraph.graph import END, StateGraph
 
