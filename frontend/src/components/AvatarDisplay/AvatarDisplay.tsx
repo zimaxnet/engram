@@ -8,7 +8,7 @@
  * - Viseme-based lip-sync (when available)
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import './AvatarDisplay.css';
 
 // Viseme to mouth shape mapping
@@ -77,10 +77,10 @@ export default function AvatarDisplay({
   showName = true,
   size = 'md',
 }: AvatarDisplayProps) {
-  const [currentVisemeId, setCurrentVisemeId] = useState(0);
   const [mouthShape, setMouthShape] = useState(VISEME_MOUTH_SHAPES[0]);
   const animationStartTime = useRef<number>(0);
   const animationFrameRef = useRef<number>(0);
+  const mouthShapeRef = useRef(mouthShape);
 
   const agent = AGENT_INFO[agentId];
 
@@ -102,8 +102,9 @@ export default function AvatarDisplay({
           }
         }
         
-        setCurrentVisemeId(currentViseme.viseme_id);
-        setMouthShape(VISEME_MOUTH_SHAPES[currentViseme.viseme_id] || VISEME_MOUTH_SHAPES[0]);
+        const newMouthShape = VISEME_MOUTH_SHAPES[currentViseme.viseme_id] || VISEME_MOUTH_SHAPES[0];
+        mouthShapeRef.current = newMouthShape;
+        setMouthShape(newMouthShape);
         
         // Continue animation if still speaking and not past last viseme
         const lastViseme = visemes[visemes.length - 1];
@@ -117,16 +118,19 @@ export default function AvatarDisplay({
       return () => {
         cancelAnimationFrame(animationFrameRef.current);
       };
-    } else {
-      // Reset to neutral
-      setCurrentVisemeId(0);
-      setMouthShape(VISEME_MOUTH_SHAPES[0]);
     }
+    // Note: Reset to neutral is handled by the random speaking effect below
   }, [isSpeaking, visemes]);
 
-  // Generate random speaking animation if no visemes
+  // Generate random speaking animation if no visemes, or reset to neutral when not speaking
   useEffect(() => {
-    if (isSpeaking && visemes.length === 0) {
+    if (!isSpeaking) {
+      // Reset to neutral when not speaking
+      setMouthShape(VISEME_MOUTH_SHAPES[0]);
+      return;
+    }
+    
+    if (visemes.length === 0) {
       const interval = setInterval(() => {
         const randomViseme = Math.floor(Math.random() * 12) + 1; // Random mouth shape
         setMouthShape(VISEME_MOUTH_SHAPES[randomViseme] || VISEME_MOUTH_SHAPES[0]);
@@ -134,7 +138,7 @@ export default function AvatarDisplay({
       
       return () => clearInterval(interval);
     }
-  }, [isSpeaking, visemes]);
+  }, [isSpeaking, visemes.length]);
 
   const getExpressionStyle = useCallback(() => {
     switch (expression) {

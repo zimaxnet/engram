@@ -23,6 +23,18 @@ interface Viseme {
   viseme_id: number;
 }
 
+interface WebSocketMessage {
+  type: 'transcription' | 'response' | 'avatar_speaking' | 'error';
+  text?: string;
+  is_final?: boolean;
+  audio?: string;
+  audio_format?: string;
+  visemes?: Viseme[];
+  agent_id?: string;
+  duration_ms?: number;
+  message?: string;
+}
+
 interface VoiceChatProps {
   agentId: string;
   onMessage?: (message: VoiceMessage) => void;
@@ -49,84 +61,18 @@ export default function VoiceChat({
   const analyserRef = useRef<AnalyserNode | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const animationFrameRef = useRef<number>(0);
-
-  // Initialize WebSocket connection
+  
+  // Store callbacks in refs to avoid stale closures
+  const onMessageRef = useRef(onMessage);
+  const onVisemesRef = useRef(onVisemes);
+  
   useEffect(() => {
-    const sessionId = `voice-${Date.now()}`;
-    const wsUrl = `${import.meta.env.VITE_WS_URL || 'ws://localhost:8082'}/api/v1/voice/ws/${sessionId}`;
-    
-    const ws = new WebSocket(wsUrl);
-    
-    ws.onopen = () => {
-      console.log('Voice WebSocket connected');
-    };
-    
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      handleWebSocketMessage(data);
-    };
-    
-    ws.onerror = (error) => {
-      console.error('Voice WebSocket error:', error);
-      setError('Connection error');
-    };
-    
-    ws.onclose = () => {
-      console.log('Voice WebSocket disconnected');
-    };
-    
-    wsRef.current = ws;
-    
-    return () => {
-      ws.close();
-    };
-  }, []);
-
-  // Handle incoming WebSocket messages
-  const handleWebSocketMessage = useCallback((data: any) => {
-    switch (data.type) {
-      case 'transcription':
-        setTranscription(data.text);
-        if (data.is_final && data.text) {
-          onMessage?.({
-            id: `user-${Date.now()}`,
-            type: 'user',
-            text: data.text,
-            timestamp: new Date()
-          });
-        }
-        setIsProcessing(false);
-        break;
-        
-      case 'response':
-        onMessage?.({
-          id: `agent-${Date.now()}`,
-          type: 'agent',
-          text: data.text,
-          agentId: data.agent_id,
-          timestamp: new Date()
-        });
-        
-        // Play audio response
-        if (data.audio) {
-          playAudio(data.audio, data.audio_format, data.visemes);
-        }
-        break;
-        
-      case 'avatar_speaking':
-        setIsSpeaking(true);
-        setTimeout(() => setIsSpeaking(false), data.duration_ms);
-        break;
-        
-      case 'error':
-        setError(data.message);
-        setIsProcessing(false);
-        break;
-    }
-  }, [onMessage]);
+    onMessageRef.current = onMessage;
+    onVisemesRef.current = onVisemes;
+  }, [onMessage, onVisemes]);
 
   // Play audio and trigger visemes
-  const playAudio = async (
+  const playAudio = useCallback(async (
     audioBase64: string, 
     format: string,
     visemes: Viseme[]
@@ -148,14 +94,89 @@ export default function VoiceChat({
         audioRef.current.play();
         
         // Trigger visemes callback
-        if (onVisemes && visemes.length > 0) {
-          onVisemes(visemes);
+        if (onVisemesRef.current && visemes.length > 0) {
+          onVisemesRef.current(visemes);
         }
       }
     } catch (e) {
       console.error('Failed to play audio:', e);
     }
-  };
+  }, []);
+
+  // Handle incoming WebSocket messages
+  const handleWebSocketMessage = useCallback((data: WebSocketMessage) => {
+    switch (data.type) {
+      case 'transcription':
+        setTranscription(data.text || '');
+        if (data.is_final && data.text) {
+          onMessageRef.current?.({
+            id: `user-${Date.now()}`,
+            type: 'user',
+            text: data.text,
+            timestamp: new Date()
+          });
+        }
+        setIsProcessing(false);
+        break;
+        
+      case 'response':
+        onMessageRef.current?.({
+          id: `agent-${Date.now()}`,
+          type: 'agent',
+          text: data.text || '',
+          agentId: data.agent_id,
+          timestamp: new Date()
+        });
+        
+        // Play audio response
+        if (data.audio && data.audio_format) {
+          playAudio(data.audio, data.audio_format, data.visemes || []);
+        }
+        break;
+        
+      case 'avatar_speaking':
+        setIsSpeaking(true);
+        setTimeout(() => setIsSpeaking(false), data.duration_ms || 0);
+        break;
+        
+      case 'error':
+        setError(data.message || 'Unknown error');
+        setIsProcessing(false);
+        break;
+    }
+  }, [playAudio]);
+
+  // Initialize WebSocket connection
+  useEffect(() => {
+    const sessionId = `voice-${Date.now()}`;
+    const wsUrl = `${import.meta.env.VITE_WS_URL || 'ws://localhost:8082'}/api/v1/voice/ws/${sessionId}`;
+    
+    const ws = new WebSocket(wsUrl);
+    
+    ws.onopen = () => {
+      console.log('Voice WebSocket connected');
+    };
+    
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data) as WebSocketMessage;
+      handleWebSocketMessage(data);
+    };
+    
+    ws.onerror = (wsError) => {
+      console.error('Voice WebSocket error:', wsError);
+      setError('Connection error');
+    };
+    
+    ws.onclose = () => {
+      console.log('Voice WebSocket disconnected');
+    };
+    
+    wsRef.current = ws;
+    
+    return () => {
+      ws.close();
+    };
+  }, [handleWebSocketMessage]);
 
   // Start recording
   const startListening = async () => {

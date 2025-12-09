@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import type { Agent } from '../../App'
 import './ChatPanel.css'
 
@@ -26,39 +26,42 @@ interface Message {
   tokensUsed?: number
 }
 
+// Create initial welcome message
+function createWelcomeMessage(agent: Agent): Message {
+  return {
+    id: Date.now().toString(),
+    role: 'assistant',
+    content: `Hello! I'm ${agent.name}, your ${agent.title}. How can I help you today?`,
+    agentId: agent.id,
+    agentName: agent.name,
+    timestamp: new Date()
+  }
+}
+
 export function ChatPanel({ agent, onMetricsUpdate }: ChatPanelProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: `Hello! I'm ${agent.name}, your ${agent.title}. How can I help you today?`,
-      agentId: agent.id,
-      agentName: agent.name,
-      timestamp: new Date()
-    }
-  ])
+  // Use key to reset state when agent changes
+  const agentKey = agent.id
+  const initialMessage = useMemo(() => createWelcomeMessage(agent), [agent])
+  
+  const [messages, setMessages] = useState<Message[]>([initialMessage])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const prevAgentKeyRef = useRef(agentKey)
 
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Update welcome message when agent changes
-  useEffect(() => {
-    setMessages([{
-      id: Date.now().toString(),
-      role: 'assistant',
-      content: `Hello! I'm ${agent.name}, your ${agent.title}. How can I help you today?`,
-      agentId: agent.id,
-      agentName: agent.name,
-      timestamp: new Date()
-    }])
-  }, [agent])
+  // Reset messages when agent changes (using ref comparison to avoid effect-setState warning)
+  if (prevAgentKeyRef.current !== agentKey) {
+    prevAgentKeyRef.current = agentKey
+    // This is synchronous state update during render, which is valid
+    setMessages([createWelcomeMessage(agent)])
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
