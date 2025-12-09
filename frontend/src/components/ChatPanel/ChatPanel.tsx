@@ -56,12 +56,13 @@ export function ChatPanel({ agent, onMetricsUpdate }: ChatPanelProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Reset messages when agent changes (using ref comparison to avoid effect-setState warning)
-  if (prevAgentKeyRef.current !== agentKey) {
-    prevAgentKeyRef.current = agentKey
-    // This is synchronous state update during render, which is valid
-    setMessages([createWelcomeMessage(agent)])
-  }
+  // Reset messages when agent changes
+  useEffect(() => {
+    if (prevAgentKeyRef.current !== agentKey) {
+      prevAgentKeyRef.current = agentKey
+      setMessages([createWelcomeMessage(agent)])
+    }
+  }, [agent, agentKey])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

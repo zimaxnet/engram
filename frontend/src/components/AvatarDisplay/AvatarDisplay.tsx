@@ -8,7 +8,7 @@
  * - Viseme-based lip-sync (when available)
  */
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import './AvatarDisplay.css';
 
 // Viseme to mouth shape mapping
@@ -81,8 +81,17 @@ export default function AvatarDisplay({
   const animationStartTime = useRef<number>(0);
   const animationFrameRef = useRef<number>(0);
   const mouthShapeRef = useRef(mouthShape);
+  const prevIsSpeakingRef = useRef(isSpeaking);
 
   const agent = AGENT_INFO[agentId];
+
+  // Reset to neutral when transitioning from speaking to not speaking
+  useEffect(() => {
+    if (prevIsSpeakingRef.current && !isSpeaking) {
+      setMouthShape(VISEME_MOUTH_SHAPES[0]);
+    }
+    prevIsSpeakingRef.current = isSpeaking;
+  }, [isSpeaking]);
 
   // Animate visemes when speaking
   useEffect(() => {
@@ -119,18 +128,11 @@ export default function AvatarDisplay({
         cancelAnimationFrame(animationFrameRef.current);
       };
     }
-    // Note: Reset to neutral is handled by the random speaking effect below
   }, [isSpeaking, visemes]);
 
-  // Generate random speaking animation if no visemes, or reset to neutral when not speaking
+  // Generate random speaking animation if no visemes
   useEffect(() => {
-    if (!isSpeaking) {
-      // Reset to neutral when not speaking
-      setMouthShape(VISEME_MOUTH_SHAPES[0]);
-      return;
-    }
-    
-    if (visemes.length === 0) {
+    if (isSpeaking && visemes.length === 0) {
       const interval = setInterval(() => {
         const randomViseme = Math.floor(Math.random() * 12) + 1; // Random mouth shape
         setMouthShape(VISEME_MOUTH_SHAPES[randomViseme] || VISEME_MOUTH_SHAPES[0]);
