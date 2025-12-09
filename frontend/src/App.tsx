@@ -82,6 +82,7 @@ function App() {
         {/* Middle Column - Chat Interface */}
         <section className="column column-center">
           <ChatPanel 
+            key={activeAgent}
             agent={agent}
             onMetricsUpdate={setSessionMetrics}
           />

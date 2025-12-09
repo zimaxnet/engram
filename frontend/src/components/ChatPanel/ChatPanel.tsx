@@ -39,8 +39,8 @@ function createWelcomeMessage(agent: Agent): Message {
 }
 
 export function ChatPanel({ agent, onMetricsUpdate }: ChatPanelProps) {
-  // Use key to reset state when agent changes
-  const agentKey = agent.id
+  // Component remounts when agent changes (via key prop in App.tsx)
+  // So we can initialize state directly
   const initialMessage = useMemo(() => createWelcomeMessage(agent), [agent])
   
   const [messages, setMessages] = useState<Message[]>([initialMessage])
@@ -49,20 +49,11 @@ export function ChatPanel({ agent, onMetricsUpdate }: ChatPanelProps) {
   const [isRecording, setIsRecording] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const prevAgentKeyRef = useRef(agentKey)
 
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
-
-  // Reset messages when agent changes
-  useEffect(() => {
-    if (prevAgentKeyRef.current !== agentKey) {
-      prevAgentKeyRef.current = agentKey
-      setMessages([createWelcomeMessage(agent)])
-    }
-  }, [agent, agentKey])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

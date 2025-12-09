@@ -8,7 +8,7 @@
  * - Viseme-based lip-sync (when available)
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
 import './AvatarDisplay.css';
 
 // Viseme to mouth shape mapping
@@ -86,7 +86,9 @@ export default function AvatarDisplay({
   const agent = AGENT_INFO[agentId];
 
   // Reset to neutral when transitioning from speaking to not speaking
-  useEffect(() => {
+  // Use useLayoutEffect for synchronous state updates before paint
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useLayoutEffect(() => {
     if (prevIsSpeakingRef.current && !isSpeaking) {
       setMouthShape(VISEME_MOUTH_SHAPES[0]);
     }
