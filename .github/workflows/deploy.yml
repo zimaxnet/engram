@@ -9,7 +9,6 @@ on:
     inputs:
       environment:
         description: "Deployment environment"
-        failOnStdErr: false
         required: true
         default: "staging"
         type: choice
@@ -72,6 +71,7 @@ jobs:
             workerImage=ghcr.io/${{ github.repository }}/worker:${{ github.sha }}
           deploymentName: engram-infra-${{ github.sha }}
           deploymentOutputs: outputs
+          failOnStdErr: false
       
       - name: Set outputs
         id: outputs
