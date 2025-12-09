@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, type FormEvent, type CSSProperties } from 'react'
 import type { Agent } from '../../App'
 import { sendChatMessage, type ApiError } from '../../services/api'
 import './ChatPanel.css'
@@ -62,7 +62,7 @@ export function ChatPanel({ agent, onMetricsUpdate }: ChatPanelProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isTyping) return
 
@@ -137,7 +137,7 @@ export function ChatPanel({ agent, onMetricsUpdate }: ChatPanelProps) {
           <div
             key={message.id}
             className={`message ${message.role}`}
-            style={message.role === 'assistant' ? { '--agent-color': agent.accentColor } as React.CSSProperties : undefined}
+            style={message.role === 'assistant' ? { '--agent-color': agent.accentColor } as CSSProperties : undefined}
           >
             {message.role === 'assistant' && (
               <div className="message-avatar">
@@ -165,7 +165,7 @@ export function ChatPanel({ agent, onMetricsUpdate }: ChatPanelProps) {
         ))}
 
         {isTyping && (
-          <div className="message assistant" style={{ '--agent-color': agent.accentColor } as React.CSSProperties}>
+          <div className="message assistant" style={{ '--agent-color': agent.accentColor } as CSSProperties}>
             <div className="message-avatar">
               <img src={agent.avatarUrl} alt={agent.name} />
             </div>
