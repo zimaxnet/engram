@@ -29,7 +29,6 @@ def test_create_context():
     assert context.episodic.conversation_id == "test-session"
 
 
-
 def test_context_to_llm_context():
     """Test converting context to LLM format"""
     security = SecurityContext(
