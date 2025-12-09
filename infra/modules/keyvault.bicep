@@ -47,16 +47,16 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   }
 }
 
-// Role assignment for admin access (Key Vault Administrator)
-resource adminRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(keyVault.id, adminObjectId, 'Key Vault Administrator')
-  scope: keyVault
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483') // Key Vault Administrator
-    principalId: adminObjectId
-    principalType: 'User'
-  }
-}
+// Role assignment for admin access (Key Vault Administrator) - Commented out to avoid deployment permission errors
+// resource adminRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+//   name: guid(keyVault.id, adminObjectId, 'Key Vault Administrator')
+//   scope: keyVault
+//   properties: {
+//     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483') // Key Vault Administrator
+//     principalId: adminObjectId
+//     principalType: 'User'
+//   }
+// }
 
 // Outputs
 output keyVaultId string = keyVault.id
