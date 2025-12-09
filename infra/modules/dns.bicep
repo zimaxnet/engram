@@ -1,5 +1,5 @@
-@description('DNS zone resource group.')
-param dnsResourceGroup string = 'dns-rg'
+// Note: dnsResourceGroup parameter kept for backwards compatibility but not used
+// since module is deployed to dns-rg scope directly
 
 @description('DNS zone name.')
 param dnsZoneName string = 'engram.work'

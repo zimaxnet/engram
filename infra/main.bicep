@@ -265,7 +265,6 @@ module dnsModule 'modules/dns.bicep' = {
     dnsZoneName: 'engram.work'
     backendFqdn: replace(backendModule.outputs.backendUrl, 'https://', '')
     temporalUIFqdn: replace(temporalModule.outputs.temporalUIFqdn, 'https://', '')
-    frontendHostname: swaModule.outputs.swaDefaultHostname
   }
 }
 
