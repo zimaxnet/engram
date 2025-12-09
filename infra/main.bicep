@@ -43,7 +43,147 @@ param tags object = {
   Environment: 'Production'
 }
 
-// ... (existing code) ...
+// =============================================================================
+// Log Analytics
+// =============================================================================
+resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
+  name: '${envName}-logs'
+  location: location
+  tags: tags
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+    retentionInDays: 30
+  }
+}
+
+// =============================================================================
+// Container Apps Environment
+// =============================================================================
+resource acaEnv 'Microsoft.App/managedEnvironments@2022-03-01' = {
+  name: '${envName}-aca'
+  location: location
+  tags: tags
+  properties: {
+    appLogsConfiguration: {
+      destination: 'log-analytics'
+      logAnalyticsConfiguration: {
+        customerId: logAnalytics.properties.customerId
+        sharedKey: logAnalytics.listKeys().primarySharedKey
+      }
+    }
+  }
+}
+
+// =============================================================================
+// PostgreSQL Flexible Server
+// =============================================================================
+resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2021-06-01' = {
+  name: '${envName}-db'
+  location: location
+  tags: tags
+  sku: {
+    name: 'Standard_B1ms'
+    tier: 'Burstable'
+  }
+  properties: {
+    administratorLogin: 'cogadmin'
+    administratorLoginPassword: postgresPassword
+    version: '13'
+    storage: {
+      storageSizeGB: 32
+    }
+    backup: {
+      backupRetentionDays: 7
+      geoRedundantBackup: 'Disabled'
+    }
+  }
+}
+
+// =============================================================================
+// Storage Account
+// =============================================================================
+resource storage 'Microsoft.Storage/storageAccounts@2021-09-01' = {
+  name: replace('${envName}store', '-', '')
+  location: location
+  tags: tags
+  sku: {
+    name: 'Standard_LRS'
+  }
+  kind: 'StorageV2'
+}
+
+// =============================================================================
+// Key Vault
+// =============================================================================
+module keyVaultModule 'modules/keyvault.bicep' = {
+  name: 'keyVault'
+  params: {
+    location: location
+    keyVaultName: '${envName}-kv-v2-${take(uniqueString(resourceGroup().id), 5)}'
+    tags: tags
+  }
+}
+
+// =============================================================================
+// Azure OpenAI
+// =============================================================================
+module openAiModule 'modules/openai.bicep' = {
+  name: 'openAi'
+  params: {
+    location: location
+    openAiName: '${envName}-openai-v2'
+    keyVaultName: keyVaultModule.outputs.keyVaultName
+    tags: tags
+  }
+}
+
+// =============================================================================
+// Azure Speech Services
+// =============================================================================
+module speechModule 'modules/speech.bicep' = {
+  name: 'speech'
+  params: {
+    location: location
+    speechName: '${envName}-speech-v2'
+    keyVaultName: keyVaultModule.outputs.keyVaultName
+    tags: tags
+  }
+}
+
+// =============================================================================
+// Temporal Container App
+// =============================================================================
+module temporalModule 'modules/temporal-aca.bicep' = {
+  name: 'temporal'
+  params: {
+    location: location
+    acaEnvId: acaEnv.id
+    acaEnvName: acaEnv.name
+    postgresFqdn: postgres.properties.fullyQualifiedDomainName
+    postgresUser: 'cogadmin'
+    postgresPassword: postgresPassword
+    postgresDb: 'engram'
+    tags: tags
+  }
+}
+
+// =============================================================================
+// Zep Container App
+// =============================================================================
+module zepModule 'modules/zep-aca.bicep' = {
+  name: 'zep'
+  params: {
+    location: location
+    acaEnvId: acaEnv.id
+    postgresFqdn: postgres.properties.fullyQualifiedDomainName
+    postgresUser: 'cogadmin'
+    postgresPassword: postgresPassword
+    postgresDb: 'engram'
+    tags: tags
+  }
+}
 
 // =============================================================================
 // Backend API Container App
