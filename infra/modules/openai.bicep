@@ -47,6 +47,10 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
 resource gpt4oDeployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
   parent: openAiAccount
   name: deploymentName
+  sku: {
+    name: 'Standard'
+    capacity: 30
+  }
   properties: {
     model: {
       format: 'OpenAI'
