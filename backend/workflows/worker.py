@@ -30,8 +30,7 @@ from backend.workflows.agent_workflow import (
 )
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -39,19 +38,19 @@ logger = logging.getLogger(__name__)
 async def create_temporal_client() -> Client:
     """Create a Temporal client"""
     settings = get_settings()
-    
+
     # Parse host and port
     host_parts = settings.temporal_host.split(":")
     host = host_parts[0]
     port = int(host_parts[1]) if len(host_parts) > 1 else 7233
-    
+
     logger.info(f"Connecting to Temporal at {host}:{port}")
-    
+
     client = await Client.connect(
         f"{host}:{port}",
         namespace=settings.temporal_namespace,
     )
-    
+
     logger.info(f"Connected to Temporal namespace: {settings.temporal_namespace}")
     return client
 
@@ -59,10 +58,10 @@ async def create_temporal_client() -> Client:
 async def run_worker():
     """Run the Temporal worker"""
     settings = get_settings()
-    
+
     # Create client
     client = await create_temporal_client()
-    
+
     # Create worker
     worker = Worker(
         client,
@@ -82,26 +81,26 @@ async def run_worker():
             validate_response_activity,
         ],
     )
-    
+
     logger.info(f"Starting worker on task queue: {settings.temporal_task_queue}")
-    
+
     # Handle shutdown gracefully
     shutdown_event = asyncio.Event()
-    
+
     def handle_shutdown(sig):
         logger.info(f"Received {sig}, shutting down...")
         shutdown_event.set()
-    
+
     # Register signal handlers
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGTERM, signal.SIGINT):
         loop.add_signal_handler(sig, lambda s=sig: handle_shutdown(s))
-    
+
     # Run worker until shutdown
     async with worker:
         logger.info("Worker started successfully")
         await shutdown_event.wait()
-    
+
     logger.info("Worker shut down")
 
 
@@ -118,4 +117,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

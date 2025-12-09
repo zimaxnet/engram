@@ -41,20 +41,15 @@ AGENTS: dict[AgentId, AgentProfile] = {
         title="Business Analyst",
         expertise=[
             "Requirements analysis",
-            "Stakeholder management", 
+            "Stakeholder management",
             "Digital transformation",
             "Process optimization",
-            "Compliance requirements"
+            "Compliance requirements",
         ],
-        personality_traits=[
-            "Analytical",
-            "Empathetic",
-            "Probing",
-            "Synthesizing"
-        ],
+        personality_traits=["Analytical", "Empathetic", "Probing", "Synthesizing"],
         voice_name="en-US-JennyNeural",
         accent_color="#3b82f6",  # Cyan
-        avatar_url="/assets/images/elena-portrait.png"
+        avatar_url="/assets/images/elena-portrait.png",
     ),
     AgentId.MARCUS: AgentProfile(
         id=AgentId.MARCUS,
@@ -65,18 +60,18 @@ AGENTS: dict[AgentId, AgentProfile] = {
             "Agile transformation",
             "Risk mitigation",
             "Timeline planning",
-            "Resource allocation"
+            "Resource allocation",
         ],
         personality_traits=[
             "Pragmatic",
             "Direct",
             "Risk-aware",
             "Timeline-focused",
-            "Team-oriented"
+            "Team-oriented",
         ],
         voice_name="en-US-GuyNeural",
         accent_color="#a855f7",  # Purple
-        avatar_url="/assets/images/marcus-portrait.png"
+        avatar_url="/assets/images/marcus-portrait.png",
     ),
 }
 
@@ -90,8 +85,7 @@ class AgentListResponse(BaseModel):
 async def list_agents():
     """List all available agents"""
     return AgentListResponse(
-        agents=list(AGENTS.values()),
-        active_agent=AgentId.ELENA  # Default
+        agents=list(AGENTS.values()), active_agent=AgentId.ELENA  # Default
     )
 
 
@@ -117,13 +111,14 @@ class SwitchAgentResponse(BaseModel):
 async def switch_agent(request: SwitchAgentRequest):
     """Switch the active agent for the current session"""
     if request.agent_id not in AGENTS:
-        raise HTTPException(status_code=404, detail=f"Agent {request.agent_id} not found")
-    
+        raise HTTPException(
+            status_code=404, detail=f"Agent {request.agent_id} not found"
+        )
+
     agent = AGENTS[request.agent_id]
-    
+
     return SwitchAgentResponse(
         success=True,
         active_agent=agent,
-        message=f"Switched to {agent.name}. How can I help you today?"
+        message=f"Switched to {agent.name}. How can I help you today?",
     )
-

@@ -43,14 +43,13 @@ async def readiness_check():
     checks = {
         "api": True,
         "database": False,  # TODO: Implement actual check
-        "zep": False,       # TODO: Implement actual check
+        "zep": False,  # TODO: Implement actual check
         "temporal": False,  # TODO: Implement actual check
     }
-    
+
     all_ready = all(checks.values())
-    
+
     return ReadinessResponse(
         status="ready" if all_ready else "degraded",
         checks=checks,
     )
-

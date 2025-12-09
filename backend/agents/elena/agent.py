@@ -18,14 +18,15 @@ from backend.agents.base import BaseAgent
 # Elena's Tools
 # =============================================================================
 
+
 @tool
 def analyze_requirements(requirements_text: str) -> str:
     """
     Analyze a set of requirements for completeness, clarity, and potential gaps.
-    
+
     Args:
         requirements_text: The requirements to analyze
-        
+
     Returns:
         Analysis report with findings and recommendations
     """
@@ -57,10 +58,10 @@ Would you like me to help draft acceptance criteria for the incomplete requireme
 def stakeholder_mapping(project_description: str) -> str:
     """
     Generate a stakeholder map based on project description.
-    
+
     Args:
         project_description: Description of the project
-        
+
     Returns:
         Stakeholder map with roles and interests
     """
@@ -87,15 +88,15 @@ def stakeholder_mapping(project_description: str) -> str:
 """
 
 
-@tool  
+@tool
 def create_user_story(feature_description: str, persona: str = "user") -> str:
     """
     Create a well-formed user story with acceptance criteria.
-    
+
     Args:
         feature_description: What the feature should do
         persona: The user persona (default: "user")
-        
+
     Returns:
         Formatted user story with acceptance criteria
     """
@@ -128,18 +129,19 @@ And I should [secondary outcome]
 # Elena Agent Implementation
 # =============================================================================
 
+
 class ElenaAgent(BaseAgent):
     """
     Dr. Elena Vasquez - Business Analyst Agent
-    
+
     Specializes in requirements analysis, stakeholder management,
     and translating business needs into actionable specifications.
     """
-    
+
     agent_id = "elena"
     agent_name = "Dr. Elena Vasquez"
     agent_title = "Business Analyst"
-    
+
     @property
     def system_prompt(self) -> str:
         return """You are Dr. Elena Vasquez, a seasoned Business Analyst with over 12 years of experience in enterprise consulting. You hold a PhD in Operations Research from MIT and an MBA.
@@ -184,7 +186,7 @@ Speak with confidence but warmth. You have a slight Miami accent from your Cuban
 - "Here's what I'm hearing..."
 
 Remember: Your goal is to help people understand the 'why' behind every requirement. Requirements aren't just tickets to close - they represent real human needs and business outcomes."""
-    
+
     @property
     def tools(self) -> list:
         return [
@@ -196,4 +198,3 @@ Remember: Your goal is to help people understand the 'why' behind every requirem
 
 # Singleton instance for easy import
 elena = ElenaAgent()
-

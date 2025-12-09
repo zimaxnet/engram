@@ -42,13 +42,13 @@ class MemorySearchResponse(BaseModel):
 async def search_memory(request: MemorySearchRequest):
     """
     Search the knowledge graph for relevant memories.
-    
+
     Uses Zep's hybrid retrieval (vector + graph) to find:
     - Relevant facts from the knowledge graph
     - Related episodic memories from past conversations
     """
     # TODO: Implement Zep integration
-    
+
     # Placeholder response
     return MemorySearchResponse(
         results=[
@@ -58,19 +58,19 @@ async def search_memory(request: MemorySearchRequest):
                 node_type="preference",
                 confidence=0.92,
                 created_at=datetime.utcnow(),
-                metadata={"source": "conversation-123"}
+                metadata={"source": "conversation-123"},
             ),
             MemoryNode(
-                id="node-2", 
+                id="node-2",
                 content="Project Alpha has a deadline of Q2 2025",
                 node_type="fact",
                 confidence=0.88,
                 created_at=datetime.utcnow(),
-                metadata={"source": "document-456"}
+                metadata={"source": "document-456"},
             ),
         ],
         total_count=2,
-        query_time_ms=45.2
+        query_time_ms=45.2,
     )
 
 
@@ -91,17 +91,16 @@ class EpisodeListResponse(BaseModel):
 
 @router.get("/episodes", response_model=EpisodeListResponse)
 async def list_episodes(
-    limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0)
+    limit: int = Query(20, ge=1, le=100), offset: int = Query(0, ge=0)
 ):
     """
     List conversation episodes from memory.
-    
+
     Episodes are discrete conversation sessions that have been
     processed and stored in the knowledge graph.
     """
     # TODO: Implement Zep episode retrieval
-    
+
     # Placeholder response
     return EpisodeListResponse(
         episodes=[
@@ -112,10 +111,10 @@ async def list_episodes(
                 agent_id="elena",
                 started_at=datetime.utcnow(),
                 ended_at=None,
-                topics=["requirements", "project-alpha", "stakeholders"]
+                topics=["requirements", "project-alpha", "stakeholders"],
             )
         ],
-        total_count=1
+        total_count=1,
     )
 
 
@@ -136,17 +135,14 @@ class AddFactResponse(BaseModel):
 async def add_fact(request: AddFactRequest):
     """
     Manually add a fact to the knowledge graph.
-    
+
     Facts added this way are marked as user-provided
     and given high confidence by default.
     """
     # TODO: Implement Zep fact ingestion
-    
-    import uuid
-    
-    return AddFactResponse(
-        success=True,
-        node_id=str(uuid.uuid4()),
-        message="Fact added to knowledge graph"
-    )
 
+    import uuid
+
+    return AddFactResponse(
+        success=True, node_id=str(uuid.uuid4()), message="Fact added to knowledge graph"
+    )

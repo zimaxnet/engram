@@ -16,7 +16,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.core import get_settings
-from backend.observability import configure_telemetry, configure_logging, TelemetryMiddleware
+from backend.observability import (
+    configure_telemetry,
+    configure_logging,
+    TelemetryMiddleware,
+)
 
 from .routers import agents, chat, health, memory, voice, workflows
 from .middleware.logging import RequestLoggingMiddleware
@@ -32,13 +36,13 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
     logger.info(f"Environment: {settings.environment}")
-    
+
     # Configure telemetry
     configure_telemetry(app)
-    
+
     # Startup
     yield
-    
+
     # Shutdown
     logger.info("Shutting down Engram API")
 
@@ -46,7 +50,7 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     """Application factory"""
     settings = get_settings()
-    
+
     app = FastAPI(
         title=settings.app_name,
         description="Context Engineering Platform - Cognition-as-a-Service",
@@ -55,7 +59,7 @@ def create_app() -> FastAPI:
         redoc_url="/redoc" if settings.debug else None,
         lifespan=lifespan,
     )
-    
+
     # CORS middleware
     app.add_middleware(
         CORSMiddleware,
@@ -64,11 +68,11 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    
+
     # Custom middleware
     app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(TelemetryMiddleware)
-    
+
     # Include routers
     app.include_router(health.router, tags=["Health"])
     app.include_router(agents.router, prefix="/api/v1/agents", tags=["Agents"])
@@ -76,7 +80,7 @@ def create_app() -> FastAPI:
     app.include_router(memory.router, prefix="/api/v1/memory", tags=["Memory"])
     app.include_router(workflows.router, prefix="/api/v1/workflows", tags=["Workflows"])
     app.include_router(voice.router, prefix="/api/v1/voice", tags=["Voice"])
-    
+
     return app
 
 
@@ -85,5 +89,5 @@ app = create_app()
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("backend.api.main:app", host="0.0.0.0", port=8080, reload=True)
 
+    uvicorn.run("backend.api.main:app", host="0.0.0.0", port=8080, reload=True)

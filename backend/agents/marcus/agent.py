@@ -18,27 +18,25 @@ from backend.agents.base import BaseAgent
 # Marcus's Tools
 # =============================================================================
 
+
 @tool
 def create_project_timeline(
-    project_name: str,
-    start_date: str,
-    end_date: str,
-    milestones: str
+    project_name: str, start_date: str, end_date: str, milestones: str
 ) -> str:
     """
     Create a project timeline with milestones and risk buffers.
-    
+
     Args:
         project_name: Name of the project
         start_date: Project start date
         end_date: Target end date
         milestones: Comma-separated list of key milestones
-        
+
     Returns:
         Project timeline with phases and recommendations
     """
     milestone_list = [m.strip() for m in milestones.split(",")]
-    
+
     return f"""
 ## Project Timeline: {project_name}
 
@@ -76,10 +74,10 @@ Want me to help you identify dependencies or create a RACI matrix?
 def assess_project_risks(project_description: str) -> str:
     """
     Assess project risks and provide mitigation strategies.
-    
+
     Args:
         project_description: Description of the project
-        
+
     Returns:
         Risk assessment with mitigation strategies
     """
@@ -125,25 +123,22 @@ def assess_project_risks(project_description: str) -> str:
 
 @tool
 def create_status_report(
-    project_name: str,
-    progress_summary: str,
-    blockers: str,
-    next_steps: str
+    project_name: str, progress_summary: str, blockers: str, next_steps: str
 ) -> str:
     """
     Generate a project status report.
-    
+
     Args:
         project_name: Name of the project
         progress_summary: Summary of progress this period
         blockers: Current blockers (comma-separated)
         next_steps: Planned next steps
-        
+
     Returns:
         Formatted status report
     """
     blocker_list = [b.strip() for b in blockers.split(",")] if blockers else ["None"]
-    
+
     return f"""
 ## Status Report: {project_name}
 **Report Date**: [Current Date]
@@ -185,17 +180,17 @@ def create_status_report(
 def estimate_effort(task_description: str, complexity: str = "medium") -> str:
     """
     Provide effort estimation for a task or feature.
-    
+
     Args:
         task_description: Description of the task
         complexity: low, medium, or high
-        
+
     Returns:
         Effort estimate with breakdown
     """
     multipliers = {"low": 1, "medium": 2, "high": 3}
     base_days = multipliers.get(complexity.lower(), 2)
-    
+
     return f"""
 ## Effort Estimation
 
@@ -237,18 +232,19 @@ This is a rough estimate. I'd recommend:
 # Marcus Agent Implementation
 # =============================================================================
 
+
 class MarcusAgent(BaseAgent):
     """
     Marcus Chen - Project Manager Agent
-    
+
     Specializes in program management, Agile transformation,
     risk mitigation, and helping teams deliver on time.
     """
-    
+
     agent_id = "marcus"
     agent_name = "Marcus Chen"
     agent_title = "Project Manager"
-    
+
     @property
     def system_prompt(self) -> str:
         return """You are Marcus Chen, an experienced Project Manager with over 15 years in tech, including 10 years at Microsoft. You hold PMP, CSM, and SAFe SPC certifications.
@@ -300,7 +296,7 @@ Speak with confidence and energy. You have a Pacific Northwest professional tone
 Most project failures aren't technical - they're failures of communication, expectation management, and early risk detection. Your job is to help teams see around corners and avoid the pitfalls you've witnessed countless times. A good PM makes the team better, not just busier.
 
 Remember: You're here to help teams succeed, not to create process for its own sake. Every meeting, every report, every status update should serve a clear purpose."""
-    
+
     @property
     def tools(self) -> list:
         return [
@@ -313,4 +309,3 @@ Remember: You're here to help teams succeed, not to create process for its own s
 
 # Singleton instance for easy import
 marcus = MarcusAgent()
-

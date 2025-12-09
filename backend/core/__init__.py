@@ -31,7 +31,7 @@ __all__ = [
     # Context
     "EnterpriseContext",
     "SecurityContext",
-    "EpisodicState", 
+    "EpisodicState",
     "SemanticKnowledge",
     "OperationalState",
     "Role",
@@ -44,4 +44,3 @@ __all__ = [
     "ToolState",
     "create_context_from_token",
 ]
-
