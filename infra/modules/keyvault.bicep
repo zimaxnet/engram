@@ -8,7 +8,7 @@ param keyVaultName string
 param tenantId string = subscription().tenantId
 
 @description('Object ID of the user or service principal that will have access to the Key Vault.')
-param adminObjectId string
+// param adminObjectId string
 
 @description('Enable soft delete for the Key Vault.')
 param enableSoftDelete bool = true

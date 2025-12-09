@@ -17,7 +17,7 @@ param deploymentName string = 'gpt-4o'
 param modelName string = 'gpt-4o'
 
 @description('Model version.')
-param modelVersion string = '0613'
+param modelVersion string = '2024-05-13'
 
 @description('Tags to apply to all resources.')
 param tags object = {
