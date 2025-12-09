@@ -12,8 +12,6 @@ Features:
 - Direct integration with GPT models
 """
 
-import asyncio
-import base64
 import logging
 import queue
 from typing import Optional, Union

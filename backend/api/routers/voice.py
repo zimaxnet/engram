@@ -463,7 +463,7 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                 "type": "error",
                 "message": str(e),
             })
-        except:
+        except Exception:
             pass
         await voicelive_service.close_session(session_id)
 

@@ -1,5 +1,4 @@
 import pytest
-from datetime import timedelta
 from temporalio import activity
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
@@ -12,12 +11,6 @@ from backend.workflows.activities import (
     MemoryPersistOutput,
     ReasoningInput,
     ReasoningOutput,
-    initialize_context_activity,
-    enrich_memory_activity,
-    agent_reasoning_activity,
-    validate_response_activity,
-    persist_memory_activity,
-    send_notification_activity,
 )
 from backend.workflows.agent_workflow import (
     AgentWorkflow,
@@ -25,7 +18,6 @@ from backend.workflows.agent_workflow import (
     ConversationWorkflow,
     ApprovalWorkflow,
     ApprovalSignal,
-    UserInputSignal,
 )
 
 # =============================================================================

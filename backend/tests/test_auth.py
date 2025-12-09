@@ -1,6 +1,5 @@
-import pytest
 from backend.api.middleware.auth import EntraIDAuth
-from backend.core import Role, SecurityContext
+from backend.core import Role
 
 class TestEntraIDAuth:
     def test_role_mapping(self):
