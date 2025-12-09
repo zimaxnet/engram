@@ -261,7 +261,6 @@ module dnsModule 'modules/dns.bicep' = {
   name: 'dns'
   scope: resourceGroup('dns-rg')
   params: {
-    dnsResourceGroup: 'dns-rg'
     dnsZoneName: 'engram.work'
     backendFqdn: replace(backendModule.outputs.backendUrl, 'https://', '')
     temporalUIFqdn: replace(temporalModule.outputs.temporalUIFqdn, 'https://', '')
