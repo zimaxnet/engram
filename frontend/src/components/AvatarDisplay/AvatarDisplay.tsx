@@ -161,7 +161,7 @@ export default function AvatarDisplay({
         style={{
           '--accent-color': agent.accentColor,
           ...getExpressionStyle(),
-        } as React.CSSProperties}
+        } as React.CSSProperties & Record<string, string>}
       >
         {/* Glow rings when speaking */}
         {isSpeaking && (
@@ -186,7 +186,7 @@ export default function AvatarDisplay({
             style={{
               '--jaw-open': mouthShape.jawOpen,
               '--mouth-width': mouthShape.mouthWidth,
-            } as React.CSSProperties}
+            } as React.CSSProperties & Record<string, string | number>}
           />
         )}
         

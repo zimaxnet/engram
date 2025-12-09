@@ -3,7 +3,6 @@ Basic health check tests
 """
 
 import os
-import sys
 
 # Set test environment variables BEFORE any backend imports
 os.environ.setdefault("ENVIRONMENT", "test")
