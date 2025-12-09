@@ -45,4 +45,3 @@ def test_context_to_llm_context():
     assert isinstance(llm_context, str)
     assert "test-user" in llm_context
     assert "Session Context" in llm_context
-

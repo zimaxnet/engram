@@ -50,4 +50,3 @@ def test_readiness_endpoint(client):
     assert "status" in data
     assert "checks" in data
     assert isinstance(data["checks"], dict)
-
