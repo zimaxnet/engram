@@ -235,7 +235,6 @@ module workerModule 'modules/worker-aca.bicep' = {
     registryUsername: registryUsername
     registryPassword: registryPassword
     keyVaultUri: keyVaultModule.outputs.keyVaultUri
-    keyVaultName: keyVaultModule.outputs.keyVaultName
     tags: tags
   }
 }
