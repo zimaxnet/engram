@@ -68,7 +68,7 @@ class VoiceLiveSession:
         """Connect to VoiceLive and set up session"""
         try:
             logger.info(f"Connecting to VoiceLive for session {self.session_id}")
-            
+
             # Use provided connection manager or create new one
             if connection_manager:
                 self._connection_manager = connection_manager
@@ -79,16 +79,16 @@ class VoiceLiveSession:
                     credential=self.credential,
                     model=self.model,
                 )
-            
+
             # Enter the context manager
             self.connection = await self._connection_manager.__aenter__()
 
             # Configure session
             await self._setup_session()
-            
+
             self.is_active = True
             logger.info(f"VoiceLive session {self.session_id} connected")
-            
+
         except Exception as e:
             logger.error(f"Failed to connect VoiceLive session {self.session_id}: {e}")
             self.is_active = False
@@ -98,7 +98,11 @@ class VoiceLiveSession:
         """Configure the VoiceLive session"""
         # Determine voice configuration
         voice_config: Union[AzureStandardVoice, str]
-        if self.voice.startswith("en-US-") or self.voice.startswith("en-CA-") or "-" in self.voice:
+        if (
+            self.voice.startswith("en-US-")
+            or self.voice.startswith("en-CA-")
+            or "-" in self.voice
+        ):
             # Azure voice
             voice_config = AzureStandardVoice(name=self.voice)
         else:
@@ -133,7 +137,7 @@ class VoiceLiveSession:
         """Send audio data to VoiceLive"""
         if not self.connection or not self.is_active:
             raise RuntimeError("VoiceLive session not connected")
-        
+
         await self.connection.input_audio_buffer.append(audio=audio_base64)
 
     async def process_events(self, on_audio: callable, on_transcription: callable):
@@ -203,17 +207,21 @@ class VoiceLiveService:
     def __init__(self):
         self.settings = get_settings()
         self._sessions: dict[str, VoiceLiveSession] = {}
-        self._connection_managers: dict[str, any] = {}  # Store context managers for cleanup
+        self._connection_managers: dict[str, any] = (
+            {}
+        )  # Store context managers for cleanup
         self._endpoint: Optional[str] = None
-        self._credential: Optional[Union[AzureKeyCredential, AsyncTokenCredential]] = None
+        self._credential: Optional[Union[AzureKeyCredential, AsyncTokenCredential]] = (
+            None
+        )
 
     @property
     def endpoint(self) -> str:
         """Get VoiceLive endpoint
-        
+
         VoiceLive uses the base endpoint (not project path) as shown in Microsoft's reference implementation.
         The SDK handles the /voice-live/realtime path internally.
-        
+
         Priority:
         1. AZURE_VOICELIVE_ENDPOINT (if set)
         2. AZURE_AI_ENDPOINT (base endpoint)
@@ -222,32 +230,32 @@ class VoiceLiveService:
         if not self._endpoint:
             # Priority 1: Use VoiceLive-specific endpoint if set
             if self.settings.azure_voicelive_endpoint:
-                base = self.settings.azure_voicelive_endpoint.rstrip('/')
+                base = self.settings.azure_voicelive_endpoint.rstrip("/")
                 self._endpoint = base
                 logger.debug(f"Using VoiceLive-specific endpoint: {self._endpoint}")
             # Priority 2: Use unified AI Services base endpoint
             elif self.settings.azure_ai_endpoint:
                 # VoiceLive needs base endpoint, not project path
                 # The SDK will construct the full path: {base}/voice-live/realtime
-                base = self.settings.azure_ai_endpoint.rstrip('/')
+                base = self.settings.azure_ai_endpoint.rstrip("/")
                 self._endpoint = base
                 logger.debug(f"Using base VoiceLive endpoint: {self._endpoint}")
             else:
                 # Fallback to OpenAI endpoint format
                 self._endpoint = self.settings.azure_openai_endpoint or ""
-        
+
         if not self._endpoint:
             raise ValueError(
                 "VoiceLive endpoint not configured. "
                 "Set AZURE_VOICELIVE_ENDPOINT, AZURE_AI_ENDPOINT, or AZURE_OPENAI_ENDPOINT"
             )
-        
+
         return self._endpoint
 
     @property
     def credential(self) -> Union[AzureKeyCredential, AsyncTokenCredential]:
         """Get VoiceLive credential
-        
+
         Priority:
         1. AZURE_VOICELIVE_API_KEY (VoiceLive-specific key)
         2. AZURE_OPENAI_KEY (fallback)
@@ -256,7 +264,9 @@ class VoiceLiveService:
         if not self._credential:
             # Priority 1: Use VoiceLive-specific API key if set
             if self.settings.azure_voicelive_api_key:
-                self._credential = AzureKeyCredential(self.settings.azure_voicelive_api_key)
+                self._credential = AzureKeyCredential(
+                    self.settings.azure_voicelive_api_key
+                )
                 logger.debug("Using VoiceLive-specific API key")
             # Priority 2: Fallback to OpenAI key
             elif self.settings.azure_openai_key:
@@ -266,12 +276,12 @@ class VoiceLiveService:
                 # Priority 3: Use Azure identity if no key provided
                 self._credential = DefaultAzureCredential()
                 logger.debug("Using Azure DefaultAzureCredential")
-        
+
         return self._credential
 
     def get_elena_instructions(self) -> str:
         """Get Elena's system instructions for VoiceLive
-        
+
         Based on Microsoft's VoiceLive reference implementation pattern.
         Instructions should be natural and conversational for voice interaction.
         """
@@ -342,7 +352,10 @@ Remember: Your goal is to help people move from ideas to execution. Projects suc
         # Get voice configuration
         if not voice:
             if agent_id == "elena":
-                voice = self.settings.azure_voicelive_voice or "en-US-Ava:DragonHDLatestNeural"
+                voice = (
+                    self.settings.azure_voicelive_voice
+                    or "en-US-Ava:DragonHDLatestNeural"
+                )
             elif agent_id == "marcus":
                 voice = self.settings.marcus_voicelive_voice or "en-US-GuyNeural"
             else:
@@ -362,7 +375,7 @@ Remember: Your goal is to help people move from ideas to execution. Projects suc
             credential=self.credential,
             model=self.settings.azure_voicelive_model or "gpt-realtime",
         )
-        
+
         # Store context manager for cleanup
         self._connection_managers[session_id] = connection_manager
 
@@ -392,7 +405,7 @@ Remember: Your goal is to help people move from ideas to execution. Projects suc
             session = self._sessions[session_id]
             await session.disconnect()
             del self._sessions[session_id]
-        
+
         # Clean up connection manager
         if session_id in self._connection_managers:
             connection_manager = self._connection_managers[session_id]
@@ -401,10 +414,9 @@ Remember: Your goal is to help people move from ideas to execution. Projects suc
             except Exception as e:
                 logger.warning(f"Error closing VoiceLive connection: {e}")
             del self._connection_managers[session_id]
-        
+
         logger.info(f"Closed VoiceLive session {session_id}")
 
 
 # Singleton instance
 voicelive_service = VoiceLiveService()
-

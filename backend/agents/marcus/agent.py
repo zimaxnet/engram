@@ -369,7 +369,10 @@ Remember: You're here to help teams succeed, not to create process for its own s
         if "risk" in text or "risks" in text:
             return "assess_project_risks", {"project_description": content}
         if "estimate" in text or "effort" in text or "size" in text:
-            return "estimate_effort", {"task_description": content, "complexity": "medium"}
+            return "estimate_effort", {
+                "task_description": content,
+                "complexity": "medium",
+            }
         return None, {}
 
     async def _maybe_use_tool(self, state: AgentState) -> AgentState:
@@ -382,17 +385,25 @@ Remember: You're here to help teams succeed, not to create process for its own s
         tool_registry = {t.name: t for t in self.tools}
         tool = tool_registry.get(tool_name)
         if not tool:
-            state["final_response"] = state.get("final_response") or "I couldn't run the requested analysis."
+            state["final_response"] = (
+                state.get("final_response") or "I couldn't run the requested analysis."
+            )
             return state
 
         try:
             result = tool.invoke(tool_args)
             state["tool_results"].append({"tool": tool_name, "result": result})
             state["messages"].append(
-                type("ToolMessage", (), {"type": "system", "content": f"[Tool:{tool_name}] {result}"})()
+                type(
+                    "ToolMessage",
+                    (),
+                    {"type": "system", "content": f"[Tool:{tool_name}] {result}"},
+                )()
             )
         except Exception as e:
-            state["final_response"] = f"I tried to run {tool_name} but hit an error: {e}"
+            state["final_response"] = (
+                f"I tried to run {tool_name} but hit an error: {e}"
+            )
         return state
 
     async def _respond_with_context(self, state: AgentState) -> AgentState:

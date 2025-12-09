@@ -2,7 +2,10 @@ import pytest
 from temporalio import activity
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
-from temporalio.worker.workflow_sandbox import SandboxedWorkflowRunner, SandboxRestrictions
+from temporalio.worker.workflow_sandbox import (
+    SandboxedWorkflowRunner,
+    SandboxRestrictions,
+)
 
 from backend.workflows.activities import (
     MemoryEnrichInput,
@@ -24,11 +27,13 @@ from backend.workflows.agent_workflow import (
 # Mock Activities
 # =============================================================================
 
+
 @activity.defn(name="initialize_context_activity")
 async def mock_initialize_context(
     user_id: str, tenant_id: str, session_id: str, agent_id: str
 ) -> str:
     return '{"mock": "context"}'
+
 
 @activity.defn(name="enrich_memory_activity")
 async def mock_enrich_memory(input: MemoryEnrichInput) -> MemoryEnrichOutput:
@@ -36,8 +41,9 @@ async def mock_enrich_memory(input: MemoryEnrichInput) -> MemoryEnrichOutput:
         context_json=input.context_json,
         facts_retrieved=1,
         entities_retrieved=1,
-        success=True
+        success=True,
     )
+
 
 @activity.defn(name="agent_reasoning_activity")
 async def mock_agent_reasoning(input: ReasoningInput) -> ReasoningOutput:
@@ -45,20 +51,26 @@ async def mock_agent_reasoning(input: ReasoningInput) -> ReasoningOutput:
         response=f"Mock response to: {input.user_message}",
         context_json=input.context_json,
         tokens_used=100,
-        success=True
+        success=True,
     )
+
 
 @activity.defn(name="validate_response_activity")
 async def mock_validate_response(response: str, context_json: str) -> tuple[bool, str]:
     return True, ""
 
+
 @activity.defn(name="persist_memory_activity")
 async def mock_persist_memory(input: MemoryPersistInput) -> MemoryPersistOutput:
     return MemoryPersistOutput(success=True)
 
+
 @activity.defn(name="send_notification_activity")
-async def mock_send_notification(user_id: str, message: str, notification_type: str = "info") -> bool:
+async def mock_send_notification(
+    user_id: str, message: str, notification_type: str = "info"
+) -> bool:
     return True
+
 
 # =============================================================================
 # Tests
@@ -70,6 +82,7 @@ runner = SandboxedWorkflowRunner(
         "backend", "pydantic"
     )
 )
+
 
 @pytest.mark.asyncio
 async def test_agent_workflow_happy_path():
@@ -84,9 +97,9 @@ async def test_agent_workflow_happy_path():
                 mock_enrich_memory,
                 mock_agent_reasoning,
                 mock_validate_response,
-                mock_persist_memory
+                mock_persist_memory,
             ],
-            workflow_runner=runner
+            workflow_runner=runner,
         ):
             result = await env.client.execute_workflow(
                 AgentWorkflow.run,
@@ -95,7 +108,7 @@ async def test_agent_workflow_happy_path():
                     tenant_id="test-tenant",
                     session_id="test-session",
                     agent_id="elena",
-                    user_message="Hello"
+                    user_message="Hello",
                 ),
                 id="test-agent-workflow",
                 task_queue="test-queue",
@@ -104,6 +117,7 @@ async def test_agent_workflow_happy_path():
             assert result.success is True
             assert result.response == "Mock response to: Hello"
             assert result.tokens_used == 100
+
 
 @pytest.mark.asyncio
 async def test_conversation_workflow():
@@ -118,9 +132,9 @@ async def test_conversation_workflow():
                 mock_enrich_memory,
                 mock_agent_reasoning,
                 mock_validate_response,
-                mock_persist_memory
+                mock_persist_memory,
             ],
-            workflow_runner=runner
+            workflow_runner=runner,
         ):
             # Start conversation
             handle = await env.client.start_workflow(
@@ -132,10 +146,10 @@ async def test_conversation_workflow():
 
             # Send first message
             await handle.signal(ConversationWorkflow.send_message, "First message")
-            
+
             # Wait a bit for processing (virtual time)
-            await env.sleep(2) 
-            
+            await env.sleep(2)
+
             # Send second message
             await handle.signal(ConversationWorkflow.send_message, "Second message")
             await env.sleep(2)
@@ -149,11 +163,12 @@ async def test_conversation_workflow():
 
             # End conversation
             await handle.signal(ConversationWorkflow.end_conversation)
-            
+
             # Wait for result
             result = await handle.result()
             assert result["turns"] == 2
             assert result["total_tokens"] == 200
+
 
 @pytest.mark.asyncio
 async def test_approval_workflow():
@@ -164,7 +179,7 @@ async def test_approval_workflow():
             task_queue="test-queue",
             workflows=[ApprovalWorkflow],
             activities=[mock_send_notification],
-            workflow_runner=runner
+            workflow_runner=runner,
         ):
             handle = await env.client.start_workflow(
                 ApprovalWorkflow.run,
@@ -179,8 +194,10 @@ async def test_approval_workflow():
 
             # Approve
             await handle.signal(
-                ApprovalWorkflow.approve, 
-                ApprovalSignal(approved=True, feedback="Looks good", approver_id="admin-1")
+                ApprovalWorkflow.approve,
+                ApprovalSignal(
+                    approved=True, feedback="Looks good", approver_id="admin-1"
+                ),
             )
 
             # Get result

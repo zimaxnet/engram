@@ -242,7 +242,10 @@ Remember: Your goal is to help people understand the 'why' behind every requirem
     def _select_tool(self, content: str) -> tuple[str | None, dict]:
         text = content.lower()
         if "acceptance" in text or "user story" in text or "story" in text:
-            return "create_user_story", {"feature_description": content, "persona": "user"}
+            return "create_user_story", {
+                "feature_description": content,
+                "persona": "user",
+            }
         if "stakeholder" in text:
             return "stakeholder_mapping", {"project_description": content}
         if "requirement" in text or "requirements" in text:
@@ -259,7 +262,9 @@ Remember: Your goal is to help people understand the 'why' behind every requirem
         tool_registry = {t.name: t for t in self.tools}
         tool = tool_registry.get(tool_name)
         if not tool:
-            state["final_response"] = state.get("final_response") or "I couldn't run the requested analysis."
+            state["final_response"] = (
+                state.get("final_response") or "I couldn't run the requested analysis."
+            )
             return state
 
         try:
@@ -268,10 +273,16 @@ Remember: Your goal is to help people understand the 'why' behind every requirem
             state["messages"].append(
                 # type: ignore
                 # LangChain BaseMessage expects role/content; we attach as a system note
-                type("ToolMessage", (), {"type": "system", "content": f"[Tool:{tool_name}] {result}"})()
+                type(
+                    "ToolMessage",
+                    (),
+                    {"type": "system", "content": f"[Tool:{tool_name}] {result}"},
+                )()
             )
         except Exception as e:
-            state["final_response"] = f"I tried to run {tool_name} but hit an error: {e}"
+            state["final_response"] = (
+                f"I tried to run {tool_name} but hit an error: {e}"
+            )
         return state
 
     async def _respond_with_context(self, state: AgentState) -> AgentState:

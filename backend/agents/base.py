@@ -51,16 +51,16 @@ class BaseAgent(ABC):
         if self._llm is None:
             # Use effective endpoint (supports both traditional and unified formats)
             endpoint = self.settings.effective_openai_endpoint
-            
+
             if not endpoint:
                 raise ValueError(
                     "Azure OpenAI endpoint not configured. "
                     "Set AZURE_OPENAI_ENDPOINT or AZURE_AI_ENDPOINT + AZURE_AI_PROJECT_NAME"
                 )
-            
+
             if not self.settings.azure_openai_key:
                 raise ValueError("Azure OpenAI API key not configured")
-            
+
             # For unified Azure AI Services, we may need to adjust the endpoint format
             # LangChain's AzureChatOpenAI expects the base endpoint
             # Unified format: https://{resource}.services.ai.azure.com/api/projects/{project}

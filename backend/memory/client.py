@@ -137,7 +137,11 @@ class ZepMemoryClient:
             results = []
             for session in resp.sessions or []:
                 for msg in session.messages or []:
-                    score_val = msg.score if hasattr(msg, "score") and msg.score is not None else 0.5
+                    score_val = (
+                        msg.score
+                        if hasattr(msg, "score") and msg.score is not None
+                        else 0.5
+                    )
                     results.append(
                         {
                             "content": msg.content,
@@ -147,7 +151,9 @@ class ZepMemoryClient:
                     )
             return results
         except Exception as e:
-            logger.warning(f"Memory search failed, falling back to recent messages: {e}")
+            logger.warning(
+                f"Memory search failed, falling back to recent messages: {e}"
+            )
             try:
                 resp = await self.client.memory.get_session_messages(
                     session_id=session_id, limit=limit

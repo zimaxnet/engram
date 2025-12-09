@@ -65,27 +65,33 @@ class Settings(BaseSettings):
     azure_openai_api_version: str = Field(
         "2024-02-15-preview", alias="AZURE_OPENAI_API_VERSION"
     )
-    
+
     # Unified Azure AI Services (project-based endpoint)
     azure_ai_endpoint: Optional[str] = Field(None, alias="AZURE_AI_ENDPOINT")
     azure_ai_project_name: Optional[str] = Field(None, alias="AZURE_AI_PROJECT_NAME")
-    
+
     # VoiceLive specific endpoint (can override azure_ai_endpoint)
-    azure_voicelive_endpoint: Optional[str] = Field(None, alias="AZURE_VOICELIVE_ENDPOINT")
-    azure_voicelive_project_name: Optional[str] = Field(None, alias="AZURE_VOICELIVE_PROJECT_NAME")
-    azure_voicelive_api_key: Optional[str] = Field(None, alias="AZURE_VOICELIVE_API_KEY")
-    
+    azure_voicelive_endpoint: Optional[str] = Field(
+        None, alias="AZURE_VOICELIVE_ENDPOINT"
+    )
+    azure_voicelive_project_name: Optional[str] = Field(
+        None, alias="AZURE_VOICELIVE_PROJECT_NAME"
+    )
+    azure_voicelive_api_key: Optional[str] = Field(
+        None, alias="AZURE_VOICELIVE_API_KEY"
+    )
+
     @property
     def effective_openai_endpoint(self) -> Optional[str]:
         """
         Get the effective OpenAI endpoint, supporting both traditional and unified formats.
-        
+
         If AZURE_AI_ENDPOINT and AZURE_AI_PROJECT_NAME are set, constructs unified endpoint.
         Otherwise, falls back to AZURE_OPENAI_ENDPOINT.
         """
         if self.azure_ai_endpoint and self.azure_ai_project_name:
             # Unified Azure AI Services format
-            base = self.azure_ai_endpoint.rstrip('/')
+            base = self.azure_ai_endpoint.rstrip("/")
             return f"{base}/api/projects/{self.azure_ai_project_name}"
         return self.azure_openai_endpoint
 
@@ -99,7 +105,7 @@ class Settings(BaseSettings):
     elena_voice_name: str = Field("en-US-JennyNeural", alias="ELENA_VOICE_NAME")
     # Marcus voice configuration
     marcus_voice_name: str = Field("en-US-GuyNeural", alias="MARCUS_VOICE_NAME")
-    
+
     # ==========================================================================
     # Azure VoiceLive (Real-time Voice)
     # ==========================================================================
