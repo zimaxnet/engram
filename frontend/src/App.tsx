@@ -3,6 +3,7 @@ import './App.css'
 import { TreeNav } from './components/TreeNav/TreeNav'
 import { ChatPanel } from './components/ChatPanel/ChatPanel'
 import { VisualPanel } from './components/VisualPanel/VisualPanel'
+import { useKeepAlive } from './hooks/useKeepAlive'
 
 export type AgentId = 'elena' | 'marcus'
 
@@ -32,6 +33,9 @@ const AGENTS: Record<AgentId, Agent> = {
 }
 
 function App() {
+  // Keep backend containers warm while user is active
+  useKeepAlive()
+
   const [activeAgent, setActiveAgent] = useState<AgentId>('elena')
   const [selectedModel, setSelectedModel] = useState('gpt-4o')
   const [sessionMetrics, setSessionMetrics] = useState({

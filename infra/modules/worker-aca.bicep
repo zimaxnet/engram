@@ -171,6 +171,16 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
       scale: {
         minReplicas: 0
         maxReplicas: 5
+        rules: [
+          {
+            name: 'http-scale'
+            http: {
+              metadata: {
+                concurrentRequests: '5'
+              }
+            }
+          }
+        ]
       }
     }
   }
