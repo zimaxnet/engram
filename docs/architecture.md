@@ -9,7 +9,7 @@ title: Architecture
 
 The Engram platform implements a **Brain + Spine** architecture pattern, separating cognitive reasoning (Brain) from durable execution (Spine), with a persistent memory layer providing long-term knowledge storage.
 
-![Engram Platform Architecture](assets/images/engram-platform-architecture.png)
+![Engram Platform Architecture](assets/images/engram-platform-architecture.svg)
 
 ## Core Principles
 
@@ -39,7 +39,7 @@ Traditional prompt engineering focuses on crafting individual prompts. **Context
 
 Every interaction in Engram flows through a structured context object:
 
-![4-Layer Context Schema](assets/images/context-schema.png)
+![4-Layer Context Schema](assets/images/context-schema.svg)
 
 ### Layer 1: Security Context
 
@@ -220,7 +220,7 @@ Response to User
 
 ### Voice Interaction Flow
 
-![Voice Interaction Flow](assets/images/voice-interaction-flow.png)
+![Voice Interaction Flow](assets/images/voice-interaction-flow.svg)
 
 1. **Capture**: Browser captures audio via WebRTC
 2. **Transcribe**: Azure Speech STT converts to text
