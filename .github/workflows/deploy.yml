@@ -68,6 +68,8 @@ jobs:
             azureAiProjectName=${{ secrets.AZURE_AI_PROJECT_NAME || '' }}
             backendImage=ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
             workerImage=ghcr.io/${{ github.repository }}/worker:${{ github.sha }}
+            registryUsername=${{ github.actor }}
+            registryPassword=${{ secrets.GITHUB_TOKEN }}
           deploymentName: engram-infra-${{ github.sha }}
           deploymentOutputs: outputs
           failOnStdErr: false

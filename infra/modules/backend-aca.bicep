@@ -40,6 +40,13 @@ param azureAiEndpoint string = ''
 @description('Azure AI Services project name.')
 param azureAiProjectName string = ''
 
+@description('Registry username.')
+param registryUsername string
+
+@description('Registry password.')
+@secure()
+param registryPassword string
+
 @description('Tags to apply to all resources.')
 param tags object = {
   Project: 'Engram'
@@ -75,6 +82,17 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
         {
           name: 'azure-speech-key'
           value: speechKey
+        }
+        {
+          name: 'registry-password'
+          value: registryPassword
+        }
+      ]
+      registries: [
+        {
+          server: 'ghcr.io'
+          username: registryUsername
+          passwordSecretRef: 'registry-password'
         }
       ]
     }
