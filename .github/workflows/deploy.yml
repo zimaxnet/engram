@@ -9,6 +9,7 @@ on:
     inputs:
       environment:
         description: "Deployment environment"
+        failOnStdErr: false
         required: true
         default: "staging"
         type: choice

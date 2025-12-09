@@ -8,8 +8,7 @@ param envName string = 'engram-env'
 @secure()
 param postgresPassword string
 
-@description('Object ID of the admin user/service principal.')
-param adminObjectId string
+// param adminObjectId string
 
 @description('Container image for backend API.')
 param backendImage string = 'ghcr.io/zimaxnet/engram/backend:latest'

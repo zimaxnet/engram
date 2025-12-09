@@ -4,8 +4,7 @@ param location string = resourceGroup().location
 @description('Name of the SWA.')
 param swaName string = 'engram-web'
 
-@description('The custom domain name.')
-param customDomainName string = 'engram.work'
+// param customDomainName string = 'engram.work'
 
 resource swa 'Microsoft.Web/staticSites@2022-03-01' = {
   name: swaName
