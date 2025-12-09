@@ -15,7 +15,7 @@ const KEEP_ALIVE_INTERVAL = 5 * 60 * 1000 // 5 minutes
 const ACTIVITY_TIMEOUT = 30 * 60 * 1000 // 30 minutes
 
 export function useKeepAlive() {
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const lastActivityRef = useRef<number>(Date.now())
   const isActiveRef = useRef<boolean>(true)
 
