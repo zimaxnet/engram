@@ -52,7 +52,7 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
       containers: [
         {
           name: 'zep'
-          image: 'docker.io/getzep/zep:latest'
+          image: 'ghcr.io/getzep/zep:latest'
           env: [
             {
               name: 'ZEP_POSTGRES_DSN'

@@ -126,7 +126,7 @@ module openAiModule 'modules/openai.bicep' = {
   name: 'openAi'
   params: {
     location: location
-    openAiName: '${envName}-openai'
+    openAiName: '${envName}-openai-v2'
     keyVaultName: keyVaultModule.outputs.keyVaultName
     tags: tags
   }
@@ -139,7 +139,7 @@ module speechModule 'modules/speech.bicep' = {
   name: 'speech'
   params: {
     location: location
-    speechName: '${envName}-speech'
+    speechName: '${envName}-speech-v2'
     keyVaultName: keyVaultModule.outputs.keyVaultName
     tags: tags
   }
