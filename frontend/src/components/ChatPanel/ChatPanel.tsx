@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import type { Agent } from '../../App'
+import { sendChatMessage, type ApiError } from '../../services/api'
 import './ChatPanel.css'
 
 interface ChatPanelProps {
@@ -42,11 +43,17 @@ export function ChatPanel({ agent, onMetricsUpdate }: ChatPanelProps) {
   // Component remounts when agent changes (via key prop in App.tsx)
   // So we can initialize state directly
   const initialMessage = useMemo(() => createWelcomeMessage(agent), [agent])
-  
+
   const [messages, setMessages] = useState<Message[]>([initialMessage])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Initialize sessionId once
+  const [sessionId] = useState<string>(() =>
+    `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  )
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -57,7 +64,7 @@ export function ChatPanel({ agent, onMetricsUpdate }: ChatPanelProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim()) return
+    if (!input.trim() || isTyping) return
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -66,39 +73,55 @@ export function ChatPanel({ agent, onMetricsUpdate }: ChatPanelProps) {
       timestamp: new Date()
     }
 
+    const userInput = input.trim()
     setMessages(prev => [...prev, userMessage])
     setInput('')
     setIsTyping(true)
+    setError(null)
 
-    // Simulate API call
-    setTimeout(() => {
-      const responseContent = agent.id === 'elena'
-        ? `I understand your question about "${input.substring(0, 30)}...". Let me analyze this from a requirements perspective. Could you tell me more about the stakeholders involved and the business outcomes you're hoping to achieve?`
-        : `Thanks for bringing this up. From a project management standpoint, I'd want to understand: What's your timeline? What resources do you have available? And what does success look like for this initiative?`
+    try {
+      // Call backend API
+      const response = await sendChatMessage(userInput, agent.id, sessionId)
 
       const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: response.message_id,
         role: 'assistant',
-        content: responseContent,
-        agentId: agent.id,
-        agentName: agent.name,
-        timestamp: new Date(),
-        tokensUsed: Math.floor(Math.random() * 200) + 100
+        content: response.content,
+        agentId: response.agent_id,
+        agentName: response.agent_name,
+        timestamp: new Date(response.timestamp),
+        tokensUsed: response.tokens_used
       }
 
       setMessages(prev => [...prev, assistantMessage])
       setIsTyping(false)
 
       // Update metrics
+      const totalMessages = messages.length + 2
       onMetricsUpdate({
-        tokensUsed: messages.length * 150 + (assistantMessage.tokensUsed || 0),
-        latency: Math.random() * 0.5 + 0.3,
-        memoryNodes: Math.floor(Math.random() * 20) + 30,
+        tokensUsed: response.tokens_used || 0,
+        latency: (response.latency_ms || 0) / 1000,
+        memoryNodes: Math.floor(Math.random() * 20) + 30, // TODO: Get from API
         duration: Math.floor((Date.now() - new Date(messages[0]?.timestamp || Date.now()).getTime()) / 60000),
-        turns: messages.length + 2,
-        cost: (messages.length * 150 + (assistantMessage.tokensUsed || 0)) * 0.00003
+        turns: totalMessages,
+        cost: (response.tokens_used || 0) * 0.00003 // Approximate cost per token
       })
-    }, 1000 + Math.random() * 1000)
+    } catch (err) {
+      setIsTyping(false)
+      const apiError = err as ApiError
+      setError(apiError.message || 'Failed to send message. Please try again.')
+
+      // Show error message in chat
+      const errorMessage: Message = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: `I apologize, but I encountered an error: ${apiError.message}. Please try again.`,
+        agentId: agent.id,
+        agentName: agent.name,
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, errorMessage])
+    }
   }
 
   const toggleRecording = () => {
@@ -118,8 +141,8 @@ export function ChatPanel({ agent, onMetricsUpdate }: ChatPanelProps) {
           >
             {message.role === 'assistant' && (
               <div className="message-avatar">
-                <img 
-                  src={agent.avatarUrl} 
+                <img
+                  src={agent.avatarUrl}
                   alt={agent.name}
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%233b82f6"/></svg>'
@@ -158,6 +181,21 @@ export function ChatPanel({ agent, onMetricsUpdate }: ChatPanelProps) {
 
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Error Display */}
+      {error && (
+        <div className="chat-error">
+          <span className="error-icon">⚠️</span>
+          <span className="error-message">{error}</span>
+          <button
+            className="error-dismiss"
+            onClick={() => setError(null)}
+            aria-label="Dismiss error"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* Input Area */}
       <form className="chat-input-area" onSubmit={handleSubmit}>

@@ -10,8 +10,9 @@ Voice: Confident, energetic, Pacific Northwest professional
 """
 
 from langchain_core.tools import tool
+from langgraph.graph import StateGraph, END
 
-from backend.agents.base import BaseAgent
+from backend.agents.base import BaseAgent, AgentState
 
 
 # =============================================================================
@@ -305,6 +306,108 @@ Remember: You're here to help teams succeed, not to create process for its own s
             create_status_report,
             estimate_effort,
         ]
+
+    # -------------------------------------------------------------------------
+    # LangGraph workflow
+    # -------------------------------------------------------------------------
+    def build_graph(self) -> StateGraph:
+        """
+        Marcus' LangGraph:
+        - reason: core LLM reasoning
+        - maybe_tool: run a PM tool based on the ask
+        - respond: craft final response with tool output
+        """
+        workflow = StateGraph(AgentState)
+
+        workflow.add_node("reason", self._reason_node)
+        workflow.add_node("maybe_tool", self._maybe_use_tool)
+        workflow.add_node("respond", self._respond_with_context)
+
+        workflow.set_entry_point("reason")
+        workflow.add_conditional_edges(
+            "reason",
+            self._decide_next,
+            {
+                "tool": "maybe_tool",
+                "respond": "respond",
+            },
+        )
+        workflow.add_edge("maybe_tool", "respond")
+        workflow.add_edge("respond", END)
+
+        return workflow.compile()
+
+    def _decide_next(self, state: AgentState) -> str:
+        """Decide whether to invoke a tool based on the last user message."""
+        last_user = next(
+            (m for m in reversed(state["messages"]) if m.type == "human"), None
+        )
+        content = last_user.content if last_user else ""
+        tool_name, tool_args = self._select_tool(content)
+        if tool_name:
+            state["pending_tool"] = tool_name
+            state["pending_tool_args"] = tool_args
+            return "tool"
+        return "respond"
+
+    def _select_tool(self, content: str) -> tuple[str | None, dict]:
+        text = content.lower()
+        if "timeline" in text or "schedule" in text:
+            return "create_project_timeline", {
+                "project_name": "Project",
+                "start_date": "2025-01-01",
+                "end_date": "2025-03-31",
+                "milestones": "Planning, Build, Test, Launch",
+            }
+        if "status" in text or "report" in text:
+            return "create_status_report", {
+                "project_name": "Project",
+                "progress_summary": content,
+                "blockers": "",
+                "next_steps": "",
+            }
+        if "risk" in text or "risks" in text:
+            return "assess_project_risks", {"project_description": content}
+        if "estimate" in text or "effort" in text or "size" in text:
+            return "estimate_effort", {"task_description": content, "complexity": "medium"}
+        return None, {}
+
+    async def _maybe_use_tool(self, state: AgentState) -> AgentState:
+        """Invoke a selected tool and append its result to messages."""
+        tool_name: str | None = state.get("pending_tool")
+        tool_args: dict = state.get("pending_tool_args", {}) or {}
+        if not tool_name:
+            return state
+
+        tool_registry = {t.name: t for t in self.tools}
+        tool = tool_registry.get(tool_name)
+        if not tool:
+            state["final_response"] = state.get("final_response") or "I couldn't run the requested analysis."
+            return state
+
+        try:
+            result = tool.invoke(tool_args)
+            state["tool_results"].append({"tool": tool_name, "result": result})
+            state["messages"].append(
+                type("ToolMessage", (), {"type": "system", "content": f"[Tool:{tool_name}] {result}"})()
+            )
+        except Exception as e:
+            state["final_response"] = f"I tried to run {tool_name} but hit an error: {e}"
+        return state
+
+    async def _respond_with_context(self, state: AgentState) -> AgentState:
+        """Compose final response, including any tool outputs."""
+        if state["tool_results"]:
+            tool_summary = "\n\n".join(
+                f"**{tr['tool']}**\n{tr['result']}" for tr in state["tool_results"]
+            )
+            base_resp = state.get("final_response") or "Here’s what I can offer:"
+            state["final_response"] = f"{base_resp}\n\n{tool_summary}"
+        elif not state.get("final_response"):
+            state["final_response"] = "Let me summarize that for you in the next turn."
+
+        state["current_step"] = "respond"
+        return state
 
 
 # Singleton instance for easy import

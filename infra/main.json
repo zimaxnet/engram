@@ -1,0 +1,1674 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.39.26.7824",
+      "templateHash": "15055942727100189551"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
+    "envName": {
+      "type": "string",
+      "defaultValue": "engram-env",
+      "metadata": {
+        "description": "Name of the environment."
+      }
+    },
+    "postgresPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Postgres Admin Password"
+      }
+    },
+    "adminObjectId": {
+      "type": "string",
+      "metadata": {
+        "description": "Object ID of the admin user/service principal."
+      }
+    },
+    "backendImage": {
+      "type": "string",
+      "defaultValue": "ghcr.io/zimaxnet/engram/backend:latest",
+      "metadata": {
+        "description": "Container image for backend API."
+      }
+    },
+    "workerImage": {
+      "type": "string",
+      "defaultValue": "ghcr.io/zimaxnet/engram/worker:latest",
+      "metadata": {
+        "description": "Container image for worker."
+      }
+    },
+    "azureOpenAiKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Azure OpenAI API key (will be stored in Key Vault)."
+      }
+    },
+    "azureSpeechKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Azure Speech API key (optional, will be stored in Key Vault)."
+      }
+    },
+    "azureAiEndpoint": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Azure AI Services unified endpoint (base URL)."
+      }
+    },
+    "azureAiProjectName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Azure AI Services project name."
+      }
+    },
+    "tags": {
+      "type": "object",
+      "defaultValue": {
+        "Project": "Engram",
+        "Environment": "Production"
+      },
+      "metadata": {
+        "description": "Tags to apply to all resources."
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2021-06-01",
+      "name": "[format('{0}-logs', parameters('envName'))]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "sku": {
+          "name": "PerGB2018"
+        },
+        "retentionInDays": 30
+      }
+    },
+    {
+      "type": "Microsoft.App/managedEnvironments",
+      "apiVersion": "2022-03-01",
+      "name": "[format('{0}-aca', parameters('envName'))]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "appLogsConfiguration": {
+          "destination": "log-analytics",
+          "logAnalyticsConfiguration": {
+            "customerId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-logs', parameters('envName'))), '2021-06-01').customerId]",
+            "sharedKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-logs', parameters('envName'))), '2021-06-01').primarySharedKey]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-logs', parameters('envName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers",
+      "apiVersion": "2021-06-01",
+      "name": "[format('{0}-db', parameters('envName'))]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "sku": {
+        "name": "Standard_B1ms",
+        "tier": "Burstable"
+      },
+      "properties": {
+        "administratorLogin": "cogadmin",
+        "administratorLoginPassword": "[parameters('postgresPassword')]",
+        "version": "13",
+        "storage": {
+          "storageSizeGB": 32
+        },
+        "backup": {
+          "backupRetentionDays": 7,
+          "geoRedundantBackup": "Disabled"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2021-09-01",
+      "name": "[replace(format('{0}store', parameters('envName')), '-', '')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "StorageV2"
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "keyVault",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "keyVaultName": {
+            "value": "[format('{0}-kv', parameters('envName'))]"
+          },
+          "adminObjectId": {
+            "value": "[parameters('adminObjectId')]"
+          },
+          "tags": {
+            "value": "[parameters('tags')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.39.26.7824",
+              "templateHash": "5761007552530514031"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]",
+              "metadata": {
+                "description": "Location for all resources."
+              }
+            },
+            "keyVaultName": {
+              "type": "string",
+              "metadata": {
+                "description": "Name of the Key Vault."
+              }
+            },
+            "tenantId": {
+              "type": "string",
+              "defaultValue": "[subscription().tenantId]",
+              "metadata": {
+                "description": "The tenant ID for the Key Vault."
+              }
+            },
+            "adminObjectId": {
+              "type": "string",
+              "metadata": {
+                "description": "Object ID of the user or service principal that will have access to the Key Vault."
+              }
+            },
+            "enableSoftDelete": {
+              "type": "bool",
+              "defaultValue": true,
+              "metadata": {
+                "description": "Enable soft delete for the Key Vault."
+              }
+            },
+            "enablePurgeProtection": {
+              "type": "bool",
+              "defaultValue": true,
+              "metadata": {
+                "description": "Enable purge protection for the Key Vault."
+              }
+            },
+            "tags": {
+              "type": "object",
+              "defaultValue": {
+                "Project": "Engram",
+                "Environment": "Development"
+              },
+              "metadata": {
+                "description": "Tags to apply to all resources."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.KeyVault/vaults",
+              "apiVersion": "2023-07-01",
+              "name": "[parameters('keyVaultName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "sku": {
+                  "family": "A",
+                  "name": "standard"
+                },
+                "tenantId": "[parameters('tenantId')]",
+                "enableSoftDelete": "[parameters('enableSoftDelete')]",
+                "enablePurgeProtection": "[if(parameters('enablePurgeProtection'), true(), null())]",
+                "enableRbacAuthorization": true,
+                "enabledForDeployment": false,
+                "enabledForDiskEncryption": false,
+                "enabledForTemplateDeployment": true,
+                "publicNetworkAccess": "Enabled",
+                "networkAcls": {
+                  "defaultAction": "Allow",
+                  "bypass": "AzureServices"
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[format('Microsoft.KeyVault/vaults/{0}', parameters('keyVaultName'))]",
+              "name": "[guid(resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName')), parameters('adminObjectId'), 'Key Vault Administrator')]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')]",
+                "principalId": "[parameters('adminObjectId')]",
+                "principalType": "User"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "keyVaultId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+            },
+            "keyVaultName": {
+              "type": "string",
+              "value": "[parameters('keyVaultName')]"
+            },
+            "keyVaultUri": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName')), '2023-07-01').vaultUri]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "openAi",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "openAiName": {
+            "value": "[format('{0}-openai', parameters('envName'))]"
+          },
+          "keyVaultName": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'keyVault'), '2025-04-01').outputs.keyVaultName.value]"
+          },
+          "tags": {
+            "value": "[parameters('tags')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.39.26.7824",
+              "templateHash": "13593857090611214216"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]",
+              "metadata": {
+                "description": "Location for all resources."
+              }
+            },
+            "openAiName": {
+              "type": "string",
+              "metadata": {
+                "description": "Name of the Azure OpenAI resource."
+              }
+            },
+            "keyVaultName": {
+              "type": "string",
+              "metadata": {
+                "description": "Name of the Key Vault to store secrets."
+              }
+            },
+            "sku": {
+              "type": "string",
+              "defaultValue": "S0",
+              "metadata": {
+                "description": "SKU for Azure OpenAI (S0 = Standard)."
+              }
+            },
+            "deploymentName": {
+              "type": "string",
+              "defaultValue": "gpt-4o",
+              "metadata": {
+                "description": "Deployment name for GPT-4o model."
+              }
+            },
+            "modelName": {
+              "type": "string",
+              "defaultValue": "gpt-4o",
+              "metadata": {
+                "description": "Model name for deployment."
+              }
+            },
+            "modelVersion": {
+              "type": "string",
+              "defaultValue": "0613",
+              "metadata": {
+                "description": "Model version."
+              }
+            },
+            "tags": {
+              "type": "object",
+              "defaultValue": {
+                "Project": "Engram",
+                "Environment": "Development"
+              },
+              "metadata": {
+                "description": "Tags to apply to all resources."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.CognitiveServices/accounts",
+              "apiVersion": "2023-05-01",
+              "name": "[parameters('openAiName')]",
+              "location": "[parameters('location')]",
+              "kind": "OpenAI",
+              "sku": {
+                "name": "[parameters('sku')]"
+              },
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "apiProperties": {
+                  "statisticsEnabled": false
+                },
+                "customSubDomainName": "[parameters('openAiName')]",
+                "publicNetworkAccess": "Enabled"
+              }
+            },
+            {
+              "type": "Microsoft.CognitiveServices/accounts/deployments",
+              "apiVersion": "2023-05-01",
+              "name": "[format('{0}/{1}', parameters('openAiName'), parameters('deploymentName'))]",
+              "properties": {
+                "model": {
+                  "format": "OpenAI",
+                  "name": "[parameters('modelName')]",
+                  "version": "[parameters('modelVersion')]"
+                },
+                "raiPolicyName": "Microsoft.Default",
+                "versionUpgradeOption": "OnceNewDefaultVersionAvailable"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2023-07-01",
+              "name": "[format('{0}/{1}', parameters('keyVaultName'), 'azure-openai-endpoint')]",
+              "properties": {
+                "value": "[format('https://{0}', reference(resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiName')), '2023-05-01').endpoint)]",
+                "contentType": "text/plain",
+                "attributes": {
+                  "enabled": true
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2023-07-01",
+              "name": "[format('{0}/{1}', parameters('keyVaultName'), 'azure-openai-key')]",
+              "properties": {
+                "value": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiName')), '2023-05-01').key1]",
+                "contentType": "text/plain",
+                "attributes": {
+                  "enabled": true
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "openAiEndpoint": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiName')), '2023-05-01').endpoint]"
+            },
+            "openAiName": {
+              "type": "string",
+              "value": "[parameters('openAiName')]"
+            },
+            "deploymentName": {
+              "type": "string",
+              "value": "[parameters('deploymentName')]"
+            },
+            "keyVaultSecretNames": {
+              "type": "object",
+              "value": {
+                "endpoint": "azure-openai-endpoint",
+                "key": "azure-openai-key"
+              }
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'keyVault')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "speech",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "speechName": {
+            "value": "[format('{0}-speech', parameters('envName'))]"
+          },
+          "keyVaultName": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'keyVault'), '2025-04-01').outputs.keyVaultName.value]"
+          },
+          "tags": {
+            "value": "[parameters('tags')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.39.26.7824",
+              "templateHash": "3009630228774224202"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]",
+              "metadata": {
+                "description": "Location for all resources."
+              }
+            },
+            "speechName": {
+              "type": "string",
+              "metadata": {
+                "description": "Name of the Azure Speech Services resource."
+              }
+            },
+            "keyVaultName": {
+              "type": "string",
+              "metadata": {
+                "description": "Name of the Key Vault to store secrets."
+              }
+            },
+            "sku": {
+              "type": "string",
+              "defaultValue": "S0",
+              "metadata": {
+                "description": "SKU for Speech Services (S0 = Standard)."
+              }
+            },
+            "tags": {
+              "type": "object",
+              "defaultValue": {
+                "Project": "Engram",
+                "Environment": "Development"
+              },
+              "metadata": {
+                "description": "Tags to apply to all resources."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.CognitiveServices/accounts",
+              "apiVersion": "2023-05-01",
+              "name": "[parameters('speechName')]",
+              "location": "[parameters('location')]",
+              "kind": "SpeechServices",
+              "sku": {
+                "name": "[parameters('sku')]"
+              },
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "apiProperties": {
+                  "statisticsEnabled": false
+                },
+                "customSubDomainName": "[parameters('speechName')]",
+                "publicNetworkAccess": "Enabled"
+              }
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2023-07-01",
+              "name": "[format('{0}/{1}', parameters('keyVaultName'), 'azure-speech-key')]",
+              "properties": {
+                "value": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', parameters('speechName')), '2023-05-01').key1]",
+                "contentType": "text/plain",
+                "attributes": {
+                  "enabled": true
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('speechName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2023-07-01",
+              "name": "[format('{0}/{1}', parameters('keyVaultName'), 'azure-speech-region')]",
+              "properties": {
+                "value": "[parameters('location')]",
+                "contentType": "text/plain",
+                "attributes": {
+                  "enabled": true
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "speechEndpoint": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', parameters('speechName')), '2023-05-01').endpoint]"
+            },
+            "speechName": {
+              "type": "string",
+              "value": "[parameters('speechName')]"
+            },
+            "speechRegion": {
+              "type": "string",
+              "value": "[parameters('location')]"
+            },
+            "keyVaultSecretNames": {
+              "type": "object",
+              "value": {
+                "key": "azure-speech-key",
+                "region": "azure-speech-region"
+              }
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'keyVault')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "temporal",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "acaEnvId": {
+            "value": "[resourceId('Microsoft.App/managedEnvironments', format('{0}-aca', parameters('envName')))]"
+          },
+          "acaEnvName": {
+            "value": "[format('{0}-aca', parameters('envName'))]"
+          },
+          "postgresFqdn": {
+            "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName'))), '2021-06-01').fullyQualifiedDomainName]"
+          },
+          "postgresUser": {
+            "value": "cogadmin"
+          },
+          "postgresPassword": {
+            "value": "[parameters('postgresPassword')]"
+          },
+          "postgresDb": {
+            "value": "engram"
+          },
+          "tags": {
+            "value": "[parameters('tags')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.39.26.7824",
+              "templateHash": "11679870764899078906"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]",
+              "metadata": {
+                "description": "Location for all resources."
+              }
+            },
+            "acaEnvId": {
+              "type": "string",
+              "metadata": {
+                "description": "ID of the Container Apps Environment."
+              }
+            },
+            "acaEnvName": {
+              "type": "string",
+              "metadata": {
+                "description": "Name of the Container Apps Environment (for internal networking)."
+              }
+            },
+            "appName": {
+              "type": "string",
+              "defaultValue": "temporal",
+              "metadata": {
+                "description": "Name of the Temporal container app."
+              }
+            },
+            "postgresFqdn": {
+              "type": "string",
+              "metadata": {
+                "description": "PostgreSQL FQDN."
+              }
+            },
+            "postgresUser": {
+              "type": "string",
+              "defaultValue": "cogadmin",
+              "metadata": {
+                "description": "PostgreSQL admin user."
+              }
+            },
+            "postgresPassword": {
+              "type": "securestring",
+              "metadata": {
+                "description": "PostgreSQL admin password."
+              }
+            },
+            "postgresDb": {
+              "type": "string",
+              "defaultValue": "engram",
+              "metadata": {
+                "description": "PostgreSQL database name."
+              }
+            },
+            "tags": {
+              "type": "object",
+              "defaultValue": {
+                "Project": "Engram",
+                "Component": "Temporal"
+              },
+              "metadata": {
+                "description": "Tags to apply to all resources."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.App/containerApps",
+              "apiVersion": "2023-05-01",
+              "name": "[format('{0}-server', parameters('appName'))]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "managedEnvironmentId": "[parameters('acaEnvId')]",
+                "configuration": {
+                  "ingress": {
+                    "external": true,
+                    "targetPort": 7233,
+                    "transport": "tcp",
+                    "allowInsecure": false
+                  },
+                  "dapr": {
+                    "enabled": false
+                  },
+                  "secrets": [
+                    {
+                      "name": "postgres-password",
+                      "value": "[parameters('postgresPassword')]"
+                    }
+                  ]
+                },
+                "template": {
+                  "containers": [
+                    {
+                      "name": "temporal-server",
+                      "image": "temporalio/auto-setup:latest",
+                      "env": [
+                        {
+                          "name": "DB",
+                          "value": "postgresql"
+                        },
+                        {
+                          "name": "DB_PORT",
+                          "value": "5432"
+                        },
+                        {
+                          "name": "POSTGRES_USER",
+                          "value": "[parameters('postgresUser')]"
+                        },
+                        {
+                          "name": "POSTGRES_PWD",
+                          "secretRef": "postgres-password"
+                        },
+                        {
+                          "name": "POSTGRES_SEEDS",
+                          "value": "[parameters('postgresFqdn')]"
+                        },
+                        {
+                          "name": "POSTGRES_DB",
+                          "value": "[parameters('postgresDb')]"
+                        },
+                        {
+                          "name": "SKIP_DB_CREATE",
+                          "value": "true"
+                        },
+                        {
+                          "name": "SKIP_DB_SETUP",
+                          "value": "true"
+                        },
+                        {
+                          "name": "SKIP_DEFAULT_NAMESPACE_CREATION",
+                          "value": "true"
+                        }
+                      ],
+                      "resources": {
+                        "cpu": "[json('0.5')]",
+                        "memory": "1Gi"
+                      }
+                    }
+                  ],
+                  "scale": {
+                    "minReplicas": 1,
+                    "maxReplicas": 3
+                  }
+                }
+              }
+            },
+            {
+              "type": "Microsoft.App/containerApps",
+              "apiVersion": "2023-05-01",
+              "name": "[format('{0}-ui', parameters('appName'))]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "managedEnvironmentId": "[parameters('acaEnvId')]",
+                "configuration": {
+                  "ingress": {
+                    "external": true,
+                    "targetPort": 8080,
+                    "transport": "http",
+                    "allowInsecure": false
+                  },
+                  "dapr": {
+                    "enabled": false
+                  }
+                },
+                "template": {
+                  "containers": [
+                    {
+                      "name": "temporal-ui",
+                      "image": "temporalio/ui:latest",
+                      "env": [
+                        {
+                          "name": "TEMPORAL_ADDRESS",
+                          "value": "[format('{0}.{1}:7233', format('{0}-server', parameters('appName')), parameters('acaEnvName'))]"
+                        },
+                        {
+                          "name": "TEMPORAL_CORS_ORIGINS",
+                          "value": "*"
+                        }
+                      ],
+                      "resources": {
+                        "cpu": "[json('0.25')]",
+                        "memory": "0.5Gi"
+                      }
+                    }
+                  ],
+                  "scale": {
+                    "minReplicas": 1,
+                    "maxReplicas": 2
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.App/containerApps', format('{0}-server', parameters('appName')))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "temporalServerFqdn": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.App/containerApps', format('{0}-server', parameters('appName'))), '2023-05-01').configuration.ingress.fqdn]"
+            },
+            "temporalUIFqdn": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.App/containerApps', format('{0}-ui', parameters('appName'))), '2023-05-01').configuration.ingress.fqdn]"
+            },
+            "temporalHost": {
+              "type": "string",
+              "value": "[format('{0}:7233', reference(resourceId('Microsoft.App/containerApps', format('{0}-server', parameters('appName'))), '2023-05-01').configuration.ingress.fqdn)]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.App/managedEnvironments', format('{0}-aca', parameters('envName')))]",
+        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "zep",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "acaEnvId": {
+            "value": "[resourceId('Microsoft.App/managedEnvironments', format('{0}-aca', parameters('envName')))]"
+          },
+          "postgresFqdn": {
+            "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName'))), '2021-06-01').fullyQualifiedDomainName]"
+          },
+          "postgresUser": {
+            "value": "cogadmin"
+          },
+          "postgresPassword": {
+            "value": "[parameters('postgresPassword')]"
+          },
+          "postgresDb": {
+            "value": "engram"
+          },
+          "tags": {
+            "value": "[parameters('tags')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.39.26.7824",
+              "templateHash": "10595852513623078293"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]",
+              "metadata": {
+                "description": "Location for all resources."
+              }
+            },
+            "acaEnvId": {
+              "type": "string",
+              "metadata": {
+                "description": "Name of the Container Apps Environment."
+              }
+            },
+            "appName": {
+              "type": "string",
+              "defaultValue": "zep",
+              "metadata": {
+                "description": "Name of the Zep container app."
+              }
+            },
+            "postgresFqdn": {
+              "type": "string",
+              "metadata": {
+                "description": "PostgreSQL FQDN."
+              }
+            },
+            "postgresUser": {
+              "type": "string",
+              "defaultValue": "cogadmin",
+              "metadata": {
+                "description": "PostgreSQL admin user."
+              }
+            },
+            "postgresPassword": {
+              "type": "securestring",
+              "metadata": {
+                "description": "PostgreSQL admin password."
+              }
+            },
+            "postgresDb": {
+              "type": "string",
+              "defaultValue": "engram",
+              "metadata": {
+                "description": "PostgreSQL database name."
+              }
+            },
+            "zepApiKey": {
+              "type": "securestring",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Zep API key (optional)."
+              }
+            },
+            "tags": {
+              "type": "object",
+              "defaultValue": {
+                "Project": "Engram",
+                "Component": "Zep"
+              },
+              "metadata": {
+                "description": "Tags to apply to all resources."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.App/containerApps",
+              "apiVersion": "2023-05-01",
+              "name": "[parameters('appName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "managedEnvironmentId": "[parameters('acaEnvId')]",
+                "configuration": {
+                  "ingress": {
+                    "external": true,
+                    "targetPort": 8000,
+                    "transport": "http",
+                    "allowInsecure": false
+                  },
+                  "dapr": {
+                    "enabled": false
+                  }
+                },
+                "template": {
+                  "containers": [
+                    {
+                      "name": "zep",
+                      "image": "getzep/zep:latest",
+                      "env": [
+                        {
+                          "name": "ZEP_POSTGRES_DSN",
+                          "value": "[format('postgresql://{0}:{1}@{2}:5432/{3}?sslmode=require', parameters('postgresUser'), parameters('postgresPassword'), parameters('postgresFqdn'), parameters('postgresDb'))]"
+                        },
+                        {
+                          "name": "ZEP_STORE_TYPE",
+                          "value": "postgres"
+                        },
+                        {
+                          "name": "ZEP_API_KEY",
+                          "value": "[parameters('zepApiKey')]"
+                        }
+                      ],
+                      "resources": {
+                        "cpu": "[json('0.5')]",
+                        "memory": "1Gi"
+                      }
+                    }
+                  ],
+                  "scale": {
+                    "minReplicas": 1,
+                    "maxReplicas": 3
+                  }
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "zepFqdn": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.App/containerApps', parameters('appName')), '2023-05-01').configuration.ingress.fqdn]"
+            },
+            "zepApiUrl": {
+              "type": "string",
+              "value": "[format('https://{0}', reference(resourceId('Microsoft.App/containerApps', parameters('appName')), '2023-05-01').configuration.ingress.fqdn)]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.App/managedEnvironments', format('{0}-aca', parameters('envName')))]",
+        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "backend",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "acaEnvId": {
+            "value": "[resourceId('Microsoft.App/managedEnvironments', format('{0}-aca', parameters('envName')))]"
+          },
+          "containerImage": {
+            "value": "[parameters('backendImage')]"
+          },
+          "postgresFqdn": {
+            "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName'))), '2021-06-01').fullyQualifiedDomainName]"
+          },
+          "postgresPassword": {
+            "value": "[parameters('postgresPassword')]"
+          },
+          "temporalHost": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'temporal'), '2025-04-01').outputs.temporalHost.value]"
+          },
+          "zepApiUrl": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'zep'), '2025-04-01').outputs.zepApiUrl.value]"
+          },
+          "openAiKey": {
+            "value": "[parameters('azureOpenAiKey')]"
+          },
+          "openAiEndpoint": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'openAi'), '2025-04-01').outputs.openAiEndpoint.value]"
+          },
+          "speechKey": {
+            "value": "[parameters('azureSpeechKey')]"
+          },
+          "azureAiEndpoint": {
+            "value": "[parameters('azureAiEndpoint')]"
+          },
+          "azureAiProjectName": {
+            "value": "[parameters('azureAiProjectName')]"
+          },
+          "tags": {
+            "value": "[parameters('tags')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.39.26.7824",
+              "templateHash": "17390166374924915477"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]",
+              "metadata": {
+                "description": "Location for all resources."
+              }
+            },
+            "acaEnvId": {
+              "type": "string",
+              "metadata": {
+                "description": "Name of the Container Apps Environment."
+              }
+            },
+            "appName": {
+              "type": "string",
+              "defaultValue": "engram-api",
+              "metadata": {
+                "description": "Name of the backend container app."
+              }
+            },
+            "containerImage": {
+              "type": "string",
+              "metadata": {
+                "description": "Container image for the backend."
+              }
+            },
+            "postgresFqdn": {
+              "type": "string",
+              "metadata": {
+                "description": "PostgreSQL FQDN."
+              }
+            },
+            "temporalHost": {
+              "type": "string",
+              "metadata": {
+                "description": "Temporal host."
+              }
+            },
+            "zepApiUrl": {
+              "type": "string",
+              "metadata": {
+                "description": "Zep API URL."
+              }
+            },
+            "postgresPassword": {
+              "type": "securestring",
+              "metadata": {
+                "description": "PostgreSQL password."
+              }
+            },
+            "openAiKey": {
+              "type": "securestring",
+              "metadata": {
+                "description": "Azure OpenAI key."
+              }
+            },
+            "openAiEndpoint": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure OpenAI endpoint."
+              }
+            },
+            "speechKey": {
+              "type": "securestring",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Azure Speech key."
+              }
+            },
+            "azureAiEndpoint": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Azure AI Services unified endpoint (base URL)."
+              }
+            },
+            "azureAiProjectName": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Azure AI Services project name."
+              }
+            },
+            "tags": {
+              "type": "object",
+              "defaultValue": {
+                "Project": "Engram",
+                "Component": "Backend"
+              },
+              "metadata": {
+                "description": "Tags to apply to all resources."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.App/containerApps",
+              "apiVersion": "2023-05-01",
+              "name": "[parameters('appName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "managedEnvironmentId": "[parameters('acaEnvId')]",
+                "configuration": {
+                  "ingress": {
+                    "external": true,
+                    "targetPort": 8080,
+                    "transport": "http",
+                    "allowInsecure": false
+                  },
+                  "dapr": {
+                    "enabled": false
+                  },
+                  "secrets": [
+                    {
+                      "name": "postgres-password",
+                      "value": "[parameters('postgresPassword')]"
+                    },
+                    {
+                      "name": "azure-openai-key",
+                      "value": "[parameters('openAiKey')]"
+                    },
+                    {
+                      "name": "azure-speech-key",
+                      "value": "[parameters('speechKey')]"
+                    }
+                  ]
+                },
+                "template": {
+                  "containers": [
+                    {
+                      "name": "api",
+                      "image": "[parameters('containerImage')]",
+                      "env": [
+                        {
+                          "name": "ENVIRONMENT",
+                          "value": "production"
+                        },
+                        {
+                          "name": "POSTGRES_HOST",
+                          "value": "[parameters('postgresFqdn')]"
+                        },
+                        {
+                          "name": "POSTGRES_PORT",
+                          "value": "5432"
+                        },
+                        {
+                          "name": "POSTGRES_USER",
+                          "value": "cogadmin"
+                        },
+                        {
+                          "name": "POSTGRES_PASSWORD",
+                          "secretRef": "postgres-password"
+                        },
+                        {
+                          "name": "POSTGRES_DB",
+                          "value": "engram"
+                        },
+                        {
+                          "name": "TEMPORAL_HOST",
+                          "value": "[parameters('temporalHost')]"
+                        },
+                        {
+                          "name": "TEMPORAL_NAMESPACE",
+                          "value": "default"
+                        },
+                        {
+                          "name": "TEMPORAL_TASK_QUEUE",
+                          "value": "engram-agents"
+                        },
+                        {
+                          "name": "ZEP_API_URL",
+                          "value": "[parameters('zepApiUrl')]"
+                        },
+                        {
+                          "name": "AZURE_OPENAI_KEY",
+                          "secretRef": "azure-openai-key"
+                        },
+                        {
+                          "name": "AZURE_OPENAI_ENDPOINT",
+                          "value": "[parameters('openAiEndpoint')]"
+                        },
+                        {
+                          "name": "AZURE_OPENAI_DEPLOYMENT",
+                          "value": "gpt-4o"
+                        },
+                        {
+                          "name": "AZURE_SPEECH_KEY",
+                          "secretRef": "[if(not(equals(parameters('speechKey'), '')), 'azure-speech-key', null())]"
+                        },
+                        {
+                          "name": "AZURE_SPEECH_REGION",
+                          "value": "[parameters('location')]"
+                        },
+                        {
+                          "name": "AZURE_AI_ENDPOINT",
+                          "value": "[parameters('azureAiEndpoint')]"
+                        },
+                        {
+                          "name": "AZURE_AI_PROJECT_NAME",
+                          "value": "[parameters('azureAiProjectName')]"
+                        },
+                        {
+                          "name": "CORS_ORIGINS",
+                          "value": "[[\"*\"]"
+                        }
+                      ],
+                      "resources": {
+                        "cpu": "[json('0.5')]",
+                        "memory": "1Gi"
+                      }
+                    }
+                  ],
+                  "scale": {
+                    "minReplicas": 1,
+                    "maxReplicas": 10
+                  }
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "backendFqdn": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.App/containerApps', parameters('appName')), '2023-05-01').configuration.ingress.fqdn]"
+            },
+            "backendUrl": {
+              "type": "string",
+              "value": "[format('https://{0}', reference(resourceId('Microsoft.App/containerApps', parameters('appName')), '2023-05-01').configuration.ingress.fqdn)]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.App/managedEnvironments', format('{0}-aca', parameters('envName')))]",
+        "[resourceId('Microsoft.Resources/deployments', 'openAi')]",
+        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName')))]",
+        "[resourceId('Microsoft.Resources/deployments', 'temporal')]",
+        "[resourceId('Microsoft.Resources/deployments', 'zep')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "worker",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "acaEnvId": {
+            "value": "[resourceId('Microsoft.App/managedEnvironments', format('{0}-aca', parameters('envName')))]"
+          },
+          "containerImage": {
+            "value": "[parameters('workerImage')]"
+          },
+          "postgresFqdn": {
+            "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName'))), '2021-06-01').fullyQualifiedDomainName]"
+          },
+          "postgresPassword": {
+            "value": "[parameters('postgresPassword')]"
+          },
+          "temporalHost": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'temporal'), '2025-04-01').outputs.temporalHost.value]"
+          },
+          "zepApiUrl": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'zep'), '2025-04-01').outputs.zepApiUrl.value]"
+          },
+          "openAiKey": {
+            "value": "[parameters('azureOpenAiKey')]"
+          },
+          "openAiEndpoint": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'openAi'), '2025-04-01').outputs.openAiEndpoint.value]"
+          },
+          "azureAiEndpoint": {
+            "value": "[parameters('azureAiEndpoint')]"
+          },
+          "azureAiProjectName": {
+            "value": "[parameters('azureAiProjectName')]"
+          },
+          "tags": {
+            "value": "[parameters('tags')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.39.26.7824",
+              "templateHash": "11823675789375976701"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]",
+              "metadata": {
+                "description": "Location for all resources."
+              }
+            },
+            "acaEnvId": {
+              "type": "string",
+              "metadata": {
+                "description": "Name of the Container Apps Environment."
+              }
+            },
+            "appName": {
+              "type": "string",
+              "defaultValue": "engram-worker",
+              "metadata": {
+                "description": "Name of the worker container app."
+              }
+            },
+            "containerImage": {
+              "type": "string",
+              "metadata": {
+                "description": "Container image for the worker."
+              }
+            },
+            "postgresFqdn": {
+              "type": "string",
+              "metadata": {
+                "description": "PostgreSQL FQDN."
+              }
+            },
+            "temporalHost": {
+              "type": "string",
+              "metadata": {
+                "description": "Temporal host."
+              }
+            },
+            "zepApiUrl": {
+              "type": "string",
+              "metadata": {
+                "description": "Zep API URL."
+              }
+            },
+            "postgresPassword": {
+              "type": "securestring",
+              "metadata": {
+                "description": "PostgreSQL password."
+              }
+            },
+            "openAiKey": {
+              "type": "securestring",
+              "metadata": {
+                "description": "Azure OpenAI key."
+              }
+            },
+            "openAiEndpoint": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure OpenAI endpoint."
+              }
+            },
+            "azureAiEndpoint": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Azure AI Services unified endpoint (base URL)."
+              }
+            },
+            "azureAiProjectName": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Azure AI Services project name."
+              }
+            },
+            "tags": {
+              "type": "object",
+              "defaultValue": {
+                "Project": "Engram",
+                "Component": "Worker"
+              },
+              "metadata": {
+                "description": "Tags to apply to all resources."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.App/containerApps",
+              "apiVersion": "2023-05-01",
+              "name": "[parameters('appName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "managedEnvironmentId": "[parameters('acaEnvId')]",
+                "configuration": {
+                  "ingress": {
+                    "external": false
+                  },
+                  "dapr": {
+                    "enabled": false
+                  },
+                  "secrets": [
+                    {
+                      "name": "postgres-password",
+                      "value": "[parameters('postgresPassword')]"
+                    },
+                    {
+                      "name": "azure-openai-key",
+                      "value": "[parameters('openAiKey')]"
+                    }
+                  ]
+                },
+                "template": {
+                  "containers": [
+                    {
+                      "name": "worker",
+                      "image": "[parameters('containerImage')]",
+                      "env": [
+                        {
+                          "name": "ENVIRONMENT",
+                          "value": "production"
+                        },
+                        {
+                          "name": "POSTGRES_HOST",
+                          "value": "[parameters('postgresFqdn')]"
+                        },
+                        {
+                          "name": "POSTGRES_PORT",
+                          "value": "5432"
+                        },
+                        {
+                          "name": "POSTGRES_USER",
+                          "value": "cogadmin"
+                        },
+                        {
+                          "name": "POSTGRES_PASSWORD",
+                          "secretRef": "postgres-password"
+                        },
+                        {
+                          "name": "POSTGRES_DB",
+                          "value": "engram"
+                        },
+                        {
+                          "name": "TEMPORAL_HOST",
+                          "value": "[parameters('temporalHost')]"
+                        },
+                        {
+                          "name": "TEMPORAL_NAMESPACE",
+                          "value": "default"
+                        },
+                        {
+                          "name": "TEMPORAL_TASK_QUEUE",
+                          "value": "engram-agents"
+                        },
+                        {
+                          "name": "ZEP_API_URL",
+                          "value": "[parameters('zepApiUrl')]"
+                        },
+                        {
+                          "name": "AZURE_OPENAI_KEY",
+                          "secretRef": "azure-openai-key"
+                        },
+                        {
+                          "name": "AZURE_OPENAI_ENDPOINT",
+                          "value": "[parameters('openAiEndpoint')]"
+                        },
+                        {
+                          "name": "AZURE_OPENAI_DEPLOYMENT",
+                          "value": "gpt-4o"
+                        },
+                        {
+                          "name": "AZURE_AI_ENDPOINT",
+                          "value": "[parameters('azureAiEndpoint')]"
+                        },
+                        {
+                          "name": "AZURE_AI_PROJECT_NAME",
+                          "value": "[parameters('azureAiProjectName')]"
+                        }
+                      ],
+                      "resources": {
+                        "cpu": "[json('0.5')]",
+                        "memory": "1Gi"
+                      }
+                    }
+                  ],
+                  "scale": {
+                    "minReplicas": 1,
+                    "maxReplicas": 5
+                  }
+                }
+              }
+            }
+          ],
+          "outputs": {
+            "workerAppName": {
+              "type": "string",
+              "value": "[parameters('appName')]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.App/managedEnvironments', format('{0}-aca', parameters('envName')))]",
+        "[resourceId('Microsoft.Resources/deployments', 'openAi')]",
+        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName')))]",
+        "[resourceId('Microsoft.Resources/deployments', 'temporal')]",
+        "[resourceId('Microsoft.Resources/deployments', 'zep')]"
+      ]
+    }
+  ],
+  "outputs": {
+    "acaEnvId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.App/managedEnvironments', format('{0}-aca', parameters('envName')))]"
+    },
+    "postgresFqdn": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName'))), '2021-06-01').fullyQualifiedDomainName]"
+    },
+    "keyVaultUri": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'keyVault'), '2025-04-01').outputs.keyVaultUri.value]"
+    },
+    "backendUrl": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'backend'), '2025-04-01').outputs.backendUrl.value]"
+    },
+    "temporalUIFqdn": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'temporal'), '2025-04-01').outputs.temporalUIFqdn.value]"
+    },
+    "zepApiUrl": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'zep'), '2025-04-01').outputs.zepApiUrl.value]"
+    },
+    "openAiEndpoint": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'openAi'), '2025-04-01').outputs.openAiEndpoint.value]"
+    }
+  }
+}

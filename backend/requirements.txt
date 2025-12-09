@@ -14,10 +14,13 @@ python-jose[cryptography]>=3.3.0
 azure-identity>=1.15.0
 azure-keyvault-secrets>=4.7.0
 azure-cognitiveservices-speech>=1.35.0
+azure-ai-voicelive[aiohttp]>=1.0.0
 openai>=1.12.0
+aiohttp>=3.9.0  # Required by azure-ai-voicelive
 
 # Agent Framework
 langchain>=0.1.0
+langchain-openai>=0.1.0
 langgraph>=0.0.20
 
 # Memory & Orchestration
@@ -32,6 +35,9 @@ sqlalchemy>=2.0.0
 opentelemetry-api>=1.22.0
 opentelemetry-sdk>=1.22.0
 opentelemetry-instrumentation-fastapi>=0.43b0
+opentelemetry-instrumentation-httpx>=0.43b0
+opentelemetry-exporter-otlp-proto-grpc>=1.22.0
+opentelemetry-exporter-otlp-proto-http>=1.22.0
 azure-monitor-opentelemetry>=1.2.0
 
 # Utilities

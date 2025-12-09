@@ -147,6 +147,48 @@
   }
 }
 
+/* Error Display */
+.chat-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  margin: 0 var(--space-lg);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+  font-size: 0.875rem;
+}
+
+.error-icon {
+  font-size: 1.125rem;
+}
+
+.error-message {
+  flex: 1;
+}
+
+.error-dismiss {
+  background: none;
+  border: none;
+  color: var(--color-error);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s;
+}
+
+.error-dismiss:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
 /* Input Area */
 .chat-input-area {
   display: flex;

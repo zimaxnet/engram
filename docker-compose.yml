@@ -24,15 +24,20 @@ services:
   # Zep (Memory Layer)
   # ------------------------------------------------------------
   zep:
-    image: getzep/zep:latest
+    image: zepai/zep:latest
     depends_on:
       postgres:
         condition: service_healthy
     environment:
       ZEP_POSTGRES_DSN: "postgres://postgres:password@postgres:5432/engram?sslmode=disable"
       ZEP_STORE_TYPE: "postgres"
+      ZEP_API_SECRET: ${ZEP_API_SECRET:-dev-secret}
+      API_SECRET: ${ZEP_API_SECRET:-dev-secret}
+      ZEP_AUTH_REQUIRED: "false"
     ports:
       - "8000:8000"
+    volumes:
+      - ./zep-config.yaml:/app/config.yaml:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
       interval: 10s

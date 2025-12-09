@@ -10,7 +10,7 @@ Centralizes all configuration with support for:
 from functools import lru_cache
 from typing import Optional
 
-from pydantic import Field
+from pydantic import Field, ConfigDict
 from pydantic_settings import BaseSettings
 
 
@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     temporal_task_queue: str = Field("engram-agents", alias="TEMPORAL_TASK_QUEUE")
 
     # ==========================================================================
-    # Azure OpenAI
+    # Azure OpenAI / Unified AI Services
     # ==========================================================================
     azure_openai_endpoint: Optional[str] = Field(None, alias="AZURE_OPENAI_ENDPOINT")
     azure_openai_key: Optional[str] = Field(None, alias="AZURE_OPENAI_KEY")
@@ -65,6 +65,29 @@ class Settings(BaseSettings):
     azure_openai_api_version: str = Field(
         "2024-02-15-preview", alias="AZURE_OPENAI_API_VERSION"
     )
+    
+    # Unified Azure AI Services (project-based endpoint)
+    azure_ai_endpoint: Optional[str] = Field(None, alias="AZURE_AI_ENDPOINT")
+    azure_ai_project_name: Optional[str] = Field(None, alias="AZURE_AI_PROJECT_NAME")
+    
+    # VoiceLive specific endpoint (can override azure_ai_endpoint)
+    azure_voicelive_endpoint: Optional[str] = Field(None, alias="AZURE_VOICELIVE_ENDPOINT")
+    azure_voicelive_project_name: Optional[str] = Field(None, alias="AZURE_VOICELIVE_PROJECT_NAME")
+    azure_voicelive_api_key: Optional[str] = Field(None, alias="AZURE_VOICELIVE_API_KEY")
+    
+    @property
+    def effective_openai_endpoint(self) -> Optional[str]:
+        """
+        Get the effective OpenAI endpoint, supporting both traditional and unified formats.
+        
+        If AZURE_AI_ENDPOINT and AZURE_AI_PROJECT_NAME are set, constructs unified endpoint.
+        Otherwise, falls back to AZURE_OPENAI_ENDPOINT.
+        """
+        if self.azure_ai_endpoint and self.azure_ai_project_name:
+            # Unified Azure AI Services format
+            base = self.azure_ai_endpoint.rstrip('/')
+            return f"{base}/api/projects/{self.azure_ai_project_name}"
+        return self.azure_openai_endpoint
 
     # ==========================================================================
     # Azure Speech Services
@@ -76,6 +99,18 @@ class Settings(BaseSettings):
     elena_voice_name: str = Field("en-US-JennyNeural", alias="ELENA_VOICE_NAME")
     # Marcus voice configuration
     marcus_voice_name: str = Field("en-US-GuyNeural", alias="MARCUS_VOICE_NAME")
+    
+    # ==========================================================================
+    # Azure VoiceLive (Real-time Voice)
+    # ==========================================================================
+    azure_voicelive_model: str = Field("gpt-realtime", alias="AZURE_VOICELIVE_MODEL")
+    azure_voicelive_voice: str = Field(
+        "en-US-Ava:DragonHDLatestNeural", alias="AZURE_VOICELIVE_VOICE"
+    )
+    # Marcus voice configuration for VoiceLive
+    marcus_voicelive_voice: str = Field(
+        "en-US-GuyNeural", alias="MARCUS_VOICELIVE_VOICE"
+    )
 
     # ==========================================================================
     # Microsoft Entra ID (Authentication)
@@ -112,10 +147,12 @@ class Settings(BaseSettings):
     rate_limit_requests: int = Field(100, alias="RATE_LIMIT_REQUESTS")
     rate_limit_window_seconds: int = Field(60, alias="RATE_LIMIT_WINDOW_SECONDS")
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",  # Ignore extra fields from .env that aren't in this model
+    )
 
 
 class KeyVaultSettings:
@@ -153,6 +190,8 @@ class KeyVaultSettings:
             "zep-api-key": "zep_api_key",
             "azure-openai-key": "azure_openai_key",
             "azure-openai-endpoint": "azure_openai_endpoint",
+            "azure-ai-endpoint": "azure_ai_endpoint",
+            "azure-ai-project-name": "azure_ai_project_name",
             "azure-speech-key": "azure_speech_key",
             "azure-client-secret": "azure_client_secret",
             "azure-client-id": "azure_client_id",

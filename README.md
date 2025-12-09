@@ -1,24 +1,97 @@
-# Cognitive Enterprise Architecture (PoC)
+# Engram - Context Engineering Platform
 
-This repository contains the "Memory Wall" solution Proof of Concept, deployed as a set of microservices on Azure.
+> **Cognition-as-a-Service for the Enterprise**
 
-## Components
-- **Memory**: Zep (Temporal Knowledge Graph).
-- **Orchestration**: Temporal (Durable Workflows).
-- **Brain**: LangGraph Agent (Python).
-- **ETL**: Unstructured.io pipeline.
+Engram is an enterprise-grade AI platform that solves the **Memory Wall Problem** in Large Language Models through innovative context engineering. Built on the **Brain + Spine** architecture pattern, Engram provides durable, scalable, and cost-effective AI agent orchestration.
 
-## Getting Started
+## Quick Start
 
 ### Local Development
-Run the entire stack locally with Docker Compose:
-```bash
-docker-compose up --build
-```
+
+1. **Configure environment**:
+   ```bash
+   cp .env.example .env
+   # Edit .env and add your Azure OpenAI credentials
+   ```
+
+2. **Start services**:
+   ```bash
+   docker-compose up -d postgres zep temporal temporal-ui
+   ```
+
+3. **Start backend**:
+   ```bash
+   cd backend
+   pip install -r requirements.txt
+   uvicorn backend.api.main:app --host 0.0.0.0 --port 8082 --reload
+   ```
+
+4. **Start frontend**:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+5. **Open browser**: `http://localhost:5173`
+
+See [Local Testing Guide](docs/local-testing.md) for detailed instructions.
 
 ### Azure Deployment
-The infrastructure is defined in Bicep. See `infra/README.md` for details.
-**Strategy**: Azure Container Apps (Serverless) + Postgres Flexible Server.
 
-### Documentation
-Full architecture and FinOps details are available in the [Wiki](https://wiki.engram.work).
+1. **Set up GitHub Secrets** (see [GitHub Secrets Guide](docs/github-secrets.md))
+2. **Deploy infrastructure**:
+   ```bash
+   az group create --name engram-rg --location eastus
+   az deployment group create \
+     --resource-group engram-rg \
+     --template-file infra/main.bicep \
+     --parameters postgresPassword='<secure-password>' adminObjectId='<your-object-id>'
+   ```
+3. **CI/CD**: Push to `main` branch to trigger automatic deployment
+
+See [Deployment Guide](docs/deployment.md) for full details.
+
+## Architecture
+
+- **Brain Layer**: LangGraph agents (Elena, Marcus) for reasoning
+- **Spine Layer**: Temporal workflows for durable orchestration
+- **Memory Layer**: Zep + Graphiti for temporal knowledge graphs
+- **Frontend**: React + Vite with voice interaction
+- **Backend**: FastAPI with enterprise security
+
+## Components
+
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| **Memory** | Zep (Temporal Knowledge Graph) | Episodic & semantic memory |
+| **Orchestration** | Temporal (Durable Workflows) | Long-running, fault-tolerant workflows |
+| **Brain** | LangGraph Agents (Python) | Agent reasoning & execution |
+| **ETL** | Unstructured.io | Document processing pipeline |
+| **Frontend** | React + Vite | 3-column UI with voice interaction |
+| **Backend** | FastAPI | REST API & WebSocket server |
+
+## Documentation
+
+- [Architecture Overview](docs/architecture.md)
+- [Agent Personas](docs/agents.md)
+- [Local Testing Guide](docs/local-testing.md)
+- [GitHub Secrets Configuration](docs/github-secrets.md)
+- [Deployment Guide](docs/deployment.md)
+- [FinOps Strategy](docs/finops.md)
+- [Azure PostgreSQL](docs/azure-postgresql.md)
+
+**Full documentation**: [Wiki](https://wiki.engram.work)
+
+## Features
+
+- 🧠 **Context Engineering** - 4-layer enterprise context schema
+- 🦴 **Durable Workflows** - Temporal-based orchestration
+- 💾 **Temporal Knowledge Graph** - Zep + Graphiti memory
+- 🎤 **Voice Interaction** - Azure Speech SDK with avatar
+- 🔐 **Enterprise Security** - Entra ID + RBAC
+- 💰 **FinOps-First** - Scale-to-zero architecture
+
+## License
+
+MIT

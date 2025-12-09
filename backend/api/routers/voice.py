@@ -8,6 +8,7 @@ Provides:
 - Real-time voice chat
 """
 
+import asyncio
 import base64
 import logging
 import uuid
@@ -312,6 +313,159 @@ async def set_avatar_expression(
 # =============================================================================
 # Real-time Voice Chat WebSocket
 # =============================================================================
+
+
+@router.websocket("/voicelive/{session_id}")
+async def voicelive_websocket(websocket: WebSocket, session_id: str):
+    """
+    WebSocket for Azure VoiceLive real-time voice conversation.
+    
+    Supports both Elena (Business Analyst) and Marcus (Project Manager).
+    
+    Protocol:
+    - Client sends: {"type": "audio", "data": "<base64 PCM16 audio>"}
+    - Client sends: {"type": "agent", "agent_id": "elena|marcus"} (to switch agent)
+    - Client sends: {"type": "text", "text": "..."} (optional text input)
+    - Server sends: {"type": "audio", "data": "<base64 PCM16 audio>"}
+    - Server sends: {"type": "transcription", "text": "...", "status": "listening|processing|complete"}
+    - Server sends: {"type": "error", "message": "..."}
+    """
+    await websocket.accept()
+    
+    logger.info(f"VoiceLive WebSocket connected: {session_id}")
+    
+    try:
+        from backend.voice.voicelive_service import voicelive_service
+        
+        # Default to Elena, but allow agent selection via WebSocket message
+        current_agent_id = "elena"
+        
+        # Create VoiceLive session
+        session = await voicelive_service.create_session(
+            session_id=session_id,
+            agent_id=current_agent_id,
+        )
+        
+        # Event handlers
+        async def on_audio(audio_data: bytes):
+            """Handle audio from assistant"""
+            audio_base64 = base64.b64encode(audio_data).decode("utf-8")
+            await websocket.send_json({
+                "type": "audio",
+                "data": audio_base64,
+                "format": "pcm16",
+            })
+        
+        async def on_transcription(status: str, text: str = ""):
+            """Handle transcription updates"""
+            await websocket.send_json({
+                "type": "transcription",
+                "status": status,
+                "text": text,
+            })
+        
+        # Start event processing in background
+        event_task = asyncio.create_task(
+            session.process_events(on_audio, on_transcription)
+        )
+        
+        try:
+            # Handle incoming messages
+            while True:
+                try:
+                    data = await websocket.receive_json()
+                except Exception as e:
+                    logger.debug(f"WebSocket receive error (may be disconnect): {e}")
+                    break
+                
+                msg_type = data.get("type")
+                
+                if msg_type == "agent":
+                    # Switch agent (requires reconnecting with new agent)
+                    new_agent_id = data.get("agent_id", "elena")
+                    if new_agent_id != current_agent_id and new_agent_id in ["elena", "marcus"]:
+                        logger.info(f"Switching agent from {current_agent_id} to {new_agent_id}")
+                        # Cancel current event processing first
+                        event_task.cancel()
+                        try:
+                            await event_task
+                        except asyncio.CancelledError:
+                            pass
+                        # Close current session
+                        await voicelive_service.close_session(session_id)
+                        # Create new session with different agent
+                        current_agent_id = new_agent_id
+                        session = await voicelive_service.create_session(
+                            session_id=session_id,
+                            agent_id=current_agent_id,
+                        )
+                        # Restart event processing
+                        event_task = asyncio.create_task(
+                            session.process_events(on_audio, on_transcription)
+                        )
+                        await websocket.send_json({
+                            "type": "agent_switched",
+                            "agent_id": current_agent_id,
+                        })
+                
+                elif msg_type == "audio":
+                    # Forward audio to VoiceLive
+                    audio_data = data.get("data", "")
+                    if audio_data:
+                        try:
+                            await session.send_audio(audio_data)
+                        except Exception as e:
+                            logger.error(f"Error sending audio to VoiceLive: {e}")
+                            await websocket.send_json({
+                                "type": "error",
+                                "message": f"Failed to send audio: {str(e)}",
+                            })
+                
+                elif msg_type == "text":
+                    # Send text input (alternative to voice)
+                    text = data.get("text", "")
+                    if text and session.connection:
+                        # VoiceLive supports text input via conversation API
+                        # This would need to be implemented based on VoiceLive SDK
+                        logger.info(f"Text input received: {text}")
+                        await websocket.send_json({
+                            "type": "info",
+                            "message": "Text input not yet implemented for VoiceLive",
+                        })
+                
+                elif msg_type == "cancel":
+                    # Cancel current response (barge-in)
+                    await session.cancel_response()
+                
+                elif msg_type == "close":
+                    break
+        
+        finally:
+            # Cleanup
+            event_task.cancel()
+            try:
+                await event_task
+            except asyncio.CancelledError:
+                pass
+            except Exception as e:
+                logger.warning(f"Error cancelling event task: {e}")
+            
+            await voicelive_service.close_session(session_id)
+            logger.info(f"VoiceLive WebSocket disconnected: {session_id}")
+    
+    except WebSocketDisconnect:
+        logger.info(f"VoiceLive WebSocket disconnected: {session_id}")
+        await voicelive_service.close_session(session_id)
+    except Exception as e:
+        logger.error(f"VoiceLive WebSocket error: {e}")
+        try:
+            await websocket.send_json({
+                "type": "error",
+                "message": str(e),
+            })
+        except:
+            pass
+        await voicelive_service.close_session(session_id)
 
 
 @router.websocket("/ws/{session_id}")

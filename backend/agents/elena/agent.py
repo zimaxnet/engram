@@ -10,8 +10,9 @@ Voice: Warm, measured, professional with Miami accent
 """
 
 from langchain_core.tools import tool
+from langgraph.graph import StateGraph, END
 
-from backend.agents.base import BaseAgent
+from backend.agents.base import BaseAgent, AgentState
 
 
 # =============================================================================
@@ -194,6 +195,98 @@ Remember: Your goal is to help people understand the 'why' behind every requirem
             stakeholder_mapping,
             create_user_story,
         ]
+
+    # -------------------------------------------------------------------------
+    # LangGraph workflow
+    # -------------------------------------------------------------------------
+    def build_graph(self) -> StateGraph:
+        """
+        Elena's LangGraph:
+        - reason: core LLM reasoning with context
+        - maybe_tool: call a targeted BA tool when relevant
+        - respond: craft final answer (with tool output if any)
+        """
+        workflow = StateGraph(AgentState)
+
+        workflow.add_node("reason", self._reason_node)
+        workflow.add_node("maybe_tool", self._maybe_use_tool)
+        workflow.add_node("respond", self._respond_with_context)
+
+        workflow.set_entry_point("reason")
+        workflow.add_conditional_edges(
+            "reason",
+            self._decide_next,
+            {
+                "tool": "maybe_tool",
+                "respond": "respond",
+            },
+        )
+        workflow.add_edge("maybe_tool", "respond")
+        workflow.add_edge("respond", END)
+
+        return workflow.compile()
+
+    def _decide_next(self, state: AgentState) -> str:
+        """Decide whether to invoke a tool based on the last user message."""
+        last_user = next(
+            (m for m in reversed(state["messages"]) if m.type == "human"), None
+        )
+        content = last_user.content if last_user else ""
+        tool_name, tool_args = self._select_tool(content)
+        if tool_name:
+            state["pending_tool"] = tool_name
+            state["pending_tool_args"] = tool_args
+            return "tool"
+        return "respond"
+
+    def _select_tool(self, content: str) -> tuple[str | None, dict]:
+        text = content.lower()
+        if "acceptance" in text or "user story" in text or "story" in text:
+            return "create_user_story", {"feature_description": content, "persona": "user"}
+        if "stakeholder" in text:
+            return "stakeholder_mapping", {"project_description": content}
+        if "requirement" in text or "requirements" in text:
+            return "analyze_requirements", {"requirements_text": content}
+        return None, {}
+
+    async def _maybe_use_tool(self, state: AgentState) -> AgentState:
+        """Invoke a selected tool and append its result to messages."""
+        tool_name: str | None = state.get("pending_tool")
+        tool_args: dict = state.get("pending_tool_args", {}) or {}
+        if not tool_name:
+            return state
+
+        tool_registry = {t.name: t for t in self.tools}
+        tool = tool_registry.get(tool_name)
+        if not tool:
+            state["final_response"] = state.get("final_response") or "I couldn't run the requested analysis."
+            return state
+
+        try:
+            result = tool.invoke(tool_args)
+            state["tool_results"].append({"tool": tool_name, "result": result})
+            state["messages"].append(
+                # type: ignore
+                # LangChain BaseMessage expects role/content; we attach as a system note
+                type("ToolMessage", (), {"type": "system", "content": f"[Tool:{tool_name}] {result}"})()
+            )
+        except Exception as e:
+            state["final_response"] = f"I tried to run {tool_name} but hit an error: {e}"
+        return state
+
+    async def _respond_with_context(self, state: AgentState) -> AgentState:
+        """Compose final response, including any tool outputs."""
+        if state["tool_results"]:
+            tool_summary = "\n\n".join(
+                f"**{tr['tool']}**\n{tr['result']}" for tr in state["tool_results"]
+            )
+            base_resp = state.get("final_response") or "Here's what I found:"
+            state["final_response"] = f"{base_resp}\n\n{tool_summary}"
+        elif not state.get("final_response"):
+            state["final_response"] = "Let me summarize that for you in the next turn."
+
+        state["current_step"] = "respond"
+        return state
 
 
 # Singleton instance for easy import

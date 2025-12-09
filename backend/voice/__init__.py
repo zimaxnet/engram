@@ -36,6 +36,11 @@ from .speech_service import (
     speech_service,
     synthesize_speech,
 )
+from .voicelive_service import (
+    VoiceLiveService,
+    VoiceLiveSession,
+    voicelive_service,
+)
 
 __all__ = [
     # Speech Service
@@ -49,6 +54,10 @@ __all__ = [
     "recognize_speech",
     "synthesize_speech",
     "get_voice_for_agent",
+    # VoiceLive Service
+    "VoiceLiveService",
+    "VoiceLiveSession",
+    "voicelive_service",
     # Avatar Service
     "AzureAvatarService",
     "avatar_service",

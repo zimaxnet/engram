@@ -103,7 +103,7 @@ PERMISSION_MATRIX: dict[Role, dict[Resource, set[Action]]] = {
         },
         Resource.AUDIT: {Action.READ},
     },
-    Role.MANAGER: {
+    Role.PM: {
         Resource.AGENTS: {Action.READ, Action.EXECUTE},
         Resource.CHAT: {Action.CREATE, Action.READ, Action.EXECUTE},
         Resource.MEMORY: {Action.CREATE, Action.READ},

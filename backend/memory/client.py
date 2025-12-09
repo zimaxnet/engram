@@ -43,9 +43,9 @@ class ZepMemoryClient:
         """Lazy-load the Zep client"""
         if self._client is None:
             try:
-                from zep_python import ZepClient
+                from zep_python.client import AsyncZep
 
-                self._client = ZepClient(
+                self._client = AsyncZep(
                     base_url=self.settings.zep_api_url,
                     api_key=self.settings.zep_api_key,
                 )
@@ -60,46 +60,17 @@ class ZepMemoryClient:
 
         return self._client
 
-    async def get_or_create_user(self, user_id: str, metadata: dict = None) -> dict:
-        """
-        Get or create a user in Zep.
-
-        Args:
-            user_id: Unique user identifier
-            metadata: Optional user metadata
-
-        Returns:
-            User object from Zep
-        """
-        try:
-            # Try to get existing user
-            user = await self.client.user.aget(user_id)
-            return user
-        except Exception:
-            # Create new user
-            user = await self.client.user.aadd(user_id=user_id, metadata=metadata or {})
-            logger.info(f"Created new Zep user: {user_id}")
-            return user
-
     async def get_or_create_session(
         self, session_id: str, user_id: str, metadata: dict = None
     ) -> dict:
         """
         Get or create a session (conversation) in Zep.
-
-        Args:
-            session_id: Unique session identifier
-            user_id: User ID for this session
-            metadata: Optional session metadata
-
-        Returns:
-            Session object from Zep
         """
         try:
-            session = await self.client.memory.aget_session(session_id)
+            session = await self.client.memory.get_session(session_id)
             return session
         except Exception:
-            session = await self.client.memory.aadd_session(
+            session = await self.client.memory.add_session(
                 session_id=session_id, user_id=user_id, metadata=metadata or {}
             )
             logger.info(f"Created new Zep session: {session_id}")
@@ -117,7 +88,7 @@ class ZepMemoryClient:
             metadata: Optional metadata for the memory
         """
         try:
-            from zep_python import Memory, Message
+            from zep_python.types.message import Message
 
             zep_messages = [
                 Message(
@@ -128,8 +99,10 @@ class ZepMemoryClient:
                 for msg in messages
             ]
 
-            memory = Memory(messages=zep_messages, metadata=metadata or {})
-            await self.client.memory.aadd_memory(session_id, memory)
+            await self.client.memory.add(
+                session_id=session_id,
+                messages=zep_messages,
+            )
             logger.debug(f"Added {len(messages)} messages to session {session_id}")
         except Exception as e:
             logger.error(f"Failed to add memory: {e}")
@@ -154,20 +127,42 @@ class ZepMemoryClient:
             List of relevant memory results
         """
         try:
-            results = await self.client.memory.asearch_memory(
-                session_id=session_id, text=query, limit=limit, search_type=search_type
+            resp = await self.client.memory.search_sessions(
+                session_ids=[session_id],
+                text=query,
+                limit=limit,
+                search_scope="messages",
+                search_type=search_type,
             )
-            return [
-                {
-                    "content": r.message.content if r.message else r.summary,
-                    "score": r.score,
-                    "metadata": r.metadata or {},
-                }
-                for r in results
-            ]
+            results = []
+            for session in resp.sessions or []:
+                for msg in session.messages or []:
+                    score_val = msg.score if hasattr(msg, "score") and msg.score is not None else 0.5
+                    results.append(
+                        {
+                            "content": msg.content,
+                            "score": score_val,
+                            "metadata": getattr(msg, "metadata", {}) or {},
+                        }
+                    )
+            return results
         except Exception as e:
-            logger.error(f"Memory search failed: {e}")
-            return []
+            logger.warning(f"Memory search failed, falling back to recent messages: {e}")
+            try:
+                resp = await self.client.memory.get_session_messages(
+                    session_id=session_id, limit=limit
+                )
+                return [
+                    {
+                        "content": m.content,
+                        "score": 0.5,
+                        "metadata": getattr(m, "metadata", {}) or {},
+                    }
+                    for m in resp.messages or []
+                ]
+            except Exception as e2:
+                logger.error(f"Memory search fallback failed: {e2}")
+                return []
 
     async def get_facts(
         self, user_id: str, query: Optional[str] = None, limit: int = 20
@@ -183,26 +178,9 @@ class ZepMemoryClient:
         Returns:
             List of GraphNode facts
         """
-        try:
-            # Zep's graph endpoint
-            facts = await self.client.graph.asearch(
-                user_id=user_id, query=query, limit=limit
-            )
-
-            return [
-                GraphNode(
-                    id=f.uuid,
-                    content=f.fact,
-                    node_type="fact",
-                    confidence=f.rating or 1.0,
-                    valid_from=f.valid_at,
-                    metadata={"source": f.source_episode_uuid},
-                )
-                for f in facts
-            ]
-        except Exception as e:
-            logger.error(f"Failed to get facts: {e}")
-            return []
+        # Facts API not available in current client; return empty for now.
+        logger.debug("get_facts not implemented for current zep-python client")
+        return []
 
     async def add_fact(
         self, user_id: str, fact: str, metadata: dict = None
@@ -242,25 +220,8 @@ class ZepMemoryClient:
         Returns:
             List of Entity objects
         """
-        try:
-            entities = await self.client.graph.aget_entities(
-                user_id=user_id, entity_type=entity_type, limit=limit
-            )
-
-            return [
-                Entity(
-                    id=e.uuid,
-                    name=e.name,
-                    entity_type=e.entity_type,
-                    properties=e.properties or {},
-                    created_at=e.created_at,
-                    updated_at=e.updated_at,
-                )
-                for e in entities
-            ]
-        except Exception as e:
-            logger.error(f"Failed to get entities: {e}")
-            return []
+        logger.debug("get_entities not implemented for current zep-python client")
+        return []
 
     async def enrich_context(
         self, context: EnterpriseContext, query: str

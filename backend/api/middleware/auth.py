@@ -212,12 +212,14 @@ class EntraIDAuth:
         role_mapping = {
             "Admin": Role.ADMIN,
             "Analyst": Role.ANALYST,
-            "Manager": Role.MANAGER,
+            "Manager": Role.PM,
             "Viewer": Role.VIEWER,
             "admin": Role.ADMIN,
             "analyst": Role.ANALYST,
-            "manager": Role.MANAGER,
+            "manager": Role.PM,
             "viewer": Role.VIEWER,
+            "PM": Role.PM,
+            "pm": Role.PM,
         }
 
         mapped = []
@@ -386,11 +388,11 @@ class RBACMiddleware:
     # Route permission mapping
     ROUTE_PERMISSIONS = {
         "/api/v1/admin": [Role.ADMIN],
-        "/api/v1/workflows": [Role.ADMIN, Role.MANAGER],
+        "/api/v1/workflows": [Role.ADMIN, Role.PM],
         "/api/v1/memory/clear": [Role.ADMIN],
-        "/api/v1/agents": [Role.ADMIN, Role.MANAGER, Role.ANALYST],
-        "/api/v1/chat": [Role.ADMIN, Role.MANAGER, Role.ANALYST, Role.VIEWER],
-        "/api/v1/voice": [Role.ADMIN, Role.MANAGER, Role.ANALYST],
+        "/api/v1/agents": [Role.ADMIN, Role.PM, Role.ANALYST],
+        "/api/v1/chat": [Role.ADMIN, Role.PM, Role.ANALYST, Role.VIEWER],
+        "/api/v1/voice": [Role.ADMIN, Role.PM, Role.ANALYST],
     }
 
     def __init__(self, app):

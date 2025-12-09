@@ -29,6 +29,7 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
   const [currentVisemes, setCurrentVisemes] = useState<Viseme[]>([])
   const [expression, setExpression] = useState<'neutral' | 'smile' | 'thinking' | 'listening'>('neutral')
   const [voiceEnabled, setVoiceEnabled] = useState(true)
+  const [voiceStatus, setVoiceStatus] = useState<'connecting' | 'connected' | 'error'>('connecting')
   
   const handleVisemes = (visemes: Viseme[]) => {
     setCurrentVisemes(visemes)
@@ -63,6 +64,11 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
       <div className="panel-card avatar-card">
         <div className="card-header">
           <h4 className="card-title">Active Agent</h4>
+          <div className={`voice-connection-badge status-${voiceStatus}`}>
+            {voiceStatus === 'connected' && 'VoiceLive: Connected'}
+            {voiceStatus === 'connecting' && 'VoiceLive: Connecting'}
+            {voiceStatus === 'error' && 'VoiceLive: Error'}
+          </div>
           <button 
             className={`voice-toggle ${voiceEnabled ? 'enabled' : ''}`}
             onClick={() => setVoiceEnabled(!voiceEnabled)}
@@ -89,6 +95,7 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
               agentId={agent.id}
               onMessage={handleVoiceMessage}
               onVisemes={handleVisemes}
+              onStatusChange={setVoiceStatus}
               disabled={!voiceEnabled}
             />
           </div>

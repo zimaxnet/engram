@@ -33,6 +33,11 @@ jobs:
     outputs:
       aca_env_id: ${{ steps.deploy.outputs.acaEnvId }}
       postgres_fqdn: ${{ steps.deploy.outputs.postgresFqdn }}
+      key_vault_uri: ${{ steps.deploy.outputs.keyVaultUri }}
+      backend_url: ${{ steps.deploy.outputs.backendUrl }}
+      temporal_ui_fqdn: ${{ steps.deploy.outputs.temporalUIFqdn }}
+      zep_api_url: ${{ steps.deploy.outputs.zepApiUrl }}
+      openai_endpoint: ${{ steps.deploy.outputs.openAiEndpoint }}
     
     steps:
       - name: Checkout code
@@ -43,16 +48,40 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       
-      - name: Deploy Bicep
+      - name: Create resource group if not exists
+        run: |
+          az group create --name ${{ env.AZURE_RESOURCE_GROUP }} --location ${{ env.AZURE_LOCATION }} || true
+      
+      - name: Deploy Bicep Infrastructure
         id: deploy
         uses: azure/arm-deploy@v2
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           template: ./infra/main.bicep
           parameters: >
-            environment=${{ github.event.inputs.environment || 'staging' }}
+            envName=${{ github.event.inputs.environment || 'staging' }}-env
             location=${{ env.AZURE_LOCATION }}
-          deploymentName: engram-${{ github.sha }}
+            postgresPassword=${{ secrets.POSTGRES_PASSWORD }}
+            adminObjectId=${{ secrets.AZURE_ADMIN_OBJECT_ID }}
+            azureOpenAiKey=${{ secrets.AZURE_OPENAI_KEY || '' }}
+            azureSpeechKey=${{ secrets.AZURE_SPEECH_KEY || '' }}
+            azureAiEndpoint=${{ secrets.AZURE_AI_ENDPOINT || '' }}
+            azureAiProjectName=${{ secrets.AZURE_AI_PROJECT_NAME || '' }}
+            backendImage=ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
+            workerImage=ghcr.io/${{ github.repository }}/worker:${{ github.sha }}
+          deploymentName: engram-infra-${{ github.sha }}
+          deploymentOutputs: outputs
+      
+      - name: Set outputs
+        id: outputs
+        run: |
+          echo "acaEnvId=${{ steps.deploy.outputs.acaEnvId }}" >> $GITHUB_OUTPUT
+          echo "postgresFqdn=${{ steps.deploy.outputs.postgresFqdn }}" >> $GITHUB_OUTPUT
+          echo "keyVaultUri=${{ steps.deploy.outputs.keyVaultUri }}" >> $GITHUB_OUTPUT
+          echo "backendUrl=${{ steps.deploy.outputs.backendUrl }}" >> $GITHUB_OUTPUT
+          echo "temporalUIFqdn=${{ steps.deploy.outputs.temporalUIFqdn }}" >> $GITHUB_OUTPUT
+          echo "zepApiUrl=${{ steps.deploy.outputs.zepApiUrl }}" >> $GITHUB_OUTPUT
+          echo "openAiEndpoint=${{ steps.deploy.outputs.openAiEndpoint }}" >> $GITHUB_OUTPUT
 
   # =============================================================================
   # Deploy Backend
@@ -72,7 +101,7 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       
-      - name: Deploy to Azure Container Apps
+      - name: Deploy Backend API to Azure Container Apps
         uses: azure/container-apps-deploy-action@v1
         with:
           resourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
@@ -82,7 +111,7 @@ jobs:
           ingress: external
           environmentVariables: |
             ENVIRONMENT=${{ github.event.inputs.environment || 'staging' }}
-            AZURE_KEY_VAULT_URL=${{ secrets.AZURE_KEY_VAULT_URL }}
+            AZURE_KEYVAULT_URL=${{ needs.deploy-infra.outputs.key_vault_uri }}
 
   # =============================================================================
   # Deploy Worker
@@ -108,10 +137,10 @@ jobs:
           resourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
           containerAppName: engram-worker
           imageToDeploy: ghcr.io/${{ github.repository }}/worker:${{ github.sha }}
+          ingress: internal
           environmentVariables: |
             ENVIRONMENT=${{ github.event.inputs.environment || 'staging' }}
-            AZURE_KEY_VAULT_URL=${{ secrets.AZURE_KEY_VAULT_URL }}
-            TEMPORAL_HOST=${{ secrets.TEMPORAL_HOST }}
+            AZURE_KEYVAULT_URL=${{ needs.deploy-infra.outputs.key_vault_uri }}
 
   # =============================================================================
   # Deploy Frontend
@@ -140,8 +169,8 @@ jobs:
       
       - name: Build frontend
         env:
-          VITE_API_URL: ${{ secrets.API_URL }}
-          VITE_WS_URL: ${{ secrets.WS_URL }}
+          VITE_API_URL: ${{ needs.deploy-infra.outputs.backend_url }}
+          VITE_WS_URL: ${{ needs.deploy-infra.outputs.backend_url }}
         run: |
           cd frontend
           npm run build
@@ -172,7 +201,11 @@ jobs:
           sleep 30
           
           # Check API health
-          curl -f ${{ secrets.API_URL }}/health || exit 1
+          curl -f ${{ needs.deploy-infra.outputs.backend_url }}/health || exit 1
+          
+          echo "Backend URL: ${{ needs.deploy-infra.outputs.backend_url }}"
+          echo "Temporal UI: ${{ needs.deploy-infra.outputs.temporal_ui_fqdn }}"
+          echo "Zep API: ${{ needs.deploy-infra.outputs.zep_api_url }}"
           
           echo "Deployment successful!"
       
