@@ -1,6 +1,3 @@
-@description('Location for all resources.')
-param location string = resourceGroup().location
-
 @description('DNS zone resource group.')
 param dnsResourceGroup string = 'dns-rg'
 
@@ -13,16 +10,9 @@ param backendFqdn string
 @description('Temporal UI FQDN.')
 param temporalUIFqdn string
 
-@description('Tags to apply to all resources.')
-param tags object = {
-  Project: 'Engram'
-  Component: 'DNS'
-}
-
-// Get DNS zone reference
+// Get DNS zone reference (module is deployed to dns-rg, so zone is in same scope)
 resource dnsZone 'Microsoft.Network/dnszones@2018-05-01' existing = {
   name: dnsZoneName
-  scope: resourceGroup(dnsResourceGroup)
 }
 
 // Backend API CNAME record
@@ -35,7 +25,6 @@ resource backendDns 'Microsoft.Network/dnszones/CNAME@2018-05-01' = {
       cname: backendFqdn
     }
   }
-  tags: tags
 }
 
 // Temporal UI CNAME record
@@ -48,7 +37,6 @@ resource temporalDns 'Microsoft.Network/dnszones/CNAME@2018-05-01' = {
       cname: temporalUIFqdn
     }
   }
-  tags: tags
 }
 
 // Note: Frontend uses apex domain (engram.work) which is already configured

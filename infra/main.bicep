@@ -256,15 +256,16 @@ module swaModule 'static-webapp.bicep' = {
 // DNS Records
 // =============================================================================
 // Note: Frontend uses apex domain (engram.work) which is configured separately
+// Deploy DNS records to the dns-rg resource group where the DNS zone exists
 module dnsModule 'modules/dns.bicep' = {
   name: 'dns'
+  scope: resourceGroup('dns-rg')
   params: {
-    location: location
     dnsResourceGroup: 'dns-rg'
     dnsZoneName: 'engram.work'
     backendFqdn: replace(backendModule.outputs.backendUrl, 'https://', '')
     temporalUIFqdn: replace(temporalModule.outputs.temporalUIFqdn, 'https://', '')
-    tags: tags
+    frontendHostname: swaModule.outputs.swaDefaultHostname
   }
 }
 
