@@ -224,6 +224,17 @@ module workerModule 'modules/worker-aca.bicep' = {
 }
 
 // =============================================================================
+// Static Web App
+// =============================================================================
+module swaModule 'static-webapp.bicep' = {
+  name: 'staticWebApp'
+  params: {
+    location: location
+    swaName: '${envName}-web'
+  }
+}
+
+// =============================================================================
 // Outputs
 // =============================================================================
 output acaEnvId string = acaEnv.id
@@ -233,3 +244,4 @@ output backendUrl string = backendModule.outputs.backendUrl
 output temporalUIFqdn string = temporalModule.outputs.temporalUIFqdn
 output zepApiUrl string = zepModule.outputs.zepApiUrl
 output openAiEndpoint string = openAiModule.outputs.openAiEndpoint
+output swaDefaultHostname string = swaModule.outputs.swaDefaultHostname

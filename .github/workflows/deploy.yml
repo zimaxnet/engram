@@ -82,6 +82,7 @@ jobs:
           echo "temporalUIFqdn=${{ steps.deploy.outputs.temporalUIFqdn }}" >> $GITHUB_OUTPUT
           echo "zepApiUrl=${{ steps.deploy.outputs.zepApiUrl }}" >> $GITHUB_OUTPUT
           echo "openAiEndpoint=${{ steps.deploy.outputs.openAiEndpoint }}" >> $GITHUB_OUTPUT
+          echo "swaDefaultHostname=${{ steps.deploy.outputs.swaDefaultHostname }}" >> $GITHUB_OUTPUT
 
   # =============================================================================
   # Deploy Backend
