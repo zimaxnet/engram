@@ -61,6 +61,9 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
   name: appName
   location: location
   tags: tags
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     managedEnvironmentId: acaEnvId
     configuration: {
@@ -199,4 +202,5 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
 // Outputs
 output backendFqdn string = backendApp.properties.configuration.ingress.fqdn
 output backendUrl string = 'https://${backendApp.properties.configuration.ingress.fqdn}'
+output principalId string = backendApp.identity.principalId
 

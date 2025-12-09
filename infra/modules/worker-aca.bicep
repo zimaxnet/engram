@@ -57,6 +57,9 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
   name: appName
   location: location
   tags: tags
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     managedEnvironmentId: acaEnvId
     configuration: {
@@ -175,4 +178,5 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
 
 // Outputs
 output workerAppName string = workerApp.name
+output principalId string = workerApp.identity.principalId
 
