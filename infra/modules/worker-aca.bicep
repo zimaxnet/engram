@@ -36,6 +36,9 @@ param azureAiEndpoint string = ''
 @description('Azure AI Services project name.')
 param azureAiProjectName string = ''
 
+@description('Key Vault URI.')
+param keyVaultUri string
+
 @description('Registry username.')
 param registryUsername string
 
