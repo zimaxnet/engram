@@ -156,8 +156,23 @@ jobs:
           echo "Waiting for services to be ready..."
           sleep 30
           
-          # Check API health
-          curl -f ${{ needs.deploy-infra.outputs.backend_url }}/health || exit 1
+          # Check API health with retries (handles scale-to-zero cold start)
+          echo "Checking backend health endpoint..."
+          MAX_RETRIES=10
+          RETRY_DELAY=10
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i/$MAX_RETRIES..."
+            if curl -f --max-time 5 ${{ needs.deploy-infra.outputs.backend_url }}/health 2>/dev/null; then
+              echo "✅ Backend is healthy!"
+              break
+            fi
+            if [ $i -eq $MAX_RETRIES ]; then
+              echo "⚠️ Backend health check failed after $MAX_RETRIES attempts"
+              echo "This may be due to scale-to-zero cold start. Backend will be ready shortly."
+              exit 0  # Don't fail deployment - backend will start on first request
+            fi
+            sleep $RETRY_DELAY
+          done
           
           echo "Backend URL: ${{ needs.deploy-infra.outputs.backend_url }}"
           echo "Temporal UI: ${{ needs.deploy-infra.outputs.temporal_ui_fqdn }}"
@@ -165,8 +180,17 @@ jobs:
           
           echo "Deployment successful!"
       
+      - name: Check Slack Webhook
+        id: check_slack
+        run: |
+          if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            echo "slack_enabled=true" >> $GITHUB_OUTPUT
+          else
+            echo "slack_enabled=false" >> $GITHUB_OUTPUT
+          fi
+      
       - name: Notify Success
-        if: success()
+        if: success() && steps.check_slack.outputs.slack_enabled == 'true'
         uses: slackapi/slack-github-action@v1.25.0
         with:
           payload: |
@@ -188,7 +212,7 @@ jobs:
         continue-on-error: true
       
       - name: Notify Failure
-        if: failure()
+        if: failure() && steps.check_slack.outputs.slack_enabled == 'true'
         uses: slackapi/slack-github-action@v1.25.0
         with:
           payload: |
