@@ -62,7 +62,6 @@ jobs:
             envName=${{ github.event.inputs.environment || 'staging' }}-env
             location=${{ env.AZURE_LOCATION }}
             postgresPassword=${{ secrets.POSTGRES_PASSWORD }}
-            adminObjectId=${{ secrets.AZURE_ADMIN_OBJECT_ID }}
             azureOpenAiKey=${{ secrets.AZURE_OPENAI_KEY || '' }}
             azureSpeechKey=${{ secrets.AZURE_SPEECH_KEY || '' }}
             azureAiEndpoint=${{ secrets.AZURE_AI_ENDPOINT || '' }}
