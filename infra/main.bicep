@@ -115,7 +115,7 @@ module keyVaultModule 'modules/keyvault.bicep' = {
   name: 'keyVault'
   params: {
     location: location
-    keyVaultName: '${envName}-kv'
+    keyVaultName: '${envName}-kv-${take(uniqueString(resourceGroup().id), 5)}'
     adminObjectId: adminObjectId
     tags: tags
   }
