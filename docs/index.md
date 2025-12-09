@@ -7,7 +7,7 @@ title: Engram - Context Engineering Platform
 
 > **Cognition-as-a-Service for the Enterprise**
 
-![Engram Platform Architecture](assets/images/engram-platform-architecture.svg)
+![Engram Platform Architecture](assets/images/engram-platform-architecture.png)
 
 ## Overview
 
@@ -30,14 +30,14 @@ Meet our AI agents:
 
 <div class="agent-cards">
   <div class="agent-card elena">
-    <img src="assets/images/elena-portrait.svg" alt="Dr. Elena Vasquez" class="agent-portrait">
+    <img src="assets/images/elena-portrait.png" alt="Dr. Elena Vasquez" class="agent-portrait">
     <h3>Dr. Elena Vasquez</h3>
     <p class="role">Business Analyst</p>
     <p>Expert in requirements analysis, stakeholder management, and digital transformation strategy.</p>
   </div>
   
   <div class="agent-card marcus">
-    <img src="assets/images/marcus-portrait.svg" alt="Marcus Chen" class="agent-portrait">
+    <img src="assets/images/marcus-portrait.png" alt="Marcus Chen" class="agent-portrait">
     <h3>Marcus Chen</h3>
     <p class="role">Project Manager</p>
     <p>Specialist in program management, Agile transformation, and enterprise delivery.</p>
@@ -74,7 +74,7 @@ Meet our AI agents:
 
 ### Voice Interaction Flow
 
-![Voice Interaction Flow](assets/images/voice-interaction-flow.svg)
+![Voice Interaction Flow](assets/images/voice-interaction-flow.png)
 
 ## Quick Links
 
