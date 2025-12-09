@@ -1,6 +1,6 @@
 # Engram Enterprise PoC - Status Document
 
-**Last Updated**: January 2025  
+**Last Updated**: December 2025  
 **Status**: 100% Complete - Ready for Production Deploy
 
 ---
@@ -16,7 +16,7 @@ Engram is an enterprise-grade **Context Engineering Platform** that solves the M
 - **Core Architecture**: ✅ Complete
 - **Agent Framework**: ✅ Complete (Elena & Marcus)
 - **Memory Layer**: ✅ Complete (Zep Cloud integration)
-- **Voice Integration**: ✅ Complete (Azure VoiceLive)
+- **Voice Integration**: ✅ Complete (Azure Speech Services - STT/TTS)
 - **Frontend**: ✅ Complete (React + VoiceChat)
 - **Infrastructure**: ✅ Complete (Bicep + CI/CD)
 - **Security Foundation**: ✅ Complete (RBAC + Entra ID + Tests)
@@ -71,7 +71,7 @@ The foundation of Engram's context engineering approach:
 - LangGraph state machine with tool calling
 - Context-first requirements framework
 - Warm, analytical communication style
-- VoiceLive integration with natural conversation flow
+- Speech Services integration with natural conversation flow
 
 #### Marcus - Project Manager Agent
 **File**: [`backend/agents/marcus/agent.py`](backend/agents/marcus/agent.py)
@@ -131,31 +131,38 @@ The foundation of Engram's context engineering approach:
 
 ---
 
-### 4. Voice Integration (Azure VoiceLive)
+### 4. Voice Integration (Azure Speech Services)
 
-**File**: [`backend/voice/voicelive_service.py`](backend/voice/voicelive_service.py)
+**File**: [`backend/voice/speech_service.py`](backend/voice/speech_service.py)
 
 #### Features
 
-**Real-Time Voice Conversation**:
-- Bidirectional audio streaming (PCM16 format)
-- Server-side Voice Activity Detection (VAD)
-- Audio echo cancellation and noise reduction
-- Natural turn-taking with barge-in support
-- Direct GPT model integration
+**Speech-to-Text (STT)**:
+- Real-time audio transcription
+- Multiple language support
+- Streaming recognition for continuous input
+- Push-to-talk and hands-free modes
 
-**WebSocket Endpoint**: `/api/v1/voice/voicelive/{session_id}`
+**Text-to-Speech (TTS)**:
+- Natural voice synthesis with neural voices
+- Agent-specific voice selection
+- Viseme data generation for lip-sync (available but not used for avatar)
+- Audio format: PCM16, 24kHz
+
+**WebSocket Endpoints**:
+- `/api/v1/voice/ws/{session_id}` - Traditional voice chat with STT/TTS
+- `/api/v1/voice/voicelive/{session_id}` - VoiceLive endpoint (available but not primary)
 
 **Protocol**:
 - Client → Server: `{"type": "audio", "data": "<base64>"}`
-- Server → Client: `{"type": "audio", "data": "<base64>"}`
-- Transcription updates: `{"type": "transcription", "status": "listening|processing|complete", "text": "..."}`
-- Agent switching: `{"type": "agent", "agent_id": "elena|marcus"}`
+- Server → Client: `{"type": "transcription", "text": "...", "is_final": bool}`
+- Server → Client: `{"type": "response", "text": "...", "audio": "<base64>", "visemes": [...]}`
+- Agent switching: `{"type": "agent_switched", "agent_id": "elena|marcus"}`
 
-**Agent-Specific Configuration**:
-- Elena: Warm, measured voice with Miami accent
-- Marcus: Confident, energetic Pacific Northwest tone
-- Custom system instructions per agent
+**Agent-Specific Voice Configuration**:
+- Elena: Warm, professional neural voice
+- Marcus: Confident, direct neural voice
+- Custom voice selection per agent
 
 #### Frontend Integration
 **File**: [`frontend/src/components/VoiceChat/VoiceChat.tsx`](frontend/src/components/VoiceChat/VoiceChat.tsx)
@@ -165,6 +172,7 @@ The foundation of Engram's context engineering approach:
 - Audio playback with visual feedback
 - Connection status indicators
 - Agent switching during conversation
+- Viseme data received but avatar display not integrated
 
 ---
 
@@ -186,10 +194,11 @@ The foundation of Engram's context engineering approach:
 - Voice integration toggle
 
 **VoiceChat** (`frontend/src/components/VoiceChat/VoiceChat.tsx`):
-- WebSocket connection to VoiceLive endpoint
+- WebSocket connection to Speech Services endpoint (`/ws/{session_id}`)
 - Audio capture and playback
-- Transcription display
+- Real-time transcription display
 - Status indicators (connecting, listening, processing, speaking)
+- Viseme data received but not used for avatar (avatar not implemented)
 
 **VisualPanel** (`frontend/src/components/VisualPanel/VisualPanel.tsx`):
 - Session metrics (tokens, latency, cost, turns)
@@ -245,6 +254,8 @@ The foundation of Engram's context engineering approach:
 - `worker-aca.bicep` - Temporal worker Container App
 - `temporal-aca.bicep` - Temporal server Container App
 - `zep-aca.bicep` - Zep service Container App (optional, using hosted)
+- `dns.bicep` - DNS CNAME records for custom domains
+- `static-webapp.bicep` - Static Web App for frontend
 
 **Main Template**: [`infra/main.bicep`](infra/main.bicep)
 - Resource group orchestration
@@ -252,6 +263,7 @@ The foundation of Engram's context engineering approach:
 - Storage Account for ETL pipeline
 - Log Analytics workspace
 - Container Apps Environment
+- DNS configuration (api.engram.work, temporal.engram.work)
 
 #### CI/CD Pipeline
 
@@ -334,7 +346,7 @@ The foundation of Engram's context engineering approach:
 | **Entra ID Integration** | High | 2-3 hrs | Configure real Entra ID tenant, test token flow, verify role mapping | ✅ Ready (Mock Verified) |
 | **Rate Limiting** | Medium | 1-2 hrs | Implement request throttling middleware (per user, per endpoint) | ✅ Ready |
 | **Production Deploy** | High | 2-3 hrs | Full Azure deployment test, verify all services communicate, test end-to-end flows | ✅ Ready to Trigger |
-| **Load Testing** | Low | 2-3 hrs | Stress test VoiceLive + chat endpoints, verify scaling behavior | ⏳ Post-PoC |
+| **Load Testing** | Low | 2-3 hrs | Stress test Speech Services + chat endpoints, verify scaling behavior | ⏳ Post-PoC |
 | **Avatar Service** | Low | 3-4 hrs | Complete WebRTC integration for avatar lip-sync (currently placeholder) | ⏳ Post-PoC |
 | **Human-in-the-Loop** | Low | 2-3 hrs | Test approval workflow signals, verify timeout handling | ✅ Verified |
 
@@ -379,18 +391,19 @@ The foundation of Engram's context engineering approach:
 **Expected Outcome**: Smooth transition with context preservation
 
 ### Scenario 4: Voice Interaction
-**Objective**: Demonstrate real-time VoiceLive conversation
+**Objective**: Demonstrate real-time voice conversation with Speech Services
 
 **Flow**:
 1. User clicks voice button in ChatPanel
-2. WebSocket connects to `/voicelive/{session_id}`
+2. WebSocket connects to `/ws/{session_id}`
 3. User speaks: "Help me analyze these requirements"
-4. Elena responds with voice, transcription displayed
-5. Natural back-and-forth conversation
-6. User switches to Marcus via voice command
-7. Marcus continues conversation with different voice persona
+4. Speech-to-text transcribes input in real-time
+5. Elena responds with synthesized voice, transcription displayed
+6. Natural back-and-forth conversation
+7. User switches to Marcus via voice command
+8. Marcus continues conversation with different voice persona
 
-**Expected Outcome**: Natural voice conversation with real-time transcription and agent switching
+**Expected Outcome**: Natural voice conversation with real-time transcription and agent switching using Azure Speech Services
 
 ---
 
@@ -403,9 +416,10 @@ The foundation of Engram's context engineering approach:
 - **Future**: Migrate to new Zep search API when available
 
 ### 2. Avatar Service
-- **Status**: Placeholder implementation
+- **Status**: Not implemented (placeholder code exists)
 - **Missing**: Full WebRTC integration for real-time avatar rendering
-- **Current**: Viseme generation works, but avatar display not fully integrated
+- **Current**: Viseme data is generated from TTS but not used for avatar display
+- **Decision**: Avatar functionality removed from PoC scope - focusing on voice interaction only
 - **Priority**: Low (voice interaction works without avatar)
 
 ### 3. Human-in-the-Loop Approval
@@ -448,11 +462,13 @@ The foundation of Engram's context engineering approach:
 - **Cost Effective**: Pay-per-use model
 - **Enterprise Ready**: Multi-tenant isolation, API key authentication
 
-### Why Azure VoiceLive?
-- **Real-Time**: Sub-200ms latency for natural conversation
-- **Server-Side VAD**: Better than client-side for reliability
-- **Direct GPT Integration**: No separate STT/TTS pipeline needed
+### Why Azure Speech Services?
+- **Mature Technology**: Well-established STT/TTS services with proven reliability
+- **Flexible Integration**: Separate STT/TTS allows for custom processing pipelines
+- **Cost Effective**: Pay-per-use model with predictable pricing
 - **Enterprise Support**: Azure SLA and compliance
+- **Voice Selection**: Wide variety of neural voices for agent personas
+- **Note**: VoiceLive SDK available but Speech Services chosen for current implementation
 
 ---
 
@@ -483,7 +499,7 @@ The foundation of Engram's context engineering approach:
 
 ### PoC Demo Success Criteria
 - ✅ Elena and Marcus agents respond correctly to queries
-- ✅ VoiceLive conversation works with <500ms latency
+- ✅ Voice conversation works with Speech Services (STT/TTS)
 - ✅ Agent switching preserves context
 - ✅ Memory enrichment retrieves relevant facts
 - ✅ Frontend displays real-time updates
@@ -505,24 +521,35 @@ The foundation of Engram's context engineering approach:
 
 The Engram Enterprise PoC is **100% complete** and ready for production deployment. All core functionality is working:
 - ✅ Agent reasoning with tools (Elena & Marcus)
-- ✅ Voice interaction with VoiceLive
+- ✅ Voice interaction with Azure Speech Services (STT/TTS)
 - ✅ Memory persistence with Zep Cloud
 - ✅ Frontend with real-time updates
 - ✅ Infrastructure as code (Bicep + CI/CD)
 - ✅ Security foundation (RBAC + Entra ID)
 - ✅ Temporal workflows verified
 - ✅ Production hardening complete
+- ✅ DNS configuration (api.engram.work, temporal.engram.work)
 
 **Post-PoC work** (optional enhancements):
 - Load testing and performance optimization
-- Avatar service WebRTC integration
+- Avatar service WebRTC integration (if desired)
 - Additional Entra ID tenant configuration
 
 The platform demonstrates the viability of **Context Engineering** as a paradigm for enterprise AI, with a production-ready foundation for scaling.
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: January 2025  
+**Document Version**: 1.1  
+**Last Updated**: December 2025  
 **Maintained By**: Engram Development Team
+
+## Change Log
+
+### Version 1.1 (December 2025)
+- Updated voice integration from VoiceLive to Azure Speech Services (STT/TTS)
+- Removed avatar/WebRTC references (not implemented in current PoC)
+- Updated DNS configuration details (api.engram.work, temporal.engram.work)
+- Clarified implementation decisions and current state
+- Updated architecture decisions to reflect Speech Services choice
+- Added DNS module to infrastructure documentation
 

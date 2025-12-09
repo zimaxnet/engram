@@ -170,20 +170,25 @@ module temporalModule 'modules/temporal-aca.bicep' = {
 }
 
 // =============================================================================
-// Zep Container App
+// Zep Configuration
 // =============================================================================
-module zepModule 'modules/zep-aca.bicep' = {
-  name: 'zep'
-  params: {
-    location: location
-    acaEnvId: acaEnv.id
-    postgresFqdn: postgres.properties.fullyQualifiedDomainName
-    postgresUser: 'cogadmin'
-    postgresPassword: postgresPassword
-    postgresDb: 'engram'
-    tags: tags
-  }
-}
+// Using Zep Cloud (app.getzep.com) instead of self-hosted container
+// The Zep container module is commented out - we use Zep Cloud API
+// module zepModule 'modules/zep-aca.bicep' = {
+//   name: 'zep'
+//   params: {
+//     location: location
+//     acaEnvId: acaEnv.id
+//     postgresFqdn: postgres.properties.fullyQualifiedDomainName
+//     postgresUser: 'cogadmin'
+//     postgresPassword: postgresPassword
+//     postgresDb: 'engram'
+//     tags: tags
+//   }
+// }
+
+// Zep Cloud API URL
+var zepApiUrl = 'https://app.getzep.com'
 
 // =============================================================================
 // Backend API Container App
@@ -197,7 +202,7 @@ module backendModule 'modules/backend-aca.bicep' = {
     postgresFqdn: postgres.properties.fullyQualifiedDomainName
     postgresPassword: postgresPassword
     temporalHost: temporalModule.outputs.temporalHost
-    zepApiUrl: zepModule.outputs.zepApiUrl
+    zepApiUrl: zepApiUrl
     openAiKey: azureOpenAiKey
     openAiEndpoint: openAiModule.outputs.openAiEndpoint
     speechKey: azureSpeechKey
@@ -223,7 +228,7 @@ module workerModule 'modules/worker-aca.bicep' = {
     postgresFqdn: postgres.properties.fullyQualifiedDomainName
     postgresPassword: postgresPassword
     temporalHost: temporalModule.outputs.temporalHost
-    zepApiUrl: zepModule.outputs.zepApiUrl
+    zepApiUrl: zepApiUrl
     openAiKey: azureOpenAiKey
     openAiEndpoint: openAiModule.outputs.openAiEndpoint
     azureAiEndpoint: azureAiEndpoint
@@ -248,13 +253,32 @@ module swaModule 'static-webapp.bicep' = {
 }
 
 // =============================================================================
+// DNS Records
+// =============================================================================
+// Note: Frontend uses apex domain (engram.work) which is configured separately
+module dnsModule 'modules/dns.bicep' = {
+  name: 'dns'
+  params: {
+    location: location
+    dnsResourceGroup: 'dns-rg'
+    dnsZoneName: 'engram.work'
+    backendFqdn: replace(backendModule.outputs.backendUrl, 'https://', '')
+    temporalUIFqdn: replace(temporalModule.outputs.temporalUIFqdn, 'https://', '')
+    tags: tags
+  }
+}
+
+// =============================================================================
 // Outputs
 // =============================================================================
 output acaEnvId string = acaEnv.id
 output postgresFqdn string = postgres.properties.fullyQualifiedDomainName
 output keyVaultUri string = keyVaultModule.outputs.keyVaultUri
 output backendUrl string = backendModule.outputs.backendUrl
+output backendDnsName string = dnsModule.outputs.backendDnsName
 output temporalUIFqdn string = temporalModule.outputs.temporalUIFqdn
-output zepApiUrl string = zepModule.outputs.zepApiUrl
+output temporalDnsName string = dnsModule.outputs.temporalDnsName
+output zepApiUrl string = zepApiUrl
 output openAiEndpoint string = openAiModule.outputs.openAiEndpoint
 output swaDefaultHostname string = swaModule.outputs.swaDefaultHostname
+output frontendDnsName string = dnsModule.outputs.frontendDnsName

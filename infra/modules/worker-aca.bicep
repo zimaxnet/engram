@@ -188,6 +188,7 @@ resource keyVaultSecretUserRole 'Microsoft.Authorization/roleDefinitions@2022-04
   scope: subscription()
 }
 
+/*
 resource keyVaultRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: keyVault
   name: guid(keyVault.id, workerApp.id, keyVaultSecretUserRole.id)
@@ -197,6 +198,7 @@ resource keyVaultRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04
     principalType: 'ServicePrincipal'
   }
 }
+*/
 
 // Outputs
 output workerAppName string = workerApp.name

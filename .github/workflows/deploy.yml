@@ -71,20 +71,21 @@ jobs:
             registryUsername=${{ github.actor }}
             registryPassword=${{ secrets.GITHUB_TOKEN }}
           deploymentName: engram-infra-${{ github.sha }}
-          deploymentOutputs: outputs
           failOnStdErr: false
       
-      - name: Set outputs
+      - name: Get deployment outputs
         id: outputs
         run: |
-          echo "acaEnvId=${{ steps.deploy.outputs.acaEnvId }}" >> $GITHUB_OUTPUT
-          echo "postgresFqdn=${{ steps.deploy.outputs.postgresFqdn }}" >> $GITHUB_OUTPUT
-          echo "keyVaultUri=${{ steps.deploy.outputs.keyVaultUri }}" >> $GITHUB_OUTPUT
-          echo "backendUrl=${{ steps.deploy.outputs.backendUrl }}" >> $GITHUB_OUTPUT
-          echo "temporalUIFqdn=${{ steps.deploy.outputs.temporalUIFqdn }}" >> $GITHUB_OUTPUT
-          echo "zepApiUrl=${{ steps.deploy.outputs.zepApiUrl }}" >> $GITHUB_OUTPUT
-          echo "openAiEndpoint=${{ steps.deploy.outputs.openAiEndpoint }}" >> $GITHUB_OUTPUT
-          echo "swaDefaultHostname=${{ steps.deploy.outputs.swaDefaultHostname }}" >> $GITHUB_OUTPUT
+          # Query deployment outputs using Azure CLI
+          DEPLOYMENT_NAME="engram-infra-${{ github.sha }}"
+          echo "aca_env_id=$(az deployment group show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name $DEPLOYMENT_NAME --query 'properties.outputs.acaEnvId.value' -o tsv)" >> $GITHUB_OUTPUT
+          echo "postgres_fqdn=$(az deployment group show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name $DEPLOYMENT_NAME --query 'properties.outputs.postgresFqdn.value' -o tsv)" >> $GITHUB_OUTPUT
+          echo "key_vault_uri=$(az deployment group show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name $DEPLOYMENT_NAME --query 'properties.outputs.keyVaultUri.value' -o tsv)" >> $GITHUB_OUTPUT
+          echo "backend_url=$(az deployment group show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name $DEPLOYMENT_NAME --query 'properties.outputs.backendUrl.value' -o tsv)" >> $GITHUB_OUTPUT
+          echo "temporal_ui_fqdn=$(az deployment group show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name $DEPLOYMENT_NAME --query 'properties.outputs.temporalUIFqdn.value' -o tsv)" >> $GITHUB_OUTPUT
+          echo "zep_api_url=$(az deployment group show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name $DEPLOYMENT_NAME --query 'properties.outputs.zepApiUrl.value' -o tsv)" >> $GITHUB_OUTPUT
+          echo "openai_endpoint=$(az deployment group show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name $DEPLOYMENT_NAME --query 'properties.outputs.openAiEndpoint.value' -o tsv)" >> $GITHUB_OUTPUT
+          echo "swa_default_hostname=$(az deployment group show --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name $DEPLOYMENT_NAME --query 'properties.outputs.swaDefaultHostname.value' -o tsv)" >> $GITHUB_OUTPUT
 
   # =============================================================================
   # Deploy Frontend
