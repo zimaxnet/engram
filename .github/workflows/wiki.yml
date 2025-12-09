@@ -31,7 +31,7 @@ jobs:
       
       - name: Install Jekyll
         run: |
-          gem install bundler jekyll jekyll-relative-links jekyll-seo-tag
+          gem install bundler jekyll jekyll-relative-links jekyll-seo-tag jekyll-theme-minimal
       
       - name: Build site
         run: |
