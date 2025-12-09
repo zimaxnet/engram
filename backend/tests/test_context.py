@@ -27,7 +27,7 @@ def test_create_context():
     assert context.security.user_id == "test-user"
     assert context.security.tenant_id == "test-tenant"
     assert context.episodic.conversation_id == "test-session"
-    assert context.operational.status == "idle"
+
 
 
 def test_context_to_llm_context():

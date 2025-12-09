@@ -17,7 +17,7 @@ from enum import Enum
 from typing import Optional
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 # =============================================================================
@@ -355,6 +355,16 @@ class EnterpriseContext(BaseModel):
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat(), UUID: lambda v: str(v)}
+
+    @model_validator(mode="after")
+    def sync_session_ids(self) -> "EnterpriseContext":
+        """Sync conversation ID from security session ID if mismatched"""
+        if (
+            self.security.session_id
+            and self.episodic.conversation_id != self.security.session_id
+        ):
+            self.episodic.conversation_id = self.security.session_id
+        return self
 
     def to_llm_context(self) -> str:
         """
