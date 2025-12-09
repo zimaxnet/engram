@@ -38,9 +38,9 @@ resource temporalServer 'Microsoft.App/containerApps@2023-05-01' = {
     managedEnvironmentId: acaEnvId
     configuration: {
       ingress: {
-        external: true
+        external: false
         targetPort: 7233
-        transport: 'tcp'
+        // transport: 'tcp' // Internal ingress handles this automatically, external TCP needs VNet
         allowInsecure: false
       }
       dapr: {
