@@ -20,6 +20,7 @@ Engram is an enterprise-grade AI platform that solves the **Memory Wall Problem*
 | 🧠 **Context Engineering** | 4-layer enterprise context schema for rich, structured AI interactions |
 | 🦴 **Durable Workflows** | Temporal-based orchestration surviving crashes and enabling human-in-the-loop |
 | 💾 **Temporal Knowledge Graph** | Zep + Graphiti for episodic and semantic memory |
+| 🚦 **System Navigator** | Unified UI for memory exploration, workflow management, and admin oversight |
 | 🎤 **Voice Interaction** | Azure VoiceLive with real-time bidirectional audio and avatar |
 | 🔐 **Enterprise Security** | Entra ID authentication with fine-grained RBAC |
 | 💰 **FinOps-First** | Scale-to-zero architecture minimizing costs |
@@ -79,6 +80,7 @@ Meet our AI agents:
 ## Quick Links
 
 - [Architecture Deep Dive](architecture.md)
+- [System Navigator Guide](system-navigator.md)
 - [Agent Personas](agents.md)
 - [Visual Development Guide](visual-development.md)
 - [FinOps Strategy](finops.md)

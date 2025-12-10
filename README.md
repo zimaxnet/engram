@@ -88,6 +88,7 @@ See [Deployment Guide](docs/deployment.md) for full details.
 - 🧠 **Context Engineering** - 4-layer enterprise context schema
 - 🦴 **Durable Workflows** - Temporal-based orchestration
 - 💾 **Temporal Knowledge Graph** - Zep + Graphiti memory
+- 🚦 **System Navigator** - Comprehensive admin & memory explorer UI
 - 🎤 **Voice Interaction** - Azure Speech SDK with avatar
 - 🔐 **Enterprise Security** - Entra ID + RBAC
 - 💰 **FinOps-First** - Scale-to-zero architecture

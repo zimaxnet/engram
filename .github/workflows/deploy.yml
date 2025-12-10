@@ -138,7 +138,7 @@ jobs:
           azure_static_web_apps_api_token: ${{ env.SWA_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "/frontend/dist"
+          app_location: "frontend/dist"
           output_location: ""
           skip_app_build: true
 
@@ -163,7 +163,7 @@ jobs:
           RETRY_DELAY=10
           for i in $(seq 1 $MAX_RETRIES); do
             echo "Attempt $i/$MAX_RETRIES..."
-            if curl -f --max-time 5 ${{ needs.deploy-infra.outputs.backend_url }}/health 2>/dev/null; then
+            if curl -f --max-time 10 ${{ needs.deploy-infra.outputs.backend_url }}/health 2>/dev/null; then
               echo "✅ Backend is healthy!"
               break
             fi
