@@ -83,7 +83,7 @@ async def search_memory(
             total_count=len(results),
             query_time_ms=(datetime.now() - start_time).total_seconds() * 1000,
         )
-    except Exception as e:
+    except Exception:
         # Fallback to empty
         return MemorySearchResponse(
             results=[],
