@@ -348,14 +348,16 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
 
         # Create avatar session for this voice session
         avatar_session = await create_avatar_session(session_id, current_agent_id)
-        
+
         # Send avatar session configuration to frontend
-        await websocket.send_json({
-            "type": "avatar_session",
-            "session_id": avatar_session.session_id,
-            "agent_id": avatar_session.agent_id,
-            "webrtc_config": avatar_service.get_webrtc_config(avatar_session),
-        })
+        await websocket.send_json(
+            {
+                "type": "avatar_session",
+                "session_id": avatar_session.session_id,
+                "agent_id": avatar_session.agent_id,
+                "webrtc_config": avatar_service.get_webrtc_config(avatar_session),
+            }
+        )
 
         # Create VoiceLive session
         session = await voicelive_service.create_session(
@@ -374,16 +376,18 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
         async def on_audio(audio_data: bytes):
             """Handle audio from assistant"""
             nonlocal response_start_time
-            
+
             if response_start_time is None:
                 response_start_time = time.time()
                 # Notify avatar that speaking is starting
-                await websocket.send_json({
-                    "type": "avatar_speaking",
-                    "status": "start",
-                    "agent_id": current_agent_id,
-                })
-            
+                await websocket.send_json(
+                    {
+                        "type": "avatar_speaking",
+                        "status": "start",
+                        "agent_id": current_agent_id,
+                    }
+                )
+
             audio_base64 = base64.b64encode(audio_data).decode("utf-8")
             await websocket.send_json(
                 {
@@ -418,17 +422,19 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
             nonlocal response_start_time, response_visemes, active_response, response_api_done
             response_api_done = True
             active_response = False
-            
+
             if response_start_time:
                 duration_ms = int((time.time() - response_start_time) * 1000)
                 # Notify avatar that speaking is done
-                await websocket.send_json({
-                    "type": "avatar_speaking",
-                    "status": "done",
-                    "duration_ms": duration_ms,
-                    "visemes": response_visemes,
-                    "agent_id": current_agent_id,
-                })
+                await websocket.send_json(
+                    {
+                        "type": "avatar_speaking",
+                        "status": "done",
+                        "duration_ms": duration_ms,
+                        "visemes": response_visemes,
+                        "agent_id": current_agent_id,
+                    }
+                )
                 response_start_time = None
                 response_visemes = []
 
@@ -436,18 +442,20 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
             """Handle conversation item events - may contain text for viseme generation"""
             # Conversation items may contain text that we can use for viseme generation
             # This is useful for avatar lip-sync
-            if hasattr(event, 'item') and hasattr(event.item, 'content'):
-                logger.debug(f"Conversation item text: {event.item.content[:50] if event.item.content else 'N/A'}...")
+            if hasattr(event, "item") and hasattr(event.item, "content"):
+                logger.debug(
+                    f"Conversation item text: {event.item.content[:50] if event.item.content else 'N/A'}..."
+                )
                 # Could extract text here for viseme generation if needed
 
         # Start event processing in background
         event_task = asyncio.create_task(
             session.process_events(
-                on_audio, 
-                on_transcription, 
+                on_audio,
+                on_transcription,
                 on_response_done,
                 on_response_created,
-                on_conversation_item
+                on_conversation_item,
             )
         )
 
@@ -482,18 +490,25 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                         await voicelive_service.close_session(session_id)
                         # Create new session with different agent
                         current_agent_id = new_agent_id
-                        
+
                         # Update avatar session for new agent
                         from backend.voice import close_avatar_session
+
                         await close_avatar_session(session_id)
-                        avatar_session = await create_avatar_session(session_id, current_agent_id)
-                        await websocket.send_json({
-                            "type": "avatar_session",
-                            "session_id": avatar_session.session_id,
-                            "agent_id": avatar_session.agent_id,
-                            "webrtc_config": avatar_service.get_webrtc_config(avatar_session),
-                        })
-                        
+                        avatar_session = await create_avatar_session(
+                            session_id, current_agent_id
+                        )
+                        await websocket.send_json(
+                            {
+                                "type": "avatar_session",
+                                "session_id": avatar_session.session_id,
+                                "agent_id": avatar_session.agent_id,
+                                "webrtc_config": avatar_service.get_webrtc_config(
+                                    avatar_session
+                                ),
+                            }
+                        )
+
                         session = await voicelive_service.create_session(
                             session_id=session_id,
                             agent_id=current_agent_id,
@@ -501,11 +516,11 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                         # Restart event processing
                         event_task = asyncio.create_task(
                             session.process_events(
-                                on_audio, 
-                                on_transcription, 
+                                on_audio,
+                                on_transcription,
                                 on_response_done,
                                 on_response_created,
-                                on_conversation_item
+                                on_conversation_item,
                             )
                         )
                         await websocket.send_json(
@@ -564,6 +579,7 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
             await voicelive_service.close_session(session_id)
             # Close avatar session
             from backend.voice import close_avatar_session
+
             await close_avatar_session(session_id)
             logger.info(f"VoiceLive WebSocket disconnected: {session_id}")
 
@@ -572,6 +588,7 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
         await voicelive_service.close_session(session_id)
         # Close avatar session
         from backend.voice import close_avatar_session
+
         await close_avatar_session(session_id)
     except Exception as e:
         logger.error(f"VoiceLive WebSocket error: {e}")
@@ -594,28 +611,33 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
 # Please use /api/v1/voice/voicelive/{session_id} instead.
 # =============================================================================
 
+
 @router.websocket("/ws/{session_id}")
 async def voice_chat_websocket(websocket: WebSocket, session_id: str):
     """
     [DEPRECATED] Legacy WebSocket endpoint for real-time voice chat.
-    
+
     This endpoint uses Speech Services (STT/TTS) and is being phased out.
     Please use /api/v1/voice/voicelive/{session_id} instead, which provides:
     - VoiceLive real-time voice conversation
     - Integrated avatar support
     - Better performance and lower latency
-    
+
     This endpoint will be removed in a future version.
     """
     await websocket.accept()
-    
-    # Send deprecation warning
-    await websocket.send_json({
-        "type": "warning",
-        "message": "This endpoint is deprecated. Please use /api/v1/voice/voicelive/{session_id} instead."
-    })
 
-    logger.warning(f"DEPRECATED: Legacy voice WebSocket connected: {session_id} - Use VoiceLive endpoint instead")
+    # Send deprecation warning
+    await websocket.send_json(
+        {
+            "type": "warning",
+            "message": "This endpoint is deprecated. Please use /api/v1/voice/voicelive/{session_id} instead.",
+        }
+    )
+
+    logger.warning(
+        f"DEPRECATED: Legacy voice WebSocket connected: {session_id} - Use VoiceLive endpoint instead"
+    )
 
     try:
         from backend.voice import (

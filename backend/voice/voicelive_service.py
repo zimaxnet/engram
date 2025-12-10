@@ -141,17 +141,17 @@ class VoiceLiveSession:
         await self.connection.input_audio_buffer.append(audio=audio_base64)
 
     async def process_events(
-        self, 
-        on_audio: callable, 
-        on_transcription: callable, 
+        self,
+        on_audio: callable,
+        on_transcription: callable,
         on_response_done: callable = None,
         on_response_created: callable = None,
-        on_conversation_item: callable = None
+        on_conversation_item: callable = None,
     ):
         """Process VoiceLive events and call handlers
-        
+
         Based on Microsoft's VoiceLive reference implementation patterns.
-        
+
         Args:
             on_audio: Callback for audio chunks (bytes)
             on_transcription: Callback for transcription updates (status: str, text: str)
@@ -200,14 +200,23 @@ class VoiceLiveSession:
 
                 elif event.type == ServerEventType.CONVERSATION_ITEM_CREATED:
                     # Conversation item created - may contain text/transcription
-                    logger.debug(f"Conversation item created: {event.item.id if hasattr(event, 'item') else 'unknown'}")
+                    logger.debug(
+                        f"Conversation item created: {event.item.id if hasattr(event, 'item') else 'unknown'}"
+                    )
                     if on_conversation_item:
                         await on_conversation_item(event)
 
                 elif event.type == ServerEventType.ERROR:
-                    error_msg = event.error.message if hasattr(event, 'error') and event.error else str(event)
+                    error_msg = (
+                        event.error.message
+                        if hasattr(event, "error") and event.error
+                        else str(event)
+                    )
                     # Handle benign cancellation errors
-                    if "Cancellation failed: no active response" in error_msg or "no active response" in error_msg.lower():
+                    if (
+                        "Cancellation failed: no active response" in error_msg
+                        or "no active response" in error_msg.lower()
+                    ):
                         logger.debug(f"Benign cancellation error: {error_msg}")
                     else:
                         logger.error(f"VoiceLive error: {error_msg}")
