@@ -4,7 +4,7 @@ param location string = resourceGroup().location
 @description('Name of the SWA.')
 param swaName string = 'engram-web'
 
-// param customDomainName string = 'engram.work'
+param customDomainName string = 'engram.work'
 
 resource swa 'Microsoft.Web/staticSites@2022-03-01' = {
   name: swaName
@@ -22,10 +22,10 @@ resource swa 'Microsoft.Web/staticSites@2022-03-01' = {
   }
 }
 
-// resource customDomain 'Microsoft.Web/staticSites/customDomains@2022-03-01' = {
-//   parent: swa
-//   name: customDomainName
-//   properties: {}
-// }
+resource customDomain 'Microsoft.Web/staticSites/customDomains@2022-03-01' = {
+  parent: swa
+  name: customDomainName
+  properties: {}
+}
 
 output swaDefaultHostname string = swa.properties.defaultHostname
