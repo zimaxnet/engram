@@ -72,8 +72,8 @@ export function GeneralSettings() {
                         <label>Default Agent</label>
                         <input
                             type="text"
-                            value={settings.default_agent || ''}
-                            onChange={e => setSettings({ ...settings, default_agent: e.target.value })}
+                            value={(settings['default_agent'] as string) || ''}
+                            onChange={(e) => setSettings({ ...settings, default_agent: e.target.value })}
                             style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
                         />
                     </div>

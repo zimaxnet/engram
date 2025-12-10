@@ -6,6 +6,7 @@ export interface Agent {
     title: string;
     accentColor: string;
     avatarUrl: string;
+    description?: string;
 }
 
 export const AGENTS: Record<AgentId, Agent> = {
