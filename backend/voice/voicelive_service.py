@@ -140,8 +140,25 @@ class VoiceLiveSession:
 
         await self.connection.input_audio_buffer.append(audio=audio_base64)
 
-    async def process_events(self, on_audio: callable, on_transcription: callable):
-        """Process VoiceLive events and call handlers"""
+    async def process_events(
+        self, 
+        on_audio: callable, 
+        on_transcription: callable, 
+        on_response_done: callable = None,
+        on_response_created: callable = None,
+        on_conversation_item: callable = None
+    ):
+        """Process VoiceLive events and call handlers
+        
+        Based on Microsoft's VoiceLive reference implementation patterns.
+        
+        Args:
+            on_audio: Callback for audio chunks (bytes)
+            on_transcription: Callback for transcription updates (status: str, text: str)
+            on_response_done: Optional callback for when response completes (for avatar)
+            on_response_created: Optional callback when response is created (for avatar start)
+            on_conversation_item: Optional callback for conversation items (for text/transcription)
+        """
         if not self.connection:
             raise RuntimeError("VoiceLive session not connected")
 
@@ -160,6 +177,12 @@ class VoiceLiveSession:
                     if on_transcription:
                         await on_transcription("listening", "stop")
 
+                elif event.type == ServerEventType.RESPONSE_CREATED:
+                    # Response creation event - useful for avatar start
+                    logger.debug("Response created")
+                    if on_response_created:
+                        await on_response_created()
+
                 elif event.type == ServerEventType.RESPONSE_AUDIO_DELTA:
                     # Audio chunk from assistant
                     if on_audio and event.delta:
@@ -167,14 +190,31 @@ class VoiceLiveSession:
 
                 elif event.type == ServerEventType.RESPONSE_AUDIO_DONE:
                     logger.debug("Assistant finished speaking")
+                    if on_response_done:
+                        await on_response_done()
 
                 elif event.type == ServerEventType.RESPONSE_DONE:
                     logger.debug("Response complete")
+                    if on_response_done:
+                        await on_response_done()
+
+                elif event.type == ServerEventType.CONVERSATION_ITEM_CREATED:
+                    # Conversation item created - may contain text/transcription
+                    logger.debug(f"Conversation item created: {event.item.id if hasattr(event, 'item') else 'unknown'}")
+                    if on_conversation_item:
+                        await on_conversation_item(event)
 
                 elif event.type == ServerEventType.ERROR:
-                    logger.error(f"VoiceLive error: {event.error.message}")
-                    if on_transcription:
-                        await on_transcription("error", event.error.message)
+                    error_msg = event.error.message if hasattr(event, 'error') and event.error else str(event)
+                    # Handle benign cancellation errors
+                    if "Cancellation failed: no active response" in error_msg or "no active response" in error_msg.lower():
+                        logger.debug(f"Benign cancellation error: {error_msg}")
+                    else:
+                        logger.error(f"VoiceLive error: {error_msg}")
+                        if on_transcription:
+                            await on_transcription("error", error_msg)
+                else:
+                    logger.debug(f"Unhandled event type: {event.type}")
 
         except Exception as e:
             logger.error(f"Error processing VoiceLive events: {e}")
