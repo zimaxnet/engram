@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { checkHealth, getAuditLogs } from '../../services/api';
 
 export function SystemHealth() {
-    const [health, setHealth] = useState<{ status: string; environment: string; version: string } | null>(null);
+    const [health, setHealth] = useState<{ status: string; timestamp: string; version: string } | null>(null);
     const [logs, setLogs] = useState<{ id: string; action: string; resource: string; user_id: string }[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -60,7 +60,7 @@ export function SystemHealth() {
                             </div>
                         )}
                         <div style={{ marginTop: '1rem', opacity: 0.7, fontSize: '0.9em' }}>
-                            Environment: {health?.environment || 'Unknown'} <br />
+                            Last Checked: {health?.timestamp ? new Date(health.timestamp).toLocaleTimeString() : 'Unknown'} <br />
                             Version: {health?.version || '0.0.0'}
                         </div>
                     </div>
