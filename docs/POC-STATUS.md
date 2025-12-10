@@ -464,13 +464,14 @@ The foundation of Engram's context engineering approach:
 - **Cost Effective**: Pay-per-use model
 - **Enterprise Ready**: Multi-tenant isolation, API key authentication
 
-### Why Azure Speech Services?
-- **Mature Technology**: Well-established STT/TTS services with proven reliability
-- **Flexible Integration**: Separate STT/TTS allows for custom processing pipelines
-- **Cost Effective**: Pay-per-use model with predictable pricing
+### Why Azure VoiceLive?
+- **Real-time Voice**: Direct integration with GPT models for natural conversation
+- **Server-side VAD**: Automatic voice activity detection and turn-taking
+- **Barge-in Support**: Natural interruption handling for fluid conversations
+- **Echo Cancellation**: Built-in audio processing for better quality
+- **Low Latency**: Real-time bidirectional streaming for responsive interaction
+- **Agent Integration**: Direct connection to agent personas with custom instructions
 - **Enterprise Support**: Azure SLA and compliance
-- **Voice Selection**: Wide variety of neural voices for agent personas
-- **Note**: VoiceLive SDK available but Speech Services chosen for current implementation
 
 ---
 
