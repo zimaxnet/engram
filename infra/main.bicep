@@ -205,7 +205,6 @@ module backendModule 'modules/backend-aca.bicep' = {
   name: 'backend'
   params: {
     location: location
-    acaEnvId: acaEnv.id
     acaEnvName: acaEnv.name
     containerImage: backendImage
     postgresFqdn: postgres.properties.fullyQualifiedDomainName
