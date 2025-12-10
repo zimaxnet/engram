@@ -234,10 +234,15 @@ export class ApiClient {
 
     let filtered = workflows;
     if (status) {
-      filtered = workflows.filter(w => w.status === status);
+      filtered = workflows.filter(w => w.status === status)
     }
 
-    return Promise.resolve({ workflows: filtered, total_count: filtered.length });
+    const paginated = filtered.slice(offset, offset + limit);
+
+    return {
+      workflows: paginated,
+      total_count: filtered.length
+    };
   }
 
   async getWorkflow(workflowId: string) {

@@ -134,7 +134,7 @@ export function Episodes() {
                             {selectedTranscript.length === 0 ? (
                                 <p style={{ opacity: 0.6 }}>No detailed transcript available for this episode.</p>
                             ) : (
-                                selectedTranscript.map((msg: any, i: number) => (
+                                selectedTranscript.map((msg: { role: string; content: string }, i: number) => (
                                     <div key={i} style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                                         <div style={{
                                             fontWeight: 'bold',
