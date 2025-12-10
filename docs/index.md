@@ -20,7 +20,7 @@ Engram is an enterprise-grade AI platform that solves the **Memory Wall Problem*
 | 🧠 **Context Engineering** | 4-layer enterprise context schema for rich, structured AI interactions |
 | 🦴 **Durable Workflows** | Temporal-based orchestration surviving crashes and enabling human-in-the-loop |
 | 💾 **Temporal Knowledge Graph** | Zep + Graphiti for episodic and semantic memory |
-| 🎤 **Voice Interaction** | Azure Speech SDK with real-time lip-sync avatar |
+| 🎤 **Voice Interaction** | Azure VoiceLive with real-time bidirectional audio and avatar |
 | 🔐 **Enterprise Security** | Entra ID authentication with fine-grained RBAC |
 | 💰 **FinOps-First** | Scale-to-zero architecture minimizing costs |
 
@@ -106,7 +106,7 @@ open http://localhost:5173
 | Agent Framework | LangGraph + Azure OpenAI |
 | Orchestration | Temporal |
 | Memory | Zep + Graphiti |
-| Voice | Azure Speech SDK |
+| Voice | Azure VoiceLive |
 | Infrastructure | Azure Container Apps |
 | Authentication | Microsoft Entra ID |
 | Observability | OpenTelemetry + App Insights |
