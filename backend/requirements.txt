@@ -23,6 +23,10 @@ langchain>=0.1.0
 langchain-openai>=0.1.0
 langgraph>=0.0.20
 
+# ETL
+unstructured[all-docs]>=0.12.0
+python-magic>=0.4.27
+
 # Memory & Orchestration
 zep-python>=2.0.0
 temporalio>=1.4.0

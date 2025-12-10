@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Agent } from '../../App'
+import type { Agent } from '../../types'
 import AvatarDisplay from '../AvatarDisplay'
 import VoiceChat from '../VoiceChat'
 import './VisualPanel.css'
@@ -30,11 +30,11 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
   const [expression, setExpression] = useState<'neutral' | 'smile' | 'thinking' | 'listening'>('neutral')
   const [voiceEnabled, setVoiceEnabled] = useState(true)
   const [voiceStatus, setVoiceStatus] = useState<'connecting' | 'connected' | 'error'>('connecting')
-  
+
   const handleVisemes = (visemes: Viseme[]) => {
     setCurrentVisemes(visemes)
     setIsSpeaking(true)
-    
+
     // Calculate total duration and stop speaking when done
     if (visemes.length > 0) {
       const lastViseme = visemes[visemes.length - 1]
@@ -44,14 +44,14 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
       }, lastViseme.time_ms + 500)
     }
   }
-  
+
   const handleVoiceMessage = (message: { text: string; type: string }) => {
     if (message.type === 'user') {
       setExpression('thinking')
     } else {
       setExpression('neutral')
     }
-    
+
     onVoiceMessage?.({
       text: message.text,
       type: message.type as 'user' | 'agent'
@@ -69,7 +69,7 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
             {voiceStatus === 'connecting' && 'VoiceLive: Connecting'}
             {voiceStatus === 'error' && 'VoiceLive: Error'}
           </div>
-          <button 
+          <button
             className={`voice-toggle ${voiceEnabled ? 'enabled' : ''}`}
             onClick={() => setVoiceEnabled(!voiceEnabled)}
             title={voiceEnabled ? 'Disable voice' : 'Enable voice'}
@@ -77,7 +77,7 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
             {voiceEnabled ? '🔊' : '🔇'}
           </button>
         </div>
-        
+
         {/* Avatar Component */}
         <AvatarDisplay
           agentId={agent.id as 'elena' | 'marcus'}
@@ -87,7 +87,7 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
           showName={true}
           size="lg"
         />
-        
+
         {/* Voice Chat Component */}
         {voiceEnabled && (
           <div className="voice-section">
@@ -157,7 +157,7 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
         <div className="config-content">
           <div className="config-row">
             <span className="config-label">Model</span>
-            <select 
+            <select
               value={model}
               onChange={(e) => onModelChange(e.target.value)}
               className="config-select"
@@ -170,10 +170,10 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
           <div className="config-row">
             <span className="config-label">Temperature</span>
             <div className="config-slider-container">
-              <input 
-                type="range" 
-                min="0" 
-                max="100" 
+              <input
+                type="range"
+                min="0"
+                max="100"
                 defaultValue="70"
                 className="config-slider"
               />
@@ -183,10 +183,10 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
           <div className="config-row">
             <span className="config-label">Max Tokens</span>
             <div className="config-slider-container">
-              <input 
-                type="range" 
-                min="0" 
-                max="100" 
+              <input
+                type="range"
+                min="0"
+                max="100"
                 defaultValue="80"
                 className="config-slider"
               />

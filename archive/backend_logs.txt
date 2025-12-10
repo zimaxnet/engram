@@ -1,0 +1,778 @@
+Backend Tests	Set up job	﻿2025-12-10T02:12:18.6862521Z Current runner version: '2.329.0'
+Backend Tests	Set up job	2025-12-10T02:12:18.6898371Z ##[group]Runner Image Provisioner
+Backend Tests	Set up job	2025-12-10T02:12:18.6899655Z Hosted Compute Agent
+Backend Tests	Set up job	2025-12-10T02:12:18.6900562Z Version: 20251124.448
+Backend Tests	Set up job	2025-12-10T02:12:18.6901566Z Commit: fda5086b43ec66ade217e5fcd18146c879571177
+Backend Tests	Set up job	2025-12-10T02:12:18.6902907Z Build Date: 2025-11-24T21:16:26Z
+Backend Tests	Set up job	2025-12-10T02:12:18.6904238Z ##[endgroup]
+Backend Tests	Set up job	2025-12-10T02:12:18.6905162Z ##[group]Operating System
+Backend Tests	Set up job	2025-12-10T02:12:18.6906247Z Ubuntu
+Backend Tests	Set up job	2025-12-10T02:12:18.6906976Z 24.04.3
+Backend Tests	Set up job	2025-12-10T02:12:18.6907749Z LTS
+Backend Tests	Set up job	2025-12-10T02:12:18.6908630Z ##[endgroup]
+Backend Tests	Set up job	2025-12-10T02:12:18.6909578Z ##[group]Runner Image
+Backend Tests	Set up job	2025-12-10T02:12:18.6910564Z Image: ubuntu-24.04
+Backend Tests	Set up job	2025-12-10T02:12:18.6911461Z Version: 20251126.144.1
+Backend Tests	Set up job	2025-12-10T02:12:18.6913487Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20251126.144/images/ubuntu/Ubuntu2404-Readme.md
+Backend Tests	Set up job	2025-12-10T02:12:18.6916015Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20251126.144
+Backend Tests	Set up job	2025-12-10T02:12:18.6918140Z ##[endgroup]
+Backend Tests	Set up job	2025-12-10T02:12:18.6920324Z ##[group]GITHUB_TOKEN Permissions
+Backend Tests	Set up job	2025-12-10T02:12:18.6923612Z Contents: read
+Backend Tests	Set up job	2025-12-10T02:12:18.6924533Z Metadata: read
+Backend Tests	Set up job	2025-12-10T02:12:18.6925887Z Packages: write
+Backend Tests	Set up job	2025-12-10T02:12:18.6927023Z SecurityEvents: write
+Backend Tests	Set up job	2025-12-10T02:12:18.6927981Z ##[endgroup]
+Backend Tests	Set up job	2025-12-10T02:12:18.6931510Z Secret source: Actions
+Backend Tests	Set up job	2025-12-10T02:12:18.6933088Z Prepare workflow directory
+Backend Tests	Set up job	2025-12-10T02:12:18.7538904Z Prepare all required actions
+Backend Tests	Set up job	2025-12-10T02:12:18.7593070Z Getting action download info
+Backend Tests	Set up job	2025-12-10T02:12:19.0465605Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+Backend Tests	Set up job	2025-12-10T02:12:19.3142067Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+Backend Tests	Set up job	2025-12-10T02:12:19.3947156Z Download action repository 'codecov/codecov-action@v4' (SHA:b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238)
+Backend Tests	Set up job	2025-12-10T02:12:19.7055986Z Complete job name: Backend Tests
+Backend Tests	Initialize containers	﻿2025-12-10T02:12:19.7549345Z ##[group]Checking docker version
+Backend Tests	Initialize containers	2025-12-10T02:12:19.7561822Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+Backend Tests	Initialize containers	2025-12-10T02:12:19.8465591Z '1.48'
+Backend Tests	Initialize containers	2025-12-10T02:12:19.8478481Z Docker daemon API version: '1.48'
+Backend Tests	Initialize containers	2025-12-10T02:12:19.8479267Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+Backend Tests	Initialize containers	2025-12-10T02:12:19.8639496Z '1.48'
+Backend Tests	Initialize containers	2025-12-10T02:12:19.8652920Z Docker client API version: '1.48'
+Backend Tests	Initialize containers	2025-12-10T02:12:19.8658662Z ##[endgroup]
+Backend Tests	Initialize containers	2025-12-10T02:12:19.8661735Z ##[group]Clean up resources from previous jobs
+Backend Tests	Initialize containers	2025-12-10T02:12:19.8667271Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=52230c"
+Backend Tests	Initialize containers	2025-12-10T02:12:19.8806609Z ##[command]/usr/bin/docker network prune --force --filter "label=52230c"
+Backend Tests	Initialize containers	2025-12-10T02:12:19.8936006Z ##[endgroup]
+Backend Tests	Initialize containers	2025-12-10T02:12:19.8936520Z ##[group]Create local container network
+Backend Tests	Initialize containers	2025-12-10T02:12:19.8946685Z ##[command]/usr/bin/docker network create --label 52230c github_network_aab7a902cf094f36b944449d9472045c
+Backend Tests	Initialize containers	2025-12-10T02:12:19.9434773Z 33de9839300c433f2783a27f5559b1cb00ae33b7f4d0ead5c042178fc1850597
+Backend Tests	Initialize containers	2025-12-10T02:12:19.9451285Z ##[endgroup]
+Backend Tests	Initialize containers	2025-12-10T02:12:19.9477642Z ##[group]Starting postgres service container
+Backend Tests	Initialize containers	2025-12-10T02:12:19.9496696Z ##[command]/usr/bin/docker pull postgres:15
+Backend Tests	Initialize containers	2025-12-10T02:12:20.2103838Z 15: Pulling from library/postgres
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3026750Z 1733a4cd5954: Pulling fs layer
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3028192Z 66fe66faf896: Pulling fs layer
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3029065Z c94f51fe9236: Pulling fs layer
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3030016Z 9602d06b4e70: Pulling fs layer
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3030825Z fab6e4443d8a: Pulling fs layer
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3031630Z f2a9e5883151: Pulling fs layer
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3032433Z 8d363c2df07a: Pulling fs layer
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3033439Z 5cdd56139991: Pulling fs layer
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3034268Z aa55ead71133: Pulling fs layer
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3035118Z 758ebfa119db: Pulling fs layer
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3036216Z 798e92f9757e: Pulling fs layer
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3037118Z ada9fa789fdc: Pulling fs layer
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3038371Z 3e738c3a66c8: Pulling fs layer
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3039264Z 687b178dca38: Pulling fs layer
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3040138Z aa55ead71133: Waiting
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3040956Z 758ebfa119db: Waiting
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3041751Z 798e92f9757e: Waiting
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3042577Z ada9fa789fdc: Waiting
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3043691Z 3e738c3a66c8: Waiting
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3044587Z 9602d06b4e70: Waiting
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3045481Z 687b178dca38: Waiting
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3046389Z fab6e4443d8a: Waiting
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3047451Z 8d363c2df07a: Waiting
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3048504Z 5cdd56139991: Waiting
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3049555Z f2a9e5883151: Waiting
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3886979Z 66fe66faf896: Verifying Checksum
+Backend Tests	Initialize containers	2025-12-10T02:12:20.3888976Z 66fe66faf896: Download complete
+Backend Tests	Initialize containers	2025-12-10T02:12:20.4765087Z c94f51fe9236: Verifying Checksum
+Backend Tests	Initialize containers	2025-12-10T02:12:20.4768782Z c94f51fe9236: Download complete
+Backend Tests	Initialize containers	2025-12-10T02:12:20.5055380Z 9602d06b4e70: Verifying Checksum
+Backend Tests	Initialize containers	2025-12-10T02:12:20.5057461Z 9602d06b4e70: Download complete
+Backend Tests	Initialize containers	2025-12-10T02:12:20.6170731Z f2a9e5883151: Verifying Checksum
+Backend Tests	Initialize containers	2025-12-10T02:12:20.6174569Z f2a9e5883151: Download complete
+Backend Tests	Initialize containers	2025-12-10T02:12:20.6747803Z 1733a4cd5954: Verifying Checksum
+Backend Tests	Initialize containers	2025-12-10T02:12:20.6749887Z 1733a4cd5954: Download complete
+Backend Tests	Initialize containers	2025-12-10T02:12:20.7121782Z 8d363c2df07a: Verifying Checksum
+Backend Tests	Initialize containers	2025-12-10T02:12:20.7124237Z 8d363c2df07a: Download complete
+Backend Tests	Initialize containers	2025-12-10T02:12:20.7306720Z fab6e4443d8a: Verifying Checksum
+Backend Tests	Initialize containers	2025-12-10T02:12:20.7311433Z fab6e4443d8a: Download complete
+Backend Tests	Initialize containers	2025-12-10T02:12:20.7694937Z 5cdd56139991: Verifying Checksum
+Backend Tests	Initialize containers	2025-12-10T02:12:20.7697093Z 5cdd56139991: Download complete
+Backend Tests	Initialize containers	2025-12-10T02:12:20.8204697Z 758ebfa119db: Verifying Checksum
+Backend Tests	Initialize containers	2025-12-10T02:12:20.8206793Z 758ebfa119db: Download complete
+Backend Tests	Initialize containers	2025-12-10T02:12:20.8542663Z 798e92f9757e: Verifying Checksum
+Backend Tests	Initialize containers	2025-12-10T02:12:20.8546018Z 798e92f9757e: Download complete
+Backend Tests	Initialize containers	2025-12-10T02:12:20.9008762Z ada9fa789fdc: Verifying Checksum
+Backend Tests	Initialize containers	2025-12-10T02:12:20.9010918Z ada9fa789fdc: Download complete
+Backend Tests	Initialize containers	2025-12-10T02:12:20.9398734Z 3e738c3a66c8: Verifying Checksum
+Backend Tests	Initialize containers	2025-12-10T02:12:20.9917000Z 687b178dca38: Verifying Checksum
+Backend Tests	Initialize containers	2025-12-10T02:12:20.9919017Z 687b178dca38: Download complete
+Backend Tests	Initialize containers	2025-12-10T02:12:21.7086067Z 1733a4cd5954: Pull complete
+Backend Tests	Initialize containers	2025-12-10T02:12:21.8685504Z 66fe66faf896: Pull complete
+Backend Tests	Initialize containers	2025-12-10T02:12:22.0679267Z c94f51fe9236: Pull complete
+Backend Tests	Initialize containers	2025-12-10T02:12:22.1265965Z 9602d06b4e70: Pull complete
+Backend Tests	Initialize containers	2025-12-10T02:12:22.4483407Z fab6e4443d8a: Pull complete
+Backend Tests	Initialize containers	2025-12-10T02:12:22.5194747Z aa55ead71133: Verifying Checksum
+Backend Tests	Initialize containers	2025-12-10T02:12:22.5195430Z aa55ead71133: Download complete
+Backend Tests	Initialize containers	2025-12-10T02:12:22.5678758Z f2a9e5883151: Pull complete
+Backend Tests	Initialize containers	2025-12-10T02:12:22.5817395Z 8d363c2df07a: Pull complete
+Backend Tests	Initialize containers	2025-12-10T02:12:22.5994861Z 5cdd56139991: Pull complete
+Backend Tests	Initialize containers	2025-12-10T02:12:25.4550974Z aa55ead71133: Pull complete
+Backend Tests	Initialize containers	2025-12-10T02:12:25.4692969Z 758ebfa119db: Pull complete
+Backend Tests	Initialize containers	2025-12-10T02:12:25.4875574Z 798e92f9757e: Pull complete
+Backend Tests	Initialize containers	2025-12-10T02:12:25.5011812Z ada9fa789fdc: Pull complete
+Backend Tests	Initialize containers	2025-12-10T02:12:25.5149005Z 3e738c3a66c8: Pull complete
+Backend Tests	Initialize containers	2025-12-10T02:12:25.5265815Z 687b178dca38: Pull complete
+Backend Tests	Initialize containers	2025-12-10T02:12:25.5311683Z Digest: sha256:0f34b3378f8982d16add539e7b11411ee8386d43a9e0c30dcfd63d25f2f3df26
+Backend Tests	Initialize containers	2025-12-10T02:12:25.5326799Z Status: Downloaded newer image for postgres:15
+Backend Tests	Initialize containers	2025-12-10T02:12:25.5360684Z docker.io/library/postgres:15
+Backend Tests	Initialize containers	2025-12-10T02:12:25.5420809Z ##[command]/usr/bin/docker create --name 72d6674851bb45828fd537e7d4e9f142_postgres15_bce304 --label 52230c --network github_network_aab7a902cf094f36b944449d9472045c --network-alias postgres -p 5432:5432 --health-cmd="pg_isready -U postgres" --health-interval=10s --health-timeout=5s --health-retries=5 -e "POSTGRES_USER=postgres" -e "POSTGRES_PASSWORD=postgres" -e "POSTGRES_DB=engram_test" -e GITHUB_ACTIONS=true -e CI=true postgres:15
+Backend Tests	Initialize containers	2025-12-10T02:12:25.5707085Z 3e971dded236ed52e04465153dbc4d6b0272308a28fbca212378751f8a9506d3
+Backend Tests	Initialize containers	2025-12-10T02:12:25.5730309Z ##[command]/usr/bin/docker start 3e971dded236ed52e04465153dbc4d6b0272308a28fbca212378751f8a9506d3
+Backend Tests	Initialize containers	2025-12-10T02:12:25.7827403Z 3e971dded236ed52e04465153dbc4d6b0272308a28fbca212378751f8a9506d3
+Backend Tests	Initialize containers	2025-12-10T02:12:25.7850978Z ##[command]/usr/bin/docker ps --all --filter id=3e971dded236ed52e04465153dbc4d6b0272308a28fbca212378751f8a9506d3 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+Backend Tests	Initialize containers	2025-12-10T02:12:25.7980800Z 3e971dded236ed52e04465153dbc4d6b0272308a28fbca212378751f8a9506d3 Up Less than a second (health: starting)
+Backend Tests	Initialize containers	2025-12-10T02:12:25.8002257Z ##[command]/usr/bin/docker port 3e971dded236ed52e04465153dbc4d6b0272308a28fbca212378751f8a9506d3
+Backend Tests	Initialize containers	2025-12-10T02:12:25.8133027Z 5432/tcp -> 0.0.0.0:5432
+Backend Tests	Initialize containers	2025-12-10T02:12:25.8133843Z 5432/tcp -> [::]:5432
+Backend Tests	Initialize containers	2025-12-10T02:12:25.8180142Z ##[endgroup]
+Backend Tests	Initialize containers	2025-12-10T02:12:25.8189038Z ##[group]Waiting for all services to be ready
+Backend Tests	Initialize containers	2025-12-10T02:12:25.8202159Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 3e971dded236ed52e04465153dbc4d6b0272308a28fbca212378751f8a9506d3
+Backend Tests	Initialize containers	2025-12-10T02:12:25.8338402Z starting
+Backend Tests	Initialize containers	2025-12-10T02:12:25.8360600Z postgres service is starting, waiting 2 seconds before checking again.
+Backend Tests	Initialize containers	2025-12-10T02:12:27.8366533Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 3e971dded236ed52e04465153dbc4d6b0272308a28fbca212378751f8a9506d3
+Backend Tests	Initialize containers	2025-12-10T02:12:27.8487582Z starting
+Backend Tests	Initialize containers	2025-12-10T02:12:27.8500755Z postgres service is starting, waiting 4 seconds before checking again.
+Backend Tests	Initialize containers	2025-12-10T02:12:32.0646771Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 3e971dded236ed52e04465153dbc4d6b0272308a28fbca212378751f8a9506d3
+Backend Tests	Initialize containers	2025-12-10T02:12:32.0764855Z starting
+Backend Tests	Initialize containers	2025-12-10T02:12:32.0778573Z postgres service is starting, waiting 9 seconds before checking again.
+Backend Tests	Initialize containers	2025-12-10T02:12:41.0886788Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 3e971dded236ed52e04465153dbc4d6b0272308a28fbca212378751f8a9506d3
+Backend Tests	Initialize containers	2025-12-10T02:12:41.1012182Z healthy
+Backend Tests	Initialize containers	2025-12-10T02:12:41.1036453Z postgres service is healthy.
+Backend Tests	Initialize containers	2025-12-10T02:12:41.1037082Z ##[endgroup]
+Backend Tests	Checkout code	﻿2025-12-10T02:12:41.1276716Z ##[group]Run actions/checkout@v4
+Backend Tests	Checkout code	2025-12-10T02:12:41.1277231Z with:
+Backend Tests	Checkout code	2025-12-10T02:12:41.1277430Z   repository: zimaxnet/engram
+Backend Tests	Checkout code	2025-12-10T02:12:41.1277787Z   token: ***
+Backend Tests	Checkout code	2025-12-10T02:12:41.1277961Z   ssh-strict: true
+Backend Tests	Checkout code	2025-12-10T02:12:41.1278138Z   ssh-user: git
+Backend Tests	Checkout code	2025-12-10T02:12:41.1278323Z   persist-credentials: true
+Backend Tests	Checkout code	2025-12-10T02:12:41.1278539Z   clean: true
+Backend Tests	Checkout code	2025-12-10T02:12:41.1278720Z   sparse-checkout-cone-mode: true
+Backend Tests	Checkout code	2025-12-10T02:12:41.1278950Z   fetch-depth: 1
+Backend Tests	Checkout code	2025-12-10T02:12:41.1279121Z   fetch-tags: false
+Backend Tests	Checkout code	2025-12-10T02:12:41.1279302Z   show-progress: true
+Backend Tests	Checkout code	2025-12-10T02:12:41.1279476Z   lfs: false
+Backend Tests	Checkout code	2025-12-10T02:12:41.1279637Z   submodules: false
+Backend Tests	Checkout code	2025-12-10T02:12:41.1279818Z   set-safe-directory: true
+Backend Tests	Checkout code	2025-12-10T02:12:41.1280178Z env:
+Backend Tests	Checkout code	2025-12-10T02:12:41.1280359Z   PYTHON_VERSION: 3.11
+Backend Tests	Checkout code	2025-12-10T02:12:41.1280545Z   NODE_VERSION: 20
+Backend Tests	Checkout code	2025-12-10T02:12:41.1280718Z ##[endgroup]
+Backend Tests	Checkout code	2025-12-10T02:12:41.2346769Z Syncing repository: zimaxnet/engram
+Backend Tests	Checkout code	2025-12-10T02:12:41.2347986Z ##[group]Getting Git version info
+Backend Tests	Checkout code	2025-12-10T02:12:41.2348424Z Working directory is '/home/runner/work/engram/engram'
+Backend Tests	Checkout code	2025-12-10T02:12:41.2348963Z [command]/usr/bin/git version
+Backend Tests	Checkout code	2025-12-10T02:12:41.2441873Z git version 2.52.0
+Backend Tests	Checkout code	2025-12-10T02:12:41.2469263Z ##[endgroup]
+Backend Tests	Checkout code	2025-12-10T02:12:41.2485831Z Temporarily overriding HOME='/home/runner/work/_temp/e46594bd-f354-4101-9363-858eae228dc3' before making global git config changes
+Backend Tests	Checkout code	2025-12-10T02:12:41.2487114Z Adding repository directory to the temporary git global config as a safe directory
+Backend Tests	Checkout code	2025-12-10T02:12:41.2501825Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/engram/engram
+Backend Tests	Checkout code	2025-12-10T02:12:41.2543719Z Deleting the contents of '/home/runner/work/engram/engram'
+Backend Tests	Checkout code	2025-12-10T02:12:41.2617250Z ##[group]Initializing the repository
+Backend Tests	Checkout code	2025-12-10T02:12:41.2617846Z [command]/usr/bin/git init /home/runner/work/engram/engram
+Backend Tests	Checkout code	2025-12-10T02:12:41.2690150Z hint: Using 'master' as the name for the initial branch. This default branch name
+Backend Tests	Checkout code	2025-12-10T02:12:41.2691371Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+Backend Tests	Checkout code	2025-12-10T02:12:41.2692136Z hint: to use in all of your new repositories, which will suppress this warning,
+Backend Tests	Checkout code	2025-12-10T02:12:41.2692532Z hint: call:
+Backend Tests	Checkout code	2025-12-10T02:12:41.2692713Z hint:
+Backend Tests	Checkout code	2025-12-10T02:12:41.2692993Z hint: 	git config --global init.defaultBranch <name>
+Backend Tests	Checkout code	2025-12-10T02:12:41.2693511Z hint:
+Backend Tests	Checkout code	2025-12-10T02:12:41.2693814Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+Backend Tests	Checkout code	2025-12-10T02:12:41.2694344Z hint: 'development'. The just-created branch can be renamed via this command:
+Backend Tests	Checkout code	2025-12-10T02:12:41.2694968Z hint:
+Backend Tests	Checkout code	2025-12-10T02:12:41.2695319Z hint: 	git branch -m <name>
+Backend Tests	Checkout code	2025-12-10T02:12:41.2695702Z hint:
+Backend Tests	Checkout code	2025-12-10T02:12:41.2696082Z hint: Disable this message with "git config set advice.defaultBranchName false"
+Backend Tests	Checkout code	2025-12-10T02:12:41.2696631Z Initialized empty Git repository in /home/runner/work/engram/engram/.git/
+Backend Tests	Checkout code	2025-12-10T02:12:41.2708699Z [command]/usr/bin/git remote add origin https://github.com/zimaxnet/engram
+Backend Tests	Checkout code	2025-12-10T02:12:41.2748523Z ##[endgroup]
+Backend Tests	Checkout code	2025-12-10T02:12:41.2749136Z ##[group]Disabling automatic garbage collection
+Backend Tests	Checkout code	2025-12-10T02:12:41.2753760Z [command]/usr/bin/git config --local gc.auto 0
+Backend Tests	Checkout code	2025-12-10T02:12:41.2781820Z ##[endgroup]
+Backend Tests	Checkout code	2025-12-10T02:12:41.2782160Z ##[group]Setting up auth
+Backend Tests	Checkout code	2025-12-10T02:12:41.2789575Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Backend Tests	Checkout code	2025-12-10T02:12:41.2820168Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Backend Tests	Checkout code	2025-12-10T02:12:41.3188105Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Backend Tests	Checkout code	2025-12-10T02:12:41.3217843Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Backend Tests	Checkout code	2025-12-10T02:12:41.3434812Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Backend Tests	Checkout code	2025-12-10T02:12:41.3465715Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Backend Tests	Checkout code	2025-12-10T02:12:41.3690127Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Backend Tests	Checkout code	2025-12-10T02:12:41.3722797Z ##[endgroup]
+Backend Tests	Checkout code	2025-12-10T02:12:41.3724005Z ##[group]Fetching the repository
+Backend Tests	Checkout code	2025-12-10T02:12:41.3731914Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +64b50f3bf477bc243e5258e3ca5f093c87593d47:refs/remotes/origin/main
+Backend Tests	Checkout code	2025-12-10T02:12:43.1764114Z From https://github.com/zimaxnet/engram
+Backend Tests	Checkout code	2025-12-10T02:12:43.1765090Z  * [new ref]         64b50f3bf477bc243e5258e3ca5f093c87593d47 -> origin/main
+Backend Tests	Checkout code	2025-12-10T02:12:43.1799033Z ##[endgroup]
+Backend Tests	Checkout code	2025-12-10T02:12:43.1799613Z ##[group]Determining the checkout info
+Backend Tests	Checkout code	2025-12-10T02:12:43.1801165Z ##[endgroup]
+Backend Tests	Checkout code	2025-12-10T02:12:43.1805896Z [command]/usr/bin/git sparse-checkout disable
+Backend Tests	Checkout code	2025-12-10T02:12:43.1854344Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Backend Tests	Checkout code	2025-12-10T02:12:43.1885653Z ##[group]Checking out the ref
+Backend Tests	Checkout code	2025-12-10T02:12:43.1890721Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Backend Tests	Checkout code	2025-12-10T02:12:43.9856596Z Switched to a new branch 'main'
+Backend Tests	Checkout code	2025-12-10T02:12:43.9857196Z branch 'main' set up to track 'origin/main'.
+Backend Tests	Checkout code	2025-12-10T02:12:43.9890977Z ##[endgroup]
+Backend Tests	Checkout code	2025-12-10T02:12:43.9930264Z [command]/usr/bin/git log -1 --format=%H
+Backend Tests	Checkout code	2025-12-10T02:12:43.9953720Z 64b50f3bf477bc243e5258e3ca5f093c87593d47
+Backend Tests	Set up Python	﻿2025-12-10T02:12:44.0164724Z ##[group]Run actions/setup-python@v5
+Backend Tests	Set up Python	2025-12-10T02:12:44.0165006Z with:
+Backend Tests	Set up Python	2025-12-10T02:12:44.0165186Z   python-version: 3.11
+Backend Tests	Set up Python	2025-12-10T02:12:44.0165384Z   cache: pip
+Backend Tests	Set up Python	2025-12-10T02:12:44.0165562Z   check-latest: false
+Backend Tests	Set up Python	2025-12-10T02:12:44.0166048Z   token: ***
+Backend Tests	Set up Python	2025-12-10T02:12:44.0166230Z   update-environment: true
+Backend Tests	Set up Python	2025-12-10T02:12:44.0166450Z   allow-prereleases: false
+Backend Tests	Set up Python	2025-12-10T02:12:44.0166649Z   freethreaded: false
+Backend Tests	Set up Python	2025-12-10T02:12:44.0166828Z env:
+Backend Tests	Set up Python	2025-12-10T02:12:44.0166980Z   PYTHON_VERSION: 3.11
+Backend Tests	Set up Python	2025-12-10T02:12:44.0167170Z   NODE_VERSION: 20
+Backend Tests	Set up Python	2025-12-10T02:12:44.0167334Z ##[endgroup]
+Backend Tests	Set up Python	2025-12-10T02:12:44.1823981Z ##[group]Installed versions
+Backend Tests	Set up Python	2025-12-10T02:12:44.1935575Z Successfully set up CPython (3.11.14)
+Backend Tests	Set up Python	2025-12-10T02:12:44.1936769Z ##[endgroup]
+Backend Tests	Set up Python	2025-12-10T02:12:44.9373914Z [command]/opt/hostedtoolcache/Python/3.11.14/x64/bin/pip cache dir
+Backend Tests	Set up Python	2025-12-10T02:12:46.8033385Z /home/runner/.cache/pip
+Backend Tests	Set up Python	2025-12-10T02:12:46.9119978Z Cache hit for: setup-python-Linux-x64-24.04-Ubuntu-python-3.11.14-pip-2d2c7e4904ab8c08daa4daa7436170efb3acc52bb0c04023e20adae48fbd880a
+Backend Tests	Set up Python	2025-12-10T02:12:47.6217733Z Received 124253499 of 124253499 (100.0%), 175.0 MBs/sec
+Backend Tests	Set up Python	2025-12-10T02:12:47.6218826Z Cache Size: ~118 MB (124253499 B)
+Backend Tests	Set up Python	2025-12-10T02:12:47.6254089Z [command]/usr/bin/tar -xf /home/runner/work/_temp/e25b7a48-0f2a-4024-9327-a0e38115fd92/cache.tzst -P -C /home/runner/work/engram/engram --use-compress-program unzstd
+Backend Tests	Set up Python	2025-12-10T02:12:47.8504959Z Cache restored successfully
+Backend Tests	Set up Python	2025-12-10T02:12:47.8749178Z Cache restored from key: setup-python-Linux-x64-24.04-Ubuntu-python-3.11.14-pip-2d2c7e4904ab8c08daa4daa7436170efb3acc52bb0c04023e20adae48fbd880a
+Backend Tests	Install dependencies	﻿2025-12-10T02:12:47.8923407Z ##[group]Run cd backend
+Backend Tests	Install dependencies	2025-12-10T02:12:47.8923745Z [36;1mcd backend[0m
+Backend Tests	Install dependencies	2025-12-10T02:12:47.8923987Z [36;1mpip install -r requirements.txt[0m
+Backend Tests	Install dependencies	2025-12-10T02:12:47.8924311Z [36;1mpip install pytest pytest-asyncio pytest-cov[0m
+Backend Tests	Install dependencies	2025-12-10T02:12:47.8964470Z shell: /usr/bin/bash -e {0}
+Backend Tests	Install dependencies	2025-12-10T02:12:47.8964722Z env:
+Backend Tests	Install dependencies	2025-12-10T02:12:47.8964895Z   PYTHON_VERSION: 3.11
+Backend Tests	Install dependencies	2025-12-10T02:12:47.8965095Z   NODE_VERSION: 20
+Backend Tests	Install dependencies	2025-12-10T02:12:47.8965359Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.14/x64
+Backend Tests	Install dependencies	2025-12-10T02:12:47.8965771Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib/pkgconfig
+Backend Tests	Install dependencies	2025-12-10T02:12:47.8966181Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+Backend Tests	Install dependencies	2025-12-10T02:12:47.8966523Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+Backend Tests	Install dependencies	2025-12-10T02:12:47.8966876Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+Backend Tests	Install dependencies	2025-12-10T02:12:47.8967222Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib
+Backend Tests	Install dependencies	2025-12-10T02:12:47.8967506Z ##[endgroup]
+Backend Tests	Install dependencies	2025-12-10T02:12:49.1378138Z Collecting fastapi>=0.109.0 (from -r requirements.txt (line 4))
+Backend Tests	Install dependencies	2025-12-10T02:12:49.1394392Z   Using cached fastapi-0.124.0-py3-none-any.whl.metadata (30 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:49.1829337Z Collecting uvicorn>=0.27.0 (from uvicorn[standard]>=0.27.0->-r requirements.txt (line 5))
+Backend Tests	Install dependencies	2025-12-10T02:12:49.1845067Z   Using cached uvicorn-0.38.0-py3-none-any.whl.metadata (6.8 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:49.2973369Z Collecting pydantic>=2.5.0 (from -r requirements.txt (line 6))
+Backend Tests	Install dependencies	2025-12-10T02:12:49.2989704Z   Using cached pydantic-2.12.5-py3-none-any.whl.metadata (90 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:49.3198763Z Collecting pydantic-settings>=2.1.0 (from -r requirements.txt (line 7))
+Backend Tests	Install dependencies	2025-12-10T02:12:49.3213822Z   Using cached pydantic_settings-2.12.0-py3-none-any.whl.metadata (3.4 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:49.3431274Z Collecting msal>=1.26.0 (from -r requirements.txt (line 10))
+Backend Tests	Install dependencies	2025-12-10T02:12:49.3445213Z   Using cached msal-1.34.0-py3-none-any.whl.metadata (11 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:49.3604959Z Collecting python-jose>=3.3.0 (from python-jose[cryptography]>=3.3.0->-r requirements.txt (line 11))
+Backend Tests	Install dependencies	2025-12-10T02:12:49.3618286Z   Using cached python_jose-3.5.0-py2.py3-none-any.whl.metadata (5.5 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:49.3843980Z Collecting azure-identity>=1.15.0 (from -r requirements.txt (line 14))
+Backend Tests	Install dependencies	2025-12-10T02:12:49.3857404Z   Using cached azure_identity-1.25.1-py3-none-any.whl.metadata (88 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:49.4033541Z Collecting azure-keyvault-secrets>=4.7.0 (from -r requirements.txt (line 15))
+Backend Tests	Install dependencies	2025-12-10T02:12:49.4047607Z   Using cached azure_keyvault_secrets-4.10.0-py3-none-any.whl.metadata (18 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:49.4441622Z Collecting azure-cognitiveservices-speech>=1.35.0 (from -r requirements.txt (line 16))
+Backend Tests	Install dependencies	2025-12-10T02:12:49.4456633Z   Using cached azure_cognitiveservices_speech-1.47.0-py3-none-manylinux1_x86_64.whl.metadata (1.6 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:49.4614300Z Collecting azure-ai-voicelive>=1.0.0 (from azure-ai-voicelive[aiohttp]>=1.0.0->-r requirements.txt (line 17))
+Backend Tests	Install dependencies	2025-12-10T02:12:49.4627069Z   Using cached azure_ai_voicelive-1.1.0-py3-none-any.whl.metadata (25 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:49.5305518Z Collecting openai>=1.12.0 (from -r requirements.txt (line 18))
+Backend Tests	Install dependencies	2025-12-10T02:12:49.5320016Z   Using cached openai-2.9.0-py3-none-any.whl.metadata (29 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.0125346Z Collecting aiohttp>=3.9.0 (from -r requirements.txt (line 19))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.0141457Z   Using cached aiohttp-3.13.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.1 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.0895151Z Collecting langchain>=0.1.0 (from -r requirements.txt (line 22))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.0910856Z   Using cached langchain-1.1.3-py3-none-any.whl.metadata (4.9 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.1227779Z Collecting langchain-openai>=0.1.0 (from -r requirements.txt (line 23))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.1242086Z   Using cached langchain_openai-1.1.1-py3-none-any.whl.metadata (2.6 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.1762771Z Collecting langgraph>=0.0.20 (from -r requirements.txt (line 24))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.1777561Z   Using cached langgraph-1.0.4-py3-none-any.whl.metadata (7.8 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.1965480Z Collecting zep-python>=2.0.0 (from -r requirements.txt (line 27))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.1979246Z   Using cached zep_python-2.0.2-py3-none-any.whl.metadata (6.0 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.2231382Z Collecting temporalio>=1.4.0 (from -r requirements.txt (line 28))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.2245748Z   Using cached temporalio-1.20.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (93 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.3047678Z Collecting asyncpg>=0.29.0 (from -r requirements.txt (line 31))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.3062723Z   Using cached asyncpg-0.31.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (4.4 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.6121902Z Collecting sqlalchemy>=2.0.0 (from -r requirements.txt (line 32))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.6809868Z   Downloading sqlalchemy-2.0.45-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (9.5 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.7137708Z Collecting opentelemetry-api>=1.22.0 (from -r requirements.txt (line 35))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.7151234Z   Using cached opentelemetry_api-1.39.0-py3-none-any.whl.metadata (1.5 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.7372768Z Collecting opentelemetry-sdk>=1.22.0 (from -r requirements.txt (line 36))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.7386718Z   Using cached opentelemetry_sdk-1.39.0-py3-none-any.whl.metadata (1.5 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.7600448Z Collecting opentelemetry-instrumentation-fastapi>=0.43b0 (from -r requirements.txt (line 37))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.7613993Z   Using cached opentelemetry_instrumentation_fastapi-0.60b0-py3-none-any.whl.metadata (2.2 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.7806812Z Collecting opentelemetry-instrumentation-httpx>=0.43b0 (from -r requirements.txt (line 38))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.7819774Z   Using cached opentelemetry_instrumentation_httpx-0.60b0-py3-none-any.whl.metadata (7.3 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.8019765Z Collecting opentelemetry-exporter-otlp-proto-grpc>=1.22.0 (from -r requirements.txt (line 39))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.8032591Z   Using cached opentelemetry_exporter_otlp_proto_grpc-1.39.0-py3-none-any.whl.metadata (2.5 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.8226368Z Collecting opentelemetry-exporter-otlp-proto-http>=1.22.0 (from -r requirements.txt (line 40))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.8239309Z   Using cached opentelemetry_exporter_otlp_proto_http-1.39.0-py3-none-any.whl.metadata (2.4 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.8411792Z Collecting azure-monitor-opentelemetry>=1.2.0 (from -r requirements.txt (line 41))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.8425575Z   Using cached azure_monitor_opentelemetry-1.8.3-py3-none-any.whl.metadata (23 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.8639319Z Collecting httpx>=0.26.0 (from -r requirements.txt (line 44))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.8653446Z   Using cached httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.8811694Z Collecting python-multipart>=0.0.6 (from -r requirements.txt (line 45))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.8825358Z   Using cached python_multipart-0.0.20-py3-none-any.whl.metadata (1.8 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.9029198Z Collecting python-dotenv>=1.0.0 (from -r requirements.txt (line 46))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.9042604Z   Using cached python_dotenv-1.2.1-py3-none-any.whl.metadata (25 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.9409789Z Collecting pytest>=8.0.0 (from -r requirements.txt (line 49))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.9424295Z   Using cached pytest-9.0.2-py3-none-any.whl.metadata (7.6 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:50.9664375Z Collecting pytest-asyncio>=0.23.0 (from -r requirements.txt (line 50))
+Backend Tests	Install dependencies	2025-12-10T02:12:50.9677799Z   Using cached pytest_asyncio-1.3.0-py3-none-any.whl.metadata (4.1 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:51.0577283Z Collecting black>=24.1.0 (from -r requirements.txt (line 51))
+Backend Tests	Install dependencies	2025-12-10T02:12:51.0593317Z   Using cached black-25.12.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (86 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:51.3916000Z Collecting ruff>=0.1.0 (from -r requirements.txt (line 52))
+Backend Tests	Install dependencies	2025-12-10T02:12:51.3931816Z   Using cached ruff-0.14.8-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (25 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:51.4307814Z Collecting starlette<0.51.0,>=0.40.0 (from fastapi>=0.109.0->-r requirements.txt (line 4))
+Backend Tests	Install dependencies	2025-12-10T02:12:51.4323004Z   Using cached starlette-0.50.0-py3-none-any.whl.metadata (6.3 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:51.5099397Z Collecting typing-extensions>=4.8.0 (from fastapi>=0.109.0->-r requirements.txt (line 4))
+Backend Tests	Install dependencies	2025-12-10T02:12:51.5114055Z   Using cached typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:51.5252044Z Collecting annotated-doc>=0.0.2 (from fastapi>=0.109.0->-r requirements.txt (line 4))
+Backend Tests	Install dependencies	2025-12-10T02:12:51.5267088Z   Using cached annotated_doc-0.0.4-py3-none-any.whl.metadata (6.6 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:51.5397834Z Collecting annotated-types>=0.6.0 (from pydantic>=2.5.0->-r requirements.txt (line 6))
+Backend Tests	Install dependencies	2025-12-10T02:12:51.5411443Z   Using cached annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:52.2721992Z Collecting pydantic-core==2.41.5 (from pydantic>=2.5.0->-r requirements.txt (line 6))
+Backend Tests	Install dependencies	2025-12-10T02:12:52.2738636Z   Using cached pydantic_core-2.41.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.3 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:52.2912633Z Collecting typing-inspection>=0.4.2 (from pydantic>=2.5.0->-r requirements.txt (line 6))
+Backend Tests	Install dependencies	2025-12-10T02:12:52.2926600Z   Using cached typing_inspection-0.4.2-py3-none-any.whl.metadata (2.6 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:52.3165375Z Collecting anyio<5,>=3.6.2 (from starlette<0.51.0,>=0.40.0->fastapi>=0.109.0->-r requirements.txt (line 4))
+Backend Tests	Install dependencies	2025-12-10T02:12:52.3178600Z   Using cached anyio-4.12.0-py3-none-any.whl.metadata (4.3 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:52.3377070Z Collecting idna>=2.8 (from anyio<5,>=3.6.2->starlette<0.51.0,>=0.40.0->fastapi>=0.109.0->-r requirements.txt (line 4))
+Backend Tests	Install dependencies	2025-12-10T02:12:52.3390538Z   Using cached idna-3.11-py3-none-any.whl.metadata (8.4 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:52.3644076Z Collecting click>=7.0 (from uvicorn>=0.27.0->uvicorn[standard]>=0.27.0->-r requirements.txt (line 5))
+Backend Tests	Install dependencies	2025-12-10T02:12:52.3658093Z   Using cached click-8.3.1-py3-none-any.whl.metadata (2.6 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:52.3811428Z Collecting h11>=0.8 (from uvicorn>=0.27.0->uvicorn[standard]>=0.27.0->-r requirements.txt (line 5))
+Backend Tests	Install dependencies	2025-12-10T02:12:52.3824869Z   Using cached h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:52.4667759Z Collecting requests<3,>=2.0.0 (from msal>=1.26.0->-r requirements.txt (line 10))
+Backend Tests	Install dependencies	2025-12-10T02:12:52.4682121Z   Using cached requests-2.32.5-py3-none-any.whl.metadata (4.9 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:52.4900527Z Collecting PyJWT<3,>=1.0.0 (from PyJWT[crypto]<3,>=1.0.0->msal>=1.26.0->-r requirements.txt (line 10))
+Backend Tests	Install dependencies	2025-12-10T02:12:52.4914295Z   Using cached PyJWT-2.10.1-py3-none-any.whl.metadata (4.0 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:52.6754732Z Collecting cryptography<49,>=2.5 (from msal>=1.26.0->-r requirements.txt (line 10))
+Backend Tests	Install dependencies	2025-12-10T02:12:52.6771159Z   Using cached cryptography-46.0.3-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:52.7833984Z Collecting cffi>=2.0.0 (from cryptography<49,>=2.5->msal>=1.26.0->-r requirements.txt (line 10))
+Backend Tests	Install dependencies	2025-12-10T02:12:52.7849788Z   Using cached cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.6 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:52.9067465Z Collecting charset_normalizer<4,>=2 (from requests<3,>=2.0.0->msal>=1.26.0->-r requirements.txt (line 10))
+Backend Tests	Install dependencies	2025-12-10T02:12:52.9082808Z   Using cached charset_normalizer-3.4.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (37 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:52.9449213Z Collecting urllib3<3,>=1.21.1 (from requests<3,>=2.0.0->msal>=1.26.0->-r requirements.txt (line 10))
+Backend Tests	Install dependencies	2025-12-10T02:12:52.9465532Z   Using cached urllib3-2.6.1-py3-none-any.whl.metadata (6.6 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:52.9700570Z Collecting certifi>=2017.4.17 (from requests<3,>=2.0.0->msal>=1.26.0->-r requirements.txt (line 10))
+Backend Tests	Install dependencies	2025-12-10T02:12:52.9714645Z   Using cached certifi-2025.11.12-py3-none-any.whl.metadata (2.5 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:52.9901453Z Collecting ecdsa!=0.15 (from python-jose>=3.3.0->python-jose[cryptography]>=3.3.0->-r requirements.txt (line 11))
+Backend Tests	Install dependencies	2025-12-10T02:12:52.9915170Z   Using cached ecdsa-0.19.1-py2.py3-none-any.whl.metadata (29 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:53.0117677Z Collecting rsa!=4.1.1,!=4.4,<5.0,>=4.0 (from python-jose>=3.3.0->python-jose[cryptography]>=3.3.0->-r requirements.txt (line 11))
+Backend Tests	Install dependencies	2025-12-10T02:12:53.0132053Z   Using cached rsa-4.9.1-py3-none-any.whl.metadata (5.6 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:53.1165747Z Collecting pyasn1>=0.5.0 (from python-jose>=3.3.0->python-jose[cryptography]>=3.3.0->-r requirements.txt (line 11))
+Backend Tests	Install dependencies	2025-12-10T02:12:53.1180552Z   Using cached pyasn1-0.6.1-py3-none-any.whl.metadata (8.4 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:53.1430885Z Collecting azure-core>=1.31.0 (from azure-identity>=1.15.0->-r requirements.txt (line 14))
+Backend Tests	Install dependencies	2025-12-10T02:12:53.1444146Z   Using cached azure_core-1.36.0-py3-none-any.whl.metadata (47 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:53.1636401Z Collecting msal-extensions>=1.2.0 (from azure-identity>=1.15.0->-r requirements.txt (line 14))
+Backend Tests	Install dependencies	2025-12-10T02:12:53.1650317Z   Using cached msal_extensions-1.3.1-py3-none-any.whl.metadata (7.8 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:53.1819500Z Collecting isodate>=0.6.1 (from azure-keyvault-secrets>=4.7.0->-r requirements.txt (line 15))
+Backend Tests	Install dependencies	2025-12-10T02:12:53.1832968Z   Using cached isodate-0.7.2-py3-none-any.whl.metadata (11 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:53.2137675Z Collecting distro<2,>=1.7.0 (from openai>=1.12.0->-r requirements.txt (line 18))
+Backend Tests	Install dependencies	2025-12-10T02:12:53.2151035Z   Using cached distro-1.9.0-py3-none-any.whl.metadata (6.8 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:53.2907117Z Collecting jiter<1,>=0.10.0 (from openai>=1.12.0->-r requirements.txt (line 18))
+Backend Tests	Install dependencies	2025-12-10T02:12:53.2922378Z   Using cached jiter-0.12.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.2 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:53.3516568Z Collecting sniffio (from openai>=1.12.0->-r requirements.txt (line 18))
+Backend Tests	Install dependencies	2025-12-10T02:12:53.3530220Z   Using cached sniffio-1.3.1-py3-none-any.whl.metadata (3.9 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:53.3893859Z Collecting tqdm>4 (from openai>=1.12.0->-r requirements.txt (line 18))
+Backend Tests	Install dependencies	2025-12-10T02:12:53.3907733Z   Using cached tqdm-4.67.1-py3-none-any.whl.metadata (57 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:53.4212694Z Collecting httpcore==1.* (from httpx>=0.26.0->-r requirements.txt (line 44))
+Backend Tests	Install dependencies	2025-12-10T02:12:53.4226664Z   Using cached httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:53.4490073Z Collecting aiohappyeyeballs>=2.5.0 (from aiohttp>=3.9.0->-r requirements.txt (line 19))
+Backend Tests	Install dependencies	2025-12-10T02:12:53.4503915Z   Using cached aiohappyeyeballs-2.6.1-py3-none-any.whl.metadata (5.9 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:53.4633933Z Collecting aiosignal>=1.4.0 (from aiohttp>=3.9.0->-r requirements.txt (line 19))
+Backend Tests	Install dependencies	2025-12-10T02:12:53.4647578Z   Using cached aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:53.4824441Z Collecting attrs>=17.3.0 (from aiohttp>=3.9.0->-r requirements.txt (line 19))
+Backend Tests	Install dependencies	2025-12-10T02:12:53.4838826Z   Using cached attrs-25.4.0-py3-none-any.whl.metadata (10 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:53.5536272Z Collecting frozenlist>=1.1.1 (from aiohttp>=3.9.0->-r requirements.txt (line 19))
+Backend Tests	Install dependencies	2025-12-10T02:12:53.5552444Z   Using cached frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (20 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:53.7785681Z Collecting multidict<7.0,>=4.5 (from aiohttp>=3.9.0->-r requirements.txt (line 19))
+Backend Tests	Install dependencies	2025-12-10T02:12:53.7801560Z   Using cached multidict-6.7.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.3 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:53.8356014Z Collecting propcache>=0.2.0 (from aiohttp>=3.9.0->-r requirements.txt (line 19))
+Backend Tests	Install dependencies	2025-12-10T02:12:53.8372366Z   Using cached propcache-0.4.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (13 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:54.0793092Z Collecting yarl<2.0,>=1.17.0 (from aiohttp>=3.9.0->-r requirements.txt (line 19))
+Backend Tests	Install dependencies	2025-12-10T02:12:54.0808796Z   Using cached yarl-1.22.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (75 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:54.2407616Z Collecting langchain-core<2.0.0,>=1.1.2 (from langchain>=0.1.0->-r requirements.txt (line 22))
+Backend Tests	Install dependencies	2025-12-10T02:12:54.2422860Z   Using cached langchain_core-1.1.3-py3-none-any.whl.metadata (3.7 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:54.3437717Z Collecting langgraph-checkpoint<4.0.0,>=2.1.0 (from langgraph>=0.0.20->-r requirements.txt (line 24))
+Backend Tests	Install dependencies	2025-12-10T02:12:54.3450890Z   Using cached langgraph_checkpoint-3.0.1-py3-none-any.whl.metadata (4.7 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:54.3621059Z Collecting langgraph-prebuilt<1.1.0,>=1.0.2 (from langgraph>=0.0.20->-r requirements.txt (line 24))
+Backend Tests	Install dependencies	2025-12-10T02:12:54.3634082Z   Using cached langgraph_prebuilt-1.0.5-py3-none-any.whl.metadata (5.2 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:54.3902644Z Collecting langgraph-sdk<0.3.0,>=0.2.2 (from langgraph>=0.0.20->-r requirements.txt (line 24))
+Backend Tests	Install dependencies	2025-12-10T02:12:54.3978624Z   Downloading langgraph_sdk-0.2.15-py3-none-any.whl.metadata (1.6 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:54.4798826Z Collecting xxhash>=3.5.0 (from langgraph>=0.0.20->-r requirements.txt (line 24))
+Backend Tests	Install dependencies	2025-12-10T02:12:54.4814562Z   Using cached xxhash-3.6.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (13 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:54.5005983Z Collecting jsonpatch<2.0.0,>=1.33.0 (from langchain-core<2.0.0,>=1.1.2->langchain>=0.1.0->-r requirements.txt (line 22))
+Backend Tests	Install dependencies	2025-12-10T02:12:54.5019355Z   Using cached jsonpatch-1.33-py2.py3-none-any.whl.metadata (3.0 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:54.5829419Z Collecting langsmith<1.0.0,>=0.3.45 (from langchain-core<2.0.0,>=1.1.2->langchain>=0.1.0->-r requirements.txt (line 22))
+Backend Tests	Install dependencies	2025-12-10T02:12:54.5908216Z   Downloading langsmith-0.4.58-py3-none-any.whl.metadata (15 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:54.6186101Z Collecting packaging<26.0.0,>=23.2.0 (from langchain-core<2.0.0,>=1.1.2->langchain>=0.1.0->-r requirements.txt (line 22))
+Backend Tests	Install dependencies	2025-12-10T02:12:54.6199853Z   Using cached packaging-25.0-py3-none-any.whl.metadata (3.3 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:54.6584347Z Collecting pyyaml<7.0.0,>=5.3.0 (from langchain-core<2.0.0,>=1.1.2->langchain>=0.1.0->-r requirements.txt (line 22))
+Backend Tests	Install dependencies	2025-12-10T02:12:54.6598972Z   Using cached pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:54.6802150Z Collecting tenacity!=8.4.0,<10.0.0,>=8.1.0 (from langchain-core<2.0.0,>=1.1.2->langchain>=0.1.0->-r requirements.txt (line 22))
+Backend Tests	Install dependencies	2025-12-10T02:12:54.6815633Z   Using cached tenacity-9.1.2-py3-none-any.whl.metadata (1.2 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:54.7364922Z Collecting uuid-utils<1.0,>=0.12.0 (from langchain-core<2.0.0,>=1.1.2->langchain>=0.1.0->-r requirements.txt (line 22))
+Backend Tests	Install dependencies	2025-12-10T02:12:54.7379472Z   Using cached uuid_utils-0.12.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (1.1 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:54.7555027Z Collecting jsonpointer>=1.9 (from jsonpatch<2.0.0,>=1.33.0->langchain-core<2.0.0,>=1.1.2->langchain>=0.1.0->-r requirements.txt (line 22))
+Backend Tests	Install dependencies	2025-12-10T02:12:54.7568744Z   Using cached jsonpointer-3.0.0-py2.py3-none-any.whl.metadata (2.3 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:54.8155062Z Collecting ormsgpack>=1.12.0 (from langgraph-checkpoint<4.0.0,>=2.1.0->langgraph>=0.0.20->-r requirements.txt (line 24))
+Backend Tests	Install dependencies	2025-12-10T02:12:54.8170728Z   Using cached ormsgpack-1.12.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (1.2 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:55.0710215Z Collecting orjson>=3.10.1 (from langgraph-sdk<0.3.0,>=0.2.2->langgraph>=0.0.20->-r requirements.txt (line 24))
+Backend Tests	Install dependencies	2025-12-10T02:12:55.0725953Z   Using cached orjson-3.11.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (41 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:55.1477730Z Collecting requests-toolbelt>=1.0.0 (from langsmith<1.0.0,>=0.3.45->langchain-core<2.0.0,>=1.1.2->langchain>=0.1.0->-r requirements.txt (line 22))
+Backend Tests	Install dependencies	2025-12-10T02:12:55.1491907Z   Using cached requests_toolbelt-1.0.0-py2.py3-none-any.whl.metadata (14 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:55.2219079Z Collecting zstandard>=0.23.0 (from langsmith<1.0.0,>=0.3.45->langchain-core<2.0.0,>=1.1.2->langchain>=0.1.0->-r requirements.txt (line 22))
+Backend Tests	Install dependencies	2025-12-10T02:12:55.2234626Z   Using cached zstandard-0.25.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.3 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:55.3098129Z Collecting tiktoken<1.0.0,>=0.7.0 (from langchain-openai>=0.1.0->-r requirements.txt (line 23))
+Backend Tests	Install dependencies	2025-12-10T02:12:55.3112108Z   Using cached tiktoken-0.12.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (6.7 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:55.7556884Z Collecting regex>=2022.1.18 (from tiktoken<1.0.0,>=0.7.0->langchain-openai>=0.1.0->-r requirements.txt (line 23))
+Backend Tests	Install dependencies	2025-12-10T02:12:55.7573916Z   Using cached regex-2025.11.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:55.8361279Z Collecting nexus-rpc==1.2.0 (from temporalio>=1.4.0->-r requirements.txt (line 28))
+Backend Tests	Install dependencies	2025-12-10T02:12:55.8375674Z   Using cached nexus_rpc-1.2.0-py3-none-any.whl.metadata (2.9 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:56.0001283Z Collecting protobuf<7.0.0,>=3.20 (from temporalio>=1.4.0->-r requirements.txt (line 28))
+Backend Tests	Install dependencies	2025-12-10T02:12:56.0017109Z   Using cached protobuf-6.33.2-cp39-abi3-manylinux2014_x86_64.whl.metadata (593 bytes)
+Backend Tests	Install dependencies	2025-12-10T02:12:56.0298140Z Collecting types-protobuf>=3.20 (from temporalio>=1.4.0->-r requirements.txt (line 28))
+Backend Tests	Install dependencies	2025-12-10T02:12:56.0311967Z   Using cached types_protobuf-6.32.1.20251105-py3-none-any.whl.metadata (2.2 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:56.1674023Z Collecting greenlet>=1 (from sqlalchemy>=2.0.0->-r requirements.txt (line 32))
+Backend Tests	Install dependencies	2025-12-10T02:12:56.1689010Z   Using cached greenlet-3.3.0-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (4.1 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:56.2055866Z Collecting importlib-metadata<8.8.0,>=6.0 (from opentelemetry-api>=1.22.0->-r requirements.txt (line 35))
+Backend Tests	Install dependencies	2025-12-10T02:12:56.2069854Z   Using cached importlib_metadata-8.7.0-py3-none-any.whl.metadata (4.8 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:56.2327114Z Collecting zipp>=3.20 (from importlib-metadata<8.8.0,>=6.0->opentelemetry-api>=1.22.0->-r requirements.txt (line 35))
+Backend Tests	Install dependencies	2025-12-10T02:12:56.2340480Z   Using cached zipp-3.23.0-py3-none-any.whl.metadata (3.6 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:56.2586222Z Collecting opentelemetry-semantic-conventions==0.60b0 (from opentelemetry-sdk>=1.22.0->-r requirements.txt (line 36))
+Backend Tests	Install dependencies	2025-12-10T02:12:56.2599657Z   Using cached opentelemetry_semantic_conventions-0.60b0-py3-none-any.whl.metadata (2.4 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:56.2874756Z Collecting opentelemetry-instrumentation-asgi==0.60b0 (from opentelemetry-instrumentation-fastapi>=0.43b0->-r requirements.txt (line 37))
+Backend Tests	Install dependencies	2025-12-10T02:12:56.2888088Z   Using cached opentelemetry_instrumentation_asgi-0.60b0-py3-none-any.whl.metadata (2.0 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:56.3113820Z Collecting opentelemetry-instrumentation==0.60b0 (from opentelemetry-instrumentation-fastapi>=0.43b0->-r requirements.txt (line 37))
+Backend Tests	Install dependencies	2025-12-10T02:12:56.3126903Z   Using cached opentelemetry_instrumentation-0.60b0-py3-none-any.whl.metadata (7.2 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:56.3316843Z Collecting opentelemetry-util-http==0.60b0 (from opentelemetry-instrumentation-fastapi>=0.43b0->-r requirements.txt (line 37))
+Backend Tests	Install dependencies	2025-12-10T02:12:56.3329842Z   Using cached opentelemetry_util_http-0.60b0-py3-none-any.whl.metadata (2.6 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:56.4788220Z Collecting wrapt<2.0.0,>=1.0.0 (from opentelemetry-instrumentation==0.60b0->opentelemetry-instrumentation-fastapi>=0.43b0->-r requirements.txt (line 37))
+Backend Tests	Install dependencies	2025-12-10T02:12:56.4804517Z   Using cached wrapt-1.17.3-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.4 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:56.5075797Z Collecting asgiref~=3.0 (from opentelemetry-instrumentation-asgi==0.60b0->opentelemetry-instrumentation-fastapi>=0.43b0->-r requirements.txt (line 37))
+Backend Tests	Install dependencies	2025-12-10T02:12:56.5089953Z   Using cached asgiref-3.11.0-py3-none-any.whl.metadata (9.3 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:56.5425438Z Collecting googleapis-common-protos~=1.57 (from opentelemetry-exporter-otlp-proto-grpc>=1.22.0->-r requirements.txt (line 39))
+Backend Tests	Install dependencies	2025-12-10T02:12:56.5439820Z   Using cached googleapis_common_protos-1.72.0-py3-none-any.whl.metadata (9.4 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.1469607Z Collecting grpcio<2.0.0,>=1.63.2 (from opentelemetry-exporter-otlp-proto-grpc>=1.22.0->-r requirements.txt (line 39))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.1484979Z   Using cached grpcio-1.76.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.7 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.1695113Z Collecting opentelemetry-exporter-otlp-proto-common==1.39.0 (from opentelemetry-exporter-otlp-proto-grpc>=1.22.0->-r requirements.txt (line 39))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.1708653Z   Using cached opentelemetry_exporter_otlp_proto_common-1.39.0-py3-none-any.whl.metadata (1.8 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.1915712Z Collecting opentelemetry-proto==1.39.0 (from opentelemetry-exporter-otlp-proto-grpc>=1.22.0->-r requirements.txt (line 39))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.1929453Z   Using cached opentelemetry_proto-1.39.0-py3-none-any.whl.metadata (2.3 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.2984956Z Collecting azure-core-tracing-opentelemetry~=1.0.0b11 (from azure-monitor-opentelemetry>=1.2.0->-r requirements.txt (line 41))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.2999499Z   Using cached azure_core_tracing_opentelemetry-1.0.0b12-py3-none-any.whl.metadata (11 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.3201959Z Collecting azure-monitor-opentelemetry-exporter~=1.0.0b46 (from azure-monitor-opentelemetry>=1.2.0->-r requirements.txt (line 41))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.3215983Z   Using cached azure_monitor_opentelemetry_exporter-1.0.0b46-py2.py3-none-any.whl.metadata (33 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.3464953Z Collecting opentelemetry-instrumentation-django==0.60b0 (from azure-monitor-opentelemetry>=1.2.0->-r requirements.txt (line 41))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.3478612Z   Using cached opentelemetry_instrumentation_django-0.60b0-py3-none-any.whl.metadata (2.3 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.3715580Z Collecting opentelemetry-instrumentation-flask==0.60b0 (from azure-monitor-opentelemetry>=1.2.0->-r requirements.txt (line 41))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.3729266Z   Using cached opentelemetry_instrumentation_flask-0.60b0-py3-none-any.whl.metadata (2.2 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.3938084Z Collecting opentelemetry-instrumentation-psycopg2==0.60b0 (from azure-monitor-opentelemetry>=1.2.0->-r requirements.txt (line 41))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.3952184Z   Using cached opentelemetry_instrumentation_psycopg2-0.60b0-py3-none-any.whl.metadata (2.1 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.4155411Z Collecting opentelemetry-instrumentation-requests==0.60b0 (from azure-monitor-opentelemetry>=1.2.0->-r requirements.txt (line 41))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.4168711Z   Using cached opentelemetry_instrumentation_requests-0.60b0-py3-none-any.whl.metadata (2.6 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.4358049Z Collecting opentelemetry-instrumentation-urllib==0.60b0 (from azure-monitor-opentelemetry>=1.2.0->-r requirements.txt (line 41))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.4371214Z   Using cached opentelemetry_instrumentation_urllib-0.60b0-py3-none-any.whl.metadata (3.4 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.4558681Z Collecting opentelemetry-instrumentation-urllib3==0.60b0 (from azure-monitor-opentelemetry>=1.2.0->-r requirements.txt (line 41))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.4571993Z   Using cached opentelemetry_instrumentation_urllib3-0.60b0-py3-none-any.whl.metadata (4.2 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.4697056Z Collecting opentelemetry-resource-detector-azure<1.0.0,>=0.1.5 (from azure-monitor-opentelemetry>=1.2.0->-r requirements.txt (line 41))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.4710127Z   Using cached opentelemetry_resource_detector_azure-0.1.5-py3-none-any.whl.metadata (5.3 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.4936066Z Collecting opentelemetry-instrumentation-wsgi==0.60b0 (from opentelemetry-instrumentation-django==0.60b0->azure-monitor-opentelemetry>=1.2.0->-r requirements.txt (line 41))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.4949198Z   Using cached opentelemetry_instrumentation_wsgi-0.60b0-py3-none-any.whl.metadata (2.1 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.5267926Z Collecting opentelemetry-instrumentation-dbapi==0.60b0 (from opentelemetry-instrumentation-psycopg2==0.60b0->azure-monitor-opentelemetry>=1.2.0->-r requirements.txt (line 41))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.5282313Z   Using cached opentelemetry_instrumentation_dbapi-0.60b0-py3-none-any.whl.metadata (2.0 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.5967555Z Collecting msrest>=0.6.10 (from azure-monitor-opentelemetry-exporter~=1.0.0b46->azure-monitor-opentelemetry>=1.2.0->-r requirements.txt (line 41))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.5980301Z   Using cached msrest-0.7.1-py3-none-any.whl.metadata (21 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.6653866Z Collecting psutil<8,>=5.9 (from azure-monitor-opentelemetry-exporter~=1.0.0b46->azure-monitor-opentelemetry>=1.2.0->-r requirements.txt (line 41))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.6668789Z   Using cached psutil-7.1.3-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl.metadata (23 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.7011258Z Collecting iniconfig>=1.0.1 (from pytest>=8.0.0->-r requirements.txt (line 49))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.7025090Z   Using cached iniconfig-2.3.0-py3-none-any.whl.metadata (2.5 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.7224759Z Collecting pluggy<2,>=1.5 (from pytest>=8.0.0->-r requirements.txt (line 49))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.7238473Z   Using cached pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.7449681Z Collecting pygments>=2.7.2 (from pytest>=8.0.0->-r requirements.txt (line 49))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.7462602Z   Using cached pygments-2.19.2-py3-none-any.whl.metadata (2.5 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.7886613Z Collecting mypy-extensions>=0.4.3 (from black>=24.1.0->-r requirements.txt (line 51))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.7899621Z   Using cached mypy_extensions-1.1.0-py3-none-any.whl.metadata (1.1 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.8042267Z Collecting pathspec>=0.9.0 (from black>=24.1.0->-r requirements.txt (line 51))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.8055349Z   Using cached pathspec-0.12.1-py3-none-any.whl.metadata (21 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.8302981Z Collecting platformdirs>=2 (from black>=24.1.0->-r requirements.txt (line 51))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.8316884Z   Using cached platformdirs-4.5.1-py3-none-any.whl.metadata (12 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.8472339Z Collecting pytokens>=0.3.0 (from black>=24.1.0->-r requirements.txt (line 51))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.8485610Z   Using cached pytokens-0.3.0-py3-none-any.whl.metadata (2.0 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.9016568Z Collecting pycparser (from cffi>=2.0.0->cryptography<49,>=2.5->msal>=1.26.0->-r requirements.txt (line 10))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.9029606Z   Using cached pycparser-2.23-py3-none-any.whl.metadata (993 bytes)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.9237496Z Collecting six>=1.9.0 (from ecdsa!=0.15->python-jose>=3.3.0->python-jose[cryptography]>=3.3.0->-r requirements.txt (line 11))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.9250508Z   Using cached six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:57.9698326Z Collecting requests-oauthlib>=0.5.0 (from msrest>=0.6.10->azure-monitor-opentelemetry-exporter~=1.0.0b46->azure-monitor-opentelemetry>=1.2.0->-r requirements.txt (line 41))
+Backend Tests	Install dependencies	2025-12-10T02:12:57.9711281Z   Using cached requests_oauthlib-2.0.0-py2.py3-none-any.whl.metadata (11 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.0343340Z Collecting oauthlib>=3.0.0 (from requests-oauthlib>=0.5.0->msrest>=0.6.10->azure-monitor-opentelemetry-exporter~=1.0.0b46->azure-monitor-opentelemetry>=1.2.0->-r requirements.txt (line 41))
+Backend Tests	Install dependencies	2025-12-10T02:12:58.0356071Z   Using cached oauthlib-3.3.1-py3-none-any.whl.metadata (7.9 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.1038376Z Collecting httptools>=0.6.3 (from uvicorn[standard]>=0.27.0->-r requirements.txt (line 5))
+Backend Tests	Install dependencies	2025-12-10T02:12:58.1052630Z   Using cached httptools-0.7.1-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (3.5 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.1558482Z Collecting uvloop>=0.15.1 (from uvicorn[standard]>=0.27.0->-r requirements.txt (line 5))
+Backend Tests	Install dependencies	2025-12-10T02:12:58.1573048Z   Using cached uvloop-0.22.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (4.9 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.2336881Z Collecting watchfiles>=0.13 (from uvicorn[standard]>=0.27.0->-r requirements.txt (line 5))
+Backend Tests	Install dependencies	2025-12-10T02:12:58.2351910Z   Using cached watchfiles-1.1.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3210065Z Collecting websockets>=10.4 (from uvicorn[standard]>=0.27.0->-r requirements.txt (line 5))
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3225394Z   Using cached websockets-15.0.1-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.8 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3667791Z Using cached fastapi-0.124.0-py3-none-any.whl (112 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3681578Z Using cached pydantic-2.12.5-py3-none-any.whl (463 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3698922Z Using cached pydantic_core-2.41.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3726488Z Using cached starlette-0.50.0-py3-none-any.whl (74 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3739662Z Using cached anyio-4.12.0-py3-none-any.whl (113 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3753492Z Using cached uvicorn-0.38.0-py3-none-any.whl (68 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3766348Z Using cached pydantic_settings-2.12.0-py3-none-any.whl (51 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3779201Z Using cached msal-1.34.0-py3-none-any.whl (116 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3793344Z Using cached cryptography-46.0.3-cp311-abi3-manylinux_2_34_x86_64.whl (4.5 MB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3837306Z Using cached PyJWT-2.10.1-py3-none-any.whl (22 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3850011Z Using cached requests-2.32.5-py3-none-any.whl (64 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3863699Z Using cached charset_normalizer-3.4.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (151 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3877120Z Using cached idna-3.11-py3-none-any.whl (71 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3890192Z Using cached urllib3-2.6.1-py3-none-any.whl (131 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3903635Z Using cached python_jose-3.5.0-py2.py3-none-any.whl (34 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3916486Z Using cached rsa-4.9.1-py3-none-any.whl (34 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3929798Z Using cached azure_identity-1.25.1-py3-none-any.whl (191 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3944008Z Using cached azure_keyvault_secrets-4.10.0-py3-none-any.whl (125 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.3958057Z Using cached azure_cognitiveservices_speech-1.47.0-py3-none-manylinux1_x86_64.whl (35.4 MB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4218080Z Using cached azure_ai_voicelive-1.1.0-py3-none-any.whl (83 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4231883Z Using cached openai-2.9.0-py3-none-any.whl (1.0 MB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4252489Z Using cached httpx-0.28.1-py3-none-any.whl (73 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4266412Z Using cached distro-1.9.0-py3-none-any.whl (20 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4279336Z Using cached httpcore-1.0.9-py3-none-any.whl (78 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4293013Z Using cached jiter-0.12.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (364 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4308778Z Using cached typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4322436Z Using cached aiohttp-3.13.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.7 MB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4348021Z Using cached multidict-6.7.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (246 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4362648Z Using cached yarl-1.22.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (365 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4378154Z Using cached langchain-1.1.3-py3-none-any.whl (102 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4392249Z Using cached langgraph-1.0.4-py3-none-any.whl (157 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4406620Z Using cached langchain_core-1.1.3-py3-none-any.whl (475 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4423824Z Using cached jsonpatch-1.33-py2.py3-none-any.whl (12 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4437217Z Using cached langgraph_checkpoint-3.0.1-py3-none-any.whl (46 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4451272Z Using cached langgraph_prebuilt-1.0.5-py3-none-any.whl (35 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4537387Z Downloading langgraph_sdk-0.2.15-py3-none-any.whl (66 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4712152Z Downloading langsmith-0.4.58-py3-none-any.whl (412 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4877471Z Using cached packaging-25.0-py3-none-any.whl (66 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4891616Z Using cached pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (806 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4910657Z Using cached tenacity-9.1.2-py3-none-any.whl (28 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4924388Z Using cached uuid_utils-0.12.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (343 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4939710Z Using cached langchain_openai-1.1.1-py3-none-any.whl (84 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4953375Z Using cached tiktoken-0.12.0-cp311-cp311-manylinux_2_28_x86_64.whl (1.2 MB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4974399Z Using cached zep_python-2.0.2-py3-none-any.whl (40 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.4988118Z Using cached temporalio-1.20.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (12.2 MB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5085020Z Using cached nexus_rpc-1.2.0-py3-none-any.whl (28 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5098395Z Using cached protobuf-6.33.2-cp39-abi3-manylinux2014_x86_64.whl (323 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5114943Z Using cached asyncpg-0.31.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.0 MB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5210580Z Downloading sqlalchemy-2.0.45-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.3 MB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5649853Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 85.1 MB/s  0:00:00
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5665238Z Using cached opentelemetry_api-1.39.0-py3-none-any.whl (66 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5679221Z Using cached importlib_metadata-8.7.0-py3-none-any.whl (27 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5692755Z Using cached opentelemetry_sdk-1.39.0-py3-none-any.whl (132 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5707269Z Using cached opentelemetry_semantic_conventions-0.60b0-py3-none-any.whl (219 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5721846Z Using cached opentelemetry_instrumentation_fastapi-0.60b0-py3-none-any.whl (13 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5735519Z Using cached opentelemetry_instrumentation-0.60b0-py3-none-any.whl (33 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5748995Z Using cached opentelemetry_instrumentation_asgi-0.60b0-py3-none-any.whl (16 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5762182Z Using cached opentelemetry_util_http-0.60b0-py3-none-any.whl (8.7 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5775597Z Using cached asgiref-3.11.0-py3-none-any.whl (24 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5789347Z Using cached wrapt-1.17.3-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (82 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5803033Z Using cached opentelemetry_instrumentation_httpx-0.60b0-py3-none-any.whl (15 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5816714Z Using cached opentelemetry_exporter_otlp_proto_grpc-1.39.0-py3-none-any.whl (19 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5830053Z Using cached opentelemetry_exporter_otlp_proto_common-1.39.0-py3-none-any.whl (18 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5843388Z Using cached opentelemetry_proto-1.39.0-py3-none-any.whl (72 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5857223Z Using cached googleapis_common_protos-1.72.0-py3-none-any.whl (297 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5872544Z Using cached grpcio-1.76.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (6.6 MB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5932295Z Using cached opentelemetry_exporter_otlp_proto_http-1.39.0-py3-none-any.whl (19 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5945558Z Using cached azure_monitor_opentelemetry-1.8.3-py3-none-any.whl (27 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5958832Z Using cached opentelemetry_instrumentation_django-0.60b0-py3-none-any.whl (21 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5972201Z Using cached opentelemetry_instrumentation_flask-0.60b0-py3-none-any.whl (15 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5985399Z Using cached opentelemetry_instrumentation_psycopg2-0.60b0-py3-none-any.whl (11 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.5998230Z Using cached opentelemetry_instrumentation_dbapi-0.60b0-py3-none-any.whl (13 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6011236Z Using cached opentelemetry_instrumentation_requests-0.60b0-py3-none-any.whl (13 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6024277Z Using cached opentelemetry_instrumentation_urllib-0.60b0-py3-none-any.whl (12 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6037210Z Using cached opentelemetry_instrumentation_urllib3-0.60b0-py3-none-any.whl (13 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6050085Z Using cached opentelemetry_instrumentation_wsgi-0.60b0-py3-none-any.whl (14 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6062989Z Using cached azure_core-1.36.0-py3-none-any.whl (213 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6078085Z Using cached azure_core_tracing_opentelemetry-1.0.0b12-py3-none-any.whl (11 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6091007Z Using cached azure_monitor_opentelemetry_exporter-1.0.0b46-py2.py3-none-any.whl (200 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6105218Z Using cached opentelemetry_resource_detector_azure-0.1.5-py3-none-any.whl (14 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6118412Z Using cached psutil-7.1.3-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (263 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6132887Z Using cached python_multipart-0.0.20-py3-none-any.whl (24 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6146028Z Using cached python_dotenv-1.2.1-py3-none-any.whl (21 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6158856Z Using cached pytest-9.0.2-py3-none-any.whl (374 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6174501Z Using cached pluggy-1.6.0-py3-none-any.whl (20 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6187423Z Using cached pytest_asyncio-1.3.0-py3-none-any.whl (15 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6200484Z Using cached black-25.12.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.8 MB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6225548Z Using cached ruff-0.14.8-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (14.1 MB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6336400Z Using cached aiohappyeyeballs-2.6.1-py3-none-any.whl (15 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6349373Z Using cached aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6362180Z Using cached annotated_doc-0.0.4-py3-none-any.whl (5.3 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6375002Z Using cached annotated_types-0.7.0-py3-none-any.whl (13 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6387688Z Using cached attrs-25.4.0-py3-none-any.whl (67 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6400727Z Using cached certifi-2025.11.12-py3-none-any.whl (159 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6414882Z Using cached cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (215 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6428705Z Using cached click-8.3.1-py3-none-any.whl (108 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6442088Z Using cached ecdsa-0.19.1-py2.py3-none-any.whl (150 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6456302Z Using cached frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (231 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6470464Z Using cached greenlet-3.3.0-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (590 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6487238Z Using cached h11-0.16.0-py3-none-any.whl (37 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6500227Z Using cached iniconfig-2.3.0-py3-none-any.whl (7.5 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6512778Z Using cached isodate-0.7.2-py3-none-any.whl (22 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6525899Z Using cached jsonpointer-3.0.0-py2.py3-none-any.whl (7.6 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6558405Z Using cached msal_extensions-1.3.1-py3-none-any.whl (20 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6559116Z Using cached msrest-0.7.1-py3-none-any.whl (85 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6566803Z Using cached mypy_extensions-1.1.0-py3-none-any.whl (5.0 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6580180Z Using cached orjson-3.11.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (138 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6594874Z Using cached ormsgpack-1.12.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (207 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6609052Z Using cached pathspec-0.12.1-py3-none-any.whl (31 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6622300Z Using cached platformdirs-4.5.1-py3-none-any.whl (18 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6636444Z Using cached propcache-0.4.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (210 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6651037Z Using cached pyasn1-0.6.1-py3-none-any.whl (83 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6664787Z Using cached pygments-2.19.2-py3-none-any.whl (1.2 MB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6686861Z Using cached pytokens-0.3.0-py3-none-any.whl (12 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6700435Z Using cached regex-2025.11.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (800 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6718998Z Using cached requests_oauthlib-2.0.0-py2.py3-none-any.whl (24 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6732070Z Using cached oauthlib-3.3.1-py3-none-any.whl (160 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6746400Z Using cached requests_toolbelt-1.0.0-py2.py3-none-any.whl (54 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6759637Z Using cached six-1.17.0-py2.py3-none-any.whl (11 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6772584Z Using cached tqdm-4.67.1-py3-none-any.whl (78 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6786558Z Using cached types_protobuf-6.32.1.20251105-py3-none-any.whl (77 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6800031Z Using cached typing_inspection-0.4.2-py3-none-any.whl (14 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6814168Z Using cached httptools-0.7.1-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (456 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6831074Z Using cached uvloop-0.22.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.8 MB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6870310Z Using cached watchfiles-1.1.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (456 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6887058Z Using cached websockets-15.0.1-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (182 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6901325Z Using cached xxhash-3.6.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (193 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6915401Z Using cached zipp-3.23.0-py3-none-any.whl (10 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6928766Z Using cached zstandard-0.25.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.6 MB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6980155Z Using cached pycparser-2.23-py3-none-any.whl (118 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:58.6993723Z Using cached sniffio-1.3.1-py3-none-any.whl (10 kB)
+Backend Tests	Install dependencies	2025-12-10T02:12:59.0805874Z Installing collected packages: zstandard, zipp, xxhash, wrapt, websockets, uvloop, uuid-utils, urllib3, typing-extensions, types-protobuf, tqdm, tenacity, sniffio, six, ruff, regex, pyyaml, pytokens, python-multipart, python-dotenv, PyJWT, pygments, pycparser, pyasn1, psutil, protobuf, propcache, pluggy, platformdirs, pathspec, packaging, ormsgpack, orjson, opentelemetry-util-http, oauthlib, mypy-extensions, multidict, jsonpointer, jiter, isodate, iniconfig, idna, httptools, h11, greenlet, frozenlist, distro, click, charset_normalizer, certifi, attrs, asyncpg, asgiref, annotated-types, annotated-doc, aiohappyeyeballs, yarl, uvicorn, typing-inspection, sqlalchemy, rsa, requests, pytest, pydantic-core, opentelemetry-proto, nexus-rpc, jsonpatch, importlib-metadata, httpcore, grpcio, googleapis-common-protos, ecdsa, cffi, black, anyio, aiosignal, watchfiles, tiktoken, temporalio, starlette, requests-toolbelt, requests-oauthlib, python-jose, pytest-asyncio, pydantic, opentelemetry-exporter-otlp-proto-common, opentelemetry-api, httpx, cryptography, azure-core, aiohttp, zep-python, pydantic-settings, opentelemetry-semantic-conventions, openai, msrest, langsmith, langgraph-sdk, fastapi, azure-keyvault-secrets, azure-core-tracing-opentelemetry, azure-cognitiveservices-speech, azure-ai-voicelive, opentelemetry-sdk, opentelemetry-instrumentation, msal, langchain-core, opentelemetry-resource-detector-azure, opentelemetry-instrumentation-wsgi, opentelemetry-instrumentation-urllib3, opentelemetry-instrumentation-urllib, opentelemetry-instrumentation-requests, opentelemetry-instrumentation-httpx, opentelemetry-instrumentation-dbapi, opentelemetry-instrumentation-asgi, opentelemetry-exporter-otlp-proto-http, opentelemetry-exporter-otlp-proto-grpc, msal-extensions, langgraph-checkpoint, langchain-openai, opentelemetry-instrumentation-psycopg2, opentelemetry-instrumentation-flask, opentelemetry-instrumentation-fastapi, opentelemetry-instrumentation-django, langgraph-prebuilt, azure-identity, langgraph, azure-monitor-opentelemetry-exporter, langchain, azure-monitor-opentelemetry
+Backend Tests	Install dependencies	2025-12-10T02:13:07.8961683Z 
+Backend Tests	Install dependencies	2025-12-10T02:13:07.9024876Z Successfully installed PyJWT-2.10.1 aiohappyeyeballs-2.6.1 aiohttp-3.13.2 aiosignal-1.4.0 annotated-doc-0.0.4 annotated-types-0.7.0 anyio-4.12.0 asgiref-3.11.0 asyncpg-0.31.0 attrs-25.4.0 azure-ai-voicelive-1.1.0 azure-cognitiveservices-speech-1.47.0 azure-core-1.36.0 azure-core-tracing-opentelemetry-1.0.0b12 azure-identity-1.25.1 azure-keyvault-secrets-4.10.0 azure-monitor-opentelemetry-1.8.3 azure-monitor-opentelemetry-exporter-1.0.0b46 black-25.12.0 certifi-2025.11.12 cffi-2.0.0 charset_normalizer-3.4.4 click-8.3.1 cryptography-46.0.3 distro-1.9.0 ecdsa-0.19.1 fastapi-0.124.0 frozenlist-1.8.0 googleapis-common-protos-1.72.0 greenlet-3.3.0 grpcio-1.76.0 h11-0.16.0 httpcore-1.0.9 httptools-0.7.1 httpx-0.28.1 idna-3.11 importlib-metadata-8.7.0 iniconfig-2.3.0 isodate-0.7.2 jiter-0.12.0 jsonpatch-1.33 jsonpointer-3.0.0 langchain-1.1.3 langchain-core-1.1.3 langchain-openai-1.1.1 langgraph-1.0.4 langgraph-checkpoint-3.0.1 langgraph-prebuilt-1.0.5 langgraph-sdk-0.2.15 langsmith-0.4.58 msal-1.34.0 msal-extensions-1.3.1 msrest-0.7.1 multidict-6.7.0 mypy-extensions-1.1.0 nexus-rpc-1.2.0 oauthlib-3.3.1 openai-2.9.0 opentelemetry-api-1.39.0 opentelemetry-exporter-otlp-proto-common-1.39.0 opentelemetry-exporter-otlp-proto-grpc-1.39.0 opentelemetry-exporter-otlp-proto-http-1.39.0 opentelemetry-instrumentation-0.60b0 opentelemetry-instrumentation-asgi-0.60b0 opentelemetry-instrumentation-dbapi-0.60b0 opentelemetry-instrumentation-django-0.60b0 opentelemetry-instrumentation-fastapi-0.60b0 opentelemetry-instrumentation-flask-0.60b0 opentelemetry-instrumentation-httpx-0.60b0 opentelemetry-instrumentation-psycopg2-0.60b0 opentelemetry-instrumentation-requests-0.60b0 opentelemetry-instrumentation-urllib-0.60b0 opentelemetry-instrumentation-urllib3-0.60b0 opentelemetry-instrumentation-wsgi-0.60b0 opentelemetry-proto-1.39.0 opentelemetry-resource-detector-azure-0.1.5 opentelemetry-sdk-1.39.0 opentelemetry-semantic-conventions-0.60b0 opentelemetry-util-http-0.60b0 orjson-3.11.5 ormsgpack-1.12.0 packaging-25.0 pathspec-0.12.1 platformdirs-4.5.1 pluggy-1.6.0 propcache-0.4.1 protobuf-6.33.2 psutil-7.1.3 pyasn1-0.6.1 pycparser-2.23 pydantic-2.12.5 pydantic-core-2.41.5 pydantic-settings-2.12.0 pygments-2.19.2 pytest-9.0.2 pytest-asyncio-1.3.0 python-dotenv-1.2.1 python-jose-3.5.0 python-multipart-0.0.20 pytokens-0.3.0 pyyaml-6.0.3 regex-2025.11.3 requests-2.32.5 requests-oauthlib-2.0.0 requests-toolbelt-1.0.0 rsa-4.9.1 ruff-0.14.8 six-1.17.0 sniffio-1.3.1 sqlalchemy-2.0.45 starlette-0.50.0 temporalio-1.20.0 tenacity-9.1.2 tiktoken-0.12.0 tqdm-4.67.1 types-protobuf-6.32.1.20251105 typing-extensions-4.15.0 typing-inspection-0.4.2 urllib3-2.6.1 uuid-utils-0.12.0 uvicorn-0.38.0 uvloop-0.22.1 watchfiles-1.1.1 websockets-15.0.1 wrapt-1.17.3 xxhash-3.6.0 yarl-1.22.0 zep-python-2.0.2 zipp-3.23.0 zstandard-0.25.0
+Backend Tests	Install dependencies	2025-12-10T02:13:09.5270087Z Requirement already satisfied: pytest in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (9.0.2)
+Backend Tests	Install dependencies	2025-12-10T02:13:09.5273538Z Requirement already satisfied: pytest-asyncio in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (1.3.0)
+Backend Tests	Install dependencies	2025-12-10T02:13:09.6115581Z Collecting pytest-cov
+Backend Tests	Install dependencies	2025-12-10T02:13:09.6130771Z   Using cached pytest_cov-7.0.0-py3-none-any.whl.metadata (31 kB)
+Backend Tests	Install dependencies	2025-12-10T02:13:09.6176788Z Requirement already satisfied: iniconfig>=1.0.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from pytest) (2.3.0)
+Backend Tests	Install dependencies	2025-12-10T02:13:09.6181899Z Requirement already satisfied: packaging>=22 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from pytest) (25.0)
+Backend Tests	Install dependencies	2025-12-10T02:13:09.6187367Z Requirement already satisfied: pluggy<2,>=1.5 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from pytest) (1.6.0)
+Backend Tests	Install dependencies	2025-12-10T02:13:09.6192489Z Requirement already satisfied: pygments>=2.7.2 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from pytest) (2.19.2)
+Backend Tests	Install dependencies	2025-12-10T02:13:09.6229338Z Requirement already satisfied: typing-extensions>=4.12 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from pytest-asyncio) (4.15.0)
+Backend Tests	Install dependencies	2025-12-10T02:13:09.9682925Z Collecting coverage>=7.10.6 (from coverage[toml]>=7.10.6->pytest-cov)
+Backend Tests	Install dependencies	2025-12-10T02:13:09.9700229Z   Using cached coverage-7.13.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (8.5 kB)
+Backend Tests	Install dependencies	2025-12-10T02:13:09.9772007Z Using cached pytest_cov-7.0.0-py3-none-any.whl (22 kB)
+Backend Tests	Install dependencies	2025-12-10T02:13:09.9786738Z Using cached coverage-7.13.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (250 kB)
+Backend Tests	Install dependencies	2025-12-10T02:13:10.0847341Z Installing collected packages: coverage, pytest-cov
+Backend Tests	Install dependencies	2025-12-10T02:13:10.1928432Z 
+Backend Tests	Install dependencies	2025-12-10T02:13:10.1981575Z Successfully installed coverage-7.13.0 pytest-cov-7.0.0
+Backend Tests	Run linting	﻿2025-12-10T02:13:10.2824619Z ##[group]Run cd backend
+Backend Tests	Run linting	2025-12-10T02:13:10.2824910Z [36;1mcd backend[0m
+Backend Tests	Run linting	2025-12-10T02:13:10.2825134Z [36;1mpip install ruff black[0m
+Backend Tests	Run linting	2025-12-10T02:13:10.2825368Z [36;1mruff check .[0m
+Backend Tests	Run linting	2025-12-10T02:13:10.2825567Z [36;1mblack --check .[0m
+Backend Tests	Run linting	2025-12-10T02:13:10.2858355Z shell: /usr/bin/bash -e {0}
+Backend Tests	Run linting	2025-12-10T02:13:10.2858579Z env:
+Backend Tests	Run linting	2025-12-10T02:13:10.2858757Z   PYTHON_VERSION: 3.11
+Backend Tests	Run linting	2025-12-10T02:13:10.2858960Z   NODE_VERSION: 20
+Backend Tests	Run linting	2025-12-10T02:13:10.2859222Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.14/x64
+Backend Tests	Run linting	2025-12-10T02:13:10.2859635Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib/pkgconfig
+Backend Tests	Run linting	2025-12-10T02:13:10.2860030Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+Backend Tests	Run linting	2025-12-10T02:13:10.2860385Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+Backend Tests	Run linting	2025-12-10T02:13:10.2860733Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+Backend Tests	Run linting	2025-12-10T02:13:10.2861088Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib
+Backend Tests	Run linting	2025-12-10T02:13:10.2861399Z ##[endgroup]
+Backend Tests	Run linting	2025-12-10T02:13:10.6330475Z Requirement already satisfied: ruff in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (0.14.8)
+Backend Tests	Run linting	2025-12-10T02:13:10.6334632Z Requirement already satisfied: black in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (25.12.0)
+Backend Tests	Run linting	2025-12-10T02:13:10.6371576Z Requirement already satisfied: click>=8.0.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from black) (8.3.1)
+Backend Tests	Run linting	2025-12-10T02:13:10.6377868Z Requirement already satisfied: mypy-extensions>=0.4.3 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from black) (1.1.0)
+Backend Tests	Run linting	2025-12-10T02:13:10.6383936Z Requirement already satisfied: packaging>=22.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from black) (25.0)
+Backend Tests	Run linting	2025-12-10T02:13:10.6389484Z Requirement already satisfied: pathspec>=0.9.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from black) (0.12.1)
+Backend Tests	Run linting	2025-12-10T02:13:10.6395135Z Requirement already satisfied: platformdirs>=2 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from black) (4.5.1)
+Backend Tests	Run linting	2025-12-10T02:13:10.6400827Z Requirement already satisfied: pytokens>=0.3.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from black) (0.3.0)
+Backend Tests	Run linting	2025-12-10T02:13:10.8109390Z All checks passed!
+Backend Tests	Run linting	2025-12-10T02:13:11.9533786Z would reformat /home/runner/work/engram/engram/backend/api/routers/voice.py
+Backend Tests	Run linting	2025-12-10T02:13:11.9688411Z would reformat /home/runner/work/engram/engram/backend/voice/voicelive_service.py
+Backend Tests	Run linting	2025-12-10T02:13:11.9776200Z 
+Backend Tests	Run linting	2025-12-10T02:13:11.9776691Z Oh no! 💥 💔 💥
+Backend Tests	Run linting	2025-12-10T02:13:11.9778782Z 2 files would be reformatted, 42 files would be left unchanged.
+Backend Tests	Run linting	2025-12-10T02:13:12.0039246Z ##[error]Process completed with exit code 1.
+Backend Tests	Post Checkout code	﻿2025-12-10T02:13:12.0118281Z Post job cleanup.
+Backend Tests	Post Checkout code	2025-12-10T02:13:12.1068496Z [command]/usr/bin/git version
+Backend Tests	Post Checkout code	2025-12-10T02:13:12.1104667Z git version 2.52.0
+Backend Tests	Post Checkout code	2025-12-10T02:13:12.1148230Z Temporarily overriding HOME='/home/runner/work/_temp/4fcb9b0f-f154-4598-9f3d-e4b73930500b' before making global git config changes
+Backend Tests	Post Checkout code	2025-12-10T02:13:12.1149562Z Adding repository directory to the temporary git global config as a safe directory
+Backend Tests	Post Checkout code	2025-12-10T02:13:12.1154865Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/engram/engram
+Backend Tests	Post Checkout code	2025-12-10T02:13:12.1192380Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Backend Tests	Post Checkout code	2025-12-10T02:13:12.1226644Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Backend Tests	Post Checkout code	2025-12-10T02:13:12.1468318Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Backend Tests	Post Checkout code	2025-12-10T02:13:12.1489547Z http.https://github.com/.extraheader
+Backend Tests	Post Checkout code	2025-12-10T02:13:12.1501613Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+Backend Tests	Post Checkout code	2025-12-10T02:13:12.1532384Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Backend Tests	Post Checkout code	2025-12-10T02:13:12.1768844Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Backend Tests	Post Checkout code	2025-12-10T02:13:12.1799648Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Backend Tests	Stop containers	﻿2025-12-10T02:13:12.2125234Z Print service container logs: 72d6674851bb45828fd537e7d4e9f142_postgres15_bce304
+Backend Tests	Stop containers	2025-12-10T02:13:12.2129808Z ##[command]/usr/bin/docker logs --details 3e971dded236ed52e04465153dbc4d6b0272308a28fbca212378751f8a9506d3
+Backend Tests	Stop containers	2025-12-10T02:13:12.2253246Z  The files belonging to this database system will be owned by user "postgres".
+Backend Tests	Stop containers	2025-12-10T02:13:12.2254006Z  This user must also own the server process.
+Backend Tests	Stop containers	2025-12-10T02:13:12.2254460Z  
+Backend Tests	Stop containers	2025-12-10T02:13:12.2254935Z  The database cluster will be initialized with locale "en_US.utf8".
+Backend Tests	Stop containers	2025-12-10T02:13:12.2255671Z  The default database encoding has accordingly been set to "UTF8".
+Backend Tests	Stop containers	2025-12-10T02:13:12.2257567Z  initdb: warning: enabling "trust" authentication for local connections
+Backend Tests	Stop containers	2025-12-10T02:13:12.2258543Z  initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+Backend Tests	Stop containers	2025-12-10T02:13:12.2259508Z  2025-12-10 02:12:26.705 UTC [1] LOG:  starting PostgreSQL 15.15 (Debian 15.15-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+Backend Tests	Stop containers	2025-12-10T02:13:12.2260242Z  2025-12-10 02:12:26.706 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+Backend Tests	Stop containers	2025-12-10T02:13:12.2260665Z  2025-12-10 02:12:26.706 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+Backend Tests	Stop containers	2025-12-10T02:13:12.2261126Z  2025-12-10 02:12:26.707 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+Backend Tests	Stop containers	2025-12-10T02:13:12.2261621Z  2025-12-10 02:12:26.710 UTC [64] LOG:  database system was shut down at 2025-12-10 02:12:26 UTC
+Backend Tests	Stop containers	2025-12-10T02:13:12.2262062Z  2025-12-10 02:12:26.714 UTC [1] LOG:  database system is ready to accept connections
+Backend Tests	Stop containers	2025-12-10T02:13:12.2262475Z  The default text search configuration will be set to "english".
+Backend Tests	Stop containers	2025-12-10T02:13:12.2262766Z  
+Backend Tests	Stop containers	2025-12-10T02:13:12.2262941Z  Data page checksums are disabled.
+Backend Tests	Stop containers	2025-12-10T02:13:12.2263394Z  
+Backend Tests	Stop containers	2025-12-10T02:13:12.2263724Z  fixing permissions on existing directory /var/lib/postgresql/data ... ok
+Backend Tests	Stop containers	2025-12-10T02:13:12.2264081Z  creating subdirectories ... ok
+Backend Tests	Stop containers	2025-12-10T02:13:12.2264379Z  selecting dynamic shared memory implementation ... posix
+Backend Tests	Stop containers	2025-12-10T02:13:12.2264694Z  selecting default max_connections ... 100
+Backend Tests	Stop containers	2025-12-10T02:13:12.2264960Z  selecting default shared_buffers ... 128MB
+Backend Tests	Stop containers	2025-12-10T02:13:12.2265215Z  selecting default time zone ... Etc/UTC
+Backend Tests	Stop containers	2025-12-10T02:13:12.2265477Z  creating configuration files ... ok
+Backend Tests	Stop containers	2025-12-10T02:13:12.2265723Z  running bootstrap script ... ok
+Backend Tests	Stop containers	2025-12-10T02:13:12.2266276Z  performing post-bootstrap initialization ... ok
+Backend Tests	Stop containers	2025-12-10T02:13:12.2266549Z  syncing data to disk ... ok
+Backend Tests	Stop containers	2025-12-10T02:13:12.2266750Z  
+Backend Tests	Stop containers	2025-12-10T02:13:12.2266898Z  
+Backend Tests	Stop containers	2025-12-10T02:13:12.2267102Z  Success. You can now start the database server using:
+Backend Tests	Stop containers	2025-12-10T02:13:12.2267361Z  
+Backend Tests	Stop containers	2025-12-10T02:13:12.2267567Z      pg_ctl -D /var/lib/postgresql/data -l logfile start
+Backend Tests	Stop containers	2025-12-10T02:13:12.2267825Z  
+Backend Tests	Stop containers	2025-12-10T02:13:12.2268360Z  waiting for server to start....2025-12-10 02:12:26.398 UTC [48] LOG:  starting PostgreSQL 15.15 (Debian 15.15-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+Backend Tests	Stop containers	2025-12-10T02:13:12.2269102Z  2025-12-10 02:12:26.399 UTC [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+Backend Tests	Stop containers	2025-12-10T02:13:12.2269587Z  2025-12-10 02:12:26.402 UTC [51] LOG:  database system was shut down at 2025-12-10 02:12:26 UTC
+Backend Tests	Stop containers	2025-12-10T02:13:12.2270022Z  2025-12-10 02:12:26.406 UTC [48] LOG:  database system is ready to accept connections
+Backend Tests	Stop containers	2025-12-10T02:13:12.2270361Z   done
+Backend Tests	Stop containers	2025-12-10T02:13:12.2270559Z  server started
+Backend Tests	Stop containers	2025-12-10T02:13:12.2271059Z  CREATE DATABASE
+Backend Tests	Stop containers	2025-12-10T02:13:12.2271359Z  
+Backend Tests	Stop containers	2025-12-10T02:13:12.2271599Z  
+Backend Tests	Stop containers	2025-12-10T02:13:12.2272103Z  /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+Backend Tests	Stop containers	2025-12-10T02:13:12.2272716Z  
+Backend Tests	Stop containers	2025-12-10T02:13:12.2272969Z  2025-12-10 02:12:26.586 UTC [48] LOG:  received fast shutdown request
+Backend Tests	Stop containers	2025-12-10T02:13:12.2273640Z  waiting for server to shut down....2025-12-10 02:12:26.587 UTC [48] LOG:  aborting any active transactions
+Backend Tests	Stop containers	2025-12-10T02:13:12.2274485Z  2025-12-10 02:12:26.589 UTC [48] LOG:  background worker "logical replication launcher" (PID 54) exited with exit code 1
+Backend Tests	Stop containers	2025-12-10T02:13:12.2274957Z  2025-12-10 02:12:26.589 UTC [49] LOG:  shutting down
+Backend Tests	Stop containers	2025-12-10T02:13:12.2275304Z  2025-12-10 02:12:26.589 UTC [49] LOG:  checkpoint starting: shutdown immediate
+Backend Tests	Stop containers	2025-12-10T02:13:12.2276139Z  2025-12-10 02:12:26.607 UTC [49] LOG:  checkpoint complete: wrote 922 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.014 s, sync=0.003 s, total=0.019 s; sync files=301, longest=0.001 s, average=0.001 s; distance=4239 kB, estimate=4239 kB
+Backend Tests	Stop containers	2025-12-10T02:13:12.2276959Z  2025-12-10 02:12:26.613 UTC [48] LOG:  database system is shut down
+Backend Tests	Stop containers	2025-12-10T02:13:12.2277251Z   done
+Backend Tests	Stop containers	2025-12-10T02:13:12.2277415Z  server stopped
+Backend Tests	Stop containers	2025-12-10T02:13:12.2277583Z  
+Backend Tests	Stop containers	2025-12-10T02:13:12.2277802Z  PostgreSQL init process complete; ready for start up.
+Backend Tests	Stop containers	2025-12-10T02:13:12.2278076Z  
+Backend Tests	Stop containers	2025-12-10T02:13:12.2284052Z Stop and remove container: 72d6674851bb45828fd537e7d4e9f142_postgres15_bce304
+Backend Tests	Stop containers	2025-12-10T02:13:12.2288667Z ##[command]/usr/bin/docker rm --force 3e971dded236ed52e04465153dbc4d6b0272308a28fbca212378751f8a9506d3
+Backend Tests	Stop containers	2025-12-10T02:13:13.9927955Z 3e971dded236ed52e04465153dbc4d6b0272308a28fbca212378751f8a9506d3
+Backend Tests	Stop containers	2025-12-10T02:13:13.9958784Z Remove container network: github_network_aab7a902cf094f36b944449d9472045c
+Backend Tests	Stop containers	2025-12-10T02:13:13.9962917Z ##[command]/usr/bin/docker network rm github_network_aab7a902cf094f36b944449d9472045c
+Backend Tests	Stop containers	2025-12-10T02:13:14.1085161Z github_network_aab7a902cf094f36b944449d9472045c
+Backend Tests	Complete job	﻿2025-12-10T02:13:14.1145790Z Cleaning up orphan processes

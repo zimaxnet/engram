@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import type { AgentId } from '../../App'
+import { useNavigate, useLocation } from 'react-router-dom'
+import type { AgentId } from '../../types'
 import './TreeNav.css'
 
 interface TreeNavProps {
@@ -20,12 +21,16 @@ interface TreeItem {
   label: string
   icon?: string
   status?: 'active' | 'idle' | 'warning'
+  path?: string // Add path property
   onClick?: () => void
 }
 
 export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['agents', 'memory'])
+    new Set(['agents', 'memory', 'workflows', 'settings', 'admin'])
   )
 
   const toggleSection = (id: string) => {
@@ -46,17 +51,24 @@ export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
       label: 'Agents',
       icon: '🧠',
       children: [
+        { id: 'overview', label: 'Overview', icon: 'ℹ️', path: '/agents' },
         {
           id: 'elena',
           label: 'Elena - Analyst',
           status: activeAgent === 'elena' ? 'active' : 'idle',
-          onClick: () => onAgentChange('elena')
+          onClick: () => {
+            onAgentChange('elena');
+            navigate('/');
+          }
         },
         {
           id: 'marcus',
           label: 'Marcus - PM',
           status: activeAgent === 'marcus' ? 'active' : 'idle',
-          onClick: () => onAgentChange('marcus')
+          onClick: () => {
+            onAgentChange('marcus');
+            navigate('/');
+          }
         }
       ]
     },
@@ -65,9 +77,9 @@ export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
       label: 'Memory',
       icon: '💾',
       children: [
-        { id: 'graph', label: 'Knowledge Graph', icon: '🔗' },
-        { id: 'episodes', label: 'Episodes', icon: '📝' },
-        { id: 'search', label: 'Search', icon: '🔍' }
+        { id: 'graph', label: 'Knowledge Graph', icon: '🔗', path: '/memory/graph' },
+        { id: 'episodes', label: 'Episodes', icon: '📝', path: '/memory/episodes' },
+        { id: 'search', label: 'Search', icon: '🔍', path: '/memory/search' }
       ]
     },
     {
@@ -75,9 +87,9 @@ export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
       label: 'Workflows',
       icon: '⚡',
       children: [
-        { id: 'active', label: 'Active', icon: '▶️' },
-        { id: 'history', label: 'History', icon: '📋' },
-        { id: 'signals', label: 'Signals', icon: '🔔' }
+        { id: 'active', label: 'Active', icon: '▶️', path: '/workflows/active' },
+        { id: 'history', label: 'History', icon: '📋', path: '/workflows/history' },
+        { id: 'signals', label: 'Signals', icon: '🔔', path: '/workflows/signals' }
       ]
     },
     {
@@ -85,9 +97,9 @@ export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
       label: 'Settings',
       icon: '⚙️',
       children: [
-        { id: 'model', label: 'Model', icon: '🤖' },
-        { id: 'voice', label: 'Voice', icon: '🎤' },
-        { id: 'rbac', label: 'RBAC', icon: '🔐' }
+        { id: 'model', label: 'Model', icon: '🤖', path: '/settings/model' },
+        { id: 'voice', label: 'Voice', icon: '🎤', path: '/settings/voice' },
+        { id: 'rbac', label: 'RBAC', icon: '🔐', path: '/settings/rbac' }
       ]
     },
     {
@@ -95,19 +107,33 @@ export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
       label: 'Admin',
       icon: '🛡️',
       children: [
-        { id: 'users', label: 'Users', icon: '👥' },
-        { id: 'audit', label: 'Audit Log', icon: '📊' },
-        { id: 'cost', label: 'Cost', icon: '💰' }
+        { id: 'users', label: 'Users', icon: '👥', path: '/admin/users' },
+        { id: 'audit', label: 'Audit Log', icon: '📊', path: '/admin/audit' },
+        { id: 'cost', label: 'Cost', icon: '💰', path: '/admin/cost' }
       ]
     }
   ]
+
+  const handleItemClick = (item: TreeItem) => {
+    if (item.onClick) {
+      item.onClick();
+    } else if (item.path) {
+      navigate(item.path);
+    }
+  };
+
+  const isItemActive = (item: TreeItem) => {
+    if (item.status === 'active') return true;
+    if (item.path && location.pathname.startsWith(item.path)) return true;
+    return false;
+  };
 
   return (
     <nav className="tree-nav">
       <div className="tree-nav-header">
         <h3>System Navigator</h3>
       </div>
-      
+
       <div className="tree-nav-content">
         {sections.map(section => (
           <div key={section.id} className="tree-section">
@@ -121,25 +147,28 @@ export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
               <span className="tree-section-icon">{section.icon}</span>
               <span className="tree-section-label">{section.label}</span>
             </button>
-            
+
             {expandedSections.has(section.id) && section.children && (
               <ul className="tree-items">
-                {section.children.map(item => (
-                  <li key={item.id}>
-                    <button
-                      className={`tree-item ${item.status === 'active' ? 'active' : ''}`}
-                      onClick={item.onClick}
-                    >
-                      {item.status && (
-                        <span className={`status-dot ${item.status}`} />
-                      )}
-                      {item.icon && (
-                        <span className="tree-item-icon">{item.icon}</span>
-                      )}
-                      <span className="tree-item-label">{item.label}</span>
-                    </button>
-                  </li>
-                ))}
+                {section.children.map(item => {
+                  const active = isItemActive(item);
+                  return (
+                    <li key={item.id}>
+                      <button
+                        className={`tree-item ${active ? 'active' : ''}`}
+                        onClick={() => handleItemClick(item)}
+                      >
+                        {item.status && (
+                          <span className={`status-dot ${item.status}`} />
+                        )}
+                        {item.icon && (
+                          <span className="tree-item-icon">{item.icon}</span>
+                        )}
+                        <span className="tree-item-label">{item.label}</span>
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo, type FormEvent, type CSSProperties } from 'react'
-import type { Agent } from '../../App'
+import type { Agent } from '../../types'
 import { sendChatMessage, type ApiError } from '../../services/api'
 import './ChatPanel.css'
 

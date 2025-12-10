@@ -10,8 +10,11 @@ Provides API for:
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from pydantic import BaseModel
+
+from backend.core import SecurityContext
+from backend.api.middleware.auth import get_current_user
 
 router = APIRouter()
 
@@ -39,7 +42,10 @@ class MemorySearchResponse(BaseModel):
 
 
 @router.post("/search", response_model=MemorySearchResponse)
-async def search_memory(request: MemorySearchRequest):
+async def search_memory(
+    request: MemorySearchRequest, 
+    user: SecurityContext = Depends(get_current_user)
+):
     """
     Search the knowledge graph for relevant memories.
 
@@ -47,31 +53,43 @@ async def search_memory(request: MemorySearchRequest):
     - Relevant facts from the knowledge graph
     - Related episodic memories from past conversations
     """
-    # TODO: Implement Zep integration
-
-    # Placeholder response
-    return MemorySearchResponse(
-        results=[
-            MemoryNode(
-                id="node-1",
-                content="User prefers detailed technical explanations",
-                node_type="preference",
-                confidence=0.92,
-                created_at=datetime.utcnow(),
-                metadata={"source": "conversation-123"},
-            ),
-            MemoryNode(
-                id="node-2",
-                content="Project Alpha has a deadline of Q2 2025",
-                node_type="fact",
-                confidence=0.88,
-                created_at=datetime.utcnow(),
-                metadata={"source": "document-456"},
-            ),
-        ],
-        total_count=2,
-        query_time_ms=45.2,
-    )
+    try:
+        from backend.memory.client import memory_client, search_memory
+        
+        start_time = datetime.now()
+        
+        # Search facts (Semantic Memory) for the authenticated user
+        facts = await memory_client.get_facts(
+            user_id=user.user_id, 
+            query=request.query, 
+            limit=request.limit
+        )
+        
+        results = []
+        for fact in facts:
+            results.append(
+                MemoryNode(
+                    id=fact.id,
+                    content=fact.content,
+                    node_type=fact.node_type,
+                    confidence=fact.confidence,
+                    created_at=fact.created_at,
+                    metadata=fact.metadata
+                )
+            )
+            
+        return MemorySearchResponse(
+            results=results,
+            total_count=len(results),
+            query_time_ms=(datetime.now() - start_time).total_seconds() * 1000,
+        )
+    except Exception as e:
+        # Fallback to empty
+        return MemorySearchResponse(
+            results=[],
+            total_count=0,
+            query_time_ms=0,
+        )
 
 
 class Episode(BaseModel):
@@ -91,7 +109,9 @@ class EpisodeListResponse(BaseModel):
 
 @router.get("/episodes", response_model=EpisodeListResponse)
 async def list_episodes(
-    limit: int = Query(20, ge=1, le=100), offset: int = Query(0, ge=0)
+    limit: int = Query(20, ge=1, le=100), 
+    offset: int = Query(0, ge=0),
+    user: SecurityContext = Depends(get_current_user)
 ):
     """
     List conversation episodes from memory.
@@ -99,23 +119,64 @@ async def list_episodes(
     Episodes are discrete conversation sessions that have been
     processed and stored in the knowledge graph.
     """
-    # TODO: Implement Zep episode retrieval
-
-    # Placeholder response
-    return EpisodeListResponse(
-        episodes=[
-            Episode(
-                id="episode-1",
-                summary="Discussion about Q1 requirements for Project Alpha",
-                turn_count=15,
-                agent_id="elena",
-                started_at=datetime.utcnow(),
-                ended_at=None,
-                topics=["requirements", "project-alpha", "stakeholders"],
+    try:
+        from backend.memory.client import list_episodes as client_list_episodes
+        
+        sessions = await client_list_episodes(
+            user_id=user.user_id, 
+            limit=limit, 
+            offset=offset
+        )
+        
+        episodes = []
+        for s in sessions:
+            episodes.append(
+                Episode(
+                    id=s["session_id"],
+                    summary=s.get("metadata", {}).get("summary", "No summary available"),
+                    turn_count=s.get("metadata", {}).get("turn_count", 0),
+                    agent_id=s.get("metadata", {}).get("agent_id", "unknown"),
+                    started_at=datetime.fromisoformat(s["created_at"]) if isinstance(s["created_at"], str) else s["created_at"],
+                    ended_at=datetime.fromisoformat(s["updated_at"]) if isinstance(s["updated_at"], str) else s["updated_at"],
+                    topics=s.get("metadata", {}).get("topics", [])
+                )
             )
-        ],
-        total_count=1,
-    )
+            
+        return EpisodeListResponse(
+            episodes=episodes,
+            total_count=len(episodes),
+        )
+    except Exception:
+        # Fallback return empty
+        return EpisodeListResponse(episodes=[], total_count=0)
+
+
+class EpisodeTranscriptResponse(BaseModel):
+    id: str
+    transcript: list[dict]
+
+
+@router.get("/episodes/{session_id}", response_model=EpisodeTranscriptResponse)
+async def get_episode_transcript(
+    session_id: str,
+    user: SecurityContext = Depends(get_current_user)
+):
+    """
+    Get the detailed transcript for a specific episode.
+    """
+    try:
+        from backend.memory.client import get_session_transcript
+        
+        # FUTURE: Verify session belongs to user
+        transcript = await get_session_transcript(session_id)
+        
+        return EpisodeTranscriptResponse(
+            id=session_id,
+            transcript=transcript
+        )
+    except Exception:
+        # Fallback
+        return EpisodeTranscriptResponse(id=session_id, transcript=[])
 
 
 class AddFactRequest(BaseModel):
@@ -132,17 +193,35 @@ class AddFactResponse(BaseModel):
 
 
 @router.post("/facts", response_model=AddFactResponse)
-async def add_fact(request: AddFactRequest):
+async def add_fact(
+    request: AddFactRequest,
+    user: SecurityContext = Depends(get_current_user)
+):
     """
     Manually add a fact to the knowledge graph.
 
     Facts added this way are marked as user-provided
     and given high confidence by default.
     """
-    # TODO: Implement Zep fact ingestion
-
-    import uuid
-
-    return AddFactResponse(
-        success=True, node_id=str(uuid.uuid4()), message="Fact added to knowledge graph"
-    )
+    try:
+        from backend.memory.client import memory_client
+        
+        fact_id = await memory_client.add_fact(
+            user_id=user.user_id, 
+            fact=request.content,
+            metadata={**request.metadata, "type": request.fact_type, "manual": True}
+        )
+        
+        if fact_id:
+            return AddFactResponse(
+                success=True, node_id=fact_id, message="Fact added to knowledge graph"
+            )
+        else:
+            return AddFactResponse(
+                success=False, node_id="", message="Failed to add fact"
+            )
+            
+    except Exception as e:
+         return AddFactResponse(
+            success=False, node_id="", message=f"Error: {str(e)}"
+        )

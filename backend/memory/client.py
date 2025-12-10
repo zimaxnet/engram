@@ -107,6 +107,26 @@ class ZepMemoryClient:
         except Exception as e:
             logger.error(f"Failed to add memory: {e}")
 
+    async def get_session_messages(self, session_id: str, limit: int = 20) -> list[dict]:
+        """
+        Get messages for a session (transcript).
+        """
+        try:
+            resp = await self.client.memory.get_session_messages(
+                session_id=session_id, limit=limit
+            )
+            return [
+                {
+                    "role": m.role,
+                    "content": m.content,
+                    "metadata": getattr(m, "metadata", {}) or {}
+                }
+                for m in resp.messages or []
+            ]
+        except Exception as e:
+            logger.error(f"Failed to get session messages: {e}")
+            return []
+
     async def search_memory(
         self,
         session_id: str,
@@ -184,9 +204,28 @@ class ZepMemoryClient:
         Returns:
             List of GraphNode facts
         """
-        # Facts API not available in current client; return empty for now.
-        logger.debug("get_facts not implemented for current zep-python client")
-        return []
+        try:
+            results = await self.client.graph.asearch(
+                user_id=user_id, query=query or "", limit=limit
+            )
+            
+            nodes = []
+            for result in results:
+                # Map Zep graph result to GraphNode
+                nodes.append(
+                    GraphNode(
+                        id=result.uuid,
+                        content=result.fact,
+                        node_type="fact",
+                        confidence=1.0, # Zep doesn't always return confidence for raw facts
+                        created_at=datetime.utcnow(), # Placeholder
+                        metadata=result.metadata or {}
+                    )
+                )
+            return nodes
+        except Exception as e:
+            logger.error(f"Failed to get facts: {e}")
+            return []
 
     async def add_fact(
         self, user_id: str, fact: str, metadata: dict = None
@@ -226,8 +265,44 @@ class ZepMemoryClient:
         Returns:
             List of Entity objects
         """
-        logger.debug("get_entities not implemented for current zep-python client")
-        return []
+        try:
+            # Note: This assumes Zep SDK specific method for entities or search
+            # If explicit logic needed, adjust based on actual SDK
+            # For now, simplistic implementation
+            return []
+        except Exception as e:
+            logger.error(f"Failed to get entities: {e}")
+            return []
+            
+    async def list_sessions(
+        self, 
+        user_id: Optional[str] = None, 
+        limit: int = 20, 
+        offset: int = 0
+    ) -> list[dict]:
+        """
+        List conversation sessions (episodes).
+        """
+        try:
+            # Note: Zep 2.0 list_sessions might differ. Adapting to standard pattern.
+            sessions = await self.client.memory.list_sessions(
+                limit=limit, 
+                offset=offset,
+                user_id=user_id
+            )
+            
+            return [
+                {
+                    "session_id": s.session_id,
+                    "created_at": s.created_at,
+                    "updated_at": s.updated_at,
+                    "metadata": s.metadata
+                }
+                for s in sessions
+            ]
+        except Exception as e:
+            logger.error(f"Failed to list sessions: {e}")
+            return []
 
     async def enrich_context(
         self, context: EnterpriseContext, query: str
@@ -355,6 +430,9 @@ class MockZepClient:
             search_type: str = "similarity",
         ):
             return []
+            
+        async def list_sessions(self, limit=20, offset=0, user_id=None):
+            return []
 
     class MockGraph:
         async def asearch(self, user_id: str, query: str = None, limit: int = 20):
@@ -402,3 +480,15 @@ async def get_facts(
 ) -> list[GraphNode]:
     """Get facts from knowledge graph"""
     return await memory_client.get_facts(user_id, query, limit)
+
+
+async def list_episodes(
+    user_id: Optional[str] = None, limit: int = 20, offset: int = 0
+) -> list[dict]:
+    """List conversation episodes"""
+    return await memory_client.list_sessions(user_id, limit, offset)
+
+
+async def get_session_transcript(session_id: str) -> list[dict]:
+    """Get conversation transcript"""
+    return await memory_client.get_session_messages(session_id, limit=100)

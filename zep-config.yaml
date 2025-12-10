@@ -1,4 +1,4 @@
-api_secret: dev-secret
+api_secret: "dev-secret"
 auth:
   required: false
 store:

@@ -66,10 +66,28 @@ See [Deployment Guide](docs/deployment.md) for full details.
 |-----------|-----------|---------|
 | **Memory** | Zep (Temporal Knowledge Graph) | Episodic & semantic memory |
 | **Orchestration** | Temporal (Durable Workflows) | Long-running, fault-tolerant workflows |
-| **Brain** | LangGraph Agents (Python) | Agent reasoning & execution |
-| **ETL** | Unstructured.io | Document processing pipeline |
-| **Frontend** | React + Vite | 3-column UI with voice interaction |
+| **Brain** | LangGraph Agents (python) | Agent reasoning & execution |
+| **ETL** | Unstructured.io | Document processing (PDF, DOCX) & Ingestion |
+| **Voice** | Azure Speech SDK | Real-time bi-directional voice streaming |
+| **Frontend** | React + Vite | Premium UI with Sidebar Concept Explainer |
 | **Backend** | FastAPI | REST API & WebSocket server |
+
+## System Capabilities
+
+### 1. Document Ingestion (ETL)
+Upload documents (PDF, DOCX, TXT) to the Knowledge Graph.
+- **Endpoint**: `POST /api/v1/etl/ingest`
+- **Process**: Partitioning -> Chunking -> Embedding -> Zep Memory
+
+### 2. Real-time Voice (VoiceLive)
+Speak with the agent using low-latency WebSockets.
+- **Endpoint**: `WS /api/v1/voice/ws/{client_id}`
+- **Features**: Interruptibility, VAD (Voice Activity Detection), Azure Neural TTS.
+
+### 3. Episodic Memory
+The agent "remembers" past conversations and facts.
+- **View Transcripts**: See full history of past episodes.
+- **Search**: Hybrid search across semantic facts and episodic history.
 
 ## Documentation
 

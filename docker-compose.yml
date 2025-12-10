@@ -15,31 +15,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # ------------------------------------------------------------
-  # Zep (Memory Layer)
-  # ------------------------------------------------------------
-  zep:
-    image: zepai/zep:latest
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      ZEP_POSTGRES_DSN: "postgres://postgres:password@postgres:5432/engram?sslmode=disable"
-      ZEP_STORE_TYPE: "postgres"
-      ZEP_API_SECRET: ${ZEP_API_SECRET:-dev-secret}
-      API_SECRET: ${ZEP_API_SECRET:-dev-secret}
-      ZEP_AUTH_REQUIRED: "false"
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./zep-config.yaml:/app/config.yaml:ro
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -50,7 +26,7 @@ services:
   temporal:
     image: temporalio/auto-setup:latest
     environment:
-      DB: postgresql
+      DB: postgres12
       DB_PORT: 5432
       POSTGRES_USER: postgres
       POSTGRES_PWD: password
@@ -59,10 +35,10 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "7233:7233"   # gRPC
-      - "8233:8233"   # Web UI
+      - "7233:7233" # gRPC
+      - "8233:8233" # Web UI
     healthcheck:
-      test: ["CMD", "tctl", "--address", "localhost:7233", "cluster", "health"]
+      test: [ "CMD", "tctl", "--address", "localhost:7233", "cluster", "health" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -82,6 +58,7 @@ services:
   # ------------------------------------------------------------
   unstructured:
     image: downloads.unstructured.io/unstructured-io/unstructured-api:latest
+    platform: linux/amd64
     ports:
       - "8001:8000"
 
@@ -94,41 +71,41 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - temporal
-      - zep
     environment:
       ENVIRONMENT: development
       DEBUG: "true"
-      
+
       # Database
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: engram
-      
+
       # Temporal
       TEMPORAL_HOST: temporal:7233
       TEMPORAL_NAMESPACE: default
       TEMPORAL_TASK_QUEUE: engram-agents
-      
-      # Zep
-      ZEP_API_URL: http://zep:8000
-      
+
+      # Zep (Cloud)
+      ZEP_API_URL: https://api.getzep.com/api/v1
+      ZEP_API_KEY: "z_1dWlkIjoiZmZlZGVkZWQtZjM5Ni00YmM1LWFhMzItMmMxNDhiZjY1MjlhIn0.5eCFUfoYycsfFm7lExmHszCezfc3C9F5firEyUHZias3_XzFHbY907NXckxuiHpdy04Tt6-ZSdaYa59qrZ8Ygw"
+
       # Azure OpenAI (set these for real functionality)
       AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT:-}
       AZURE_OPENAI_KEY: ${AZURE_OPENAI_KEY:-}
       AZURE_OPENAI_DEPLOYMENT: ${AZURE_OPENAI_DEPLOYMENT:-gpt-4o}
-      
+
       # Azure Speech (optional)
       AZURE_SPEECH_KEY: ${AZURE_SPEECH_KEY:-}
       AZURE_SPEECH_REGION: ${AZURE_SPEECH_REGION:-eastus}
-      
+
       # CORS
       CORS_ORIGINS: '["http://localhost:5173", "http://localhost:3000", "http://localhost:8080"]'
     ports:
       - "8082:8080"
     volumes:
-      - ./backend:/app
+      - ./backend:/app/backend
     command: uvicorn backend.api.main:app --host 0.0.0.0 --port 8080 --reload
 
   # ------------------------------------------------------------
@@ -141,32 +118,31 @@ services:
     depends_on:
       temporal:
         condition: service_healthy
-      zep:
-        condition: service_healthy
     environment:
       ENVIRONMENT: development
-      
+
       # Database
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: engram
-      
+
       # Temporal
       TEMPORAL_HOST: temporal:7233
       TEMPORAL_NAMESPACE: default
       TEMPORAL_TASK_QUEUE: engram-agents
-      
-      # Zep
-      ZEP_API_URL: http://zep:8000
-      
+
+      # Zep (Cloud)
+      ZEP_API_URL: https://api.getzep.com/api/v1
+      ZEP_API_KEY: "z_1dWlkIjoiZmZlZGVkZWQtZjM5Ni00YmM1LWFhMzItMmMxNDhiZjY1MjlhIn0.5eCFUfoYycsfFm7lExmHszCezfc3C9F5firEyUHZias3_XzFHbY907NXckxuiHpdy04Tt6-ZSdaYa59qrZ8Ygw"
+
       # Azure OpenAI
       AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT:-}
       AZURE_OPENAI_KEY: ${AZURE_OPENAI_KEY:-}
       AZURE_OPENAI_DEPLOYMENT: ${AZURE_OPENAI_DEPLOYMENT:-gpt-4o}
     volumes:
-      - ./backend:/app
+      - ./backend:/app/backend
     restart: unless-stopped
 
   # ------------------------------------------------------------
@@ -175,10 +151,10 @@ services:
   etl:
     build: ./etl-pipeline
     depends_on:
-      - zep
       - unstructured
     environment:
-      ZEP_API_URL: http://zep:8000
+      ZEP_API_URL: https://api.getzep.com/api/v1
+      ZEP_API_KEY: "z_1dWlkIjoiZmZlZGVkZWQtZjM5Ni00YmM1LWFhMzItMmMxNDhiZjY1MjlhIn0.5eCFUfoYycsfFm7lExmHszCezfc3C9F5firEyUHZias3_XzFHbY907NXckxuiHpdy04Tt6-ZSdaYa59qrZ8Ygw"
       UNSTRUCTURED_API_URL: http://unstructured:8000
     volumes:
       - ./etl-pipeline:/app
