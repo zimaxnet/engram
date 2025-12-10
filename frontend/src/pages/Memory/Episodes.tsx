@@ -1,4 +1,4 @@
-// ... imports
+import { useState, useEffect } from 'react';
 import { listEpisodes, getEpisode } from '../../services/api';
 
 interface Episode {

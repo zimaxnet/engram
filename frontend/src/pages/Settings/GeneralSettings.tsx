@@ -53,8 +53,8 @@ export function GeneralSettings() {
                         <label>Application Name</label>
                         <input
                             type="text"
-                            value={settings.app_name || ''}
-                            onChange={e => setSettings({ ...settings, app_name: e.target.value })}
+                            value={(settings['LOG_LEVEL'] as string) || ''}
+                            onChange={(e) => setSettings({ ...settings, LOG_LEVEL: e.target.value })}
                             style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
                         />
                     </div>
@@ -63,8 +63,8 @@ export function GeneralSettings() {
                         <label>Maintenance Mode</label>
                         <input
                             type="checkbox"
-                            checked={settings.maintenance_mode || false}
-                            onChange={e => setSettings({ ...settings, maintenance_mode: e.target.checked })}
+                            checked={(settings['ENABLE_AUDIT'] as boolean) || false}
+                            onChange={(e) => setSettings({ ...settings, ENABLE_AUDIT: e.target.checked })}
                         />
                     </div>
 
