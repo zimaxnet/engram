@@ -5,7 +5,6 @@ Provides endpoints for document ingestion and processing.
 """
 
 import logging
-from typing import Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, BackgroundTasks
 from pydantic import BaseModel

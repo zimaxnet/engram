@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 from backend.api.middleware.auth import get_current_user
 from backend.core import SecurityContext
