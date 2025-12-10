@@ -16,7 +16,7 @@ Engram is an enterprise-grade **Context Engineering Platform** that solves the M
 - **Core Architecture**: ✅ Complete
 - **Agent Framework**: ✅ Complete (Elena & Marcus)
 - **Memory Layer**: ✅ Complete (Zep Cloud integration)
-- **Voice Integration**: ✅ Complete (Azure Speech Services - STT/TTS)
+- **Voice Integration**: ✅ Complete (Azure VoiceLive - Real-time Voice)
 - **Frontend**: ✅ Complete (React + VoiceChat)
 - **Infrastructure**: ✅ Complete (Bicep + CI/CD)
 - **Security Foundation**: ✅ Complete (RBAC + Entra ID + Tests)
@@ -71,7 +71,7 @@ The foundation of Engram's context engineering approach:
 - LangGraph state machine with tool calling
 - Context-first requirements framework
 - Warm, analytical communication style
-- Speech Services integration with natural conversation flow
+- VoiceLive integration with natural conversation flow
 
 #### Marcus - Project Manager Agent
 **File**: [`backend/agents/marcus/agent.py`](backend/agents/marcus/agent.py)
@@ -131,38 +131,39 @@ The foundation of Engram's context engineering approach:
 
 ---
 
-### 4. Voice Integration (Azure Speech Services)
+### 4. Voice Integration (Azure VoiceLive)
 
-**File**: [`backend/voice/speech_service.py`](backend/voice/speech_service.py)
+**File**: [`backend/voice/voicelive_service.py`](backend/voice/voicelive_service.py)
 
 #### Features
 
-**Speech-to-Text (STT)**:
-- Real-time audio transcription
-- Multiple language support
-- Streaming recognition for continuous input
-- Push-to-talk and hands-free modes
-
-**Text-to-Speech (TTS)**:
-- Natural voice synthesis with neural voices
-- Agent-specific voice selection
-- Viseme data generation for lip-sync (available but not used for avatar)
-- Audio format: PCM16, 24kHz
+**Azure VoiceLive Real-time Voice**:
+- Real-time bidirectional audio streaming
+- Server-side VAD (Voice Activity Detection)
+- Audio echo cancellation and noise reduction
+- Natural turn-taking with barge-in support
+- Direct integration with GPT models (gpt-realtime)
+- Push-to-talk voice input
+- Real-time transcription with status updates
+- Audio format: PCM16, 16kHz
 
 **WebSocket Endpoints**:
-- `/api/v1/voice/ws/{session_id}` - Traditional voice chat with STT/TTS
-- `/api/v1/voice/voicelive/{session_id}` - VoiceLive endpoint (available but not primary)
+- `/api/v1/voice/voicelive/{session_id}` - **Primary VoiceLive endpoint**
+- `/api/v1/voice/ws/{session_id}` - Legacy Speech Services endpoint (available but not primary)
 
 **Protocol**:
-- Client → Server: `{"type": "audio", "data": "<base64>"}`
-- Server → Client: `{"type": "transcription", "text": "...", "is_final": bool}`
-- Server → Client: `{"type": "response", "text": "...", "audio": "<base64>", "visemes": [...]}`
-- Agent switching: `{"type": "agent_switched", "agent_id": "elena|marcus"}`
+- Client → Server: `{"type": "audio", "data": "<base64 PCM16>"}`
+- Client → Server: `{"type": "agent", "agent_id": "elena|marcus"}` (switch agent)
+- Client → Server: `{"type": "cancel"}` (barge-in)
+- Server → Client: `{"type": "audio", "data": "<base64 PCM16>", "format": "pcm16"}`
+- Server → Client: `{"type": "transcription", "status": "listening|processing|complete", "text": "..."}`
+- Server → Client: `{"type": "agent_switched", "agent_id": "elena|marcus"}`
+- Server → Client: `{"type": "error", "message": "..."}`
 
 **Agent-Specific Voice Configuration**:
-- Elena: Warm, professional neural voice
-- Marcus: Confident, direct neural voice
-- Custom voice selection per agent
+- Elena: `en-US-Ava:DragonHDLatestNeural` (warm, professional)
+- Marcus: `en-US-GuyNeural` (confident, direct)
+- Custom voice selection per agent via environment variables
 
 #### Frontend Integration
 **File**: [`frontend/src/components/VoiceChat/VoiceChat.tsx`](frontend/src/components/VoiceChat/VoiceChat.tsx)
@@ -194,11 +195,12 @@ The foundation of Engram's context engineering approach:
 - Voice integration toggle
 
 **VoiceChat** (`frontend/src/components/VoiceChat/VoiceChat.tsx`):
-- WebSocket connection to Speech Services endpoint (`/ws/{session_id}`)
-- Audio capture and playback
-- Real-time transcription display
+- WebSocket connection to VoiceLive endpoint (`/api/v1/voice/voicelive/{session_id}`)
+- Audio capture (PCM16, 16kHz) and playback
+- Real-time transcription display with status updates
 - Status indicators (connecting, listening, processing, speaking)
-- Viseme data received but not used for avatar (avatar not implemented)
+- Agent switching during conversation
+- Barge-in support (cancel current response)
 
 **VisualPanel** (`frontend/src/components/VisualPanel/VisualPanel.tsx`):
 - Session metrics (tokens, latency, cost, turns)
@@ -403,7 +405,7 @@ The foundation of Engram's context engineering approach:
 7. User switches to Marcus via voice command
 8. Marcus continues conversation with different voice persona
 
-**Expected Outcome**: Natural voice conversation with real-time transcription and agent switching using Azure Speech Services
+**Expected Outcome**: Natural voice conversation with real-time transcription and agent switching using Azure VoiceLive
 
 ---
 
@@ -521,7 +523,7 @@ The foundation of Engram's context engineering approach:
 
 The Engram Enterprise PoC is **100% complete** and ready for production deployment. All core functionality is working:
 - ✅ Agent reasoning with tools (Elena & Marcus)
-- ✅ Voice interaction with Azure Speech Services (STT/TTS)
+- ✅ Voice interaction with Azure VoiceLive (real-time voice)
 - ✅ Memory persistence with Zep Cloud
 - ✅ Frontend with real-time updates
 - ✅ Infrastructure as code (Bicep + CI/CD)
@@ -546,10 +548,10 @@ The platform demonstrates the viability of **Context Engineering** as a paradigm
 ## Change Log
 
 ### Version 1.1 (December 2025)
-- Updated voice integration from VoiceLive to Azure Speech Services (STT/TTS)
+- Voice integration using Azure VoiceLive (real-time voice) as primary
 - Removed avatar/WebRTC references (not implemented in current PoC)
 - Updated DNS configuration details (api.engram.work, temporal.engram.work)
 - Clarified implementation decisions and current state
-- Updated architecture decisions to reflect Speech Services choice
+- Architecture uses Azure VoiceLive for real-time voice conversation
 - Added DNS module to infrastructure documentation
 
