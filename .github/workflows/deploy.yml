@@ -69,7 +69,7 @@ jobs:
             backendImage=ghcr.io/${{ github.repository }}/backend:latest
             workerImage=ghcr.io/${{ github.repository }}/worker:latest
             registryUsername=${{ github.actor }}
-            registryPassword=${{ secrets.GITHUB_TOKEN }}
+            registryPassword=${{ secrets.CR_PAT }}
           deploymentName: engram-infra-${{ github.sha }}
           failOnStdErr: false
       
