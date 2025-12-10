@@ -173,6 +173,9 @@ resource managedCert 'Microsoft.App/managedEnvironments/managedCertificates@2022
     subjectName: 'temporal.engram.work'
     domainControlValidation: 'CNAME'
   }
+  dependsOn: [
+    temporalUI
+  ]
 }
 
 // Helper resource to reference environment

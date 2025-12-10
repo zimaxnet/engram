@@ -230,6 +230,9 @@ resource managedCert 'Microsoft.App/managedEnvironments/managedCertificates@2022
     subjectName: 'api.engram.work'
     domainControlValidation: 'CNAME'
   }
+  dependsOn: [
+    backendApp
+  ]
 }
 
 // Outputs
