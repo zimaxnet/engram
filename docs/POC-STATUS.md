@@ -393,16 +393,16 @@ The foundation of Engram's context engineering approach:
 **Expected Outcome**: Smooth transition with context preservation
 
 ### Scenario 4: Voice Interaction
-**Objective**: Demonstrate real-time voice conversation with Speech Services
+**Objective**: Demonstrate real-time voice conversation with VoiceLive
 
 **Flow**:
 1. User clicks voice button in ChatPanel
-2. WebSocket connects to `/ws/{session_id}`
+2. WebSocket connects to `/api/v1/voice/voicelive/{session_id}`
 3. User speaks: "Help me analyze these requirements"
-4. Speech-to-text transcribes input in real-time
+4. VoiceLive transcribes input in real-time with status updates
 5. Elena responds with synthesized voice, transcription displayed
-6. Natural back-and-forth conversation
-7. User switches to Marcus via voice command
+6. Natural back-and-forth conversation with barge-in support
+7. User switches to Marcus via agent message
 8. Marcus continues conversation with different voice persona
 
 **Expected Outcome**: Natural voice conversation with real-time transcription and agent switching using Azure VoiceLive
