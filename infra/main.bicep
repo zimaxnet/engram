@@ -99,6 +99,14 @@ resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2021-06-01' = {
       geoRedundantBackup: 'Disabled'
     }
   }
+
+  resource allowAzureServices 'firewallRules' = {
+    name: 'AllowAzureServices'
+    properties: {
+      startIpAddress: '0.0.0.0'
+      endIpAddress: '0.0.0.0'
+    }
+  }
 }
 
 // =============================================================================
