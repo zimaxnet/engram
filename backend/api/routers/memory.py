@@ -54,7 +54,7 @@ async def search_memory(
     - Related episodic memories from past conversations
     """
     try:
-        from backend.memory.client import memory_client, search_memory
+        from backend.memory.client import memory_client
         
         start_time = datetime.now()
         
