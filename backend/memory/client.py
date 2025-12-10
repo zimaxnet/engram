@@ -107,7 +107,9 @@ class ZepMemoryClient:
         except Exception as e:
             logger.error(f"Failed to add memory: {e}")
 
-    async def get_session_messages(self, session_id: str, limit: int = 20) -> list[dict]:
+    async def get_session_messages(
+        self, session_id: str, limit: int = 20
+    ) -> list[dict]:
         """
         Get messages for a session (transcript).
         """
@@ -119,7 +121,7 @@ class ZepMemoryClient:
                 {
                     "role": m.role,
                     "content": m.content,
-                    "metadata": getattr(m, "metadata", {}) or {}
+                    "metadata": getattr(m, "metadata", {}) or {},
                 }
                 for m in resp.messages or []
             ]
@@ -208,7 +210,7 @@ class ZepMemoryClient:
             results = await self.client.graph.asearch(
                 user_id=user_id, query=query or "", limit=limit
             )
-            
+
             nodes = []
             for result in results:
                 # Map Zep graph result to GraphNode
@@ -217,9 +219,9 @@ class ZepMemoryClient:
                         id=result.uuid,
                         content=result.fact,
                         node_type="fact",
-                        confidence=1.0, # Zep doesn't always return confidence for raw facts
-                        created_at=datetime.utcnow(), # Placeholder
-                        metadata=result.metadata or {}
+                        confidence=1.0,  # Zep doesn't always return confidence for raw facts
+                        created_at=datetime.utcnow(),  # Placeholder
+                        metadata=result.metadata or {},
                     )
                 )
             return nodes
@@ -273,12 +275,9 @@ class ZepMemoryClient:
         except Exception as e:
             logger.error(f"Failed to get entities: {e}")
             return []
-            
+
     async def list_sessions(
-        self, 
-        user_id: Optional[str] = None, 
-        limit: int = 20, 
-        offset: int = 0
+        self, user_id: Optional[str] = None, limit: int = 20, offset: int = 0
     ) -> list[dict]:
         """
         List conversation sessions (episodes).
@@ -286,17 +285,15 @@ class ZepMemoryClient:
         try:
             # Note: Zep 2.0 list_sessions might differ. Adapting to standard pattern.
             sessions = await self.client.memory.list_sessions(
-                limit=limit, 
-                offset=offset,
-                user_id=user_id
+                limit=limit, offset=offset, user_id=user_id
             )
-            
+
             return [
                 {
                     "session_id": s.session_id,
                     "created_at": s.created_at,
                     "updated_at": s.updated_at,
-                    "metadata": s.metadata
+                    "metadata": s.metadata,
                 }
                 for s in sessions
             ]
@@ -430,7 +427,7 @@ class MockZepClient:
             search_type: str = "similarity",
         ):
             return []
-            
+
         async def list_sessions(self, limit=20, offset=0, user_id=None):
             return []
 

@@ -43,8 +43,7 @@ class MemorySearchResponse(BaseModel):
 
 @router.post("/search", response_model=MemorySearchResponse)
 async def search_memory(
-    request: MemorySearchRequest, 
-    user: SecurityContext = Depends(get_current_user)
+    request: MemorySearchRequest, user: SecurityContext = Depends(get_current_user)
 ):
     """
     Search the knowledge graph for relevant memories.
@@ -55,16 +54,14 @@ async def search_memory(
     """
     try:
         from backend.memory.client import memory_client
-        
+
         start_time = datetime.now()
-        
+
         # Search facts (Semantic Memory) for the authenticated user
         facts = await memory_client.get_facts(
-            user_id=user.user_id, 
-            query=request.query, 
-            limit=request.limit
+            user_id=user.user_id, query=request.query, limit=request.limit
         )
-        
+
         results = []
         for fact in facts:
             results.append(
@@ -74,10 +71,10 @@ async def search_memory(
                     node_type=fact.node_type,
                     confidence=fact.confidence,
                     created_at=fact.created_at,
-                    metadata=fact.metadata
+                    metadata=fact.metadata,
                 )
             )
-            
+
         return MemorySearchResponse(
             results=results,
             total_count=len(results),
@@ -109,9 +106,9 @@ class EpisodeListResponse(BaseModel):
 
 @router.get("/episodes", response_model=EpisodeListResponse)
 async def list_episodes(
-    limit: int = Query(20, ge=1, le=100), 
+    limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    user: SecurityContext = Depends(get_current_user)
+    user: SecurityContext = Depends(get_current_user),
 ):
     """
     List conversation episodes from memory.
@@ -121,27 +118,35 @@ async def list_episodes(
     """
     try:
         from backend.memory.client import list_episodes as client_list_episodes
-        
+
         sessions = await client_list_episodes(
-            user_id=user.user_id, 
-            limit=limit, 
-            offset=offset
+            user_id=user.user_id, limit=limit, offset=offset
         )
-        
+
         episodes = []
         for s in sessions:
             episodes.append(
                 Episode(
                     id=s["session_id"],
-                    summary=s.get("metadata", {}).get("summary", "No summary available"),
+                    summary=s.get("metadata", {}).get(
+                        "summary", "No summary available"
+                    ),
                     turn_count=s.get("metadata", {}).get("turn_count", 0),
                     agent_id=s.get("metadata", {}).get("agent_id", "unknown"),
-                    started_at=datetime.fromisoformat(s["created_at"]) if isinstance(s["created_at"], str) else s["created_at"],
-                    ended_at=datetime.fromisoformat(s["updated_at"]) if isinstance(s["updated_at"], str) else s["updated_at"],
-                    topics=s.get("metadata", {}).get("topics", [])
+                    started_at=(
+                        datetime.fromisoformat(s["created_at"])
+                        if isinstance(s["created_at"], str)
+                        else s["created_at"]
+                    ),
+                    ended_at=(
+                        datetime.fromisoformat(s["updated_at"])
+                        if isinstance(s["updated_at"], str)
+                        else s["updated_at"]
+                    ),
+                    topics=s.get("metadata", {}).get("topics", []),
                 )
             )
-            
+
         return EpisodeListResponse(
             episodes=episodes,
             total_count=len(episodes),
@@ -158,22 +163,18 @@ class EpisodeTranscriptResponse(BaseModel):
 
 @router.get("/episodes/{session_id}", response_model=EpisodeTranscriptResponse)
 async def get_episode_transcript(
-    session_id: str,
-    user: SecurityContext = Depends(get_current_user)
+    session_id: str, user: SecurityContext = Depends(get_current_user)
 ):
     """
     Get the detailed transcript for a specific episode.
     """
     try:
         from backend.memory.client import get_session_transcript
-        
+
         # FUTURE: Verify session belongs to user
         transcript = await get_session_transcript(session_id)
-        
-        return EpisodeTranscriptResponse(
-            id=session_id,
-            transcript=transcript
-        )
+
+        return EpisodeTranscriptResponse(id=session_id, transcript=transcript)
     except Exception:
         # Fallback
         return EpisodeTranscriptResponse(id=session_id, transcript=[])
@@ -194,8 +195,7 @@ class AddFactResponse(BaseModel):
 
 @router.post("/facts", response_model=AddFactResponse)
 async def add_fact(
-    request: AddFactRequest,
-    user: SecurityContext = Depends(get_current_user)
+    request: AddFactRequest, user: SecurityContext = Depends(get_current_user)
 ):
     """
     Manually add a fact to the knowledge graph.
@@ -205,13 +205,13 @@ async def add_fact(
     """
     try:
         from backend.memory.client import memory_client
-        
+
         fact_id = await memory_client.add_fact(
-            user_id=user.user_id, 
+            user_id=user.user_id,
             fact=request.content,
-            metadata={**request.metadata, "type": request.fact_type, "manual": True}
+            metadata={**request.metadata, "type": request.fact_type, "manual": True},
         )
-        
+
         if fact_id:
             return AddFactResponse(
                 success=True, node_id=fact_id, message="Fact added to knowledge graph"
@@ -220,8 +220,6 @@ async def add_fact(
             return AddFactResponse(
                 success=False, node_id="", message="Failed to add fact"
             )
-            
+
     except Exception as e:
-         return AddFactResponse(
-            success=False, node_id="", message=f"Error: {str(e)}"
-        )
+        return AddFactResponse(success=False, node_id="", message=f"Error: {str(e)}")

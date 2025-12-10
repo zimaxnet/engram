@@ -87,9 +87,9 @@ async def list_workflows(
                     started_at=datetime.utcnow(),
                     task_summary="Analyzing Q1 financial reports",
                     step_count=5,
-                    current_step="Extracting data from PDF"
+                    current_step="Extracting data from PDF",
                 ),
-                 WorkflowSummary(
+                WorkflowSummary(
                     workflow_id="mock-wf-2",
                     workflow_type="AgentWorkflow",
                     status=WorkflowStatus.WAITING,
@@ -97,9 +97,9 @@ async def list_workflows(
                     started_at=datetime.utcnow(),
                     task_summary="Project Alpha timeline review",
                     step_count=3,
-                    current_step="Waiting for human approval"
+                    current_step="Waiting for human approval",
                 ),
-                 WorkflowSummary(
+                WorkflowSummary(
                     workflow_id="mock-wf-3",
                     workflow_type="AgentWorkflow",
                     status=WorkflowStatus.COMPLETED,
@@ -108,10 +108,10 @@ async def list_workflows(
                     completed_at=datetime.utcnow(),
                     task_summary="Competitor analysis",
                     step_count=8,
-                    current_step="Finished"
-                )
-            ], 
-            total_count=3
+                    current_step="Finished",
+                ),
+            ],
+            total_count=3,
         )
 
 
@@ -175,8 +175,16 @@ async def get_workflow(
             started_at=datetime.utcnow(),
             task_summary="Mock workflow detail",
             steps=[
-                {"name": "Start", "status": "COMPLETED", "timestamp": datetime.utcnow().isoformat()},
-                {"name": "Analysis", "status": "RUNNING", "timestamp": datetime.utcnow().isoformat()},
+                {
+                    "name": "Start",
+                    "status": "COMPLETED",
+                    "timestamp": datetime.utcnow().isoformat(),
+                },
+                {
+                    "name": "Analysis",
+                    "status": "RUNNING",
+                    "timestamp": datetime.utcnow().isoformat(),
+                },
             ],
             context_snapshot={"recent_message": "Processing data..."},
         )
