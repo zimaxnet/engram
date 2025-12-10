@@ -227,6 +227,7 @@ resource managedCert 'Microsoft.App/managedEnvironments/managedCertificates@2022
   name: 'api-engram-work-cert'
   location: location
   properties: {
+    subjectName: 'api.engram.work'
     domainControlValidation: 'CNAME'
   }
 }

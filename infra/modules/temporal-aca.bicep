@@ -170,6 +170,7 @@ resource managedCert 'Microsoft.App/managedEnvironments/managedCertificates@2022
   name: 'temporal-engram-work-cert'
   location: location
   properties: {
+    subjectName: 'temporal.engram.work'
     domainControlValidation: 'CNAME'
   }
 }
