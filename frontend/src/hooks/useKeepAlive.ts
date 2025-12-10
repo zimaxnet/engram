@@ -16,7 +16,7 @@ const ACTIVITY_TIMEOUT = 30 * 60 * 1000 // 30 minutes
 
 export function useKeepAlive() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const lastActivityRef = useRef<number>(Date.now())
+  const lastActivityRef = useRef<number>(0)
   const isActiveRef = useRef<boolean>(true)
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export function useKeepAlive() {
         try {
           await checkHealth()
           console.debug('[KeepAlive] Health check sent')
-        } catch (error) {
+        } catch {
           // Silently fail - don't spam console with errors
           console.debug('[KeepAlive] Health check failed (backend may be cold starting)')
         }
