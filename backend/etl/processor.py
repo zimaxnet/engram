@@ -13,7 +13,6 @@ import io
 # but for this file we expect unstructured to be installed.
 from unstructured.partition.auto import partition
 from unstructured.chunking.title import chunk_by_title
-from unstructured.chunking.title import chunk_by_title
 
 logger = logging.getLogger(__name__)
 
