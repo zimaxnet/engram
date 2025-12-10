@@ -123,13 +123,7 @@ resource temporalUI 'Microsoft.App/containerApps@2023-05-01' = {
         targetPort: 8080
         transport: 'http'
         allowInsecure: false
-        customDomains: [
-          {
-            name: 'temporal.engram.work'
-            bindingType: 'SniEnabled'
-            certificateId: managedCert.id
-          }
-        ]
+
       }
       dapr: {
         enabled: false
@@ -164,30 +158,9 @@ resource temporalUI 'Microsoft.App/containerApps@2023-05-01' = {
   }
 }
 
-// Managed Certificate
-resource managedCert 'Microsoft.App/managedEnvironments/managedCertificates@2022-11-01-preview' = {
-  parent: acaEnv
-  name: 'temporal-engram-work-cert'
-  location: location
-  properties: {
-    subjectName: 'temporal.engram.work'
-    domainControlValidation: 'CNAME'
-  }
-  dependsOn: [
-    temporalUI
-  ]
-}
-
-// Helper resource to reference environment
-resource acaEnv 'Microsoft.App/managedEnvironments@2022-03-01' existing = {
-  name: acaEnvName
-}
-
 // Outputs
 output temporalServerFqdn string = temporalServer.properties.configuration.ingress.fqdn
-// Output custom domain URL for the UI (if needed by other apps, though technically not used by frontend directly yet)
-output temporalUIUrl string = 'https://temporal.engram.work'
-// Output default ACA FQDN for DNS CNAME creation
+output temporalUIUrl string = 'https://${temporalUI.properties.configuration.ingress.fqdn}'
 output temporalUIDefaultFqdn string = temporalUI.properties.configuration.ingress.fqdn
 output temporalHost string = '${temporalServer.properties.configuration.ingress.fqdn}:7233'
 

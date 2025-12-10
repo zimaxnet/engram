@@ -180,23 +180,21 @@ module temporalModule 'modules/temporal-aca.bicep' = {
 // =============================================================================
 // Zep Configuration
 // =============================================================================
-// Using Zep Cloud (app.getzep.com) instead of self-hosted container
-// The Zep container module is commented out - we use Zep Cloud API
-// module zepModule 'modules/zep-aca.bicep' = {
-//   name: 'zep'
-//   params: {
-//     location: location
-//     acaEnvId: acaEnv.id
-//     postgresFqdn: postgres.properties.fullyQualifiedDomainName
-//     postgresUser: 'cogadmin'
-//     postgresPassword: postgresPassword
-//     postgresDb: 'engram'
-//     tags: tags
-//   }
-// }
+module zepModule 'modules/zep-aca.bicep' = {
+  name: 'zep'
+  params: {
+    location: location
+    acaEnvId: acaEnv.id
+    postgresFqdn: postgres.properties.fullyQualifiedDomainName
+    postgresUser: 'cogadmin'
+    postgresPassword: postgresPassword
+    postgresDb: 'engram'
+    tags: tags
+  }
+}
 
-// Zep Cloud API URL
-var zepApiUrl = 'https://app.getzep.com'
+// Zep API URL (Use container hostname)
+var zepApiUrl = zepModule.outputs.zepApiUrl
 
 // =============================================================================
 // Backend API Container App
@@ -263,15 +261,15 @@ module swaModule 'static-webapp.bicep' = {
 // =============================================================================
 // Note: Frontend uses apex domain (engram.work) which is configured separately
 // Deploy DNS records to the dns-rg resource group where the DNS zone exists
-module dnsModule 'modules/dns.bicep' = {
-  name: 'dns'
-  scope: resourceGroup('dns-rg')
-  params: {
-    dnsZoneName: 'engram.work'
-    backendFqdn: backendModule.outputs.backendDefaultFqdn
-    temporalUIFqdn: temporalModule.outputs.temporalUIDefaultFqdn
-  }
-}
+// module dnsModule 'modules/dns.bicep' = {
+//   name: 'dns'
+//   scope: resourceGroup('dns-rg')
+//   params: {
+//     dnsZoneName: 'engram.work'
+//     backendFqdn: backendModule.outputs.backendDefaultFqdn
+//     temporalUIFqdn: temporalModule.outputs.temporalUIDefaultFqdn
+//   }
+// }
 
 // =============================================================================
 // Outputs
@@ -280,10 +278,4 @@ output acaEnvId string = acaEnv.id
 output postgresFqdn string = postgres.properties.fullyQualifiedDomainName
 output keyVaultUri string = keyVaultModule.outputs.keyVaultUri
 output backendUrl string = backendModule.outputs.backendUrl
-output backendDnsName string = dnsModule.outputs.backendDnsName
-output temporalUIFqdn string = temporalModule.outputs.temporalUIUrl
-output temporalDnsName string = dnsModule.outputs.temporalDnsName
-output zepApiUrl string = zepApiUrl
-output openAiEndpoint string = openAiModule.outputs.openAiEndpoint
 output swaDefaultHostname string = swaModule.outputs.swaDefaultHostname
-output frontendDnsName string = dnsModule.outputs.frontendDnsName

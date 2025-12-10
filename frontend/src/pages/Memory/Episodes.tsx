@@ -15,7 +15,7 @@ export function Episodes() {
     const [episodes, setEpisodes] = useState<Episode[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [selectedTranscript, setSelectedTranscript] = useState<any[] | null>(null);
+    const [selectedTranscript, setSelectedTranscript] = useState<{ role: string; content: string }[] | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {

@@ -7,7 +7,7 @@ interface SearchResult {
     node_type: string;
     confidence: number;
     created_at: string;
-    metadata: Record<string, any>;
+    metadata: Record<string, unknown>;
 }
 
 export function Search() {

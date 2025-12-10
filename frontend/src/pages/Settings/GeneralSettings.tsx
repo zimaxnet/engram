@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getSystemSettings, updateSystemSettings } from '../../services/api';
 
 export function GeneralSettings() {
-    const [settings, setSettings] = useState<any>({});
+    const [settings, setSettings] = useState<Record<string, unknown>>({});
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 

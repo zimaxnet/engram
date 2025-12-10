@@ -77,13 +77,8 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
         targetPort: 8080
         transport: 'http'
         allowInsecure: false
-        customDomains: [
-          {
-            name: 'api.engram.work'
-            bindingType: 'SniEnabled'
-            certificateId: managedCert.id
-          }
-        ]
+        allowInsecure: false
+
       }
       dapr: {
         enabled: false
@@ -221,23 +216,9 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
   }
 }
 
-// Managed Certificate
-resource managedCert 'Microsoft.App/managedEnvironments/managedCertificates@2022-11-01-preview' = {
-  parent: acaEnv
-  name: 'api-engram-work-cert'
-  location: location
-  properties: {
-    subjectName: 'api.engram.work'
-    domainControlValidation: 'CNAME'
-  }
-  dependsOn: [
-    backendApp
-  ]
-}
-
-// Outputs
+// Output default ACA FQDN as URL
 output backendFqdn string = backendApp.properties.configuration.ingress.fqdn
-output backendUrl string = 'https://api.engram.work'
+output backendUrl string = 'https://${backendApp.properties.configuration.ingress.fqdn}'
 output backendDefaultFqdn string = backendApp.properties.configuration.ingress.fqdn
 output principalId string = backendApp.identity.principalId
 

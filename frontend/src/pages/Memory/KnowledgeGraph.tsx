@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { searchMemory } from '../../services/api';
 
 export function KnowledgeGraph() {
-    const [facts, setFacts] = useState<any[]>([]);
+    const [facts, setFacts] = useState<{ id: string; content: string; node_type: string }[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {

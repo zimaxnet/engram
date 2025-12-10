@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { listUsers } from '../../services/api';
 
 export function UserManagement() {
-    const [users, setUsers] = useState<any[]>([]);
+    const [users, setUsers] = useState<{ user_id: string; email: string; role: string; active: boolean; last_login: string }[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {

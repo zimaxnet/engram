@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { checkHealth, getAuditLogs } from '../../services/api';
 
 export function SystemHealth() {
-    const [health, setHealth] = useState<any>(null);
-    const [logs, setLogs] = useState<any[]>([]);
+    const [health, setHealth] = useState<{ status: string; environment: string; version: string } | null>(null);
+    const [logs, setLogs] = useState<{ id: string; action: string; resource: string; user_id: string }[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {

@@ -126,7 +126,7 @@ export class ApiClient {
         node_type: string
         confidence: number
         created_at: string
-        metadata: Record<string, any>
+        metadata: Record<string, unknown>
       }>
       total_count: number
       query_time_ms: number
@@ -157,12 +157,12 @@ export class ApiClient {
       transcript: Array<{
         role: string
         content: string
-        metadata?: Record<string, any>
+        metadata?: Record<string, unknown>
       }>
     }>(`/memory/episodes/${episodeId}`)
   }
 
-  async addFact(content: string, metadata: Record<string, any> = {}) {
+  async addFact(content: string, metadata: Record<string, unknown> = {}) {
     return this.request<{
       success: boolean
       node_id: string
@@ -241,10 +241,10 @@ export class ApiClient {
   }
 
   async getWorkflow(workflowId: string) {
-    return this.request<any>(`/workflows/${workflowId}`);
+    return this.request<unknown>(`/workflows/${workflowId}`);
   }
 
-  async signalWorkflow(workflowId: string, signalName: string, payload: any = {}) {
+  async signalWorkflow(workflowId: string, signalName: string, payload: unknown = {}) {
     // Mock signal
     console.log(`Signaling ${workflowId} with ${signalName}`, payload);
     return Promise.resolve({ success: true });
@@ -263,7 +263,7 @@ export class ApiClient {
     });
   }
 
-  async updateSystemSettings(settings: any) {
+  async updateSystemSettings(settings: unknown) {
     console.log("Updating settings", settings);
     return Promise.resolve({ success: true });
   }
@@ -328,13 +328,13 @@ export const searchMemory = (query: string, limit?: number) => apiClient.searchM
 export const listEpisodes = (limit?: number, offset?: number) => apiClient.listEpisodes(limit, offset)
 export const getEpisode = (episodeId: string) => apiClient.getEpisode(episodeId)
 
-export const addFact = (content: string, metadata?: Record<string, any>) => apiClient.addFact(content, metadata)
+export const addFact = (content: string, metadata?: Record<string, unknown>) => apiClient.addFact(content, metadata)
 
 export const listWorkflows = (status?: string, limit?: number, offset?: number) => apiClient.listWorkflows(status, limit, offset);
 export const getWorkflow = (workflowId: string) => apiClient.getWorkflow(workflowId);
-export const signalWorkflow = (workflowId: string, signalName: string, payload?: any) => apiClient.signalWorkflow(workflowId, signalName, payload);
+export const signalWorkflow = (workflowId: string, signalName: string, payload?: unknown) => apiClient.signalWorkflow(workflowId, signalName, payload);
 
 export const getSystemSettings = () => apiClient.getSystemSettings();
-export const updateSystemSettings = (settings: any) => apiClient.updateSystemSettings(settings);
+export const updateSystemSettings = (settings: unknown) => apiClient.updateSystemSettings(settings);
 export const listUsers = () => apiClient.listUsers();
 export const getAuditLogs = () => apiClient.getAuditLogs();
