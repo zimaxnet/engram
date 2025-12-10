@@ -182,7 +182,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             }
             {
               name: 'CORS_ORIGINS'
-              value: '["*"]'
+              value: '["https://engram.work", "https://*.azurestaticapps.net", "http://localhost:5173", "*"]'
             }
           ]
           resources: {
