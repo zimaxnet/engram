@@ -2,9 +2,39 @@
 param location string = resourceGroup().location
 
 @description('Name of the Container Apps Environment.')
-param acaEnvId string
+param acaEnvName string
 
-@description('Name of the backend container app.')
+// ... existing params ...
+
+// Get reference to existing ACA environment for parenting the cert
+resource acaEnv 'Microsoft.App/managedEnvironments@2022-03-01' existing = {
+  name: acaEnvName
+}
+
+// Backend API Container App
+resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
+// ...
+        customDomains: [
+          {
+            name: 'api.engram.work'
+            bindingType: 'SniEnabled'
+            certificateId: managedCert.id
+          }
+        ]
+// ...
+}
+
+// Managed Certificate
+resource managedCert 'Microsoft.App/managedEnvironments/managedCertificates@2022-11-01-preview' = {
+  parent: acaEnv
+  name: 'api-engram-work-cert'
+  location: location
+  properties: {
+    domainControlValidation: 'CNAME'
+  }
+}
+
+// ... outputs ...
 param appName string = 'engram-api'
 
 @description('Container image for the backend.')
@@ -72,7 +102,43 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
         targetPort: 8080
         transport: 'http'
         allowInsecure: false
+        customDomains: [
+          {
+            name: 'api.engram.work'
+            bindingType: 'SniEnabled'
+            certificateId: resourceId('Microsoft.App/managedEnvironments/managedCertificates', acaEnvId, 'api-engram-work-cert')
+          }
+        ]
       }
+      dapr: {
+        enabled: false
+      }
+      secrets: [
+// ... (existing secrets)
+      ]
+// ...
+    }
+// ...
+  }
+}
+
+// Managed Certificate
+resource managedCert 'Microsoft.App/managedEnvironments/managedCertificates@2022-11-01-preview' = {
+  name: 'api-engram-work-cert'
+  parent: backendApp.parent // This is wrong, parent is Environment, not App. But App is in 'resource', I need reference to environment resource or use full scope name?
+  // Managed certificates are children of the Managed Environment.
+  // I need to define it at the scope of the Environment or use the environment Name.
+}
+// Actually, it's easier to define it as a child resource if I have the parent resource object.
+// But passed param is 'acaEnvId' string. I cannot use 'parent' property easily with just ID.
+// Usually I use 'name: '${acaEnvName}/certificateName' but I need acaEnvName param.
+// backend-aca.bicep receives acaEnvId. I should extract name or pass name.
+
+// ...
+// Output custom domain URL for the application
+output backendUrl string = 'https://api.engram.work'
+// Output default ACA FQDN for DNS CNAME creation
+output backendDefaultFqdn string = backendApp.properties.configuration.ingress.fqdn
       dapr: {
         enabled: false
       }

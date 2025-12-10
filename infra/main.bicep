@@ -206,6 +206,7 @@ module backendModule 'modules/backend-aca.bicep' = {
   params: {
     location: location
     acaEnvId: acaEnv.id
+    acaEnvName: acaEnv.name
     containerImage: backendImage
     postgresFqdn: postgres.properties.fullyQualifiedDomainName
     postgresPassword: postgresPassword
@@ -268,8 +269,8 @@ module dnsModule 'modules/dns.bicep' = {
   scope: resourceGroup('dns-rg')
   params: {
     dnsZoneName: 'engram.work'
-    backendFqdn: replace(backendModule.outputs.backendUrl, 'https://', '')
-    temporalUIFqdn: replace(temporalModule.outputs.temporalUIFqdn, 'https://', '')
+    backendFqdn: backendModule.outputs.backendDefaultFqdn
+    temporalUIFqdn: temporalModule.outputs.temporalUIDefaultFqdn
   }
 }
 
