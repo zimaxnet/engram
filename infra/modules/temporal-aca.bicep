@@ -32,16 +32,16 @@ param tags object = {
   Component: 'Temporal'
 }
 
-resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = {
-  parent: acaEnv
-  name: 'cert-${appName}-ui'
-  location: location
-  tags: tags
-  properties: {
-    subjectName: customDomainName
-    domainControlValidation: 'CNAME'
-  }
-}
+// resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = {
+//   parent: acaEnv
+//   name: 'cert-${appName}-ui'
+//   location: location
+//   tags: tags
+//   properties: {
+//     subjectName: customDomainName
+//     domainControlValidation: 'CNAME'
+//   }
+// }
 
 resource acaEnv 'Microsoft.App/managedEnvironments@2022-03-01' existing = {
   name: acaEnvName
@@ -144,8 +144,8 @@ resource temporalUI 'Microsoft.App/containerApps@2023-05-01' = {
         customDomains: [
           {
             name: customDomainName
-            certificateId: certificate.id
-            bindingType: 'SniEnabled'
+            // certificateId: certificate.id
+            bindingType: 'Disabled'
           }
         ]
 
