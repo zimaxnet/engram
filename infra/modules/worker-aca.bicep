@@ -25,9 +25,7 @@ param zepApiUrl string
 @secure()
 param postgresPassword string
 
-@description('Azure OpenAI key.')
-@secure()
-param openAiKey string
+// param openAiKey removed
 
 @description('Azure OpenAI endpoint.')
 param openAiEndpoint string
@@ -78,7 +76,8 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
         }
         {
           name: 'azure-openai-key'
-          value: openAiKey
+          keyVaultUrl: '${keyVaultUri}secrets/azure-openai-key'
+          identity: 'system'
         }
         {
           name: 'zep-api-key'

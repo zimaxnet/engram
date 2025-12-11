@@ -28,16 +28,12 @@ param zepApiUrl string
 @secure()
 param postgresPassword string
 
-@description('Azure OpenAI key.')
-@secure()
-param openAiKey string
+// param openAiKey removed
 
 @description('Azure OpenAI endpoint.')
 param openAiEndpoint string
 
-@description('Azure Speech key.')
-@secure()
-param speechKey string = ''
+// param speechKey removed
 
 @description('Azure AI Services unified endpoint (base URL).')
 param azureAiEndpoint string = ''
@@ -118,11 +114,13 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
         }
         {
           name: 'azure-openai-key'
-          value: openAiKey
+          keyVaultUrl: '${keyVaultUri}secrets/azure-openai-key'
+          identity: 'system'
         }
         {
           name: 'azure-speech-key'
-          value: speechKey
+          keyVaultUrl: '${keyVaultUri}secrets/azure-speech-key'
+          identity: 'system'
         }
         {
           name: 'registry-password'

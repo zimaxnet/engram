@@ -16,13 +16,8 @@ param backendImage string = 'ghcr.io/zimaxnet/engram/backend:latest'
 @description('Container image for worker.')
 param workerImage string = 'ghcr.io/zimaxnet/engram/worker:latest'
 
-@description('Azure OpenAI API key (will be stored in Key Vault).')
-@secure()
-param azureOpenAiKey string = ''
-
-@description('Azure Speech API key (optional, will be stored in Key Vault).')
-@secure()
-param azureSpeechKey string = ''
+// param azureOpenAiKey removed
+// param azureSpeechKey removed
 
 @description('Azure AI Services unified endpoint (base URL).')
 param azureAiEndpoint string = ''
@@ -224,9 +219,8 @@ module backendModule 'modules/backend-aca.bicep' = {
 
     zepApiUrl: zepApiUrl
 
-    openAiKey: azureOpenAiKey
+    // params removed
     openAiEndpoint: openAiModule.outputs.openAiEndpoint
-    speechKey: azureSpeechKey
     azureAiEndpoint: azureAiEndpoint
     azureAiProjectName: azureAiProjectName
     registryUsername: registryUsername
@@ -251,7 +245,7 @@ module workerModule 'modules/worker-aca.bicep' = {
 
     zepApiUrl: zepApiUrl
 
-    openAiKey: azureOpenAiKey
+    // params removed
     openAiEndpoint: openAiModule.outputs.openAiEndpoint
     azureAiEndpoint: azureAiEndpoint
     azureAiProjectName: azureAiProjectName

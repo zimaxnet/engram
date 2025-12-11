@@ -63,8 +63,6 @@ jobs:
             location=${{ env.AZURE_LOCATION }}
             postgresPassword=${{ secrets.POSTGRES_PASSWORD }}
 
-            azureOpenAiKey=${{ secrets.AZURE_OPENAI_KEY || '' }}
-            azureSpeechKey=${{ secrets.AZURE_SPEECH_KEY || '' }}
             azureAiEndpoint=${{ secrets.AZURE_AI_ENDPOINT || '' }}
             azureAiProjectName=${{ secrets.AZURE_AI_PROJECT_NAME || '' }}
             backendImage=ghcr.io/${{ github.repository }}/backend:latest
