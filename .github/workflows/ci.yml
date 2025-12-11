@@ -59,8 +59,8 @@ jobs:
       - name: Run linting
         run: |
           cd backend
-          pip install ruff black
-          ruff check .
+          pip install --upgrade ruff black
+          ruff check --config ruff.toml .
           black --check .
       
       - name: Run tests
