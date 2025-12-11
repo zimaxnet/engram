@@ -19,7 +19,7 @@ from typing import Union, Optional, TYPE_CHECKING, cast
 
 from azure.core.credentials import AzureKeyCredential
 from azure.core.credentials_async import AsyncTokenCredential
-from azure.identity.aio import AzureCliCredential, DefaultAzureCredential
+from azure.identity.aio import AzureCliCredential
 
 from azure.ai.voicelive.aio import connect
 from azure.ai.voicelive.models import (
@@ -562,31 +562,11 @@ if __name__ == "__main__":
 from __future__ import annotations
 import os
 import sys
-import argparse
-import asyncio
-import base64
 from datetime import datetime
 import logging
-import queue
-import signal
-from typing import Union, Optional, TYPE_CHECKING, cast
+from typing import Union, TYPE_CHECKING, cast
 
-from azure.core.credentials import AzureKeyCredential
-from azure.core.credentials_async import AsyncTokenCredential
-from azure.identity.aio import AzureCliCredential, DefaultAzureCredential
 
-from azure.ai.voicelive.aio import connect
-from azure.ai.voicelive.models import (
-    AudioEchoCancellation,
-    AudioNoiseReduction,
-    AzureStandardVoice,
-    InputAudioFormat,
-    Modality,
-    OutputAudioFormat,
-    RequestSession,
-    ServerEventType,
-    ServerVad
-)
 from dotenv import load_dotenv
 import pyaudio
 

@@ -2,16 +2,13 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 # -------------------------------------------------------------------------
-import os
 import asyncio
 import base64
-import json
 import logging
 import pyaudio
 from typing import Optional
 
 from openai import AsyncAzureOpenAI
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +33,7 @@ class RealtimeClient:
         self.stop_event = asyncio.Event()
 
     async def run(self):
-        print(f"\n✨ Connecting to Azure OpenAI Realtime API...")
+        print("\n✨ Connecting to Azure OpenAI Realtime API...")
         print(f"   Endpoint: {self.endpoint}")
         print(f"   Model: {self.deployment_name}")
         print(f"   Voice: {self.voice}")
@@ -55,13 +52,13 @@ class RealtimeClient:
         # Let's stick to the sample pattern exactly for reliability.
         
         # NOTE: Using protocol from MS Quickstart
-        base_url = f"{self.endpoint.rstrip('/')}/openai/realtime" 
+        # NOTE: Using protocol from MS Quickstart
+        # base_url = f"{self.endpoint.rstrip('/')}/openai/realtime" 
         # Actually MS sample says: base_url = endpoint.replace("https://", "wss://").rstrip("/") + "/openai/realtime"
         # But `AsyncAzureOpenAI` is the modern way if supported. 
         # Let's use the exact MS Quickstart code structure for safety.
         
         from openai import AsyncOpenAI
-        from azure.core.credentials import AzureKeyCredential
         
         # Construct wss URL
         wss_url = self.endpoint.replace("https://", "wss://").rstrip("/") + "/openai/realtime"

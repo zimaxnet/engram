@@ -19,7 +19,7 @@ from typing import Union, Optional, TYPE_CHECKING, cast
 
 from azure.core.credentials import AzureKeyCredential
 from azure.core.credentials_async import AsyncTokenCredential
-from azure.identity.aio import AzureCliCredential, DefaultAzureCredential
+from azure.identity.aio import AzureCliCredential
 
 from azure.ai.voicelive.aio import connect
 from azure.ai.voicelive.models import (
