@@ -27,9 +27,7 @@ param azureSpeechKey string = ''
 @description('Azure AI Services unified endpoint (base URL).')
 param azureAiEndpoint string = ''
 
-@description('Zep API Key (for api.getzep.com).')
-@secure()
-param zepApiKey string = ''
+
 
 @description('Azure AI Services project name.')
 param azureAiProjectName string = ''
@@ -152,6 +150,30 @@ module openAiModule 'modules/openai.bicep' = {
 }
 
 // =============================================================================
+// Role Assignments (Key Vault Access for Managed Identities)
+// =============================================================================
+// Key Vault Secrets User (4633458b-17de-408a-b874-0445c86b69e6)
+var keyVaultSecretsUserRole = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
+
+module backendKvRole 'modules/role-assignment.bicep' = {
+  name: 'backend-kv-role'
+  params: {
+    principalId: backendModule.outputs.principalId
+    roleDefinitionId: keyVaultSecretsUserRole
+    nameSeed: 'backend-kv'
+  }
+}
+
+module workerKvRole 'modules/role-assignment.bicep' = {
+  name: 'worker-kv-role'
+  params: {
+    principalId: workerModule.outputs.principalId
+    roleDefinitionId: keyVaultSecretsUserRole
+    nameSeed: 'worker-kv'
+  }
+}
+
+// =============================================================================
 // Azure Speech Services
 // =============================================================================
 module speechModule 'modules/speech.bicep' = {
@@ -201,7 +223,7 @@ module backendModule 'modules/backend-aca.bicep' = {
     temporalHost: temporalModule.outputs.temporalHost
 
     zepApiUrl: zepApiUrl
-    zepApiKey: zepApiKey
+
     openAiKey: azureOpenAiKey
     openAiEndpoint: openAiModule.outputs.openAiEndpoint
     speechKey: azureSpeechKey
@@ -228,7 +250,7 @@ module workerModule 'modules/worker-aca.bicep' = {
     temporalHost: temporalModule.outputs.temporalHost
 
     zepApiUrl: zepApiUrl
-    zepApiKey: zepApiKey
+
     openAiKey: azureOpenAiKey
     openAiEndpoint: openAiModule.outputs.openAiEndpoint
     azureAiEndpoint: azureAiEndpoint

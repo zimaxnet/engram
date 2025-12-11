@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.39.26.7824",
-      "templateHash": "6690673876296561612"
+      "templateHash": "18325596107001267597"
     }
   },
   "parameters": {
@@ -64,13 +64,6 @@
         "description": "Azure AI Services unified endpoint (base URL)."
       }
     },
-    "zepApiKey": {
-      "type": "securestring",
-      "defaultValue": "",
-      "metadata": {
-        "description": "Zep API Key (for api.getzep.com)."
-      }
-    },
     "azureAiProjectName": {
       "type": "string",
       "defaultValue": "",
@@ -102,6 +95,7 @@
     }
   },
   "variables": {
+    "keyVaultSecretsUserRole": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]",
     "zepApiUrl": "https://api.getzep.com/api/v1"
   },
   "resources": [
@@ -491,6 +485,142 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Resources/deployments', 'keyVault')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "backend-kv-role",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "principalId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'backend'), '2025-04-01').outputs.principalId.value]"
+          },
+          "roleDefinitionId": {
+            "value": "[variables('keyVaultSecretsUserRole')]"
+          },
+          "nameSeed": {
+            "value": "backend-kv"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.39.26.7824",
+              "templateHash": "13835471208710525857"
+            }
+          },
+          "parameters": {
+            "principalId": {
+              "type": "string",
+              "metadata": {
+                "description": "The principal ID to assign the role to."
+              }
+            },
+            "roleDefinitionId": {
+              "type": "string",
+              "metadata": {
+                "description": "The role definition ID."
+              }
+            },
+            "nameSeed": {
+              "type": "string",
+              "metadata": {
+                "description": "A seed value to ensure unique name generation (e.g. resource name)."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "name": "[guid(resourceGroup().id, parameters('principalId'), parameters('roleDefinitionId'), parameters('nameSeed'))]",
+              "properties": {
+                "roleDefinitionId": "[parameters('roleDefinitionId')]",
+                "principalId": "[parameters('principalId')]",
+                "principalType": "ServicePrincipal"
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'backend')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "worker-kv-role",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "principalId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'worker'), '2025-04-01').outputs.principalId.value]"
+          },
+          "roleDefinitionId": {
+            "value": "[variables('keyVaultSecretsUserRole')]"
+          },
+          "nameSeed": {
+            "value": "worker-kv"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.39.26.7824",
+              "templateHash": "13835471208710525857"
+            }
+          },
+          "parameters": {
+            "principalId": {
+              "type": "string",
+              "metadata": {
+                "description": "The principal ID to assign the role to."
+              }
+            },
+            "roleDefinitionId": {
+              "type": "string",
+              "metadata": {
+                "description": "The role definition ID."
+              }
+            },
+            "nameSeed": {
+              "type": "string",
+              "metadata": {
+                "description": "A seed value to ensure unique name generation (e.g. resource name)."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "name": "[guid(resourceGroup().id, parameters('principalId'), parameters('roleDefinitionId'), parameters('nameSeed'))]",
+              "properties": {
+                "roleDefinitionId": "[parameters('roleDefinitionId')]",
+                "principalId": "[parameters('principalId')]",
+                "principalType": "ServicePrincipal"
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'worker')]"
       ]
     },
     {
@@ -935,9 +1065,6 @@
           "zepApiUrl": {
             "value": "[variables('zepApiUrl')]"
           },
-          "zepApiKey": {
-            "value": "[parameters('zepApiKey')]"
-          },
           "openAiKey": {
             "value": "[parameters('azureOpenAiKey')]"
           },
@@ -973,7 +1100,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.39.26.7824",
-              "templateHash": "8663131947380131896"
+              "templateHash": "6688200246975279452"
             }
           },
           "parameters": {
@@ -1019,13 +1146,6 @@
               "type": "string",
               "metadata": {
                 "description": "Zep API URL."
-              }
-            },
-            "zepApiKey": {
-              "type": "securestring",
-              "defaultValue": "",
-              "metadata": {
-                "description": "Zep API Key."
               }
             },
             "postgresPassword": {
@@ -1125,7 +1245,8 @@
                     },
                     {
                       "name": "zep-api-key",
-                      "value": "[parameters('zepApiKey')]"
+                      "keyVaultUrl": "[format('{0}secrets/zep-api-key', parameters('keyVaultUri'))]",
+                      "identity": "system"
                     },
                     {
                       "name": "azure-openai-key",
@@ -1200,7 +1321,7 @@
                         },
                         {
                           "name": "ZEP_API_KEY",
-                          "secretRef": "[if(not(equals(parameters('zepApiKey'), '')), 'zep-api-key', null())]"
+                          "secretRef": "zep-api-key"
                         },
                         {
                           "name": "AZURE_OPENAI_KEY",
@@ -1318,9 +1439,6 @@
           "zepApiUrl": {
             "value": "[variables('zepApiUrl')]"
           },
-          "zepApiKey": {
-            "value": "[parameters('zepApiKey')]"
-          },
           "openAiKey": {
             "value": "[parameters('azureOpenAiKey')]"
           },
@@ -1353,7 +1471,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.39.26.7824",
-              "templateHash": "1249543365014998408"
+              "templateHash": "2183947891460991670"
             }
           },
           "parameters": {
@@ -1399,13 +1517,6 @@
               "type": "string",
               "metadata": {
                 "description": "Zep API URL."
-              }
-            },
-            "zepApiKey": {
-              "type": "securestring",
-              "defaultValue": "",
-              "metadata": {
-                "description": "Zep API Key."
               }
             },
             "postgresPassword": {
@@ -1499,7 +1610,8 @@
                     },
                     {
                       "name": "zep-api-key",
-                      "value": "[parameters('zepApiKey')]"
+                      "keyVaultUrl": "[format('{0}secrets/zep-api-key', parameters('keyVaultUri'))]",
+                      "identity": "system"
                     },
                     {
                       "name": "registry-password",
@@ -1566,7 +1678,7 @@
                         },
                         {
                           "name": "ZEP_API_KEY",
-                          "secretRef": "[if(not(equals(parameters('zepApiKey'), '')), 'zep-api-key', null())]"
+                          "secretRef": "zep-api-key"
                         },
                         {
                           "name": "AZURE_OPENAI_KEY",
