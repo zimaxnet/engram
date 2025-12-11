@@ -50,3 +50,5 @@ logs/
 *.temp
 .cache/
 
+
+venv311/
