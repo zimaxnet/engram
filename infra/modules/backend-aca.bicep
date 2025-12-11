@@ -77,7 +77,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
         targetPort: 8080
         transport: 'http'
         allowInsecure: false
-        allowInsecure: false
+
 
       }
       dapr: {
