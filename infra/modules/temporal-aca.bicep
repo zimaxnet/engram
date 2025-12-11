@@ -10,6 +10,9 @@ param acaEnvName string
 @description('Name of the Temporal container app.')
 param appName string = 'temporal'
 
+@description('Custom domain name for Temporal UI.')
+param customDomainName string = 'temporal.engram.work'
+
 @description('PostgreSQL FQDN.')
 param postgresFqdn string
 
@@ -27,6 +30,21 @@ param postgresDb string = 'engram'
 param tags object = {
   Project: 'Engram'
   Component: 'Temporal'
+}
+
+resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2022-03-01' = {
+  parent: acaEnv
+  name: 'cert-${appName}-ui'
+  location: location
+  tags: tags
+  properties: {
+    subjectName: customDomainName
+    domainControlValidation: 'CNAME'
+  }
+}
+
+resource acaEnv 'Microsoft.App/managedEnvironments@2022-03-01' existing = {
+  name: acaEnvName
 }
 
 // Temporal Server Container App
@@ -123,6 +141,13 @@ resource temporalUI 'Microsoft.App/containerApps@2023-05-01' = {
         targetPort: 8080
         transport: 'http'
         allowInsecure: false
+        customDomains: [
+          {
+            name: customDomainName
+            certificateId: certificate.id
+            bindingType: 'SniEnabled'
+          }
+        ]
 
       }
       dapr: {

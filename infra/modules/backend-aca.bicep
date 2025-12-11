@@ -7,6 +7,9 @@ param acaEnvName string
 @description('Name of the backend container app.')
 param appName string = 'engram-api'
 
+@description('Custom domain name for the backend.')
+param customDomainName string = 'api.engram.work'
+
 @description('Container image for the backend.')
 param containerImage string
 
@@ -59,8 +62,19 @@ param tags object = {
 }
 
 // Get reference to existing ACA environment for parenting the cert
-resource acaEnv 'Microsoft.App/managedEnvironments@2022-03-01' existing = {
+ resource acaEnv 'Microsoft.App/managedEnvironments@2022-03-01' existing = {
   name: acaEnvName
+}
+
+resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2022-03-01' = {
+  parent: acaEnv
+  name: 'cert-${appName}'
+  location: location
+  tags: tags
+  properties: {
+    subjectName: customDomainName
+    domainControlValidation: 'CNAME'
+  }
 }
 
 // Backend API Container App
@@ -79,6 +93,13 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
         targetPort: 8080
         transport: 'http'
         allowInsecure: false
+        customDomains: [
+          {
+            name: customDomainName
+            certificateId: certificate.id
+            bindingType: 'SniEnabled'
+          }
+        ]
 
 
       }

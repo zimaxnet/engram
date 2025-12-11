@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.39.26.7824",
-      "templateHash": "18325596107001267597"
+      "templateHash": "1196226917018554448"
     }
   },
   "parameters": {
@@ -810,7 +810,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.39.26.7824",
-              "templateHash": "6097403252611116441"
+              "templateHash": "13350954395259412378"
             }
           },
           "parameters": {
@@ -838,6 +838,13 @@
               "defaultValue": "temporal",
               "metadata": {
                 "description": "Name of the Temporal container app."
+              }
+            },
+            "customDomainName": {
+              "type": "string",
+              "defaultValue": "temporal.engram.work",
+              "metadata": {
+                "description": "Custom domain name for Temporal UI."
               }
             },
             "postgresFqdn": {
@@ -878,6 +885,17 @@
             }
           },
           "resources": [
+            {
+              "type": "Microsoft.App/managedEnvironments/managedCertificates",
+              "apiVersion": "2022-03-01",
+              "name": "[format('{0}/{1}', parameters('acaEnvName'), format('cert-{0}-ui', parameters('appName')))]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "subjectName": "[parameters('customDomainName')]",
+                "domainControlValidation": "CNAME"
+              }
+            },
             {
               "type": "Microsoft.App/containerApps",
               "apiVersion": "2023-05-01",
@@ -971,7 +989,14 @@
                     "external": true,
                     "targetPort": 8080,
                     "transport": "http",
-                    "allowInsecure": false
+                    "allowInsecure": false,
+                    "customDomains": [
+                      {
+                        "name": "[parameters('customDomainName')]",
+                        "certificateId": "[resourceId('Microsoft.App/managedEnvironments/managedCertificates', parameters('acaEnvName'), format('cert-{0}-ui', parameters('appName')))]",
+                        "bindingType": "SniEnabled"
+                      }
+                    ]
                   },
                   "dapr": {
                     "enabled": false
@@ -1005,6 +1030,7 @@
                 }
               },
               "dependsOn": [
+                "[resourceId('Microsoft.App/managedEnvironments/managedCertificates', parameters('acaEnvName'), format('cert-{0}-ui', parameters('appName')))]",
                 "[resourceId('Microsoft.App/containerApps', format('{0}-server', parameters('appName')))]"
               ]
             }
@@ -1100,7 +1126,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.39.26.7824",
-              "templateHash": "6688200246975279452"
+              "templateHash": "3585638807544741040"
             }
           },
           "parameters": {
@@ -1122,6 +1148,13 @@
               "defaultValue": "engram-api",
               "metadata": {
                 "description": "Name of the backend container app."
+              }
+            },
+            "customDomainName": {
+              "type": "string",
+              "defaultValue": "api.engram.work",
+              "metadata": {
+                "description": "Custom domain name for the backend."
               }
             },
             "containerImage": {
@@ -1218,6 +1251,17 @@
           },
           "resources": [
             {
+              "type": "Microsoft.App/managedEnvironments/managedCertificates",
+              "apiVersion": "2022-03-01",
+              "name": "[format('{0}/{1}', parameters('acaEnvName'), format('cert-{0}', parameters('appName')))]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "subjectName": "[parameters('customDomainName')]",
+                "domainControlValidation": "CNAME"
+              }
+            },
+            {
               "type": "Microsoft.App/containerApps",
               "apiVersion": "2023-05-01",
               "name": "[parameters('appName')]",
@@ -1233,7 +1277,14 @@
                     "external": true,
                     "targetPort": 8080,
                     "transport": "http",
-                    "allowInsecure": false
+                    "allowInsecure": false,
+                    "customDomains": [
+                      {
+                        "name": "[parameters('customDomainName')]",
+                        "certificateId": "[resourceId('Microsoft.App/managedEnvironments/managedCertificates', parameters('acaEnvName'), format('cert-{0}', parameters('appName')))]",
+                        "bindingType": "SniEnabled"
+                      }
+                    ]
                   },
                   "dapr": {
                     "enabled": false
@@ -1377,7 +1428,10 @@
                     ]
                   }
                 }
-              }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.App/managedEnvironments/managedCertificates', parameters('acaEnvName'), format('cert-{0}', parameters('appName')))]"
+              ]
             }
           ],
           "outputs": {
