@@ -27,6 +27,10 @@ param azureSpeechKey string = ''
 @description('Azure AI Services unified endpoint (base URL).')
 param azureAiEndpoint string = ''
 
+@description('Zep API Key (for api.getzep.com).')
+@secure()
+param zepApiKey string = ''
+
 @description('Azure AI Services project name.')
 param azureAiProjectName string = ''
 
@@ -180,21 +184,8 @@ module temporalModule 'modules/temporal-aca.bicep' = {
 // =============================================================================
 // Zep Configuration
 // =============================================================================
-module zepModule 'modules/zep-aca.bicep' = {
-  name: 'zep'
-  params: {
-    location: location
-    acaEnvId: acaEnv.id
-    postgresFqdn: postgres.properties.fullyQualifiedDomainName
-    postgresUser: 'cogadmin'
-    postgresPassword: postgresPassword
-    postgresDb: 'engram'
-    tags: tags
-  }
-}
-
-// Zep API URL (Use container hostname)
-var zepApiUrl = zepModule.outputs.zepApiUrl
+// SaaS URL
+var zepApiUrl = 'https://api.getzep.com/api/v1'
 
 // =============================================================================
 // Backend API Container App
@@ -208,7 +199,9 @@ module backendModule 'modules/backend-aca.bicep' = {
     postgresFqdn: postgres.properties.fullyQualifiedDomainName
     postgresPassword: postgresPassword
     temporalHost: temporalModule.outputs.temporalHost
+
     zepApiUrl: zepApiUrl
+    zepApiKey: zepApiKey
     openAiKey: azureOpenAiKey
     openAiEndpoint: openAiModule.outputs.openAiEndpoint
     speechKey: azureSpeechKey
@@ -233,7 +226,9 @@ module workerModule 'modules/worker-aca.bicep' = {
     postgresFqdn: postgres.properties.fullyQualifiedDomainName
     postgresPassword: postgresPassword
     temporalHost: temporalModule.outputs.temporalHost
+
     zepApiUrl: zepApiUrl
+    zepApiKey: zepApiKey
     openAiKey: azureOpenAiKey
     openAiEndpoint: openAiModule.outputs.openAiEndpoint
     azureAiEndpoint: azureAiEndpoint

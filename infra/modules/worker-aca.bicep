@@ -19,6 +19,10 @@ param temporalHost string
 @description('Zep API URL.')
 param zepApiUrl string
 
+@description('Zep API Key.')
+@secure()
+param zepApiKey string = ''
+
 @description('PostgreSQL password.')
 @secure()
 param postgresPassword string
@@ -77,6 +81,10 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
         {
           name: 'azure-openai-key'
           value: openAiKey
+        }
+        {
+          name: 'zep-api-key'
+          value: zepApiKey
         }
         {
           name: 'registry-password'
@@ -140,6 +148,10 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'ZEP_API_URL'
               value: zepApiUrl
+            }
+            {
+              name: 'ZEP_API_KEY'
+              secretRef: zepApiKey != '' ? 'zep-api-key' : null
             }
             {
               name: 'AZURE_OPENAI_KEY'
