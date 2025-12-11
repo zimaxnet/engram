@@ -68,7 +68,7 @@ param tags object = {
 
 resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = {
   parent: acaEnv
-  name: 'cert-${appName}'
+  name: 'api.engram.work-staging--251211140607'
   location: location
   tags: tags
   properties: {
