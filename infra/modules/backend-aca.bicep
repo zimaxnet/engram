@@ -201,10 +201,8 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
               name: 'AZURE_OPENAI_DEPLOYMENT'
               value: 'gpt-4o'
             }
-            {
               name: 'AZURE_SPEECH_KEY'
-              secretRef: speechKey != '' ? 'azure-speech-key' : null
-            }
+              secretRef: 'azure-speech-key'
             {
               name: 'AZURE_SPEECH_REGION'
               value: location
