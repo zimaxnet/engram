@@ -30,7 +30,7 @@ export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
   const location = useLocation();
 
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['agents', 'memory', 'workflows', 'settings', 'admin'])
+    new Set(['agents', 'sources', 'memory', 'workflows', 'settings', 'admin'])
   )
 
   const toggleSection = (id: string) => {
@@ -70,6 +70,15 @@ export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
             navigate('/');
           }
         }
+      ]
+    },
+    {
+      id: 'sources',
+      label: 'Sources',
+      icon: '🗂️',
+      children: [
+        { id: 'sources-home', label: 'Unstructured Intake', icon: '🧾', path: '/sources' },
+        { id: 'sources-uploads', label: 'Uploads', icon: '📤', path: '/sources' }
       ]
     },
     {

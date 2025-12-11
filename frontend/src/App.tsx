@@ -6,6 +6,7 @@ import { ChatView } from './pages/Chat/ChatView';
 import { AgentsPage } from './pages/Agents/AgentsPage';
 import { useKeepAlive } from './hooks/useKeepAlive';
 import { type AgentId } from './types';
+import { SourcesPage } from './pages/Sources/SourcesPage';
 import { KnowledgeGraph } from './pages/Memory/KnowledgeGraph';
 import { Episodes } from './pages/Memory/Episodes';
 import { Search } from './pages/Memory/Search';
@@ -42,6 +43,9 @@ function App() {
 
           {/* Agents Information */}
           <Route path="agents" element={<AgentsPage />} />
+
+          {/* Sources / Unstructured intake */}
+          <Route path="sources" element={<SourcesPage />} />
 
           {/* Memory Section */}
           <Route path="memory">
