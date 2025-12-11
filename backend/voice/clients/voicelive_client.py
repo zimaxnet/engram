@@ -3,18 +3,14 @@
 # Licensed under the MIT License.
 # -------------------------------------------------------------------------
 from __future__ import annotations
-import os
 import asyncio
 import base64
 import logging
 import queue
-import signal
-from datetime import datetime
-from typing import Union, Optional, TYPE_CHECKING, cast
+from typing import Union, Optional, TYPE_CHECKING
 
 from azure.core.credentials import AzureKeyCredential
 from azure.core.credentials_async import AsyncTokenCredential
-from azure.identity.aio import AzureCliCredential, DefaultAzureCredential
 
 from azure.ai.voicelive.aio import connect
 from azure.ai.voicelive.models import (
@@ -26,7 +22,7 @@ from azure.ai.voicelive.models import (
     OutputAudioFormat,
     RequestSession,
     ServerEventType,
-    ServerVad
+    ServerVad,
 )
 import pyaudio
 
@@ -34,6 +30,7 @@ if TYPE_CHECKING:
     from azure.ai.voicelive.aio import VoiceLiveConnection
 
 logger = logging.getLogger(__name__)
+
 
 class AudioProcessor:
     """
@@ -45,11 +42,12 @@ class AudioProcessor:
     - Send thread: Async audio data transmission to VoiceLive
     - Playback thread: PyAudio output stream writing
     """
-    
+
     loop: asyncio.AbstractEventLoop
-    
+
     class AudioPlaybackPacket:
         """Represents a packet that can be sent to the audio playback queue."""
+
         def __init__(self, seq_num: int, data: Optional[bytes]):
             self.seq_num = seq_num
             self.data = data
@@ -62,12 +60,14 @@ class AudioProcessor:
         self.format = pyaudio.paInt16
         self.channels = 1
         self.rate = 24000
-        self.chunk_size = 1200 # 50ms
+        self.chunk_size = 1200  # 50ms
 
         # Capture and playback state
         self.input_stream = None
 
-        self.playback_queue: queue.Queue[AudioProcessor.AudioPlaybackPacket] = queue.Queue()
+        self.playback_queue: queue.Queue[AudioProcessor.AudioPlaybackPacket] = (
+            queue.Queue()
+        )
         self.playback_base = 0
         self.next_seq_num = 0
         self.output_stream: Optional[pyaudio.Stream] = None
@@ -76,11 +76,13 @@ class AudioProcessor:
 
     def start_capture(self):
         """Start capturing audio from microphone."""
+
         def _capture_callback(
-            in_data,      # data
+            in_data,  # data
             _frame_count,  # number of frames
-            _time_info,    # dictionary
-            _status_flags):
+            _time_info,  # dictionary
+            _status_flags,
+        ):
             """Audio capture thread - runs in background."""
             audio_base64 = base64.b64encode(in_data).decode("utf-8")
             asyncio.run_coroutine_threadsafe(
@@ -115,11 +117,10 @@ class AudioProcessor:
             return
 
         remaining = bytes()
+
         def _playback_callback(
-            _in_data,
-            frame_count,  # number of frames
-            _time_info,
-            _status_flags):
+            _in_data, frame_count, _time_info, _status_flags  # number of frames
+        ):
 
             nonlocal remaining
             frame_count *= pyaudio.get_sample_size(pyaudio.paInt16)
@@ -165,7 +166,7 @@ class AudioProcessor:
                 rate=self.rate,
                 output=True,
                 frames_per_buffer=self.chunk_size,
-                stream_callback=_playback_callback
+                stream_callback=_playback_callback,
             )
             logger.info("Audio playback system ready")
         except Exception:
@@ -181,8 +182,9 @@ class AudioProcessor:
         """Queue audio data for playback."""
         self.playback_queue.put(
             AudioProcessor.AudioPlaybackPacket(
-                seq_num=self._get_and_increase_seq_num(),
-                data=audio_data))
+                seq_num=self._get_and_increase_seq_num(), data=audio_data
+            )
+        )
 
     def skip_pending_audio(self):
         """Skip current audio in playback queue."""
@@ -211,6 +213,7 @@ class AudioProcessor:
             self.audio.terminate()
 
         logger.info("Audio processor cleaned up")
+
 
 class VoiceLiveClient:
     """Reusable voice assistant client implementing the VoiceLive SDK patterns."""
@@ -269,11 +272,11 @@ class VoiceLiveClient:
 
                 # Setup signal handlers if not in main thread (handled by caller usually, but helper here)
                 # We'll rely on the caller handling KeyboardInterrupt to cancel this task
-                
+
                 # Process events
                 await self._process_events()
         except asyncio.CancelledError:
-             logger.info("Run task cancelled")
+            logger.info("Run task cancelled")
         except Exception as e:
             logger.error(f"Error in client run: {e}")
             raise
@@ -287,7 +290,11 @@ class VoiceLiveClient:
 
         # Create voice configuration
         voice_config: Union[AzureStandardVoice, str]
-        if self.voice.startswith("en-US-") or self.voice.startswith("en-CA-") or "-" in self.voice:
+        if (
+            self.voice.startswith("en-US-")
+            or self.voice.startswith("en-CA-")
+            or "-" in self.voice
+        ):
             # Azure voice
             voice_config = AzureStandardVoice(name=self.voice)
         else:
@@ -296,9 +303,8 @@ class VoiceLiveClient:
 
         # Create turn detection configuration
         turn_detection_config = ServerVad(
-            threshold=0.5,
-            prefix_padding_ms=300,
-            silence_duration_ms=500)
+            threshold=0.5, prefix_padding_ms=300, silence_duration_ms=500
+        )
 
         # Create session configuration
         session_config = RequestSession(
@@ -309,7 +315,9 @@ class VoiceLiveClient:
             output_audio_format=OutputAudioFormat.PCM16,
             turn_detection=turn_detection_config,
             input_audio_echo_cancellation=AudioEchoCancellation(),
-            input_audio_noise_reduction=AudioNoiseReduction(type="azure_deep_noise_suppression"),
+            input_audio_noise_reduction=AudioNoiseReduction(
+                type="azure_deep_noise_suppression"
+            ),
         )
 
         conn = self.connection
@@ -378,12 +386,15 @@ class VoiceLiveClient:
             logger.info("✅ Response complete")
             self._active_response = False
             self._response_api_done = True
-            
-        elif event.type == ServerEventType.RESPONSE_AUDIO_TRANSCRIPT_DONE:
-             print(f"\n🤖 Assistant: {event.transcript}")
 
-        elif event.type == ServerEventType.CONVERSATION_ITEM_INPUT_AUDIO_TRANSCRIPTION_COMPLETED:
-             print(f"\n👤 User: {event.transcript}")
+        elif event.type == ServerEventType.RESPONSE_AUDIO_TRANSCRIPT_DONE:
+            print(f"\n🤖 Assistant: {event.transcript}")
+
+        elif (
+            event.type
+            == ServerEventType.CONVERSATION_ITEM_INPUT_AUDIO_TRANSCRIPTION_COMPLETED
+        ):
+            print(f"\n👤 User: {event.transcript}")
 
         elif event.type == ServerEventType.ERROR:
             msg = event.error.message

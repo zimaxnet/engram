@@ -13,10 +13,11 @@ load_dotenv(override=True)
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%H:%M:%S'
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    datefmt="%H:%M:%S",
 )
 logger = logging.getLogger(__name__)
+
 
 def load_prompt(filename):
     try:
@@ -28,31 +29,38 @@ def load_prompt(filename):
         print(f"Error loading prompt {filename}: {e}")
         sys.exit(1)
 
+
 def main():
-    api_key = os.environ.get("AZURE_VOICELIVE_API_KEY") or os.environ.get("AZURE_OPENAI_KEY")
-    endpoint = os.environ.get("AZURE_VOICELIVE_ENDPOINT") or os.environ.get("AZURE_OPENAI_ENDPOINT")
+    api_key = os.environ.get("AZURE_VOICELIVE_API_KEY") or os.environ.get(
+        "AZURE_OPENAI_KEY"
+    )
+    endpoint = os.environ.get("AZURE_VOICELIVE_ENDPOINT") or os.environ.get(
+        "AZURE_OPENAI_ENDPOINT"
+    )
     model = os.environ.get("AZURE_VOICELIVE_MODEL", "gpt-realtime")
-    
+
     if not api_key or not endpoint:
-        print("❌ Missing credentials. Please set AZURE_VOICELIVE_API_KEY (or AZURE_OPENAI_KEY) and AZURE_VOICELIVE_ENDPOINT in .env")
+        print(
+            "❌ Missing credentials. Please set AZURE_VOICELIVE_API_KEY (or AZURE_OPENAI_KEY) and AZURE_VOICELIVE_ENDPOINT in .env"
+        )
         sys.exit(1)
 
     # Clean endpoint if needed (VoiceLive SDK expects base endpoint usually)
     # But following sample pattern:
     # If AZURE_OPENAI_ENDPOINT includes /openai/..., we might need to be careful.
     # The sample uses the endpoint directly. Let's assume standard Azure AI endpoint format.
-    
+
     prompt_data = load_prompt("elena.json")
-    
+
     # Create credential
     credential = AzureKeyCredential(api_key)
-    
+
     client = VoiceLiveClient(
         endpoint=endpoint,
         credential=credential,
         model=model,
         voice=prompt_data.get("voice", "shimmer"),
-        instructions=prompt_data["instructions"]
+        instructions=prompt_data["instructions"],
     )
 
     try:
@@ -61,6 +69,7 @@ def main():
         print("\n👋 Exiting...")
     except Exception as e:
         print(f"\n❌ Error: {e}")
+
 
 if __name__ == "__main__":
     main()

@@ -7,10 +7,7 @@ endpoint = "https://zimax-gw.azure-api.net/zimax/openai/v1/"
 deployment_name = "gpt-5.1-chat"
 api_key = "<your-api-key>"
 
-client = OpenAI(
-    base_url=endpoint,
-    api_key=api_key
-)
+client = OpenAI(base_url=endpoint, api_key=api_key)
 
 completion = client.chat.completions.create(
     model=deployment_name,
