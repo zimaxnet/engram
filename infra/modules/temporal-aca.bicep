@@ -32,7 +32,7 @@ param tags object = {
   Component: 'Temporal'
 }
 
-resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2022-03-01' = {
+resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = {
   parent: acaEnv
   name: 'cert-${appName}-ui'
   location: location
