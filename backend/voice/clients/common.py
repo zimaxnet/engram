@@ -2,290 +2,148 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 # -------------------------------------------------------------------------
-from __future__ import annotations
 import os
-import sys
 import asyncio
 import base64
+import json
 import logging
-import queue
-import signal
-from datetime import datetime
-from typing import Union, Optional, cast
-
 import pyaudio
-from azure.core.credentials import AzureKeyCredential
-from azure.core.credentials_async import AsyncTokenCredential
-from azure.identity.aio import AzureCliCredential, DefaultAzureCredential
-from azure.ai.voicelive.aio import connect, VoiceLiveConnection
-from azure.ai.voicelive.models import (
-    AudioEchoCancellation,
-    AudioNoiseReduction,
-    AzureStandardVoice,
-    InputAudioFormat,
-    Modality,
-    OutputAudioFormat,
-    RequestSession,
-    ServerEventType,
-    ServerVad
-)
-from dotenv import load_dotenv
+from typing import Optional
+
+from openai import AsyncAzureOpenAI
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
-class AudioProcessor:
-    """
-    Handles real-time audio capture and playback for the voice assistant.
-    """
-    
-    loop: asyncio.AbstractEventLoop
-    
-    class AudioPlaybackPacket:
-        def __init__(self, seq_num: int, data: Optional[bytes]):
-            self.seq_num = seq_num
-            self.data = data
-
-    def __init__(self, connection: VoiceLiveConnection):
-        self.connection = connection
-        self.audio = pyaudio.PyAudio()
-
-        # Audio configuration - PCM16, 24kHz, mono as specified
+class RealtimeClient:
+    def __init__(self, endpoint: str, api_key: str, deployment_name: str, system_message: str, voice: str):
+        self.endpoint = endpoint
+        self.api_key = api_key
+        self.deployment_name = deployment_name
+        self.system_message = system_message
+        self.voice = voice
+        self.client: Optional[AsyncAzureOpenAI] = None
+        
+        # Audio settings
         self.format = pyaudio.paInt16
         self.channels = 1
         self.rate = 24000
-        self.chunk_size = 1200 # 50ms
-
+        self.chunk_size = 2400  # 100ms
+        self.audio = pyaudio.PyAudio()
         self.input_stream = None
-        self.playback_queue: queue.Queue[AudioProcessor.AudioPlaybackPacket] = queue.Queue()
-        self.playback_base = 0
-        self.next_seq_num = 0
-        self.output_stream: Optional[pyaudio.Stream] = None
+        self.output_stream = None
+        
+        self.stop_event = asyncio.Event()
 
-        logger.info("AudioProcessor initialized with 24kHz PCM16 mono audio")
+    async def run(self):
+        print(f"\n✨ Connecting to Azure OpenAI Realtime API...")
+        print(f"   Endpoint: {self.endpoint}")
+        print(f"   Model: {self.deployment_name}")
+        print(f"   Voice: {self.voice}")
+        
+        self.client = AsyncAzureOpenAI(
+            azure_endpoint=self.endpoint,
+            api_key=self.api_key,
+            api_version="2024-10-01-preview", # Check for latest version
+        )
 
-    def start_capture(self):
-        """Start capturing audio from microphone."""
-        def _capture_callback(in_data, _frame_count, _time_info, _status_flags):
-            audio_base64 = base64.b64encode(in_data).decode("utf-8")
-            asyncio.run_coroutine_threadsafe(
-                self.connection.input_audio_buffer.append(audio=audio_base64), self.loop
-            )
-            return (None, pyaudio.paContinue)
+        # Build WebSocket URL - handled by SDK usually but let's see MS sample
+        # MS sample uses AsyncOpenAI with base_url modification. 
+        # But AsyncAzureOpenAI might support it natively now?
+        # The MS Quickstart shows:
+        # client = AsyncOpenAI(websocket_base_url=...)
+        # Let's stick to the sample pattern exactly for reliability.
+        
+        # NOTE: Using protocol from MS Quickstart
+        base_url = f"{self.endpoint.rstrip('/')}/openai/realtime" 
+        # Actually MS sample says: base_url = endpoint.replace("https://", "wss://").rstrip("/") + "/openai/realtime"
+        # But `AsyncAzureOpenAI` is the modern way if supported. 
+        # Let's use the exact MS Quickstart code structure for safety.
+        
+        from openai import AsyncOpenAI
+        from azure.core.credentials import AzureKeyCredential
+        
+        # Construct wss URL
+        wss_url = self.endpoint.replace("https://", "wss://").rstrip("/") + "/openai/realtime"
+        
+        client = AsyncOpenAI(
+            base_url=wss_url,
+            api_key=self.api_key
+        )
 
-        if self.input_stream:
-            return
+        print("🎤 Starting audio session... (Press Ctrl+C to stop)")
+        
+        async with client.beta.realtime.connect(model=self.deployment_name) as connection:
+            await connection.session.update(session={
+                "modalities": ["audio", "text"],
+                "instructions": self.system_message,
+                "voice": self.voice,
+                "input_audio_format": "pcm16",
+                "output_audio_format": "pcm16",
+                "turn_detection": {
+                    "type": "server_vad",
+                    "threshold": 0.5,
+                    "prefix_padding_ms": 300,
+                    "silence_duration_ms": 200,
+                }
+            })
+            
+            # Start audio tasks
+            send_task = asyncio.create_task(self.send_audio(connection))
+            receive_task = asyncio.create_task(self.receive_audio(connection))
+            
+            try:
+                await  asyncio.gather(send_task, receive_task)
+            except asyncio.CancelledError:
+                pass
+            finally:
+                self.cleanup()
 
-        self.loop = asyncio.get_event_loop()
-
+    async def send_audio(self, connection):
+        self.input_stream = self.audio.open(
+            format=self.format,
+            channels=self.channels,
+            rate=self.rate,
+            input=True,
+            frames_per_buffer=self.chunk_size,
+        )
+        
         try:
-            self.input_stream = self.audio.open(
-                format=self.format,
-                channels=self.channels,
-                rate=self.rate,
-                input=True,
-                frames_per_buffer=self.chunk_size,
-                stream_callback=_capture_callback,
-            )
-            logger.info("Started audio capture")
-        except Exception:
-            logger.exception("Failed to start audio capture")
-            raise
+            while not self.stop_event.is_set():
+                data = await asyncio.to_thread(self.input_stream.read, self.chunk_size, exception_on_overflow=False)
+                base64_audio = base64.b64encode(data).decode("utf-8")
+                await connection.input_audio_buffer.append(audio=base64_audio)
+                await asyncio.sleep(0) # Yield
+        except Exception as e:
+            logger.error(f"Error sending audio: {e}")
 
-    def start_playback(self):
-        """Initialize audio playback system."""
-        if self.output_stream:
-            return
+    async def receive_audio(self, connection):
+        self.output_stream = self.audio.open(
+            format=self.format,
+            channels=self.channels,
+            rate=self.rate,
+            output=True,
+            frames_per_buffer=self.chunk_size,
+        )
+        
+        print("🗣️  Assistant is listening...")
+        
+        async for event in connection:
+            if event.type == "response.audio.delta":
+                audio_bytes = base64.b64decode(event.delta)
+                await asyncio.to_thread(self.output_stream.write, audio_bytes)
+            elif event.type == "response.audio_transcript.done":
+                print(f"\n🤖 Assistant: {event.transcript}")
+            elif event.type == "conversation.item.input_audio_transcription.completed":
+                 print(f"\n👤 User: {event.transcript}")
+            elif event.type == "error":
+                print(f"Error: {event.error}")
 
-        remaining = bytes()
-        def _playback_callback(_in_data, frame_count, _time_info, _status_flags):
-            nonlocal remaining
-            frame_count *= pyaudio.get_sample_size(pyaudio.paInt16)
-
-            out = remaining[:frame_count]
-            remaining = remaining[frame_count:]
-
-            while len(out) < frame_count:
-                try:
-                    packet = self.playback_queue.get_nowait()
-                except queue.Empty:
-                    out = out + bytes(frame_count - len(out))
-                    continue
-                except Exception:
-                    logger.exception("Error in audio playback")
-                    raise
-
-                if not packet or not packet.data:
-                    logger.info("End of playback queue.")
-                    break
-
-                if packet.seq_num < self.playback_base:
-                    if len(remaining) > 0:
-                        remaining = bytes()
-                    continue
-
-                num_to_take = frame_count - len(out)
-                out = out + packet.data[:num_to_take]
-                remaining = packet.data[num_to_take:]
-
-            if len(out) >= frame_count:
-                return (out, pyaudio.paContinue)
-            else:
-                return (out, pyaudio.paComplete)
-
-        try:
-            self.output_stream = self.audio.open(
-                format=self.format,
-                channels=self.channels,
-                rate=self.rate,
-                output=True,
-                frames_per_buffer=self.chunk_size,
-                stream_callback=_playback_callback
-            )
-            logger.info("Audio playback system ready")
-        except Exception:
-            logger.exception("Failed to initialize audio playback")
-            raise
-
-    def _get_and_increase_seq_num(self):
-        seq = self.next_seq_num
-        self.next_seq_num += 1
-        return seq
-
-    def queue_audio(self, audio_data: Optional[bytes]) -> None:
-        self.playback_queue.put(
-            AudioProcessor.AudioPlaybackPacket(
-                seq_num=self._get_and_increase_seq_num(),
-                data=audio_data))
-
-    def skip_pending_audio(self):
-        self.playback_base = self._get_and_increase_seq_num()
-
-    def shutdown(self):
+    def cleanup(self):
         if self.input_stream:
             self.input_stream.stop_stream()
             self.input_stream.close()
-            self.input_stream = None
         if self.output_stream:
-            self.skip_pending_audio()
-            self.queue_audio(None)
             self.output_stream.stop_stream()
             self.output_stream.close()
-            self.output_stream = None
-        if self.audio:
-            self.audio.terminate()
-        logger.info("Audio processor cleaned up")
-
-
-class BasicVoiceAssistant:
-    """Basic voice assistant implementing the VoiceLive SDK patterns."""
-
-    def __init__(
-        self,
-        endpoint: str,
-        credential: Union[AzureKeyCredential, AsyncTokenCredential],
-        model: str,
-        voice: str,
-        instructions: str,
-    ):
-        self.endpoint = endpoint
-        self.credential = credential
-        self.model = model
-        self.voice = voice
-        self.instructions = instructions
-        self.connection: Optional["VoiceLiveConnection"] = None
-        self.audio_processor: Optional[AudioProcessor] = None
-        self.session_ready = False
-        self._active_response = False
-        self._response_api_done = False
-
-    async def start(self):
-        try:
-            logger.info("Connecting to VoiceLive API with model %s", self.model)
-            async with connect(
-                endpoint=self.endpoint,
-                credential=self.credential,
-                model=self.model,
-            ) as connection:
-                self.connection = connection
-                self.audio_processor = AudioProcessor(connection)
-                
-                await self._setup_session()
-                self.audio_processor.start_playback()
-
-                logger.info("Voice assistant ready! Start speaking...")
-                print("\n" + "=" * 60)
-                print(f"🎤 VOICE ASSISTANT READY: {self.voice}")
-                print("Start speaking to begin conversation")
-                print("Press Ctrl+C to exit")
-                print("=" * 60 + "\n")
-
-                await self._process_events()
-        finally:
-            if self.audio_processor:
-                self.audio_processor.shutdown()
-
-    async def _setup_session(self):
-        # Create voice configuration
-        voice_config: Union[AzureStandardVoice, str]
-        if self.voice.startswith("en-US-") or self.voice.startswith("en-CA-") or "-" in self.voice:
-            voice_config = AzureStandardVoice(name=self.voice)
-        else:
-            voice_config = self.voice
-
-        session_config = RequestSession(
-            modalities=[Modality.TEXT, Modality.AUDIO],
-            instructions=self.instructions,
-            voice=voice_config,
-            input_audio_format=InputAudioFormat.PCM16,
-            output_audio_format=OutputAudioFormat.PCM16,
-            turn_detection=ServerVad(threshold=0.5, prefix_padding_ms=300, silence_duration_ms=500),
-            input_audio_echo_cancellation=AudioEchoCancellation(),
-            input_audio_noise_reduction=AudioNoiseReduction(type="azure_deep_noise_suppression"),
-        )
-
-        assert self.connection is not None
-        await self.connection.session.update(session=session_config)
-
-    async def _process_events(self):
-        assert self.connection is not None
-        async for event in self.connection:
-            await self._handle_event(event)
-
-    async def _handle_event(self, event):
-        ap = self.audio_processor
-        conn = self.connection
-        
-        if event.type == ServerEventType.SESSION_UPDATED:
-            self.session_ready = True
-            if ap: ap.start_capture()
-
-        elif event.type == ServerEventType.INPUT_AUDIO_BUFFER_SPEECH_STARTED:
-            print("🎤 Listening...")
-            if ap: ap.skip_pending_audio()
-            if self._active_response and not self._response_api_done:
-                try:
-                    await conn.response.cancel()
-                except Exception:
-                    pass
-
-        elif event.type == ServerEventType.INPUT_AUDIO_BUFFER_SPEECH_STOPPED:
-            print("🤔 Processing...")
-
-        elif event.type == ServerEventType.RESPONSE_CREATED:
-            self._active_response = True
-            self._response_api_done = False
-
-        elif event.type == ServerEventType.RESPONSE_AUDIO_DELTA:
-            if ap: ap.queue_audio(event.delta)
-
-        elif event.type == ServerEventType.RESPONSE_AUDIO_DONE:
-            print("🎤 Ready for next input...")
-
-        elif event.type == ServerEventType.RESPONSE_DONE:
-            self._active_response = False
-            self._response_api_done = True
-
-        elif event.type == ServerEventType.ERROR:
-            msg = event.error.message
-            if "no active response" not in msg:
-                print(f"Error: {msg}")
+        self.audio.terminate()
