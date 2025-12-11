@@ -201,9 +201,10 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
               name: 'AZURE_OPENAI_DEPLOYMENT'
               value: 'gpt-4o'
             }
+            {
               name: 'AZURE_SPEECH_KEY'
               secretRef: 'azure-speech-key'
-            {
+            }
               name: 'AZURE_SPEECH_REGION'
               value: location
             }
@@ -218,6 +219,18 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'CORS_ORIGINS'
               value: '["https://engram.work", "https://*.azurestaticapps.net", "http://localhost:5173", "*"]'
+            }
+            {
+               name: 'AZURE_VOICELIVE_ENDPOINT'
+               value: openAiEndpoint 
+            }
+            {
+               name: 'AZURE_VOICELIVE_API_KEY'
+               secretRef: 'azure-openai-key'
+            }
+            {
+               name: 'AZURE_VOICELIVE_MODEL'
+               value: 'gpt-4o-realtime-preview'
             }
           ]
           resources: {
