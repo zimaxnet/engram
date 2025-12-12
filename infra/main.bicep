@@ -146,7 +146,8 @@ module keyVaultModule 'modules/keyvault.bicep' = {
   params: {
     location: location
     // Key Vault names must be 3-24 alphanumeric only; strip hyphens from envName and suffix a short unique string
-    keyVaultName: '${toLower(replace(envName, '-', ''))}kv${take(uniqueString(resourceGroup().id), 5)}'
+    // The prior name is stuck in soft-deleted state; add a static differentiator to avoid the collision
+    keyVaultName: '${toLower(replace(envName, '-', ''))}kvx${take(uniqueString(resourceGroup().id), 5)}'
     tags: tags
   }
 }
