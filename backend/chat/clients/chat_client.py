@@ -26,9 +26,7 @@ class ChatClient:
         self.api_key = api_key
         self.model = model
         self.system_prompt = system_prompt
-        self.history: List[Dict[str, str]] = [
-            {"role": "system", "content": system_prompt}
-        ]
+        self.history: List[Dict[str, str]] = [{"role": "system", "content": system_prompt}]
 
         # Determine client type based on endpoint URL
         # If it looks like a standard OpenAI URL or custom Gateway but NOT specific Azure format

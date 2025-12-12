@@ -53,9 +53,7 @@ async def ingest_document(
         chunks = processor.process_file(content, filename, content_type)
 
         if not chunks:
-            raise HTTPException(
-                status_code=400, detail="No text content extracted from file"
-            )
+            raise HTTPException(status_code=400, detail="No text content extracted from file")
 
         # Save to Memory (Zep)
         # We add them as "documents" or facts.

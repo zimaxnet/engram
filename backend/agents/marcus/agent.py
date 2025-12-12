@@ -21,9 +21,7 @@ from backend.agents.base import BaseAgent, AgentState
 
 
 @tool
-def create_project_timeline(
-    project_name: str, start_date: str, end_date: str, milestones: str
-) -> str:
+def create_project_timeline(project_name: str, start_date: str, end_date: str, milestones: str) -> str:
     """
     Create a project timeline with milestones and risk buffers.
 
@@ -48,7 +46,7 @@ def create_project_timeline(
 - **Risk Buffer**: 15% recommended
 
 ### Milestones
-{chr(10).join(f"- [ ] **M{i+1}**: {m}" for i, m in enumerate(milestone_list))}
+{chr(10).join(f"- [ ] **M{i + 1}**: {m}" for i, m in enumerate(milestone_list))}
 
 ### Recommended Phase Structure
 
@@ -123,9 +121,7 @@ def assess_project_risks(project_description: str) -> str:
 
 
 @tool
-def create_status_report(
-    project_name: str, progress_summary: str, blockers: str, next_steps: str
-) -> str:
+def create_status_report(project_name: str, progress_summary: str, blockers: str, next_steps: str) -> str:
     """
     Generate a project status report.
 
@@ -339,9 +335,7 @@ Remember: You're here to help teams succeed, not to create process for its own s
 
     def _decide_next(self, state: AgentState) -> str:
         """Decide whether to invoke a tool based on the last user message."""
-        last_user = next(
-            (m for m in reversed(state["messages"]) if m.type == "human"), None
-        )
+        last_user = next((m for m in reversed(state["messages"]) if m.type == "human"), None)
         content = last_user.content if last_user else ""
         tool_name, tool_args = self._select_tool(content)
         if tool_name:
@@ -385,9 +379,7 @@ Remember: You're here to help teams succeed, not to create process for its own s
         tool_registry = {t.name: t for t in self.tools}
         tool = tool_registry.get(tool_name)
         if not tool:
-            state["final_response"] = (
-                state.get("final_response") or "I couldn't run the requested analysis."
-            )
+            state["final_response"] = state.get("final_response") or "I couldn't run the requested analysis."
             return state
 
         try:
@@ -401,17 +393,13 @@ Remember: You're here to help teams succeed, not to create process for its own s
                 )()
             )
         except Exception as e:
-            state["final_response"] = (
-                f"I tried to run {tool_name} but hit an error: {e}"
-            )
+            state["final_response"] = f"I tried to run {tool_name} but hit an error: {e}"
         return state
 
     async def _respond_with_context(self, state: AgentState) -> AgentState:
         """Compose final response, including any tool outputs."""
         if state["tool_results"]:
-            tool_summary = "\n\n".join(
-                f"**{tr['tool']}**\n{tr['result']}" for tr in state["tool_results"]
-            )
+            tool_summary = "\n\n".join(f"**{tr['tool']}**\n{tr['result']}" for tr in state["tool_results"])
             base_resp = state.get("final_response") or "Here’s what I can offer:"
             state["final_response"] = f"{base_resp}\n\n{tool_summary}"
         elif not state.get("final_response"):

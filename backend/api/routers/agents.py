@@ -85,7 +85,8 @@ class AgentListResponse(BaseModel):
 async def list_agents():
     """List all available agents"""
     return AgentListResponse(
-        agents=list(AGENTS.values()), active_agent=AgentId.ELENA  # Default
+        agents=list(AGENTS.values()),
+        active_agent=AgentId.ELENA,  # Default
     )
 
 
@@ -111,9 +112,7 @@ class SwitchAgentResponse(BaseModel):
 async def switch_agent(request: SwitchAgentRequest):
     """Switch the active agent for the current session"""
     if request.agent_id not in AGENTS:
-        raise HTTPException(
-            status_code=404, detail=f"Agent {request.agent_id} not found"
-        )
+        raise HTTPException(status_code=404, detail=f"Agent {request.agent_id} not found")
 
     agent = AGENTS[request.agent_id]
 

@@ -60,9 +60,7 @@ class ZepMemoryClient:
 
         return self._client
 
-    async def get_or_create_session(
-        self, session_id: str, user_id: str, metadata: dict = None
-    ) -> dict:
+    async def get_or_create_session(self, session_id: str, user_id: str, metadata: dict = None) -> dict:
         """
         Get or create a session (conversation) in Zep.
         """
@@ -76,9 +74,7 @@ class ZepMemoryClient:
             logger.info(f"Created new Zep session: {session_id}")
             return session
 
-    async def add_memory(
-        self, session_id: str, messages: list[dict], metadata: dict = None
-    ) -> None:
+    async def add_memory(self, session_id: str, messages: list[dict], metadata: dict = None) -> None:
         """
         Add messages to a session's memory.
 
@@ -107,16 +103,12 @@ class ZepMemoryClient:
         except Exception as e:
             logger.error(f"Failed to add memory: {e}")
 
-    async def get_session_messages(
-        self, session_id: str, limit: int = 20
-    ) -> list[dict]:
+    async def get_session_messages(self, session_id: str, limit: int = 20) -> list[dict]:
         """
         Get messages for a session (transcript).
         """
         try:
-            resp = await self.client.memory.get_session_messages(
-                session_id=session_id, limit=limit
-            )
+            resp = await self.client.memory.get_session_messages(session_id=session_id, limit=limit)
             return [
                 {
                     "role": m.role,
@@ -159,11 +151,7 @@ class ZepMemoryClient:
             results = []
             for session in resp.sessions or []:
                 for msg in session.messages or []:
-                    score_val = (
-                        msg.score
-                        if hasattr(msg, "score") and msg.score is not None
-                        else 0.5
-                    )
+                    score_val = msg.score if hasattr(msg, "score") and msg.score is not None else 0.5
                     results.append(
                         {
                             "content": msg.content,
@@ -173,13 +161,9 @@ class ZepMemoryClient:
                     )
             return results
         except Exception as e:
-            logger.warning(
-                f"Memory search failed, falling back to recent messages: {e}"
-            )
+            logger.warning(f"Memory search failed, falling back to recent messages: {e}")
             try:
-                resp = await self.client.memory.get_session_messages(
-                    session_id=session_id, limit=limit
-                )
+                resp = await self.client.memory.get_session_messages(session_id=session_id, limit=limit)
                 return [
                     {
                         "content": m.content,
@@ -192,9 +176,7 @@ class ZepMemoryClient:
                 logger.error(f"Memory search fallback failed: {e2}")
                 return []
 
-    async def get_facts(
-        self, user_id: str, query: Optional[str] = None, limit: int = 20
-    ) -> list[GraphNode]:
+    async def get_facts(self, user_id: str, query: Optional[str] = None, limit: int = 20) -> list[GraphNode]:
         """
         Get facts from the knowledge graph for a user.
 
@@ -207,9 +189,7 @@ class ZepMemoryClient:
             List of GraphNode facts
         """
         try:
-            results = await self.client.graph.asearch(
-                user_id=user_id, query=query or "", limit=limit
-            )
+            results = await self.client.graph.asearch(user_id=user_id, query=query or "", limit=limit)
 
             nodes = []
             for result in results:
@@ -229,9 +209,7 @@ class ZepMemoryClient:
             logger.error(f"Failed to get facts: {e}")
             return []
 
-    async def add_fact(
-        self, user_id: str, fact: str, metadata: dict = None
-    ) -> Optional[str]:
+    async def add_fact(self, user_id: str, fact: str, metadata: dict = None) -> Optional[str]:
         """
         Add a fact to the knowledge graph.
 
@@ -244,18 +222,14 @@ class ZepMemoryClient:
             Fact ID if successful
         """
         try:
-            result = await self.client.graph.aadd(
-                user_id=user_id, fact=fact, metadata=metadata or {}
-            )
+            result = await self.client.graph.aadd(user_id=user_id, fact=fact, metadata=metadata or {})
             logger.info(f"Added fact for user {user_id}: {fact[:50]}...")
             return result.uuid
         except Exception as e:
             logger.error(f"Failed to add fact: {e}")
             return None
 
-    async def get_entities(
-        self, user_id: str, entity_type: Optional[str] = None, limit: int = 50
-    ) -> list[Entity]:
+    async def get_entities(self, user_id: str, entity_type: Optional[str] = None, limit: int = 50) -> list[Entity]:
         """
         Get entities from the knowledge graph.
 
@@ -276,17 +250,13 @@ class ZepMemoryClient:
             logger.error(f"Failed to get entities: {e}")
             return []
 
-    async def list_sessions(
-        self, user_id: Optional[str] = None, limit: int = 20, offset: int = 0
-    ) -> list[dict]:
+    async def list_sessions(self, user_id: Optional[str] = None, limit: int = 20, offset: int = 0) -> list[dict]:
         """
         List conversation sessions (episodes).
         """
         try:
             # Note: Zep 2.0 list_sessions might differ. Adapting to standard pattern.
-            sessions = await self.client.memory.list_sessions(
-                limit=limit, offset=offset, user_id=user_id
-            )
+            sessions = await self.client.memory.list_sessions(limit=limit, offset=offset, user_id=user_id)
 
             return [
                 {
@@ -301,9 +271,7 @@ class ZepMemoryClient:
             logger.error(f"Failed to list sessions: {e}")
             return []
 
-    async def enrich_context(
-        self, context: EnterpriseContext, query: str
-    ) -> EnterpriseContext:
+    async def enrich_context(self, context: EnterpriseContext, query: str) -> EnterpriseContext:
         """
         Enrich an EnterpriseContext with relevant memory.
 
@@ -328,9 +296,7 @@ class ZepMemoryClient:
         )
 
         # Search for relevant memory
-        memory_results = await self.search_memory(
-            session_id=session_id, query=query, limit=5
-        )
+        memory_results = await self.search_memory(session_id=session_id, query=query, limit=5)
 
         # Get relevant facts from knowledge graph
         facts = await self.get_facts(user_id=user_id, query=query, limit=10)
@@ -372,9 +338,7 @@ class ZepMemoryClient:
 
         # Convert recent turns to Zep format
         messages = []
-        for turn in context.episodic.recent_turns[
-            -2:
-        ]:  # Last 2 turns (user + assistant)
+        for turn in context.episodic.recent_turns[-2:]:  # Last 2 turns (user + assistant)
             messages.append(
                 {
                     "role": turn.role.value,
@@ -411,9 +375,7 @@ class MockZepClient:
         async def aget_session(self, session_id: str):
             raise Exception("Session not found")
 
-        async def aadd_session(
-            self, session_id: str, user_id: str, metadata: dict = None
-        ):
+        async def aadd_session(self, session_id: str, user_id: str, metadata: dict = None):
             return {"session_id": session_id, "user_id": user_id}
 
         async def aadd_memory(self, session_id: str, memory):
@@ -441,9 +403,7 @@ class MockZepClient:
 
             return Result()
 
-        async def aget_entities(
-            self, user_id: str, entity_type: str = None, limit: int = 50
-        ):
+        async def aget_entities(self, user_id: str, entity_type: str = None, limit: int = 50):
             return []
 
     def __init__(self):
@@ -472,16 +432,12 @@ async def search_memory(session_id: str, query: str, limit: int = 10) -> list[di
     return await memory_client.search_memory(session_id, query, limit)
 
 
-async def get_facts(
-    user_id: str, query: str = None, limit: int = 20
-) -> list[GraphNode]:
+async def get_facts(user_id: str, query: str = None, limit: int = 20) -> list[GraphNode]:
     """Get facts from knowledge graph"""
     return await memory_client.get_facts(user_id, query, limit)
 
 
-async def list_episodes(
-    user_id: Optional[str] = None, limit: int = 20, offset: int = 0
-) -> list[dict]:
+async def list_episodes(user_id: Optional[str] = None, limit: int = 20, offset: int = 0) -> list[dict]:
     """List conversation episodes"""
     return await memory_client.list_sessions(user_id, limit, offset)
 

@@ -70,9 +70,7 @@ def configure_telemetry(app=None) -> None:
         try:
             from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
 
-            azure_exporter = AzureMonitorTraceExporter(
-                connection_string=settings.appinsights_connection_string
-            )
+            azure_exporter = AzureMonitorTraceExporter(connection_string=settings.appinsights_connection_string)
             _tracer_provider.add_span_processor(BatchSpanProcessor(azure_exporter))
             logger.info("Azure Monitor trace exporter configured")
         except ImportError:
@@ -94,9 +92,7 @@ def configure_telemetry(app=None) -> None:
         try:
             from azure.monitor.opentelemetry.exporter import AzureMonitorMetricExporter
 
-            azure_metric_exporter = AzureMonitorMetricExporter(
-                connection_string=settings.appinsights_connection_string
-            )
+            azure_metric_exporter = AzureMonitorMetricExporter(connection_string=settings.appinsights_connection_string)
             metric_readers.append(PeriodicExportingMetricReader(azure_metric_exporter))
         except ImportError:
             pass
@@ -106,9 +102,7 @@ def configure_telemetry(app=None) -> None:
         metric_readers.append(PeriodicExportingMetricReader(otlp_metric_exporter))
 
     if metric_readers:
-        _meter_provider = MeterProvider(
-            resource=resource, metric_readers=metric_readers
-        )
+        _meter_provider = MeterProvider(resource=resource, metric_readers=metric_readers)
         metrics.set_meter_provider(_meter_provider)
 
     # Instrument FastAPI
@@ -148,9 +142,7 @@ def create_span(
     """
     tracer = get_tracer()
 
-    with tracer.start_as_current_span(
-        name, kind=kind, attributes=attributes or {}
-    ) as span:
+    with tracer.start_as_current_span(name, kind=kind, attributes=attributes or {}) as span:
         try:
             yield span
         except Exception as e:
@@ -159,9 +151,7 @@ def create_span(
             raise
 
 
-def trace_function(
-    name: Optional[str] = None, attributes: Optional[dict] = None
-) -> Callable:
+def trace_function(name: Optional[str] = None, attributes: Optional[dict] = None) -> Callable:
     """
     Decorator to trace a function.
 
@@ -191,9 +181,7 @@ def trace_function(
     return decorator
 
 
-def record_metric(
-    name: str, value: float, attributes: Optional[dict] = None, unit: str = ""
-) -> None:
+def record_metric(name: str, value: float, attributes: Optional[dict] = None, unit: str = "") -> None:
     """
     Record a metric value.
 
@@ -261,9 +249,7 @@ def create_standard_metrics():
     meter = get_meter()
 
     # Request metrics
-    request_counter = meter.create_counter(
-        "http_requests_total", unit="1", description="Total HTTP requests"
-    )
+    request_counter = meter.create_counter("http_requests_total", unit="1", description="Total HTTP requests")
 
     request_duration = meter.create_histogram(
         "http_request_duration_seconds", unit="s", description="HTTP request duration"

@@ -45,13 +45,9 @@ class SecurityContext(BaseModel):
 
     user_id: str = Field(..., description="Unique user identifier from Entra ID")
     tenant_id: str = Field(..., description="Organization/tenant identifier")
-    session_id: str = Field(
-        default_factory=lambda: str(uuid4()), description="Current session ID"
-    )
+    session_id: str = Field(default_factory=lambda: str(uuid4()), description="Current session ID")
     roles: list[Role] = Field(default_factory=list, description="User's assigned roles")
-    scopes: list[str] = Field(
-        default_factory=list, description="Fine-grained permission scopes"
-    )
+    scopes: list[str] = Field(default_factory=list, description="Fine-grained permission scopes")
 
     # Entra ID token metadata
     token_expiry: Optional[datetime] = Field(None, description="Token expiration time")
@@ -97,12 +93,8 @@ class Turn(BaseModel):
     role: MessageRole
     content: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    agent_id: Optional[str] = Field(
-        None, description="Which agent responded (elena/marcus)"
-    )
-    tool_calls: Optional[list[dict]] = Field(
-        None, description="Tool calls made in this turn"
-    )
+    agent_id: Optional[str] = Field(None, description="Which agent responded (elena/marcus)")
+    tool_calls: Optional[list[dict]] = Field(None, description="Tool calls made in this turn")
     token_count: Optional[int] = Field(None, description="Token count for this turn")
 
 
@@ -115,9 +107,7 @@ class EpisodicState(BaseModel):
     """
 
     conversation_id: str = Field(default_factory=lambda: str(uuid4()))
-    recent_turns: list[Turn] = Field(
-        default_factory=list, description="Rolling window of recent turns"
-    )
+    recent_turns: list[Turn] = Field(default_factory=list, description="Rolling window of recent turns")
     summary: str = Field("", description="Compressed narrative of conversation so far")
 
     # Configuration
@@ -174,15 +164,9 @@ class GraphNode(BaseModel):
     content: str
     node_type: str = Field("fact", description="Type: fact, entity, relationship")
     confidence: float = Field(1.0, ge=0.0, le=1.0)
-    valid_from: Optional[datetime] = Field(
-        None, description="When this fact became true"
-    )
-    valid_to: Optional[datetime] = Field(
-        None, description="When this fact stopped being true"
-    )
-    source_episode_id: Optional[str] = Field(
-        None, description="Episode that created this node"
-    )
+    valid_from: Optional[datetime] = Field(None, description="When this fact became true")
+    valid_to: Optional[datetime] = Field(None, description="When this fact stopped being true")
+    source_episode_id: Optional[str] = Field(None, description="Episode that created this node")
     metadata: dict = Field(default_factory=dict)
 
 
@@ -200,9 +184,7 @@ class SemanticKnowledge(BaseModel):
     # Query metadata
     last_query: Optional[str] = Field(None, description="Last memory query executed")
     query_timestamp: Optional[datetime] = None
-    retrieval_scores: dict[str, float] = Field(
-        default_factory=dict, description="Relevance scores"
-    )
+    retrieval_scores: dict[str, float] = Field(default_factory=dict, description="Relevance scores")
 
     def add_fact(self, node: GraphNode) -> None:
         """Add a retrieved fact"""
@@ -218,9 +200,7 @@ class SemanticKnowledge(BaseModel):
         parts = []
 
         if self.entity_context:
-            entities = [
-                f"- {e.name} ({e.entity_type})" for e in self.entity_context.values()
-            ]
+            entities = [f"- {e.name} ({e.entity_type})" for e in self.entity_context.values()]
             parts.append("Known Entities:\n" + "\n".join(entities))
 
         if self.retrieved_facts:
@@ -281,9 +261,7 @@ class OperationalState(BaseModel):
     run_id: Optional[str] = Field(None, description="Temporal run ID")
 
     # Agent identification
-    active_agent: str = Field(
-        "elena", description="Currently active agent (elena/marcus)"
-    )
+    active_agent: str = Field("elena", description="Currently active agent (elena/marcus)")
 
     # Planning state
     current_plan: list[PlanStep] = Field(default_factory=list)
@@ -347,9 +325,7 @@ class EnterpriseContext(BaseModel):
     operational: OperationalState = Field(default_factory=OperationalState)
 
     # Context metadata
-    context_version: str = Field(
-        "1.0.0", description="Schema version for compatibility"
-    )
+    context_version: str = Field("1.0.0", description="Schema version for compatibility")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -359,10 +335,7 @@ class EnterpriseContext(BaseModel):
     @model_validator(mode="after")
     def sync_session_ids(self) -> "EnterpriseContext":
         """Sync conversation ID from security session ID if mismatched"""
-        if (
-            self.security.session_id
-            and self.episodic.conversation_id != self.security.session_id
-        ):
+        if self.security.session_id and self.episodic.conversation_id != self.security.session_id:
             self.episodic.conversation_id = self.security.session_id
         return self
 
@@ -385,12 +358,7 @@ class EnterpriseContext(BaseModel):
         ]
 
         if self.operational.current_plan:
-            plan_summary = "\n".join(
-                [
-                    f"- [{s.status.value}] {s.action}"
-                    for s in self.operational.current_plan
-                ]
-            )
+            plan_summary = "\n".join([f"- [{s.status.value}] {s.action}" for s in self.operational.current_plan])
             parts.extend(["", "## Current Plan", plan_summary])
 
         return "\n".join(parts)

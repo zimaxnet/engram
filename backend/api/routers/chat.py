@@ -30,9 +30,7 @@ router = APIRouter()
 _sessions: dict[str, EnterpriseContext] = {}
 
 
-def get_or_create_session(
-    session_id: str, security: SecurityContext
-) -> EnterpriseContext:
+def get_or_create_session(session_id: str, security: SecurityContext) -> EnterpriseContext:
     """Get existing session or create new one"""
     if session_id not in _sessions:
         _sessions[session_id] = EnterpriseContext(security=security)
@@ -58,9 +56,7 @@ class ChatResponse(BaseModel):
 
 
 @router.post("", response_model=ChatResponse)
-async def send_message(
-    message: ChatMessage, user: SecurityContext = Depends(get_current_user)
-):
+async def send_message(message: ChatMessage, user: SecurityContext = Depends(get_current_user)):
     """
     Send a message and get a response.
 
@@ -129,9 +125,7 @@ class ConnectionManager:
         self.active_connections: dict[str, WebSocket] = {}
         self.session_contexts: dict[str, EnterpriseContext] = {}
 
-    async def connect(
-        self, websocket: WebSocket, session_id: str, security: SecurityContext
-    ):
+    async def connect(self, websocket: WebSocket, session_id: str, security: SecurityContext):
         await websocket.accept()
         self.active_connections[session_id] = websocket
         if session_id not in self.session_contexts:
@@ -173,9 +167,7 @@ async def websocket_chat(websocket: WebSocket, session_id: str):
     # In production, validate token from query params or first message
     from backend.core import Role
 
-    dev_security = SecurityContext(
-        user_id="ws-user", tenant_id="ws-tenant", roles=[Role.ANALYST], scopes=["*"]
-    )
+    dev_security = SecurityContext(user_id="ws-user", tenant_id="ws-tenant", roles=[Role.ANALYST], scopes=["*"])
 
     await manager.connect(websocket, session_id, dev_security)
 
@@ -190,15 +182,11 @@ async def websocket_chat(websocket: WebSocket, session_id: str):
                 # Get context
                 context = manager.get_context(session_id)
                 if not context:
-                    await manager.send_message(
-                        session_id, {"type": "error", "message": "Session not found"}
-                    )
+                    await manager.send_message(session_id, {"type": "error", "message": "Session not found"})
                     continue
 
                 # Send typing indicator
-                await manager.send_message(
-                    session_id, {"type": "typing", "agent_id": agent_id}
-                )
+                await manager.send_message(session_id, {"type": "typing", "agent_id": agent_id})
 
                 try:
                     # Enrich context
@@ -256,9 +244,7 @@ async def websocket_chat(websocket: WebSocket, session_id: str):
 
 
 @router.delete("/session/{session_id}")
-async def clear_session(
-    session_id: str, user: SecurityContext = Depends(get_current_user)
-):
+async def clear_session(session_id: str, user: SecurityContext = Depends(get_current_user)):
     """Clear a chat session"""
     if session_id in _sessions:
         del _sessions[session_id]

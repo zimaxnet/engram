@@ -1,7 +1,9 @@
 exclude = ["voice/foundry_*.py", "chat/foundry_*.py"]
-ignore = ["F811"]
 line-length = 120
 
-[per-file-ignores]
+[lint]
+ignore = ["F811"]
+
+[lint.per-file-ignores]
 "voice/foundry_*.py" = ["ALL"]
 "chat/foundry_*.py" = ["ALL"]

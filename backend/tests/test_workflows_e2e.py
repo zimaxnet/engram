@@ -29,9 +29,7 @@ from backend.workflows.agent_workflow import (
 
 
 @activity.defn(name="initialize_context_activity")
-async def mock_initialize_context(
-    user_id: str, tenant_id: str, session_id: str, agent_id: str
-) -> str:
+async def mock_initialize_context(user_id: str, tenant_id: str, session_id: str, agent_id: str) -> str:
     return '{"mock": "context"}'
 
 
@@ -66,9 +64,7 @@ async def mock_persist_memory(input: MemoryPersistInput) -> MemoryPersistOutput:
 
 
 @activity.defn(name="send_notification_activity")
-async def mock_send_notification(
-    user_id: str, message: str, notification_type: str = "info"
-) -> bool:
+async def mock_send_notification(user_id: str, message: str, notification_type: str = "info") -> bool:
     return True
 
 
@@ -78,9 +74,7 @@ async def mock_send_notification(
 
 # Configure runner to pass through backend modules to avoid sandbox issues with Pydantic/datetime
 runner = SandboxedWorkflowRunner(
-    restrictions=SandboxRestrictions.default.with_passthrough_modules(
-        "backend", "pydantic"
-    )
+    restrictions=SandboxRestrictions.default.with_passthrough_modules("backend", "pydantic")
 )
 
 
@@ -195,9 +189,7 @@ async def test_approval_workflow():
             # Approve
             await handle.signal(
                 ApprovalWorkflow.approve,
-                ApprovalSignal(
-                    approved=True, feedback="Looks good", approver_id="admin-1"
-                ),
+                ApprovalSignal(approved=True, feedback="Looks good", approver_id="admin-1"),
             )
 
             # Get result

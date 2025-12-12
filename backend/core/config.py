@@ -63,9 +63,7 @@ class Settings(BaseSettings):
     azure_ai_project_name: Optional[str] = Field(None, alias="AZURE_AI_PROJECT_NAME")
     azure_ai_key: Optional[str] = Field(None, alias="AZURE_AI_KEY")
     azure_ai_deployment: str = Field("gpt-4o-mini", alias="AZURE_AI_DEPLOYMENT")
-    azure_ai_api_version: str = Field(
-        "2024-10-01-preview", alias="AZURE_AI_API_VERSION"
-    )
+    azure_ai_api_version: str = Field("2024-10-01-preview", alias="AZURE_AI_API_VERSION")
 
     # Elena voice configuration
     elena_voice_name: str = Field("en-US-JennyNeural", alias="ELENA_VOICE_NAME")
@@ -76,13 +74,9 @@ class Settings(BaseSettings):
     # Azure VoiceLive (Real-time Voice)
     # ==========================================================================
     azure_voicelive_model: str = Field("gpt-realtime", alias="AZURE_VOICELIVE_MODEL")
-    azure_voicelive_voice: str = Field(
-        "en-US-Ava:DragonHDLatestNeural", alias="AZURE_VOICELIVE_VOICE"
-    )
+    azure_voicelive_voice: str = Field("en-US-Ava:DragonHDLatestNeural", alias="AZURE_VOICELIVE_VOICE")
     # Marcus voice configuration for VoiceLive
-    marcus_voicelive_voice: str = Field(
-        "en-US-GuyNeural", alias="MARCUS_VOICELIVE_VOICE"
-    )
+    marcus_voicelive_voice: str = Field("en-US-GuyNeural", alias="MARCUS_VOICELIVE_VOICE")
 
     # ==========================================================================
     # Microsoft Entra ID (Authentication)
@@ -100,17 +94,13 @@ class Settings(BaseSettings):
     # ==========================================================================
     # CORS & Security
     # ==========================================================================
-    cors_origins: list[str] = Field(
-        default=["http://localhost:5173", "http://localhost:3000"], alias="CORS_ORIGINS"
-    )
+    cors_origins: list[str] = Field(default=["http://localhost:5173", "http://localhost:3000"], alias="CORS_ORIGINS")
     api_key_header: str = "X-API-Key"
 
     # ==========================================================================
     # Observability
     # ==========================================================================
-    appinsights_connection_string: Optional[str] = Field(
-        None, alias="APPLICATIONINSIGHTS_CONNECTION_STRING"
-    )
+    appinsights_connection_string: Optional[str] = Field(None, alias="APPLICATIONINSIGHTS_CONNECTION_STRING")
     log_level: str = Field("INFO", alias="LOG_LEVEL")
 
     # ==========================================================================

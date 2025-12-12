@@ -198,10 +198,7 @@ class AgentWorkflow:
 
         This is the durable execution path for processing a user message.
         """
-        workflow.logger.info(
-            f"Starting agent workflow: session={input.session_id}, "
-            f"agent={input.agent_id}"
-        )
+        workflow.logger.info(f"Starting agent workflow: session={input.session_id}, agent={input.agent_id}")
 
         try:
             # Step 1: Initialize Context
@@ -215,9 +212,7 @@ class AgentWorkflow:
             # Step 2: Enrich with Memory
             enrich_result = await workflow.execute_activity(
                 enrich_memory_activity,
-                MemoryEnrichInput(
-                    context_json=self._context_json, query=input.user_message
-                ),
+                MemoryEnrichInput(context_json=self._context_json, query=input.user_message),
                 start_to_close_timeout=timedelta(seconds=60),
                 retry_policy=MEMORY_RETRY_POLICY,
             )
@@ -229,9 +224,7 @@ class AgentWorkflow:
                     f"{enrich_result.entities_retrieved} entities"
                 )
             else:
-                workflow.logger.warning(
-                    f"Memory enrichment failed: {enrich_result.error}"
-                )
+                workflow.logger.warning(f"Memory enrichment failed: {enrich_result.error}")
 
             # Step 3: Agent Reasoning (the Brain)
             reasoning_result = await workflow.execute_activity(
@@ -246,9 +239,7 @@ class AgentWorkflow:
             )
 
             if not reasoning_result.success:
-                workflow.logger.error(
-                    f"Agent reasoning failed: {reasoning_result.error}"
-                )
+                workflow.logger.error(f"Agent reasoning failed: {reasoning_result.error}")
                 return AgentWorkflowOutput(
                     response=reasoning_result.response,
                     agent_id=input.agent_id,
@@ -270,9 +261,7 @@ class AgentWorkflow:
             )
 
             if not is_valid:
-                workflow.logger.warning(
-                    f"Response validation failed: {validation_error}"
-                )
+                workflow.logger.warning(f"Response validation failed: {validation_error}")
                 response = (
                     "I generated a response but it didn't pass validation. "
                     "Let me try to rephrase. Could you please ask your question again?"
@@ -287,14 +276,10 @@ class AgentWorkflow:
             )
 
             if not persist_result.success:
-                workflow.logger.warning(
-                    f"Memory persistence failed: {persist_result.error}"
-                )
+                workflow.logger.warning(f"Memory persistence failed: {persist_result.error}")
 
             # Success!
-            workflow.logger.info(
-                f"Workflow completed: tokens={reasoning_result.tokens_used}"
-            )
+            workflow.logger.info(f"Workflow completed: tokens={reasoning_result.tokens_used}")
 
             return AgentWorkflowOutput(
                 response=response,
@@ -404,9 +389,7 @@ class ConversationWorkflow:
         while not self._should_end:
             # Wait for next message (can wait indefinitely)
             self._awaiting_input = True
-            await workflow.wait_condition(
-                lambda: self._new_message is not None or self._should_end
-            )
+            await workflow.wait_condition(lambda: self._new_message is not None or self._should_end)
 
             if self._should_end:
                 break

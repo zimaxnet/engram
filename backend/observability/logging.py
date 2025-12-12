@@ -244,9 +244,7 @@ def get_logger(name: str) -> StructuredLogger:
 
 
 # Context variable for request-scoped logging
-_log_context: contextvars.ContextVar[dict] = contextvars.ContextVar(
-    "log_context", default={}
-)
+_log_context: contextvars.ContextVar[dict] = contextvars.ContextVar("log_context", default={})
 
 
 def set_log_context(**kwargs) -> None:

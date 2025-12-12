@@ -103,9 +103,7 @@ class ToolExecutionOutput:
 
 
 @activity.defn
-async def initialize_context_activity(
-    user_id: str, tenant_id: str, session_id: str, agent_id: str
-) -> str:
+async def initialize_context_activity(user_id: str, tenant_id: str, session_id: str, agent_id: str) -> str:
     """
     Initialize a new EnterpriseContext for a workflow.
 
@@ -115,9 +113,7 @@ async def initialize_context_activity(
     Returns:
         Serialized EnterpriseContext JSON
     """
-    activity.logger.info(
-        f"Initializing context for user {user_id}, session {session_id}"
-    )
+    activity.logger.info(f"Initializing context for user {user_id}, session {session_id}")
 
     from backend.core import Role, SecurityContext, EnterpriseContext
 
@@ -147,9 +143,7 @@ async def enrich_memory_activity(input: MemoryEnrichInput) -> MemoryEnrichOutput
     - Layer 2: Episodic state (relevant past conversations)
     - Layer 3: Semantic knowledge (facts, entities from graph)
     """
-    activity.logger.info(
-        f"Enriching context with memory for query: {input.query[:50]}..."
-    )
+    activity.logger.info(f"Enriching context with memory for query: {input.query[:50]}...")
 
     try:
         from backend.core import EnterpriseContext
@@ -200,9 +194,7 @@ async def agent_reasoning_activity(input: ReasoningInput) -> ReasoningOutput:
         agent = get_agent(input.agent_id)
 
         # Run the agent
-        response, updated_context = await agent.run(
-            user_message=input.user_message, context=context
-        )
+        response, updated_context = await agent.run(user_message=input.user_message, context=context)
 
         return ReasoningOutput(
             response=response,
@@ -289,9 +281,7 @@ async def execute_tool_activity(input: ToolExecutionInput) -> ToolExecutionOutpu
         }
 
         if input.tool_name not in tools:
-            return ToolExecutionOutput(
-                result="", success=False, error=f"Unknown tool: {input.tool_name}"
-            )
+            return ToolExecutionOutput(result="", success=False, error=f"Unknown tool: {input.tool_name}")
 
         # Execute the tool
         tool = tools[input.tool_name]
@@ -305,9 +295,7 @@ async def execute_tool_activity(input: ToolExecutionInput) -> ToolExecutionOutpu
 
 
 @activity.defn
-async def send_notification_activity(
-    user_id: str, message: str, notification_type: str = "info"
-) -> bool:
+async def send_notification_activity(user_id: str, message: str, notification_type: str = "info") -> bool:
     """
     Send a notification to the user.
 
@@ -326,9 +314,7 @@ async def send_notification_activity(
 
 
 @activity.defn
-async def validate_response_activity(
-    response: str, context_json: str
-) -> tuple[bool, str]:
+async def validate_response_activity(response: str, context_json: str) -> tuple[bool, str]:
     """
     Validate an agent response before sending.
 

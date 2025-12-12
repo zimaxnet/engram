@@ -42,9 +42,7 @@ class MemorySearchResponse(BaseModel):
 
 
 @router.post("/search", response_model=MemorySearchResponse)
-async def search_memory(
-    request: MemorySearchRequest, user: SecurityContext = Depends(get_current_user)
-):
+async def search_memory(request: MemorySearchRequest, user: SecurityContext = Depends(get_current_user)):
     """
     Search the knowledge graph for relevant memories.
 
@@ -58,9 +56,7 @@ async def search_memory(
         start_time = datetime.now()
 
         # Search facts (Semantic Memory) for the authenticated user
-        facts = await memory_client.get_facts(
-            user_id=user.user_id, query=request.query, limit=request.limit
-        )
+        facts = await memory_client.get_facts(user_id=user.user_id, query=request.query, limit=request.limit)
 
         results = []
         for fact in facts:
@@ -119,29 +115,21 @@ async def list_episodes(
     try:
         from backend.memory.client import list_episodes as client_list_episodes
 
-        sessions = await client_list_episodes(
-            user_id=user.user_id, limit=limit, offset=offset
-        )
+        sessions = await client_list_episodes(user_id=user.user_id, limit=limit, offset=offset)
 
         episodes = []
         for s in sessions:
             episodes.append(
                 Episode(
                     id=s["session_id"],
-                    summary=s.get("metadata", {}).get(
-                        "summary", "No summary available"
-                    ),
+                    summary=s.get("metadata", {}).get("summary", "No summary available"),
                     turn_count=s.get("metadata", {}).get("turn_count", 0),
                     agent_id=s.get("metadata", {}).get("agent_id", "unknown"),
                     started_at=(
-                        datetime.fromisoformat(s["created_at"])
-                        if isinstance(s["created_at"], str)
-                        else s["created_at"]
+                        datetime.fromisoformat(s["created_at"]) if isinstance(s["created_at"], str) else s["created_at"]
                     ),
                     ended_at=(
-                        datetime.fromisoformat(s["updated_at"])
-                        if isinstance(s["updated_at"], str)
-                        else s["updated_at"]
+                        datetime.fromisoformat(s["updated_at"]) if isinstance(s["updated_at"], str) else s["updated_at"]
                     ),
                     topics=s.get("metadata", {}).get("topics", []),
                 )
@@ -162,9 +150,7 @@ class EpisodeTranscriptResponse(BaseModel):
 
 
 @router.get("/episodes/{session_id}", response_model=EpisodeTranscriptResponse)
-async def get_episode_transcript(
-    session_id: str, user: SecurityContext = Depends(get_current_user)
-):
+async def get_episode_transcript(session_id: str, user: SecurityContext = Depends(get_current_user)):
     """
     Get the detailed transcript for a specific episode.
     """
@@ -194,9 +180,7 @@ class AddFactResponse(BaseModel):
 
 
 @router.post("/facts", response_model=AddFactResponse)
-async def add_fact(
-    request: AddFactRequest, user: SecurityContext = Depends(get_current_user)
-):
+async def add_fact(request: AddFactRequest, user: SecurityContext = Depends(get_current_user)):
     """
     Manually add a fact to the knowledge graph.
 
@@ -213,13 +197,9 @@ async def add_fact(
         )
 
         if fact_id:
-            return AddFactResponse(
-                success=True, node_id=fact_id, message="Fact added to knowledge graph"
-            )
+            return AddFactResponse(success=True, node_id=fact_id, message="Fact added to knowledge graph")
         else:
-            return AddFactResponse(
-                success=False, node_id="", message="Failed to add fact"
-            )
+            return AddFactResponse(success=False, node_id="", message="Failed to add fact")
 
     except Exception as e:
         return AddFactResponse(success=False, node_id="", message=f"Error: {str(e)}")

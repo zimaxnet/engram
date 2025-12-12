@@ -83,9 +83,7 @@ class AgentRouter:
             raise ValueError(f"Unknown agent: {agent_id}")
         return self.agents[agent_id]
 
-    def suggest_agent(
-        self, query: str, current_agent: Optional[AgentId] = None
-    ) -> AgentId:
+    def suggest_agent(self, query: str, current_agent: Optional[AgentId] = None) -> AgentId:
         """
         Suggest the best agent for a query based on content analysis.
 

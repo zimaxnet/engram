@@ -139,9 +139,7 @@ PERMISSION_MATRIX: dict[Role, dict[Resource, set[Action]]] = {
 class PermissionDenied(HTTPException):
     """Exception raised when permission is denied"""
 
-    def __init__(
-        self, resource: Resource, action: Action, detail: Optional[str] = None
-    ):
+    def __init__(self, resource: Resource, action: Action, detail: Optional[str] = None):
         message = detail or f"Permission denied: {action.value} on {resource.value}"
         super().__init__(status_code=status.HTTP_403_FORBIDDEN, detail=message)
 
@@ -169,9 +167,7 @@ class RBACService:
     def __init__(self):
         self._audit_log: list[AuditLogEntry] = []
 
-    def has_permission(
-        self, user: SecurityContext, resource: Resource, action: Action
-    ) -> bool:
+    def has_permission(self, user: SecurityContext, resource: Resource, action: Action) -> bool:
         """
         Check if user has permission for action on resource.
 
@@ -242,13 +238,9 @@ class RBACService:
         self._audit_log.append(entry)
 
         if not success:
-            logger.warning(
-                f"Access denied: {user.user_id} attempted {action.value} on {resource.value}"
-            )
+            logger.warning(f"Access denied: {user.user_id} attempted {action.value} on {resource.value}")
         else:
-            logger.debug(
-                f"Access granted: {user.user_id} performed {action.value} on {resource.value}"
-            )
+            logger.debug(f"Access granted: {user.user_id} performed {action.value} on {resource.value}")
 
     def get_audit_log(
         self,

@@ -93,9 +93,7 @@ async def get_system_settings(user: SecurityContext = Depends(get_current_user))
 
 
 @router.put("/settings", response_model=SystemSettings)
-async def update_system_settings(
-    settings: SystemSettings, user: SecurityContext = Depends(get_current_user)
-):
+async def update_system_settings(settings: SystemSettings, user: SecurityContext = Depends(get_current_user)):
     """Update system configuration."""
     global _current_settings
     _current_settings = settings

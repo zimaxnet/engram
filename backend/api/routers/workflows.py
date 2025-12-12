@@ -129,9 +129,7 @@ class WorkflowDetail(BaseModel):
 
 
 @router.get("/{workflow_id}", response_model=WorkflowDetail)
-async def get_workflow(
-    workflow_id: str, user: SecurityContext = Depends(get_current_user)
-):
+async def get_workflow(workflow_id: str, user: SecurityContext = Depends(get_current_user)):
     """
     Get details for a specific workflow.
 
@@ -145,21 +143,9 @@ async def get_workflow(
         return WorkflowDetail(
             workflow_id=workflow_id,
             workflow_type="AgentWorkflow",
-            status=(
-                WorkflowStatus.RUNNING
-                if status["status"] == "RUNNING"
-                else WorkflowStatus.COMPLETED
-            ),
-            started_at=(
-                datetime.fromisoformat(status["start_time"])
-                if status.get("start_time")
-                else None
-            ),
-            completed_at=(
-                datetime.fromisoformat(status["close_time"])
-                if status.get("close_time")
-                else None
-            ),
+            status=(WorkflowStatus.RUNNING if status["status"] == "RUNNING" else WorkflowStatus.COMPLETED),
+            started_at=(datetime.fromisoformat(status["start_time"]) if status.get("start_time") else None),
+            completed_at=(datetime.fromisoformat(status["close_time"]) if status.get("close_time") else None),
             task_summary="Agent execution workflow",
             steps=[],
         )
@@ -286,9 +272,7 @@ async def switch_agent_in_conversation(
 
 
 @router.get("/conversation/{workflow_id}/history")
-async def get_conversation_history_endpoint(
-    workflow_id: str, user: SecurityContext = Depends(get_current_user)
-):
+async def get_conversation_history_endpoint(workflow_id: str, user: SecurityContext = Depends(get_current_user)):
     """
     Get the conversation history from a running workflow.
     """
@@ -301,15 +285,11 @@ async def get_conversation_history_endpoint(
 
     except Exception as e:
         logger.error(f"Failed to get history: {e}")
-        raise HTTPException(
-            status_code=500, detail="Failed to get conversation history"
-        )
+        raise HTTPException(status_code=500, detail="Failed to get conversation history")
 
 
 @router.post("/conversation/{workflow_id}/end")
-async def end_conversation_endpoint(
-    workflow_id: str, user: SecurityContext = Depends(get_current_user)
-):
+async def end_conversation_endpoint(workflow_id: str, user: SecurityContext = Depends(get_current_user)):
     """
     End an ongoing conversation and get the summary.
     """
@@ -359,9 +339,7 @@ async def send_signal(
                 feedback=request.payload.get("feedback"),
                 approver_id=user.user_id,
             )
-            return SignalResponse(
-                success=True, message=f"Approval signal sent to workflow {workflow_id}"
-            )
+            return SignalResponse(success=True, message=f"Approval signal sent to workflow {workflow_id}")
 
         # Generic signal handling - would need workflow-specific implementation
         await get_temporal_client()
@@ -378,9 +356,7 @@ async def send_signal(
 
 
 @router.post("/{workflow_id}/cancel", response_model=SignalResponse)
-async def cancel_workflow(
-    workflow_id: str, user: SecurityContext = Depends(get_current_user)
-):
+async def cancel_workflow(workflow_id: str, user: SecurityContext = Depends(get_current_user)):
     """
     Cancel a running workflow.
 
@@ -394,9 +370,7 @@ async def cancel_workflow(
 
         await handle.cancel()
 
-        return SignalResponse(
-            success=True, message=f"Workflow {workflow_id} cancellation requested"
-        )
+        return SignalResponse(success=True, message=f"Workflow {workflow_id} cancellation requested")
 
     except Exception as e:
         logger.error(f"Failed to cancel workflow: {e}")
@@ -415,9 +389,7 @@ class ApprovalResponse(BaseModel):
 
 
 @router.post("/approval/request", response_model=ApprovalResponse)
-async def request_approval_endpoint(
-    request: ApprovalRequest, user: SecurityContext = Depends(get_current_user)
-):
+async def request_approval_endpoint(request: ApprovalRequest, user: SecurityContext = Depends(get_current_user)):
     """
     Start an approval workflow.
 
@@ -433,9 +405,7 @@ async def request_approval_endpoint(
             timeout_hours=request.timeout_hours,
         )
 
-        return ApprovalResponse(
-            workflow_id=workflow_id, message="Approval request sent"
-        )
+        return ApprovalResponse(workflow_id=workflow_id, message="Approval request sent")
 
     except Exception as e:
         logger.error(f"Failed to request approval: {e}")

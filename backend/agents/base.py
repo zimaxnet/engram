@@ -42,10 +42,7 @@ class FoundryChatClient:
         timeout: float = 60.0,
     ) -> None:
         base = endpoint.rstrip("/")
-        self.url = (
-            f"{base}/openai/deployments/{deployment}/chat/completions"
-            f"?api-version={api_version}"
-        )
+        self.url = f"{base}/openai/deployments/{deployment}/chat/completions?api-version={api_version}"
         self.headers = {"api-key": api_key, "Content-Type": "application/json"}
         self.temperature = temperature
         self.max_tokens = max_tokens
@@ -70,9 +67,7 @@ class FoundryChatClient:
         }
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:
-            response = await client.post(
-                self.url, headers=self.headers, json=payload
-            )
+            response = await client.post(self.url, headers=self.headers, json=payload)
             response.raise_for_status()
             data = response.json()
 
@@ -108,9 +103,7 @@ class BaseAgent(ABC):
             if self.settings.azure_ai_project_name:
                 endpoint = f"{endpoint.rstrip('/')}/api/projects/{self.settings.azure_ai_project_name}"
             if not endpoint:
-                raise ValueError(
-                    "Azure AI endpoint not configured. Set AZURE_AI_ENDPOINT."
-                )
+                raise ValueError("Azure AI endpoint not configured. Set AZURE_AI_ENDPOINT.")
 
             if not self.settings.azure_ai_key:
                 raise ValueError("Azure AI API key not configured")
@@ -228,9 +221,7 @@ class BaseAgent(ABC):
         parts = [self.system_prompt, "", "---", "", context.to_llm_context()]
         return "\n".join(parts)
 
-    async def run(
-        self, user_message: str, context: EnterpriseContext
-    ) -> tuple[str, EnterpriseContext]:
+    async def run(self, user_message: str, context: EnterpriseContext) -> tuple[str, EnterpriseContext]:
         """
         Execute the agent with a user message.
 
@@ -242,9 +233,7 @@ class BaseAgent(ABC):
             Tuple of (response_text, updated_context)
         """
         # Add user message to context
-        user_turn = Turn(
-            role=MessageRole.USER, content=user_message, timestamp=datetime.utcnow()
-        )
+        user_turn = Turn(role=MessageRole.USER, content=user_message, timestamp=datetime.utcnow())
         context.episodic.add_turn(user_turn)
 
         # Build initial state
@@ -261,9 +250,7 @@ class BaseAgent(ABC):
         final_state = await self.graph.ainvoke(initial_state)
 
         # Extract response
-        response = final_state.get(
-            "final_response", "I apologize, but I couldn't generate a response."
-        )
+        response = final_state.get("final_response", "I apologize, but I couldn't generate a response.")
 
         # Add assistant turn to context
         assistant_turn = Turn(
@@ -281,6 +268,4 @@ class BaseAgent(ABC):
         return response, context
 
     def __repr__(self) -> str:
-        return (
-            f"<{self.__class__.__name__}(id={self.agent_id}, name={self.agent_name})>"
-        )
+        return f"<{self.__class__.__name__}(id={self.agent_id}, name={self.agent_name})>"

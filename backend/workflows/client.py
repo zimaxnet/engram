@@ -103,9 +103,7 @@ async def execute_agent_turn(
     return result
 
 
-async def start_conversation(
-    user_id: str, tenant_id: str, session_id: str, initial_agent: str = "elena"
-) -> str:
+async def start_conversation(user_id: str, tenant_id: str, session_id: str, initial_agent: str = "elena") -> str:
     """
     Start a long-running conversation workflow.
 
@@ -239,10 +237,6 @@ async def get_workflow_status(workflow_id: str) -> dict:
     return {
         "workflow_id": workflow_id,
         "status": str(description.status),
-        "start_time": (
-            description.start_time.isoformat() if description.start_time else None
-        ),
-        "close_time": (
-            description.close_time.isoformat() if description.close_time else None
-        ),
+        "start_time": (description.start_time.isoformat() if description.start_time else None),
+        "close_time": (description.close_time.isoformat() if description.close_time else None),
     }

@@ -76,15 +76,9 @@ class DocumentProcessor:
                         "metadata": {
                             "filename": filename,
                             "page_number": (
-                                chunk.metadata.page_number
-                                if hasattr(chunk.metadata, "page_number")
-                                else None
+                                chunk.metadata.page_number if hasattr(chunk.metadata, "page_number") else None
                             ),
-                            "filetype": (
-                                chunk.metadata.filetype
-                                if hasattr(chunk.metadata, "filetype")
-                                else None
-                            ),
+                            "filetype": (chunk.metadata.filetype if hasattr(chunk.metadata, "filetype") else None),
                             "source": "unstructured_etl",
                         },
                     }
