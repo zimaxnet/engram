@@ -19,16 +19,9 @@ param temporalHost string
 @description('Zep API URL.')
 param zepApiUrl string
 
-
-
 @description('PostgreSQL password.')
 @secure()
 param postgresPassword string
-
-// param openAiKey removed
-
-@description('Azure OpenAI endpoint.')
-param openAiEndpoint string
 
 @description('Azure AI Services unified endpoint (base URL).')
 param azureAiEndpoint string = ''
@@ -39,47 +32,6 @@ param azureAiProjectName string = ''
 @description('Azure AI Services API key for Foundry.')
 @secure()
 param azureAiKey string = ''
-
-@description('Key Vault URI.')
-param keyVaultUri string
-
-@description('User-assigned identity resource ID used for Key Vault access.')
-param identityResourceId string
-
-@description('Registry username.')
-param registryUsername string
-
-@description('Registry password.')
-@description('Location for all resources.')
-param location string = resourceGroup().location
-
-@description('Name of the Container Apps Environment.')
-param acaEnvId string
-
-@description('Name of the worker container app.')
-param appName string = 'engram-worker'
-
-@description('Container image for the worker.')
-param containerImage string
-
-@description('PostgreSQL FQDN.')
-param postgresFqdn string
-
-@description('Temporal host.')
-param temporalHost string
-
-@description('Zep API URL.')
-param zepApiUrl string
-
-@description('PostgreSQL password.')
-@secure()
-param postgresPassword string
-
-@description('Azure AI Services unified endpoint (base URL).')
-param azureAiEndpoint string = ''
-
-@description('Azure AI Services project name.')
-param azureAiProjectName string = ''
 
 @description('Key Vault URI.')
 param keyVaultUri string
