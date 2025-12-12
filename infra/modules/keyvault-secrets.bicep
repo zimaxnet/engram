@@ -51,12 +51,12 @@ resource postgresSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!em
   }
 }
 
-// Zep API Key
-resource zepSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(zepApiKey)) {
+// Zep API Key (ensure secret exists even if value not provided)
+resource zepSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVault
   name: 'zep-api-key'
   properties: {
-    value: zepApiKey
+    value: empty(zepApiKey) ? 'placeholder-zep-key' : zepApiKey
     contentType: 'text/plain'
     attributes: {
       enabled: true
