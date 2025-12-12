@@ -297,7 +297,8 @@ module swaModule 'static-webapp.bicep' = {
   name: 'staticWebApp'
   params: {
     location: location
-    swaName: '${envName}-web'
+    // Use the default SWA name so certificates remain bound to the intended environment
+    swaName: 'engram-web'
     enableCustomDomain: false
   }
 }
