@@ -10,10 +10,10 @@ param tenantId string = subscription().tenantId
 // param adminObjectId string
 
 @description('Enable soft delete for the Key Vault.')
-param enableSoftDelete bool = true
+param enableSoftDelete bool = false
 
 @description('Enable purge protection for the Key Vault.')
-param enablePurgeProtection bool = true
+param enablePurgeProtection bool = false
 
 @description('Tags to apply to all resources.')
 param tags object = {
