@@ -54,12 +54,12 @@ resource zepSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   }
 }
 
-// Azure AI Foundry API Key
-resource azureAiKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(azureAiKey)) {
+// Azure AI Foundry API Key (seed with placeholder if not provided)
+resource azureAiKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVault
   name: 'azure-ai-key'
   properties: {
-    value: azureAiKey
+    value: empty(azureAiKey) ? 'placeholder-azure-ai-key' : azureAiKey
     contentType: 'text/plain'
     attributes: {
       enabled: true
