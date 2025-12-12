@@ -5,8 +5,8 @@ This guide walks you through testing the complete Engram platform locally with a
 ## Prerequisites
 
 1. **Docker & Docker Compose** - For running local services
-2. **Azure OpenAI Account** - For agent functionality
-3. **Azure Speech Services** (Optional) - For voice features
+2. **Azure AI Services (Foundry) key** - For agent functionality
+3. ~~Azure Speech Services~~ - Voice features removed in this build
 4. **Node.js 20+** - For frontend development
 5. **Python 3.11+** - For backend development
 
@@ -19,14 +19,10 @@ This guide walks you through testing the complete Engram platform locally with a
 
 2. Edit `.env` and add your Azure credentials:
    ```env
-   # Required for agent functionality
-   AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
-   AZURE_OPENAI_KEY=your-key-here
-   AZURE_OPENAI_DEPLOYMENT=gpt-4o
-   
-   # Optional for voice features
-   AZURE_SPEECH_KEY=your-key-here
-   AZURE_SPEECH_REGION=eastus
+   # Required for agent functionality (Azure AI Foundry)
+   AZURE_AI_ENDPOINT=https://your-endpoint.services.ai.azure.com
+   AZURE_AI_KEY=your-key-here
+   AZURE_AI_DEPLOYMENT=gpt-4o-mini
    ```
 
 ## Step 2: Start Local Services
@@ -114,18 +110,9 @@ docker-compose logs -f worker
 3. Type a message in the chat
 4. Verify:
    - Message appears in chat
-   - Agent responds (if Azure OpenAI is configured)
+   - Agent responds (if Azure AI key is configured)
    - Metrics update in the right panel
    - No errors in browser console
-
-## Step 8: Test Voice Features (Optional)
-
-If Azure Speech is configured:
-
-1. Click the microphone button in chat
-2. Allow microphone access
-3. Speak a message
-4. Verify transcription and response
 
 ## Troubleshooting
 
@@ -165,15 +152,14 @@ export PYTHONPATH="${PWD}/backend:${PYTHONPATH}"
 2. Check Zep logs: `docker-compose logs zep`
 3. Verify PostgreSQL connection: `docker-compose logs postgres`
 
-### Azure OpenAI errors
+### Azure AI errors
 
 **Error**: `401 Unauthorized` or `Invalid API key`
 
 **Solution**:
-1. Verify `AZURE_OPENAI_KEY` in `.env` is correct
-2. Check `AZURE_OPENAI_ENDPOINT` format (should be `https://your-resource.openai.azure.com`)
-3. Ensure deployment name matches: `AZURE_OPENAI_DEPLOYMENT=gpt-4o`
-4. Verify the deployment exists in Azure Portal
+1. Verify `AZURE_AI_KEY` in `.env` is correct
+2. Check `AZURE_AI_ENDPOINT` format (should be `https://your-endpoint.services.ai.azure.com`)
+3. Ensure deployment name matches: `AZURE_AI_DEPLOYMENT=gpt-4o-mini`
 
 ## Testing Checklist
 
@@ -181,7 +167,7 @@ export PYTHONPATH="${PWD}/backend:${PYTHONPATH}"
 - [ ] Backend API responds to `/health` endpoint
 - [ ] Frontend loads without errors
 - [ ] Chat messages send successfully
-- [ ] Agent responses are received (if Azure OpenAI configured)
+- [ ] Agent responses are received (if Azure AI credentials configured)
 - [ ] Metrics update in Visual Panel
 - [ ] Temporal UI is accessible
 - [ ] Zep health check passes

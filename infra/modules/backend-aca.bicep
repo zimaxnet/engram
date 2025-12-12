@@ -22,24 +22,19 @@ param temporalHost string
 @description('Zep API URL.')
 param zepApiUrl string
 
-
-
 @description('PostgreSQL password.')
 @secure()
 param postgresPassword string
-
-// param openAiKey removed
-
-@description('Azure OpenAI endpoint.')
-param openAiEndpoint string
-
-// param speechKey removed
 
 @description('Azure AI Services unified endpoint (base URL).')
 param azureAiEndpoint string = ''
 
 @description('Azure AI Services project name.')
 param azureAiProjectName string = ''
+
+@description('Azure AI Services API key for Foundry.')
+@secure()
+param azureAiKey string = ''
 
 @description('Key Vault URI.')
 param keyVaultUri string
@@ -119,13 +114,8 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
           identity: identityResourceId
         }
         {
-          name: 'azure-openai-key'
-          keyVaultUrl: '${keyVaultUri}secrets/azure-openai-key'
-          identity: identityResourceId
-        }
-        {
-          name: 'azure-speech-key'
-          keyVaultUrl: '${keyVaultUri}secrets/azure-speech-key'
+          name: 'azure-ai-key'
+          keyVaultUrl: '${keyVaultUri}secrets/azure-ai-key'
           identity: identityResourceId
         }
         {
@@ -196,24 +186,8 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
               secretRef: 'zep-api-key'
             }
             {
-              name: 'AZURE_OPENAI_KEY'
-              secretRef: 'azure-openai-key'
-            }
-            {
-              name: 'AZURE_OPENAI_ENDPOINT'
-              value: openAiEndpoint
-            }
-            {
-              name: 'AZURE_OPENAI_DEPLOYMENT'
-              value: 'gpt-4o'
-            }
-            {
-              name: 'AZURE_SPEECH_KEY'
-              secretRef: 'azure-speech-key'
-            }
-            {
-              name: 'AZURE_SPEECH_REGION'
-              value: location
+              name: 'AZURE_AI_KEY'
+              secretRef: 'azure-ai-key'
             }
             {
               name: 'AZURE_AI_ENDPOINT'
@@ -226,18 +200,6 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'CORS_ORIGINS'
               value: '["https://engram.work", "https://*.azurestaticapps.net", "http://localhost:5173", "*"]'
-            }
-            {
-               name: 'AZURE_VOICELIVE_ENDPOINT'
-               value: openAiEndpoint 
-            }
-            {
-               name: 'AZURE_VOICELIVE_API_KEY'
-               secretRef: 'azure-openai-key'
-            }
-            {
-               name: 'AZURE_VOICELIVE_MODEL'
-               value: 'gpt-4o-realtime-preview'
             }
           ]
           resources: {

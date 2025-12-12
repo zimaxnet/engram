@@ -222,17 +222,9 @@ User Request
 Response to User
 ```
 
-### Voice Interaction Flow
+### Voice Interaction Flow (removed)
 
-![Voice Interaction Flow](/assets/images/voice-interaction-flow.png)
-
-1. **Capture**: Browser captures audio via WebRTC
-2. **Transcribe**: Azure Speech STT converts to text
-3. **Process**: Agent workflow generates response
-4. **Synthesize**: Azure Speech TTS with viseme data
-5. **Animate**: Frontend renders avatar with lip-sync
-
----
+Voice features are disabled in the current build; no Speech or VoiceLive paths are deployed.
 
 ## Security Architecture
 

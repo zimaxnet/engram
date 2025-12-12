@@ -180,25 +180,14 @@ echo ""
 echo "Optional secrets (press Enter to skip):"
 echo ""
 
-# Azure OpenAI Key (optional)
-read -p "Enter Azure OpenAI API key (optional): " OPENAI_KEY
+# Azure AI Foundry Key (optional override)
+read -p "Enter Azure AI API key (optional): " OPENAI_KEY
 if [ -n "$OPENAI_KEY" ]; then
     if [ "$USE_GH_CLI" = true ]; then
-        echo "$OPENAI_KEY" | gh secret set AZURE_OPENAI_KEY
-        echo -e "${GREEN}✓ Set AZURE_OPENAI_KEY${NC}"
+        echo "$OPENAI_KEY" | gh secret set AZURE_AI_KEY
+        echo -e "${GREEN}✓ Set AZURE_AI_KEY${NC}"
     else
-        echo -e "${YELLOW}→ AZURE_OPENAI_KEY: (set manually)${NC}"
-    fi
-fi
-
-# Azure Speech Key (optional)
-read -p "Enter Azure Speech API key (optional): " SPEECH_KEY
-if [ -n "$SPEECH_KEY" ]; then
-    if [ "$USE_GH_CLI" = true ]; then
-        echo "$SPEECH_KEY" | gh secret set AZURE_SPEECH_KEY
-        echo -e "${GREEN}✓ Set AZURE_SPEECH_KEY${NC}"
-    else
-        echo -e "${YELLOW}→ AZURE_SPEECH_KEY: (set manually)${NC}"
+        echo -e "${YELLOW}→ AZURE_AI_KEY: (set manually)${NC}"
     fi
 fi
 

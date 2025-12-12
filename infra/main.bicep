@@ -4,8 +4,6 @@ param location string = resourceGroup().location
 @description('Name of the environment.')
 param envName string = 'engram-env'
 
-@description('Deploy Azure OpenAI (set false to skip).')
-param enableOpenAi bool = false
 
 @description('Postgres Admin Password')
 @secure()
@@ -29,6 +27,10 @@ param azureAiEndpoint string = ''
 
 @description('Azure AI Services project name.')
 param azureAiProjectName string = ''
+
+@description('Azure AI Services API key for Foundry.')
+@secure()
+param azureAiKey string = ''
 
 @description('Registry username.')
 param registryUsername string
@@ -155,25 +157,13 @@ module keyVaultModule 'modules/keyvault.bicep' = {
   }
 }
 
-// Seed required secrets (Zep API key; OpenAI/Speech keys already set by their modules)
+// Seed required secrets (Zep API key)
 module keyVaultSecrets 'modules/keyvault-secrets.bicep' = {
   name: 'keyVaultSecrets'
   params: {
     keyVaultName: keyVaultModule.outputs.keyVaultName
     zepApiKey: zepApiKey
-  }
-}
-
-// =============================================================================
-// Azure OpenAI (optional)
-// =============================================================================
-module openAiModule 'modules/openai.bicep' = if (enableOpenAi) {
-  name: 'openAi'
-  params: {
-    location: location
-    openAiName: '${envName}-openai-v2'
-    keyVaultName: keyVaultModule.outputs.keyVaultName
-    tags: tags
+    azureAiKey: azureAiKey
   }
 }
 
@@ -198,19 +188,6 @@ module workerKvRole 'modules/role-assignment.bicep' = {
     principalId: workerIdentity.properties.principalId
     roleDefinitionId: keyVaultSecretsUserRole
     nameSeed: 'worker-kv'
-  }
-}
-
-// =============================================================================
-// Azure Speech Services
-// =============================================================================
-module speechModule 'modules/speech.bicep' = {
-  name: 'speech'
-  params: {
-    location: location
-    speechName: '${envName}-speech-v2'
-    keyVaultName: keyVaultModule.outputs.keyVaultName
-    tags: tags
   }
 }
 
@@ -255,9 +232,8 @@ module backendModule 'modules/backend-aca.bicep' = {
 
     zepApiUrl: zepApiUrl
 
-    // params removed
-    openAiEndpoint: enableOpenAi ? openAiModule.outputs.openAiEndpoint : ''
     azureAiEndpoint: azureAiEndpoint
+    azureAiKey: azureAiKey
     azureAiProjectName: azureAiProjectName
     registryUsername: registryUsername
     registryPassword: registryPassword
@@ -282,9 +258,8 @@ module workerModule 'modules/worker-aca.bicep' = {
 
     zepApiUrl: zepApiUrl
 
-    // params removed
-    openAiEndpoint: enableOpenAi ? openAiModule.outputs.openAiEndpoint : ''
     azureAiEndpoint: azureAiEndpoint
+    azureAiKey: azureAiKey
     azureAiProjectName: azureAiProjectName
     registryUsername: registryUsername
     registryPassword: registryPassword
@@ -330,4 +305,3 @@ output postgresFqdn string = postgres.properties.fullyQualifiedDomainName
 output keyVaultUri string = keyVaultModule.outputs.keyVaultUri
 output backendUrl string = backendModule.outputs.backendUrl
 output swaDefaultHostname string = swaModule.outputs.swaDefaultHostname
-output openAiEndpoint string = enableOpenAi ? openAiModule.outputs.openAiEndpoint : ''

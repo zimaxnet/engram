@@ -43,7 +43,7 @@ cd engram
 
 # Create environment file
 cp .env.example .env
-# Edit .env with your Azure OpenAI credentials
+# Edit .env with your Azure AI Foundry credentials
 
 # Start all services
 docker-compose up -d
@@ -72,14 +72,10 @@ open http://localhost:5173
 ENVIRONMENT=development
 DEBUG=true
 
-# Azure OpenAI (required for agent functionality)
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-AZURE_OPENAI_KEY=your-key-here
-AZURE_OPENAI_DEPLOYMENT=gpt-4o
-
-# Azure Speech (optional, for voice)
-AZURE_SPEECH_KEY=your-speech-key
-AZURE_SPEECH_REGION=eastus
+# Azure AI Foundry (required for agent functionality)
+AZURE_AI_ENDPOINT=https://your-endpoint.services.ai.azure.com/
+AZURE_AI_KEY=your-key-here
+AZURE_AI_DEPLOYMENT=gpt-4o-mini
 
 # Database (defaults work for docker-compose)
 POSTGRES_HOST=localhost
@@ -125,13 +121,7 @@ KV_NAME=$(az deployment group show \
 
 # Set required secrets
 az keyvault secret set --vault-name $KV_NAME \
-  --name "azure-openai-key" --value "your-openai-key"
-
-az keyvault secret set --vault-name $KV_NAME \
-  --name "azure-openai-endpoint" --value "https://your-resource.openai.azure.com/"
-
-az keyvault secret set --vault-name $KV_NAME \
-  --name "azure-speech-key" --value "your-speech-key"
+  --name "azure-ai-key" --value "your-foundry-key"
 
 az keyvault secret set --vault-name $KV_NAME \
   --name "azure-client-id" --value "your-entra-client-id"
@@ -297,10 +287,9 @@ Access Temporal UI at your deployed URL to verify:
 | Issue | Cause | Solution |
 |-------|-------|----------|
 | 401 Unauthorized | Invalid/expired token | Check Entra ID config |
-| 500 on agent calls | Missing OpenAI key | Verify Key Vault secrets |
+| 500 on agent calls | Missing AZURE_AI_KEY | Verify Key Vault secrets |
 | Workflows not running | Worker not started | Check worker logs, task queue |
 | Memory errors | Zep connection failed | Verify Zep URL and health |
-| Voice not working | Speech key invalid | Check Azure Speech config |
 
 ### Viewing Logs
 

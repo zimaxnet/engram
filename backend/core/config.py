@@ -57,49 +57,15 @@ class Settings(BaseSettings):
     temporal_task_queue: str = Field("engram-agents", alias="TEMPORAL_TASK_QUEUE")
 
     # ==========================================================================
-    # Azure OpenAI / Unified AI Services
+    # Azure AI Foundry (key-auth)
     # ==========================================================================
-    azure_openai_endpoint: Optional[str] = Field(None, alias="AZURE_OPENAI_ENDPOINT")
-    azure_openai_key: Optional[str] = Field(None, alias="AZURE_OPENAI_KEY")
-    azure_openai_deployment: str = Field("gpt-4o", alias="AZURE_OPENAI_DEPLOYMENT")
-    azure_openai_api_version: str = Field(
-        "2024-02-15-preview", alias="AZURE_OPENAI_API_VERSION"
-    )
-
-    # Unified Azure AI Services (project-based endpoint)
     azure_ai_endpoint: Optional[str] = Field(None, alias="AZURE_AI_ENDPOINT")
     azure_ai_project_name: Optional[str] = Field(None, alias="AZURE_AI_PROJECT_NAME")
-
-    # VoiceLive specific endpoint (can override azure_ai_endpoint)
-    azure_voicelive_endpoint: Optional[str] = Field(
-        None, alias="AZURE_VOICELIVE_ENDPOINT"
+    azure_ai_key: Optional[str] = Field(None, alias="AZURE_AI_KEY")
+    azure_ai_deployment: str = Field("gpt-4o-mini", alias="AZURE_AI_DEPLOYMENT")
+    azure_ai_api_version: str = Field(
+        "2024-10-01-preview", alias="AZURE_AI_API_VERSION"
     )
-    azure_voicelive_project_name: Optional[str] = Field(
-        None, alias="AZURE_VOICELIVE_PROJECT_NAME"
-    )
-    azure_voicelive_api_key: Optional[str] = Field(
-        None, alias="AZURE_VOICELIVE_API_KEY"
-    )
-
-    @property
-    def effective_openai_endpoint(self) -> Optional[str]:
-        """
-        Get the effective OpenAI endpoint, supporting both traditional and unified formats.
-
-        If AZURE_AI_ENDPOINT and AZURE_AI_PROJECT_NAME are set, constructs unified endpoint.
-        Otherwise, falls back to AZURE_OPENAI_ENDPOINT.
-        """
-        if self.azure_ai_endpoint and self.azure_ai_project_name:
-            # Unified Azure AI Services format
-            base = self.azure_ai_endpoint.rstrip("/")
-            return f"{base}/api/projects/{self.azure_ai_project_name}"
-        return self.azure_openai_endpoint
-
-    # ==========================================================================
-    # Azure Speech Services
-    # ==========================================================================
-    azure_speech_key: Optional[str] = Field(None, alias="AZURE_SPEECH_KEY")
-    azure_speech_region: str = Field("eastus", alias="AZURE_SPEECH_REGION")
 
     # Elena voice configuration
     elena_voice_name: str = Field("en-US-JennyNeural", alias="ELENA_VOICE_NAME")
@@ -194,11 +160,9 @@ class KeyVaultSettings:
         secret_mappings = {
             "postgres-connection-string": "postgres_dsn",
             "zep-api-key": "zep_api_key",
-            "azure-openai-key": "azure_openai_key",
-            "azure-openai-endpoint": "azure_openai_endpoint",
+            "azure-ai-key": "azure_ai_key",
             "azure-ai-endpoint": "azure_ai_endpoint",
             "azure-ai-project-name": "azure_ai_project_name",
-            "azure-speech-key": "azure_speech_key",
             "azure-client-secret": "azure_client_secret",
             "azure-client-id": "azure_client_id",
             "azure-tenant-id": "azure_tenant_id",

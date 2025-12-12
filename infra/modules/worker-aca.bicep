@@ -36,6 +36,51 @@ param azureAiEndpoint string = ''
 @description('Azure AI Services project name.')
 param azureAiProjectName string = ''
 
+@description('Azure AI Services API key for Foundry.')
+@secure()
+param azureAiKey string = ''
+
+@description('Key Vault URI.')
+param keyVaultUri string
+
+@description('User-assigned identity resource ID used for Key Vault access.')
+param identityResourceId string
+
+@description('Registry username.')
+param registryUsername string
+
+@description('Registry password.')
+@description('Location for all resources.')
+param location string = resourceGroup().location
+
+@description('Name of the Container Apps Environment.')
+param acaEnvId string
+
+@description('Name of the worker container app.')
+param appName string = 'engram-worker'
+
+@description('Container image for the worker.')
+param containerImage string
+
+@description('PostgreSQL FQDN.')
+param postgresFqdn string
+
+@description('Temporal host.')
+param temporalHost string
+
+@description('Zep API URL.')
+param zepApiUrl string
+
+@description('PostgreSQL password.')
+@secure()
+param postgresPassword string
+
+@description('Azure AI Services unified endpoint (base URL).')
+param azureAiEndpoint string = ''
+
+@description('Azure AI Services project name.')
+param azureAiProjectName string = ''
+
 @description('Key Vault URI.')
 param keyVaultUri string
 
@@ -81,13 +126,13 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
           value: postgresPassword
         }
         {
-          name: 'azure-openai-key'
-          keyVaultUrl: '${keyVaultUri}secrets/azure-openai-key'
+          name: 'zep-api-key'
+          keyVaultUrl: '${keyVaultUri}secrets/zep-api-key'
           identity: identityResourceId
         }
         {
-          name: 'zep-api-key'
-          keyVaultUrl: '${keyVaultUri}secrets/zep-api-key'
+          name: 'azure-ai-key'
+          keyVaultUrl: '${keyVaultUri}secrets/azure-ai-key'
           identity: identityResourceId
         }
         {
@@ -158,16 +203,8 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
               secretRef: 'zep-api-key'
             }
             {
-              name: 'AZURE_OPENAI_KEY'
-              secretRef: 'azure-openai-key'
-            }
-            {
-              name: 'AZURE_OPENAI_ENDPOINT'
-              value: openAiEndpoint
-            }
-            {
-              name: 'AZURE_OPENAI_DEPLOYMENT'
-              value: 'gpt-4o'
+              name: 'AZURE_AI_KEY'
+              secretRef: 'azure-ai-key'
             }
             {
               name: 'AZURE_AI_ENDPOINT'

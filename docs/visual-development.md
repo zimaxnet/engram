@@ -79,70 +79,10 @@ This guide documents the visual assets for the Engram platform and provides JSON
       "color": "#6b7280"
     }
   ],
-  "connections": [
-    {"from": "Frontend", "to": "API Gateway", "type": "https"},
-    {"from": "API Gateway", "to": "Brain Layer", "type": "internal"},
-    {"from": "Brain Layer", "to": "Spine Layer", "type": "workflow"},
-    {"from": "Spine Layer", "to": "Memory Layer", "type": "activity"},
-    {"from": "All", "to": "Infrastructure", "type": "deployment"}
-  ],
-  "annotations": [
-    {"text": "Context Engineering", "position": "center", "style": "highlight"},
-    {"text": "4-Layer Context Schema", "position": "below-brain", "style": "callout"}
-  ]
-}
-```
+  ### 2. Voice Interaction Flow (removed)
 
----
+  Voice diagrams are omitted because voice features are disabled in this build.
 
-### 2. Voice Interaction Flow
-
-![Voice Interaction Flow](/assets/images/voice-interaction-flow.png)
-
-**Description**: Shows the complete voice interaction pipeline from user speech to avatar response with lip-sync.
-
-#### JSON Prompt
-
-```json
-{
-  "diagram_type": "flow_diagram",
-  "title": "Voice Interaction Pipeline",
-  "style": {
-    "aesthetic": "modern_tech_dark_theme",
-    "flow_direction": "left_to_right",
-    "color_scheme": {
-      "background": "#0a0e1a",
-      "flow_lines": "#00d4ff",
-      "components": "#1a1f35"
-    }
-  },
-  "stages": [
-    {
-      "name": "User Input",
-      "icon": "microphone",
-      "description": "Voice capture",
-      "color": "#10b981"
-    },
-    {
-      "name": "Speech-to-Text",
-      "icon": "waveform_to_text",
-      "description": "Azure Speech STT",
-      "color": "#3b82f6"
-    },
-    {
-      "name": "Agent Processing",
-      "icon": "brain_cog",
-      "description": "LangGraph reasoning",
-      "color": "#00d4ff"
-    },
-    {
-      "name": "Text-to-Speech",
-      "icon": "text_to_waveform",
-      "description": "Azure Speech TTS + Visemes",
-      "color": "#a855f7"
-    },
-    {
-      "name": "Avatar Render",
       "icon": "avatar_speaking",
       "description": "Lip-sync animation",
       "color": "#f59e0b"

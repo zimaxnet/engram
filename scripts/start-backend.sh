@@ -39,17 +39,17 @@ if [ -f "$PROJECT_ROOT/.env" ]; then
 fi
 
 # Set default Azure variables if not set
-if [ -z "$AZURE_AI_ENDPOINT" ] && [ -z "$AZURE_VOICELIVE_ENDPOINT" ]; then
+if [ -z "$AZURE_AI_ENDPOINT" ]; then
     export AZURE_AI_ENDPOINT="${AZURE_AI_ENDPOINT:-https://zimax.services.ai.azure.com}"
 fi
-if [ -z "$AZURE_AI_PROJECT_NAME" ] && [ -z "$AZURE_VOICELIVE_PROJECT_NAME" ]; then
+if [ -z "$AZURE_AI_PROJECT_NAME" ]; then
     export AZURE_AI_PROJECT_NAME="${AZURE_AI_PROJECT_NAME:-zimax}"
 fi
-if [ -z "$AZURE_OPENAI_KEY" ]; then
-    echo "⚠️  AZURE_OPENAI_KEY not set"
+if [ -z "$AZURE_AI_KEY" ]; then
+    echo "⚠️  AZURE_AI_KEY not set"
     echo ""
     echo "Set it with:"
-    echo "  export AZURE_OPENAI_KEY=\"your-key-here\""
+    echo "  export AZURE_AI_KEY=\"your-key-here\""
     echo "  Or add it to .env file"
     echo ""
     read -p "Continue anyway? (y/n): " CONTINUE

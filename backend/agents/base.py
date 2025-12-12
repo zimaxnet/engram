@@ -9,8 +9,8 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Literal, Optional, TypedDict
 
-from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
-from langchain_openai import AzureChatOpenAI
+import httpx
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langgraph.graph import END, StateGraph
 
 from backend.core import EnterpriseContext, MessageRole, Turn, get_settings
@@ -25,6 +25,61 @@ class AgentState(TypedDict):
     should_continue: bool
     tool_results: list[dict]
     final_response: Optional[str]
+
+
+class FoundryChatClient:
+    """Minimal async chat client for Azure AI Foundry (key auth)."""
+
+    def __init__(
+        self,
+        *,
+        endpoint: str,
+        api_key: str,
+        deployment: str,
+        api_version: str,
+        temperature: float = 0.7,
+        max_tokens: int = 4096,
+        timeout: float = 60.0,
+    ) -> None:
+        base = endpoint.rstrip("/")
+        self.url = (
+            f"{base}/openai/deployments/{deployment}/chat/completions"
+            f"?api-version={api_version}"
+        )
+        self.headers = {"api-key": api_key, "Content-Type": "application/json"}
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+        self.timeout = timeout
+
+    @staticmethod
+    def _format_message(message: BaseMessage) -> dict:
+        role_map = {
+            "system": "system",
+            "human": "user",
+            "ai": "assistant",
+            "assistant": "assistant",
+        }
+        role = role_map.get(message.type, "user")
+        return {"role": role, "content": message.content}
+
+    async def ainvoke(self, messages: list[BaseMessage]) -> AIMessage:
+        payload = {
+            "messages": [self._format_message(m) for m in messages],
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
+        }
+
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            response = await client.post(
+                self.url, headers=self.headers, json=payload
+            )
+            response.raise_for_status()
+            data = response.json()
+
+        choice = data.get("choices", [{}])[0]
+        msg = choice.get("message", {})
+        content = msg.get("content", "")
+        return AIMessage(content=content or "")
 
 
 class BaseAgent(ABC):
@@ -42,38 +97,31 @@ class BaseAgent(ABC):
 
     def __init__(self):
         self.settings = get_settings()
-        self._llm: Optional[AzureChatOpenAI] = None
+        self._llm: Optional[FoundryChatClient] = None
         self._graph: Optional[StateGraph] = None
 
     @property
-    def llm(self) -> AzureChatOpenAI:
-        """Lazy-load the LLM client with support for unified Azure AI Services"""
+    def llm(self) -> FoundryChatClient:
+        """Lazy-load the Azure AI Foundry client."""
         if self._llm is None:
-            # Use effective endpoint (supports both traditional and unified formats)
-            endpoint = self.settings.effective_openai_endpoint
-
+            endpoint = self.settings.azure_ai_endpoint
+            if self.settings.azure_ai_project_name:
+                endpoint = f"{endpoint.rstrip('/')}/api/projects/{self.settings.azure_ai_project_name}"
             if not endpoint:
                 raise ValueError(
-                    "Azure OpenAI endpoint not configured. "
-                    "Set AZURE_OPENAI_ENDPOINT or AZURE_AI_ENDPOINT + AZURE_AI_PROJECT_NAME"
+                    "Azure AI endpoint not configured. Set AZURE_AI_ENDPOINT."
                 )
 
-            if not self.settings.azure_openai_key:
-                raise ValueError("Azure OpenAI API key not configured")
+            if not self.settings.azure_ai_key:
+                raise ValueError("Azure AI API key not configured")
 
-            # For unified Azure AI Services, we may need to adjust the endpoint format
-            # LangChain's AzureChatOpenAI expects the base endpoint
-            # Unified format: https://{resource}.services.ai.azure.com/api/projects/{project}
-            # We'll use the full path for unified endpoints
-            self._llm = AzureChatOpenAI(
-                azure_endpoint=endpoint,
-                api_key=self.settings.azure_openai_key,
-                api_version=self.settings.azure_openai_api_version,
-                deployment_name=self.settings.azure_openai_deployment,
+            self._llm = FoundryChatClient(
+                endpoint=endpoint,
+                api_key=self.settings.azure_ai_key,
+                deployment=self.settings.azure_ai_deployment,
+                api_version=self.settings.azure_ai_api_version,
                 temperature=0.7,
                 max_tokens=4096,
-                # For unified endpoints, we may need to set additional headers
-                # The SDK should handle this automatically, but we can add custom headers if needed
             )
         return self._llm
 

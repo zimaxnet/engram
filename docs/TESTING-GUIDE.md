@@ -23,31 +23,23 @@
 - [ ] Session management
 - [ ] Agent-specific responses
 
-### 4. Voice API 🎤
-- [ ] Speech-to-Text (transcribe)
-- [ ] Text-to-Speech (synthesize)
-- [ ] Voice WebSocket connection
-- [ ] Real-time transcription
-- [ ] Voice configuration
-
-### 5. Memory API 🧠
+### 4. Memory API 🧠
 - [ ] Search memory
 - [ ] List episodes
 - [ ] Add facts
 
-### 6. Workflows API ⚡
+### 5. Workflows API ⚡
 - [ ] List workflows
 - [ ] Get workflow details
 - [ ] Start conversation
 - [ ] Send workflow signal
 - [ ] Workflow history
 
-### 7. Frontend UI 🎨
+### 6. Frontend UI 🎨
 - [ ] Page loads correctly
 - [ ] Agent selection (Elena/Marcus)
 - [ ] Chat panel functionality
 - [ ] Visual panel metrics
-- [ ] Voice controls
 - [ ] Tree navigation
 
 ---

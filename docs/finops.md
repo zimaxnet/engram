@@ -40,13 +40,12 @@ Engram is designed with **cost-conscious architecture** as a first-class concern
 | Storage Account | Standard | LRS, Hot tier | $1 |
 | Key Vault | Standard | < 10K operations | $0.03/10K ops |
 
-### AI Services
+### AI Services (Foundry)
 
 | Service | Model | Pricing | Notes |
 |---------|-------|---------|-------|
-| Azure OpenAI | gpt-4o | $5/$15 per 1M tokens | Input/Output |
-| Azure OpenAI | gpt-4o-mini | $0.15/$0.60 per 1M tokens | Cost-efficient |
-| Azure Speech | STT/TTS | $1/hr STT, $4/1M chars TTS | Pay-per-use |
+| Azure AI (Foundry) | gpt-4o | $5/$15 per 1M tokens | Input/Output |
+| Azure AI (Foundry) | gpt-4o-mini | $0.15/$0.60 per 1M tokens | Cost-efficient |
 
 ### Estimated Monthly Costs
 
@@ -169,7 +168,6 @@ MAX_TOKENS_PER_USER_PER_DAY = 100000
 | `tokens_used_total` | Total tokens consumed | > 1M/day |
 | `api_calls_total` | External API calls | > 10K/day |
 | `workflow_executions` | Temporal workflows | > 5K/day |
-| `voice_minutes` | Speech service usage | > 60 min/day |
 
 ### Daily Cost Report
 
@@ -243,12 +241,12 @@ For predictable workloads, consider:
 |---------|-----------|-----------------|-----------------|
 | PostgreSQL | $0.034/hr | $0.022/hr (35% off) | $0.017/hr (50% off) |
 | Container Apps | Pay-per-use | N/A | N/A |
-| Azure OpenAI | Standard | PTU (Provisioned) | PTU |
+| Azure AI (Foundry) | Standard | PTU (Provisioned) | PTU |
 
 ### When to Use Reserved Capacity
 
 - **PostgreSQL**: Always (predictable baseline)
-- **OpenAI PTU**: When > 100K tokens/hour sustained
+- **Azure AI PTU**: When > 100K tokens/hour sustained
 - **Container Apps**: Never (scale-to-zero is better)
 
 ---

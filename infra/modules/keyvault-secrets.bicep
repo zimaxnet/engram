@@ -9,19 +9,9 @@ param postgresConnectionString string = ''
 @secure()
 param zepApiKey string = ''
 
-@description('Azure OpenAI API key.')
+@description('Azure AI Services API key for Foundry.')
 @secure()
-param azureOpenAiKey string = ''
-
-@description('Azure OpenAI endpoint.')
-param azureOpenAiEndpoint string = ''
-
-@description('Azure Speech API key.')
-@secure()
-param azureSpeechKey string = ''
-
-@description('Azure Speech region.')
-param azureSpeechRegion string = ''
+param azureAiKey string = ''
 
 @description('Entra ID client secret.')
 @secure()
@@ -64,51 +54,12 @@ resource zepSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   }
 }
 
-// Azure OpenAI API Key
-resource openAiKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(azureOpenAiKey)) {
+// Azure AI Foundry API Key
+resource azureAiKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(azureAiKey)) {
   parent: keyVault
-  name: 'azure-openai-key'
+  name: 'azure-ai-key'
   properties: {
-    value: azureOpenAiKey
-    contentType: 'text/plain'
-    attributes: {
-      enabled: true
-    }
-  }
-}
-
-// Azure OpenAI Endpoint
-resource openAiEndpointSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(azureOpenAiEndpoint)) {
-  parent: keyVault
-  name: 'azure-openai-endpoint'
-  properties: {
-    value: azureOpenAiEndpoint
-    contentType: 'text/plain'
-    attributes: {
-      enabled: true
-    }
-  }
-}
-
-// Azure Speech API Key
-resource speechKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(azureSpeechKey)) {
-  parent: keyVault
-  name: 'azure-speech-key'
-  properties: {
-    value: azureSpeechKey
-    contentType: 'text/plain'
-    attributes: {
-      enabled: true
-    }
-  }
-}
-
-// Azure Speech Region
-resource speechRegionSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(azureSpeechRegion)) {
-  parent: keyVault
-  name: 'azure-speech-region'
-  properties: {
-    value: azureSpeechRegion
+    value: azureAiKey
     contentType: 'text/plain'
     attributes: {
       enabled: true
@@ -159,10 +110,7 @@ resource entraTenantIdSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if
 output secretNames array = [
   'postgres-connection-string'
   'zep-api-key'
-  'azure-openai-key'
-  'azure-openai-endpoint'
-  'azure-speech-key'
-  'azure-speech-region'
+  'azure-ai-key'
   'entra-client-secret'
   'entra-client-id'
   'entra-tenant-id'

@@ -29,7 +29,7 @@ else
     echo ""
     echo "Or manually:"
     echo "  source venv/bin/activate"
-    echo "  export AZURE_OPENAI_KEY=\"cf23c3ed0f9d420dbd02c1e95a5b5bb3\""
+    echo "  export AZURE_AI_KEY=\"your-key-here\""
     echo "  PYTHONPATH=. uvicorn backend.api.main:app --host 0.0.0.0 --port 8082 --reload --reload-exclude \"venv/**\""
 fi
 

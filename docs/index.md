@@ -105,10 +105,9 @@ open http://localhost:5173
 |-------|------------|
 | Frontend | React 19 + Vite |
 | Backend | FastAPI + Python 3.11 |
-| Agent Framework | LangGraph + Azure OpenAI |
+| Agent Framework | LangGraph + Azure AI (Foundry) |
 | Orchestration | Temporal |
 | Memory | Zep + Graphiti |
-| Voice | Azure VoiceLive |
 | Infrastructure | Azure Container Apps |
 | Authentication | Microsoft Entra ID |
 | Observability | OpenTelemetry + App Insights |

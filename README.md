@@ -11,7 +11,7 @@ Engram is an enterprise-grade AI platform that solves the **Memory Wall Problem*
 1. **Configure environment**:
    ```bash
    cp .env.example .env
-   # Edit .env and add your Azure OpenAI credentials
+   # Edit .env and add your Azure AI Foundry endpoint + key (AZURE_AI_ENDPOINT, AZURE_AI_KEY, AZURE_AI_DEPLOYMENT)
    ```
 
 2. **Start services**:
@@ -68,7 +68,6 @@ See [Deployment Guide](docs/deployment.md) for full details.
 | **Orchestration** | Temporal (Durable Workflows) | Long-running, fault-tolerant workflows |
 | **Brain** | LangGraph Agents (python) | Agent reasoning & execution |
 | **ETL** | Unstructured.io | Document processing (PDF, DOCX) & Ingestion |
-| **Voice** | Azure Speech SDK | Real-time bi-directional voice streaming |
 | **Frontend** | React + Vite | Premium UI with Sidebar Concept Explainer |
 | **Backend** | FastAPI | REST API & WebSocket server |
 
@@ -79,12 +78,7 @@ Upload documents (PDF, DOCX, TXT) to the Knowledge Graph.
 - **Endpoint**: `POST /api/v1/etl/ingest`
 - **Process**: Partitioning -> Chunking -> Embedding -> Zep Memory
 
-### 2. Real-time Voice (VoiceLive)
-Speak with the agent using low-latency WebSockets.
-- **Endpoint**: `WS /api/v1/voice/ws/{client_id}`
-- **Features**: Interruptibility, VAD (Voice Activity Detection), Azure Neural TTS.
-
-### 3. Episodic Memory
+### 2. Episodic Memory
 The agent "remembers" past conversations and facts.
 - **View Transcripts**: See full history of past episodes.
 - **Search**: Hybrid search across semantic facts and episodic history.
@@ -107,7 +101,7 @@ The agent "remembers" past conversations and facts.
 - 🦴 **Durable Workflows** - Temporal-based orchestration
 - 💾 **Temporal Knowledge Graph** - Zep + Graphiti memory
 - 🚦 **System Navigator** - Comprehensive admin & memory explorer UI
-- 🎤 **Voice Interaction** - Azure Speech SDK with avatar
+- 🔑 **Foundry Key Auth** - Azure AI Services via key-only configuration
 - 🔐 **Enterprise Security** - Entra ID + RBAC
 - 💰 **FinOps-First** - Scale-to-zero architecture
 

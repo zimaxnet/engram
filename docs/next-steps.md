@@ -4,69 +4,34 @@ This document outlines the recommended next steps for completing the Engram plat
 
 ## Immediate Next Steps (Priority 1)
 
-### 1. Test VoiceLive Integration Locally
+### 1. Validate Azure AI chat locally
 
-**Goal**: Verify VoiceLive works with both Elena and Marcus before deploying.
+**Goal**: Confirm text chat works end-to-end with Azure AI (Foundry) key auth.
 
 **Steps**:
 ```bash
-# Install VoiceLive SDK
 cd backend
-pip install azure-ai-voicelive
-
-# Set environment variables
-export AZURE_AI_ENDPOINT="https://zimax.services.ai.azure.com"
-export AZURE_AI_PROJECT_NAME="zimax"
-export AZURE_OPENAI_KEY="your-key"
-
-# Start backend
+export AZURE_AI_KEY="<your-foundry-key>"
+export AZURE_AI_ENDPOINT="https://<your-endpoint>.models.ai.azure.com"
+export AZURE_AI_PROJECT_NAME="<your-project>"
 uvicorn backend.api.main:app --host 0.0.0.0 --port 8082 --reload
-
-# Test VoiceLive WebSocket
-# Use a WebSocket client to connect to:
-# ws://localhost:8082/api/v1/voice/voicelive/test-session-123
 ```
 
 **Test Cases**:
-- [ ] Connect to VoiceLive WebSocket
-- [ ] Send audio data and receive response
-- [ ] Switch between Elena and Marcus
-- [ ] Test barge-in (cancel response)
-- [ ] Verify transcription status updates
+- [ ] `/healthz` returns 200
+- [ ] `/api/v1/chat/stream` streams tokens
+- [ ] Agents swap correctly (Elena/Marcus)
+- [ ] No OpenAI or Speech env vars required
 
-### 2. Update Frontend VoiceChat Component
+### 2. Harden frontend chat experience
 
-**Goal**: Integrate VoiceLive WebSocket into the frontend.
-
-**Files to Update**:
-- `frontend/src/components/VoiceChat/VoiceChat.tsx`
-- `frontend/src/components/ChatPanel/ChatPanel.tsx`
+**Goal**: Ensure chat UI is stable without voice features.
 
 **Changes Needed**:
-- Replace traditional Speech Services WebSocket with VoiceLive endpoint
-- Update audio format handling (PCM16, 24kHz)
-- Add agent switching UI
-- Handle VoiceLive-specific message types
-
-**Implementation**:
-```typescript
-// Connect to VoiceLive instead of traditional voice
-const ws = new WebSocket(
-  `${WS_URL}/api/v1/voice/voicelive/${sessionId}`
-);
-
-// Send audio
-ws.send(JSON.stringify({
-  type: "audio",
-  data: base64Audio
-}));
-
-// Switch agent
-ws.send(JSON.stringify({
-  type: "agent",
-  agent_id: "marcus"
-}));
-```
+- Verify `VITE_API_URL` points to backend
+- Keep voice controls hidden/disabled
+- Confirm streaming renders incrementally
+- Add error toasts for missing `AZURE_AI_KEY`
 
 ### 3. Verify Azure Deployment Configuration
 
@@ -244,21 +209,6 @@ npm install
 npm run dev
 ```
 
-### Testing VoiceLive
-```bash
-# Test VoiceLive connection
-python -c "
-import asyncio
-from backend.voice.voicelive_service import voicelive_service
-
-async def test():
-    session = await voicelive_service.create_session('test-123', 'elena')
-    print('Session created:', session.session_id)
-
-asyncio.run(test())
-"
-```
-
 ### Deploy to Azure
 ```bash
 # Push to main branch to trigger deployment
@@ -270,29 +220,8 @@ az deployment group create \
   --template-file infra/main.bicep \
   --parameters postgresPassword='...' \
                adminObjectId='...' \
-               azureOpenAiKey='...'
+               azureAiKey='...'
 ```
-
-## Questions to Resolve
-
-1. **VoiceLive SDK Version**: Confirm `azure-ai-voicelive>=1.0.0` is correct
-2. **Endpoint Format**: Verify VoiceLive endpoint format (base vs project path)
-3. **Frontend Audio**: Determine if we need to handle PCM16 conversion in browser
-4. **Agent Switching**: Test if agent switching works smoothly in production
-5. **Cost Monitoring**: Set up Azure cost alerts for VoiceLive usage
-
-## Getting Help
-
-- **Backend Issues**: Check `backend/` directory and logs
-- **Frontend Issues**: Check `frontend/` directory and browser console
-- **Deployment Issues**: Check GitHub Actions logs
-- **Azure Issues**: Check Azure Portal → Container Apps → Logs
-
-## Success Criteria
-
-✅ VoiceLive works for both Elena and Marcus  
-✅ Frontend can connect and stream audio  
-✅ Agents respond with correct personas  
 ✅ Memory persists across conversations  
 ✅ Workflows handle errors gracefully  
 ✅ Deployment succeeds in Azure  
