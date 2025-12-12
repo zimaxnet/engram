@@ -243,5 +243,4 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
 
 // Outputs
 output workerAppName string = workerApp.name
-output principalId string = workerApp.identity.principalId
 
