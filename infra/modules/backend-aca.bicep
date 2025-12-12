@@ -84,7 +84,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      identityResourceId: {}
+      '${identityResourceId}': {}
     }
   }
   properties: {
