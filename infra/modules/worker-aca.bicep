@@ -29,10 +29,6 @@ param azureAiEndpoint string = ''
 @description('Azure AI Services project name.')
 param azureAiProjectName string = ''
 
-@description('Azure AI Services API key for Foundry.')
-@secure()
-param azureAiKey string = ''
-
 @description('Key Vault URI.')
 param keyVaultUri string
 

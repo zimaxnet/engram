@@ -7,6 +7,9 @@ param acaEnvName string
 @description('Name of the backend container app.')
 param appName string = 'engram-api'
 
+@description('Whether to attach a custom domain and managed certificate to the backend.')
+param enableCustomDomain bool = false
+
 @description('Custom domain name for the backend.')
 param customDomainName string = 'api.engram.work'
 
@@ -32,10 +35,6 @@ param azureAiEndpoint string = ''
 @description('Azure AI Services project name.')
 param azureAiProjectName string = ''
 
-@description('Azure AI Services API key for Foundry.')
-@secure()
-param azureAiKey string = ''
-
 @description('Key Vault URI.')
 param keyVaultUri string
 
@@ -60,7 +59,7 @@ param tags object = {
   name: acaEnvName
 }
 
-resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = {
+resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = if (enableCustomDomain) {
   parent: acaEnv
   name: 'api.engram.work-staging--251211140607'
   location: location
@@ -90,13 +89,13 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
         targetPort: 8080
         transport: 'http'
         allowInsecure: false
-        customDomains: [
+        customDomains: enableCustomDomain ? [
           {
             name: customDomainName
             certificateId: certificate.id
             bindingType: 'SniEnabled'
           }
-        ]
+        ] : []
 
 
       }

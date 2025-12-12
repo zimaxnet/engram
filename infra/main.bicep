@@ -225,6 +225,7 @@ module backendModule 'modules/backend-aca.bicep' = {
   params: {
     location: location
     acaEnvName: acaEnv.name
+    appName: '${envName}-api'
     containerImage: backendImage
     postgresFqdn: postgres.properties.fullyQualifiedDomainName
     postgresPassword: postgresPassword
@@ -233,7 +234,6 @@ module backendModule 'modules/backend-aca.bicep' = {
     zepApiUrl: zepApiUrl
 
     azureAiEndpoint: azureAiEndpoint
-    azureAiKey: azureAiKey
     azureAiProjectName: azureAiProjectName
     registryUsername: registryUsername
     registryPassword: registryPassword
@@ -251,6 +251,7 @@ module workerModule 'modules/worker-aca.bicep' = {
   params: {
     location: location
     acaEnvId: acaEnv.id
+    appName: '${envName}-worker'
     containerImage: workerImage
     postgresFqdn: postgres.properties.fullyQualifiedDomainName
     postgresPassword: postgresPassword
@@ -259,7 +260,6 @@ module workerModule 'modules/worker-aca.bicep' = {
     zepApiUrl: zepApiUrl
 
     azureAiEndpoint: azureAiEndpoint
-    azureAiKey: azureAiKey
     azureAiProjectName: azureAiProjectName
     registryUsername: registryUsername
     registryPassword: registryPassword
