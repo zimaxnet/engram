@@ -126,7 +126,8 @@ module keyVaultModule 'modules/keyvault.bicep' = {
   name: 'keyVault'
   params: {
     location: location
-    keyVaultName: '${envName}-kv-v2-${take(uniqueString(resourceGroup().id), 5)}'
+    // Key Vault names must be 3-24 alphanumeric only; strip hyphens from envName and suffix a short unique string
+    keyVaultName: '${toLower(replace(envName, '-', ''))}kv${take(uniqueString(resourceGroup().id), 5)}'
     tags: tags
   }
 }
@@ -190,6 +191,7 @@ module temporalModule 'modules/temporal-aca.bicep' = {
     location: location
     acaEnvId: acaEnv.id
     acaEnvName: acaEnv.name
+    enableCustomDomain: false
     postgresFqdn: postgres.properties.fullyQualifiedDomainName
     postgresUser: 'cogadmin'
     postgresPassword: postgresPassword
@@ -264,6 +266,7 @@ module swaModule 'static-webapp.bicep' = {
   params: {
     location: location
     swaName: '${envName}-web'
+    enableCustomDomain: false
   }
 }
 

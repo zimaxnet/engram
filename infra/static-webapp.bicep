@@ -4,6 +4,9 @@ param location string = resourceGroup().location
 @description('Name of the SWA.')
 param swaName string = 'engram-web'
 
+@description('Whether to bind the custom domain (requires DNS TXT token).')
+param enableCustomDomain bool = false
+
 param customDomainName string = 'engram.work'
 
 resource swa 'Microsoft.Web/staticSites@2022-03-01' = {
@@ -22,10 +25,12 @@ resource swa 'Microsoft.Web/staticSites@2022-03-01' = {
   }
 }
 
-resource customDomain 'Microsoft.Web/staticSites/customDomains@2022-03-01' = {
+resource customDomain 'Microsoft.Web/staticSites/customDomains@2022-03-01' = if (enableCustomDomain) {
   parent: swa
   name: customDomainName
-  properties: {}
+  properties: {
+    validationMethod: 'dns-txt-token'
+  }
 }
 
 output swaDefaultHostname string = swa.properties.defaultHostname

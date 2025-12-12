@@ -13,6 +13,9 @@ param appName string = 'temporal'
 @description('Custom domain name for Temporal UI.')
 param customDomainName string = 'temporal.engram.work'
 
+@description('Whether to provision a managed certificate and bind the custom domain to Temporal UI.')
+param enableCustomDomain bool = false
+
 @description('PostgreSQL FQDN.')
 param postgresFqdn string
 
@@ -32,9 +35,9 @@ param tags object = {
   Component: 'Temporal'
 }
 
-resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = {
+resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = if (enableCustomDomain) {
   parent: acaEnv
-  name: 'temporal.engram.work-staging--251211140541'
+  name: '${replace(customDomainName, '.', '-')}-${acaEnvName}-cert'
   location: location
   tags: tags
   properties: {
@@ -141,13 +144,13 @@ resource temporalUI 'Microsoft.App/containerApps@2023-05-01' = {
         targetPort: 8080
         transport: 'http'
         allowInsecure: false
-        customDomains: [
-          {
-            name: customDomainName
-            certificateId: certificate.id
-            bindingType: 'SniEnabled'
-          }
-        ]
+          customDomains: enableCustomDomain ? [
+            {
+              name: customDomainName
+              certificateId: certificate.id
+              bindingType: 'SniEnabled'
+            }
+          ] : []
 
       }
       dapr: {
