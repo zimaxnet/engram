@@ -34,6 +34,10 @@ param registryUsername string
 @secure()
 param registryPassword string
 
+@description('Zep API key (stored in Key Vault and used by backend/worker).')
+@secure()
+param zepApiKey string = ''
+
 @description('Tags to apply to all resources.')
 param tags object = {
   Project: 'Engram'
@@ -120,6 +124,21 @@ resource storage 'Microsoft.Storage/storageAccounts@2021-09-01' = {
 }
 
 // =============================================================================
+// Managed Identities (User Assigned)
+// =============================================================================
+resource backendIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
+  name: '${envName}-backend-identity'
+  location: location
+  tags: tags
+}
+
+resource workerIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
+  name: '${envName}-worker-identity'
+  location: location
+  tags: tags
+}
+
+// =============================================================================
 // Key Vault
 // =============================================================================
 module keyVaultModule 'modules/keyvault.bicep' = {
@@ -129,6 +148,15 @@ module keyVaultModule 'modules/keyvault.bicep' = {
     // Key Vault names must be 3-24 alphanumeric only; strip hyphens from envName and suffix a short unique string
     keyVaultName: '${toLower(replace(envName, '-', ''))}kv${take(uniqueString(resourceGroup().id), 5)}'
     tags: tags
+  }
+}
+
+// Seed required secrets (Zep API key; OpenAI/Speech keys already set by their modules)
+module keyVaultSecrets 'modules/keyvault-secrets.bicep' = {
+  name: 'keyVaultSecrets'
+  params: {
+    keyVaultName: keyVaultModule.outputs.keyVaultName
+    zepApiKey: zepApiKey
   }
 }
 
@@ -154,7 +182,7 @@ var keyVaultSecretsUserRole = subscriptionResourceId('Microsoft.Authorization/ro
 module backendKvRole 'modules/role-assignment.bicep' = {
   name: 'backend-kv-role'
   params: {
-    principalId: backendModule.outputs.principalId
+    principalId: backendIdentity.properties.principalId
     roleDefinitionId: keyVaultSecretsUserRole
     nameSeed: 'backend-kv'
   }
@@ -163,7 +191,7 @@ module backendKvRole 'modules/role-assignment.bicep' = {
 module workerKvRole 'modules/role-assignment.bicep' = {
   name: 'worker-kv-role'
   params: {
-    principalId: workerModule.outputs.principalId
+    principalId: workerIdentity.properties.principalId
     roleDefinitionId: keyVaultSecretsUserRole
     nameSeed: 'worker-kv'
   }
@@ -230,6 +258,7 @@ module backendModule 'modules/backend-aca.bicep' = {
     registryUsername: registryUsername
     registryPassword: registryPassword
     keyVaultUri: keyVaultModule.outputs.keyVaultUri
+    identityResourceId: backendIdentity.id
     tags: tags
   }
 }
@@ -256,6 +285,7 @@ module workerModule 'modules/worker-aca.bicep' = {
     registryUsername: registryUsername
     registryPassword: registryPassword
     keyVaultUri: keyVaultModule.outputs.keyVaultUri
+    identityResourceId: workerIdentity.id
     tags: tags
   }
 }

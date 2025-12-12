@@ -69,6 +69,7 @@ jobs:
             workerImage=ghcr.io/${{ github.repository }}/worker:latest
             registryUsername=${{ github.actor }}
             registryPassword=${{ secrets.CR_PAT }}
+            zepApiKey=${{ secrets.ZEP_API_KEY || '' }}
           deploymentName: engram-infra-${{ github.sha }}
           failOnStdErr: false
       

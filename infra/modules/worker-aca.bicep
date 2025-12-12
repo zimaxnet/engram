@@ -39,6 +39,9 @@ param azureAiProjectName string = ''
 @description('Key Vault URI.')
 param keyVaultUri string
 
+@description('User-assigned identity resource ID used for Key Vault access.')
+param identityResourceId string
+
 @description('Registry username.')
 param registryUsername string
 
@@ -58,7 +61,10 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
   location: location
   tags: tags
   identity: {
-    type: 'SystemAssigned'
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      identityResourceId: {}
+    }
   }
   properties: {
     managedEnvironmentId: acaEnvId
@@ -77,12 +83,12 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
         {
           name: 'azure-openai-key'
           keyVaultUrl: '${keyVaultUri}secrets/azure-openai-key'
-          identity: 'system'
+          identity: identityResourceId
         }
         {
           name: 'zep-api-key'
           keyVaultUrl: '${keyVaultUri}secrets/zep-api-key'
-          identity: 'system'
+          identity: identityResourceId
         }
         {
           name: 'registry-password'
