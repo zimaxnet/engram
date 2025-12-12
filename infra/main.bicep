@@ -191,6 +191,8 @@ module temporalModule 'modules/temporal-aca.bicep' = {
     location: location
     acaEnvId: acaEnv.id
     acaEnvName: acaEnv.name
+    // Include environment in app name to avoid cross-environment collisions
+    appName: '${envName}-temporal'
     enableCustomDomain: false
     postgresFqdn: postgres.properties.fullyQualifiedDomainName
     postgresUser: 'cogadmin'

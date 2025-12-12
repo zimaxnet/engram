@@ -49,7 +49,8 @@ resource gpt4oDeployment 'Microsoft.CognitiveServices/accounts/deployments@2023-
   name: deploymentName
   sku: {
     name: 'Standard'
-    capacity: 30
+    // Keep capacity within available TPM quota
+    capacity: 10
   }
   properties: {
     model: {
