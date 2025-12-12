@@ -4,6 +4,9 @@ param location string = resourceGroup().location
 @description('Name of the environment.')
 param envName string = 'engram-env'
 
+@description('Deploy Azure OpenAI (set false to skip).')
+param enableOpenAi bool = false
+
 @description('Postgres Admin Password')
 @secure()
 param postgresPassword string
@@ -162,9 +165,9 @@ module keyVaultSecrets 'modules/keyvault-secrets.bicep' = {
 }
 
 // =============================================================================
-// Azure OpenAI
+// Azure OpenAI (optional)
 // =============================================================================
-module openAiModule 'modules/openai.bicep' = {
+module openAiModule 'modules/openai.bicep' = if (enableOpenAi) {
   name: 'openAi'
   params: {
     location: location
@@ -253,7 +256,7 @@ module backendModule 'modules/backend-aca.bicep' = {
     zepApiUrl: zepApiUrl
 
     // params removed
-    openAiEndpoint: openAiModule.outputs.openAiEndpoint
+    openAiEndpoint: enableOpenAi ? openAiModule.outputs.openAiEndpoint : ''
     azureAiEndpoint: azureAiEndpoint
     azureAiProjectName: azureAiProjectName
     registryUsername: registryUsername
@@ -280,7 +283,7 @@ module workerModule 'modules/worker-aca.bicep' = {
     zepApiUrl: zepApiUrl
 
     // params removed
-    openAiEndpoint: openAiModule.outputs.openAiEndpoint
+    openAiEndpoint: enableOpenAi ? openAiModule.outputs.openAiEndpoint : ''
     azureAiEndpoint: azureAiEndpoint
     azureAiProjectName: azureAiProjectName
     registryUsername: registryUsername
@@ -327,3 +330,4 @@ output postgresFqdn string = postgres.properties.fullyQualifiedDomainName
 output keyVaultUri string = keyVaultModule.outputs.keyVaultUri
 output backendUrl string = backendModule.outputs.backendUrl
 output swaDefaultHostname string = swaModule.outputs.swaDefaultHostname
+output openAiEndpoint string = enableOpenAi ? openAiModule.outputs.openAiEndpoint : ''
