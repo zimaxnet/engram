@@ -305,3 +305,6 @@ output postgresFqdn string = postgres.properties.fullyQualifiedDomainName
 output keyVaultUri string = keyVaultModule.outputs.keyVaultUri
 output backendUrl string = backendModule.outputs.backendUrl
 output swaDefaultHostname string = swaModule.outputs.swaDefaultHostname
+output temporalUIFqdn string = temporalModule.outputs.temporalUIDefaultFqdn
+output zepApiUrl string = zepApiUrl
+output openAiEndpoint string = azureAiEndpoint
