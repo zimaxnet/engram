@@ -24,6 +24,21 @@ param zepPostgresDb string = 'zep'
 @secure()
 param zepApiKey string = ''
 
+// Optionally include API key secret/env only when provided to avoid invalid empty secret
+var zepApiSecret = empty(zepApiKey) ? [] : [
+  {
+    name: 'zep-api-key'
+    value: zepApiKey
+  }
+]
+
+var zepApiEnv = empty(zepApiKey) ? [] : [
+  {
+    name: 'ZEP_API_KEY'
+    secretRef: 'zep-api-key'
+  }
+]
+
 @description('Tags to apply to all resources.')
 param tags object = {
   Project: 'Engram'
@@ -51,11 +66,7 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
           name: 'zep-postgres-password'
           value: zepPostgresPassword
         }
-        {
-          name: 'zep-api-key'
-          value: zepApiKey
-        }
-      ]
+      ] + zepApiSecret
     }
     template: {
       containers: [
@@ -75,11 +86,7 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
               name: 'ZEP_STORE_POSTGRES_DSN'
               value: 'postgresql://${zepPostgresUser}:${zepPostgresPassword}@${zepPostgresFqdn}:5432/${zepPostgresDb}?sslmode=require'
             }
-            {
-              name: 'ZEP_API_KEY'
-              secretRef: 'zep-api-key'
-            }
-          ]
+          ] + zepApiEnv
           resources: {
             cpu: json('0.5')
             memory: '1Gi'
