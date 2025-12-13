@@ -3,6 +3,8 @@ layout: default
 title: Visual Development Guide
 ---
 
+# [Home](/) › Visual Development
+
 # Visual Development Guide
 
 This guide documents the visual assets for the Engram platform and provides JSON prompts for generating consistent imagery using AI image generation tools like Nano Banana Pro.
