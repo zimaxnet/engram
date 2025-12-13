@@ -61,19 +61,19 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
       dapr: {
         enabled: false
       }
-      secrets: [
+      secrets: concat([
         {
           name: 'zep-postgres-password'
           value: zepPostgresPassword
         }
-      ] + zepApiSecret
+      ], zepApiSecret)
     }
     template: {
       containers: [
         {
           name: 'zep'
           image: 'getzep/zep:latest'
-          env: [
+          env: concat([
             {
               name: 'ZEP_SERVER_ADDRESS'
               value: '0.0.0.0:8000'
@@ -86,7 +86,7 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
               name: 'ZEP_STORE_POSTGRES_DSN'
               value: 'postgresql://${zepPostgresUser}:${zepPostgresPassword}@${zepPostgresFqdn}:5432/${zepPostgresDb}?sslmode=require'
             }
-          ] + zepApiEnv
+          ], zepApiEnv)
           resources: {
             cpu: json('0.5')
             memory: '1Gi'
