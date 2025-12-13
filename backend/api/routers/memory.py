@@ -76,7 +76,7 @@ async def search_memory(request: MemorySearchRequest, user: SecurityContext = De
             total_count=len(results),
             query_time_ms=(datetime.now() - start_time).total_seconds() * 1000,
         )
-    except Exception as e:
+    except Exception:
         # In tests we want failures to surface (avoid masking contract breaks).
         if get_settings().environment == "test":
             raise
