@@ -21,6 +21,46 @@ services:
       retries: 5
 
   # ------------------------------------------------------------
+  # Zep (Memory) - OPTIONAL self-host for enterprise hardening
+  #
+  # Default POC uses Zep Cloud (scale-to-zero friendly).
+  # To self-host, run with a different .env where:
+  #   ZEP_API_URL=http://zep:8000
+  # and bring up these services.
+  # ------------------------------------------------------------
+  zep-postgres:
+    image: pgvector/pgvector:pg16
+    profiles: ["zep-selfhost"]
+    environment:
+      POSTGRES_USER: zep
+      POSTGRES_PASSWORD: zep_password
+      POSTGRES_DB: zep
+    ports:
+      - "5433:5432"
+    volumes:
+      - zep-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U zep" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  zep:
+    image: getzep/zep:latest
+    profiles: ["zep-selfhost"]
+    depends_on:
+      zep-postgres:
+        condition: service_healthy
+    environment:
+      # Zep server
+      ZEP_SERVER_ADDRESS: 0.0.0.0:8000
+      # Storage
+      ZEP_STORE: postgres
+      ZEP_STORE_POSTGRES_DSN: postgresql://zep:zep_password@zep-postgres:5432/zep
+    ports:
+      - "8000:8000"
+
+  # ------------------------------------------------------------
   # Temporal (Orchestration - Spine Layer)
   # ------------------------------------------------------------
   temporal:
@@ -88,8 +128,9 @@ services:
       TEMPORAL_TASK_QUEUE: engram-agents
 
       # Zep (Cloud)
-      ZEP_API_URL: https://api.getzep.com/api/v1
-      ZEP_API_KEY: "z_1dWlkIjoiZmZlZGVkZWQtZjM5Ni00YmM1LWFhMzItMmMxNDhiZjY1MjlhIn0.5eCFUfoYycsfFm7lExmHszCezfc3C9F5firEyUHZias3_XzFHbY907NXckxuiHpdy04Tt6-ZSdaYa59qrZ8Ygw"
+      # POC default: Zep Cloud. For self-host, set ZEP_API_URL=http://zep:8000
+      ZEP_API_URL: ${ZEP_API_URL:-https://api.getzep.com/api/v2}
+      ZEP_API_KEY: ${ZEP_API_KEY:-}
 
       # Azure AI Foundry (optional)
       AZURE_AI_ENDPOINT: ${AZURE_AI_ENDPOINT:-}
@@ -130,8 +171,9 @@ services:
       TEMPORAL_TASK_QUEUE: engram-agents
 
       # Zep (Cloud)
-      ZEP_API_URL: https://api.getzep.com/api/v1
-      ZEP_API_KEY: "z_1dWlkIjoiZmZlZGVkZWQtZjM5Ni00YmM1LWFhMzItMmMxNDhiZjY1MjlhIn0.5eCFUfoYycsfFm7lExmHszCezfc3C9F5firEyUHZias3_XzFHbY907NXckxuiHpdy04Tt6-ZSdaYa59qrZ8Ygw"
+      # POC default: Zep Cloud. For self-host, set ZEP_API_URL=http://zep:8000
+      ZEP_API_URL: ${ZEP_API_URL:-https://api.getzep.com/api/v2}
+      ZEP_API_KEY: ${ZEP_API_KEY:-}
 
       # Azure AI Foundry (optional)
       AZURE_AI_ENDPOINT: ${AZURE_AI_ENDPOINT:-}
@@ -149,8 +191,8 @@ services:
     depends_on:
       - unstructured
     environment:
-      ZEP_API_URL: https://api.getzep.com/api/v1
-      ZEP_API_KEY: "z_1dWlkIjoiZmZlZGVkZWQtZjM5Ni00YmM1LWFhMzItMmMxNDhiZjY1MjlhIn0.5eCFUfoYycsfFm7lExmHszCezfc3C9F5firEyUHZias3_XzFHbY907NXckxuiHpdy04Tt6-ZSdaYa59qrZ8Ygw"
+      ZEP_API_URL: ${ZEP_API_URL:-https://api.getzep.com/api/v2}
+      ZEP_API_KEY: ${ZEP_API_KEY:-}
       UNSTRUCTURED_API_URL: http://unstructured:8000
     volumes:
       - ./etl-pipeline:/app
@@ -174,3 +216,4 @@ services:
 
 volumes:
   postgres-data:
+  zep-postgres-data:
