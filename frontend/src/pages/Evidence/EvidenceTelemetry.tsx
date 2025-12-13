@@ -47,7 +47,7 @@ export function EvidenceTelemetry() {
           <div className="ev__controls">
             <label className="ev__range">
               <span className="subtle">Range</span>
-              <select value={range} onChange={(e) => setRange(e.target.value as any)}>
+              <select value={range} onChange={(e) => setRange(e.target.value as EvidenceTelemetrySnapshot['rangeLabel'])}>
                 {RANGE_OPTIONS.map((r) => (
                   <option key={r} value={r}>
                     {r}

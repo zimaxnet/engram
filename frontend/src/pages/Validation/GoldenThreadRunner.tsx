@@ -107,7 +107,7 @@ export function GoldenThreadRunner() {
 
             <label>
               Mode
-              <select value={mode} onChange={(e) => setMode(e.target.value as any)}>
+              <select value={mode} onChange={(e) => setMode(e.target.value as 'deterministic' | 'acceptance')}>
                 <option value="deterministic">Deterministic (Mock Brain)</option>
                 <option value="acceptance">Acceptance (Real Model)</option>
               </select>

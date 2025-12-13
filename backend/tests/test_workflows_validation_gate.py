@@ -50,7 +50,9 @@ async def mock_persist_memory(input: MemoryPersistInput) -> MemoryPersistOutput:
     return MemoryPersistOutput(success=True)
 
 
-runner = SandboxedWorkflowRunner(restrictions=SandboxRestrictions.default.with_passthrough_modules("backend", "pydantic"))
+runner = SandboxedWorkflowRunner(
+    restrictions=SandboxRestrictions.default.with_passthrough_modules("backend", "pydantic")
+)
 
 
 @pytest.mark.asyncio
