@@ -1,7 +1,5 @@
 # Connector Roadmap: Sources & Destinations
 
-# [Home](/) › Connectors & Ingestion
-
 ## Overview
 
 Engram supports ingestion from multiple enterprise sources via **connectors** that integrate with Unstructured.io and write to both the **system of record** (Blob Storage) and **system of recall** (Zep).
@@ -53,13 +51,6 @@ Source System → Connector → Unstructured → Engram API → [Blob (record) +
 - **Ingestion** section: "Connectors", "Document Upload", "Progress"
 - Connector registration form: Source type, credentials (stored in Key Vault), scope/filters
 - Connector status dashboard: Last sync, success/failure, items processed
-
-##### Context Ingestion UI (mock)
-![Context Ingestion dashboard](/assets/images/context-ingestion.png)
-
-- Shows live connector health, doc counts, and tagging (tenant/domain/sensitivity).
-- Parsing queue pairs each source with ETA and RBAC context for approvals.
-- Quick ingest widget mirrors `/api/v1/etl/ingest` for ad-hoc uploads during POCs.
 
 #### API Endpoints
 

@@ -1,7 +1,5 @@
 # System Navigator
 
-# [Home](/) › System Navigator
-
 The **System Navigator** is the core operational interface for the Engram platform, providing deep visibility and control over the AI's cognitive processes, memory, and execution state.
 
 ## Overview
@@ -26,21 +24,11 @@ Provides transparency into what the AI knows and remembers.
 -   **Episodes**: Chronological view of past conversations and interactions.
 -   **Search**: Semantic search across the entire memory store.
 
-![Memory Search with provenance tags](/assets/images/memory-search-provenance.png)
-
-- Results are tenant-scoped with provenance chips (tenant, domain, sensitivity).
-- Hybrid retrieval (vector + keyword) is surfaced; graph neighbors shown for traceability.
-
 ## 3. Workflows (Spine)
 Control plane for long-running, durable processes managed by Temporal.
 -   **Active Workflows**: View currently running agents and waiting tasks.
 -   **History**: Audit trail of completed workflow executions.
 -   **Signals**: Human-in-the-loop controls (Approve/Reject/Cancel).
-
-![Workflow detail and signals](/assets/images/workflow-detail-durable-spine.png)
-
-- Shows per-step timing, retries, and validation status for deterministic runs.
-- Signals (Approve/Cancel/Provide input) are audited and scoped per tenant.
 
 ## 4. Settings
 Configuration for user and system preferences.
@@ -52,9 +40,3 @@ Operational dashboard for platform administrators.
 -   **User Management**: Role-based access control and user status.
 -   **System Health**: Real-time status of backend services (API, Temporal, Zep).
 -   **Audit Logs**: Security and operational logs.
-
-## BAU Hub (Daily operations)
-![BAU Hub daily flows](/assets/images/bau-hub.png)
-
-- Daily flows for intake/triage, policy Q&A, decision log search, and guided walkthroughs.
-- Recent artifacts and sensitivity tags keep analysts aligned to tenant/domain guardrails.

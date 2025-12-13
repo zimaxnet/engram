@@ -1,7 +1,5 @@
 # Engram Platform - Complete Testing Guide
 
-# [Home](/) › Testing & Golden Thread
-
 ## Test Environment
 - **Frontend**: https://engram.work
 - **Backend API**: https://engram-api.calmgrass-018b2019.eastus2.azurecontainerapps.io
@@ -49,12 +47,4 @@
 ## Test Execution
 
 Let's walk through each category systematically.
-
-## Golden Thread Validation (E2E proof)
-
-![Golden Thread validation suite](/assets/images/golden-thread-validation.png)
-
-- Deterministic run over a seeded dataset (anchors: gh-pages, ingestion, /api/v1/etl/ingest).
-- Eight checks cover auth gate, ingest, memory hit, workflow ordering, and episode transcript.
-- Use as a release gate per environment; re-run failed checks only when iterating fixes.
 

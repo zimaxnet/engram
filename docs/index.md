@@ -77,20 +77,14 @@ Meet our AI agents:
 
 ![Voice Interaction Flow](/assets/images/voice-interaction-flow.png)
 
-## Quick Links (wiki)
+## Quick Links
 
 - [Architecture Deep Dive](architecture.md)
 - [System Navigator Guide](system-navigator.md)
 - [Agent Personas](agents.md)
-- [Connectors & Ingestion](connectors-plan.md)
-- [Testing & Golden Thread](TESTING-GUIDE.md)
-- [Telemetry (App Insights)](app-insights-guide.md)
+- [Visual Development Guide](visual-development.md)
 - [FinOps Strategy](finops.md)
 - [Deployment Guide](deployment.md)
-- [Enterprise Environment Model](enterprise-env-model.html)
-- [POC vs Enterprise](poc-vs-enterprise.html)
-- [Next Steps](next-steps.md)
-- [Visual Development Guide](visual-development.md)
 
 ## Getting Started
 

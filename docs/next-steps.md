@@ -1,7 +1,5 @@
 # Next Steps - Engram Platform Development
 
-[Home](/) › Next Steps
-
 This document outlines the recommended next steps for completing the Engram platform development and deployment.
 
 ## Immediate Next Steps (Priority 1)

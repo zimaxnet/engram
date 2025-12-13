@@ -3,8 +3,6 @@ layout: default
 title: Architecture
 ---
 
-# [Home](/) › Architecture
-
 # Architecture Deep Dive
 
 ## Overview

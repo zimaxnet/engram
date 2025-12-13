@@ -3,8 +3,6 @@ layout: default
 title: Agent Personas
 ---
 
-# [Home](/) › Agent Personas
-
 # Agent Personas
 
 The Engram platform features two specialized AI agent personas designed for enterprise business analysis and project management.
