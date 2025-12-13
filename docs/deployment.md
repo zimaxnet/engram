@@ -3,6 +3,8 @@ layout: default
 title: Deployment Guide
 ---
 
+# [Home](/) › Deployment Guide
+
 # Deployment Guide
 
 This guide covers deploying the Engram platform to Azure and local development setup.

@@ -3,6 +3,8 @@ layout: default
 title: FinOps Strategy
 ---
 
+# [Home](/) › FinOps Strategy
+
 # FinOps Strategy
 
 Engram is designed with **cost-conscious architecture** as a first-class concern. This guide details our approach to minimizing and tracking costs while maintaining enterprise-grade capabilities.
