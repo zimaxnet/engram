@@ -30,7 +30,7 @@ export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
   const location = useLocation();
 
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['agents', 'sources', 'memory', 'workflows', 'settings', 'admin'])
+    new Set(['agents', 'sources', 'validation', 'memory', 'workflows', 'bau', 'settings', 'admin'])
   )
 
   const toggleSection = (id: string) => {
@@ -82,6 +82,15 @@ export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
       ]
     },
     {
+      id: 'validation',
+      label: 'Validation',
+      icon: '✅',
+      children: [
+        { id: 'golden-thread', label: 'Golden Thread', icon: '🧪', path: '/validation/golden-thread' },
+        { id: 'evidence', label: 'Evidence & Telemetry', icon: '📡', path: '/evidence' }
+      ]
+    },
+    {
       id: 'memory',
       label: 'Memory',
       icon: '💾',
@@ -102,13 +111,19 @@ export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
       ]
     },
     {
+      id: 'bau',
+      label: 'BAU',
+      icon: '🏢',
+      children: [
+        { id: 'bau-hub', label: 'BAU Hub', icon: '🧭', path: '/bau' }
+      ]
+    },
+    {
       id: 'settings',
       label: 'Settings',
       icon: '⚙️',
       children: [
-        { id: 'model', label: 'Model', icon: '🤖', path: '/settings/model' },
-        { id: 'voice', label: 'Voice', icon: '🎤', path: '/settings/voice' },
-        { id: 'rbac', label: 'RBAC', icon: '🔐', path: '/settings/rbac' }
+        { id: 'general', label: 'General', icon: '🧩', path: '/settings/general' }
       ]
     },
     {
@@ -117,8 +132,7 @@ export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
       icon: '🛡️',
       children: [
         { id: 'users', label: 'Users', icon: '👥', path: '/admin/users' },
-        { id: 'audit', label: 'Audit Log', icon: '📊', path: '/admin/audit' },
-        { id: 'cost', label: 'Cost', icon: '💰', path: '/admin/cost' }
+        { id: 'health', label: 'System Health', icon: '🩺', path: '/admin/health' }
       ]
     }
   ]

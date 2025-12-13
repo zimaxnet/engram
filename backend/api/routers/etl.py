@@ -63,13 +63,21 @@ async def ingest_document(
             count = 0
             for chunk in chunks_to_index:
                 try:
+                    chunk_metadata = dict(chunk.get("metadata") or {})
+                    # Preserve ingestion provenance while keeping ETL metadata.
+                    # Prevent key collisions (e.g. chunk metadata overwriting source/filename).
+                    etl_source = chunk_metadata.pop("source", None)
+                    etl_filename = chunk_metadata.pop("filename", None)
+
                     await memory_client.add_fact(
                         user_id=user_id,
                         fact=chunk["text"],
                         metadata={
                             "source": "document_upload",
                             "filename": fname,
-                            **chunk["metadata"],
+                            "etl_source": etl_source,
+                            "etl_filename": etl_filename,
+                            **chunk_metadata,
                         },
                     )
                     count += 1

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { listWorkflows, signalWorkflow } from '../../services/api';
 
 interface Workflow {
@@ -13,6 +14,7 @@ interface Workflow {
 }
 
 export function ActiveWorkflows() {
+    const navigate = useNavigate();
     const [workflows, setWorkflows] = useState<Workflow[]>([]);
     const [loading, setLoading] = useState(true);
     const [signaling, setSignaling] = useState<string | null>(null);
@@ -92,6 +94,19 @@ export function ActiveWorkflows() {
                                     </p>
                                 </div>
                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <button
+                                        onClick={() => navigate(`/workflows/${wf.workflow_id}`)}
+                                        style={{
+                                            padding: '0.5rem 1rem',
+                                            background: 'rgba(255,255,255,0.06)',
+                                            color: 'var(--color-text)',
+                                            border: '1px solid var(--glass-border)',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Details
+                                    </button>
                                     {wf.status === 'waiting' && (
                                         <button
                                             onClick={() => handleSignal(wf.workflow_id, 'approve')}

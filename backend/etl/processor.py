@@ -9,10 +9,14 @@ import logging
 from typing import List, Optional
 import io
 
-# We import these inside functions to avoid hard hard dependency failures if missing
-# but for this file we expect unstructured to be installed.
-from unstructured.partition.auto import partition
-from unstructured.chunking.title import chunk_by_title
+# Unstructured is an optional dependency in some dev/test environments.
+# Keep module import safe so tests can monkeypatch these symbols.
+try:
+    from unstructured.partition.auto import partition  # type: ignore
+    from unstructured.chunking.title import chunk_by_title  # type: ignore
+except Exception:  # pragma: no cover
+    partition = None  # type: ignore
+    chunk_by_title = None  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +49,11 @@ class DocumentProcessor:
             List of dicts with 'text' and 'metadata'.
         """
         try:
+            if partition is None or chunk_by_title is None:
+                raise RuntimeError(
+                    "Unstructured is not installed. Install 'unstructured[all-docs]' to enable document ingestion."
+                )
+
             # Create a file-like object
             file_obj = io.BytesIO(file_content)
 

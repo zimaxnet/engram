@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { listWorkflows } from '../../services/api';
 
 interface Workflow {
@@ -13,6 +14,7 @@ interface Workflow {
 }
 
 export function WorkflowHistory() {
+    const navigate = useNavigate();
     const [workflows, setWorkflows] = useState<Workflow[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -74,6 +76,21 @@ export function WorkflowHistory() {
                                     }}>{wf.status}</span>
                                 </div>
                                 <p style={{ margin: 0, opacity: 0.9 }}>{wf.task_summary}</p>
+                                <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem' }}>
+                                    <button
+                                        onClick={() => navigate(`/workflows/${wf.workflow_id}`)}
+                                        style={{
+                                            padding: '0.5rem 1rem',
+                                            background: 'rgba(255,255,255,0.06)',
+                                            color: 'var(--color-text)',
+                                            border: '1px solid var(--glass-border)',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Details
+                                    </button>
+                                </div>
                                 <div style={{ marginTop: '0.5rem', fontSize: '0.8em', opacity: 0.5 }}>
                                     Duration: {wf.completed_at ?
                                         Math.round((new Date(wf.completed_at).getTime() - new Date(wf.started_at).getTime()) / 1000 / 60) + ' min'

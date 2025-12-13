@@ -164,6 +164,8 @@ class GraphNode(BaseModel):
     content: str
     node_type: str = Field("fact", description="Type: fact, entity, relationship")
     confidence: float = Field(1.0, ge=0.0, le=1.0)
+    created_at: Optional[datetime] = Field(None, description="When this node was created")
+    updated_at: Optional[datetime] = Field(None, description="When this node was last updated")
     valid_from: Optional[datetime] = Field(None, description="When this fact became true")
     valid_to: Optional[datetime] = Field(None, description="When this fact stopped being true")
     source_episode_id: Optional[str] = Field(None, description="Episode that created this node")

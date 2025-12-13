@@ -67,6 +67,48 @@ const CONTENT_MAP: Record<string, ConceptContent> = {
             </>
         )
     },
+    '/validation': {
+        title: 'Proof, Not Promises',
+        image: '/assets/images/concept-workflows.png',
+        content: (
+            <>
+                <p>
+                    <strong>Golden Thread</strong> validation is the “living proof” path: ingest a known artifact, retrieve it from memory, run the workflow steps, and collect an evidence bundle.
+                </p>
+                <p>
+                    This is how enterprise teams gain <em>certainty</em>—each check produces an observable trace/workflow/session ID that can be audited.
+                </p>
+            </>
+        )
+    },
+    '/evidence': {
+        title: 'Operational Truth',
+        image: '/assets/images/concept-admin.png',
+        content: (
+            <>
+                <p>
+                    <strong>Evidence & Telemetry</strong> connects what we believe (tests) to what is happening (live signals).
+                </p>
+                <p>
+                    Alerts become actionable through narrative: Elena explains impact and hypotheses; Marcus coordinates plan and ETA.
+                </p>
+            </>
+        )
+    },
+    '/bau': {
+        title: 'BAU Adoption',
+        image: '/assets/images/concept-settings.png',
+        content: (
+            <>
+                <p>
+                    <strong>BAU Hub</strong> is where Engram becomes daily work: intake, policy Q&amp;A, decision recall, and status reporting.
+                </p>
+                <p>
+                    The advantage comes from compounding memory + durable workflows + governance—turning execution into a reusable asset.
+                </p>
+            </>
+        )
+    },
     '/settings': {
         title: 'System Control',
         image: '/assets/images/concept-settings.png',

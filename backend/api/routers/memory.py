@@ -13,7 +13,7 @@ from typing import Optional
 from fastapi import APIRouter, Query, Depends
 from pydantic import BaseModel
 
-from backend.core import SecurityContext
+from backend.core import SecurityContext, get_settings
 from backend.api.middleware.auth import get_current_user
 
 router = APIRouter()
@@ -76,8 +76,11 @@ async def search_memory(request: MemorySearchRequest, user: SecurityContext = De
             total_count=len(results),
             query_time_ms=(datetime.now() - start_time).total_seconds() * 1000,
         )
-    except Exception:
-        # Fallback to empty
+    except Exception as e:
+        # In tests we want failures to surface (avoid masking contract breaks).
+        if get_settings().environment == "test":
+            raise
+        # Fallback to empty in other environments
         return MemorySearchResponse(
             results=[],
             total_count=0,
