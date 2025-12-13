@@ -1,110 +1,29 @@
-# Engram - Context Engineering Platform
+# Engram Wiki
 
-> **Cognition-as-a-Service for the Enterprise**
+This branch is documentation-only. All application code, infra, and tests have been removed to keep the repository focused on the published wiki.
 
-Engram is an enterprise-grade AI platform that solves the **Memory Wall Problem** in Large Language Models through innovative context engineering. Built on the **Brain + Spine** architecture pattern, Engram provides durable, scalable, and cost-effective AI agent orchestration.
+- Live wiki: https://wiki.engram.work  
+- Source: `docs/` (Jekyll-compatible structure with Markdown and images in `docs/assets/images/`)
 
-## Quick Start
+## Editing
+- Update Markdown pages under `docs/`.
+- Place new images in `docs/assets/images/` and reference them with site-relative paths (e.g., `/assets/images/example.png`).
 
-### Local Development
+## Local preview (optional)
+If you want to preview locally with Jekyll:
+```bash
+gem install bundler jekyll   # if not already installed
+jekyll serve --source docs --livereload
+```
+Then open http://localhost:4000.
 
-1. **Configure environment**:
-   ```bash
-   cp .env.example .env
-   # Edit .env and add your Azure AI Foundry endpoint + key (AZURE_AI_ENDPOINT, AZURE_AI_KEY, AZURE_AI_DEPLOYMENT)
-   ```
-
-2. **Start services**:
-   ```bash
-   docker-compose up -d postgres zep temporal temporal-ui
-   ```
-
-3. **Start backend**:
-   ```bash
-   cd backend
-   pip install -r requirements.txt
-   uvicorn backend.api.main:app --host 0.0.0.0 --port 8082 --reload
-   ```
-
-4. **Start frontend**:
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
-
-5. **Open browser**: `http://localhost:5173`
-
-See [Local Testing Guide](docs/local-testing.md) for detailed instructions.
-
-### Azure Deployment
-
-1. **Set up GitHub Secrets** (see [GitHub Secrets Guide](docs/github-secrets.md))
-2. **Deploy infrastructure**:
-   ```bash
-   az group create --name engram-rg --location eastus
-   az deployment group create \
-     --resource-group engram-rg \
-     --template-file infra/main.bicep \
-     --parameters postgresPassword='<secure-password>' adminObjectId='<your-object-id>'
-   ```
-3. **CI/CD**: Push to `main` branch to trigger automatic deployment
-
-See [Deployment Guide](docs/deployment.md) for full details.
-
-## Architecture
-
-- **Brain Layer**: LangGraph agents (Elena, Marcus) for reasoning
-- **Spine Layer**: Temporal workflows for durable orchestration
-- **Memory Layer**: Zep + Graphiti for temporal knowledge graphs
-- **Frontend**: React + Vite with voice interaction
-- **Backend**: FastAPI with enterprise security
-
-## Components
-
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| **Memory** | Zep (Temporal Knowledge Graph) | Episodic & semantic memory |
-| **Orchestration** | Temporal (Durable Workflows) | Long-running, fault-tolerant workflows |
-| **Brain** | LangGraph Agents (python) | Agent reasoning & execution |
-| **ETL** | Unstructured.io | Document processing (PDF, DOCX) & Ingestion |
-| **Frontend** | React + Vite | Premium UI with Sidebar Concept Explainer |
-| **Backend** | FastAPI | REST API & WebSocket server |
-
-## System Capabilities
-
-### 1. Document Ingestion (ETL)
-Upload documents (PDF, DOCX, TXT) to the Knowledge Graph.
-- **Endpoint**: `POST /api/v1/etl/ingest`
-- **Process**: Partitioning -> Chunking -> Embedding -> Zep Memory
-
-### 2. Episodic Memory
-The agent "remembers" past conversations and facts.
-- **View Transcripts**: See full history of past episodes.
-- **Search**: Hybrid search across semantic facts and episodic history.
-
-## Documentation
-
-- [Architecture Overview](docs/architecture.md)
-- [Agent Personas](docs/agents.md)
-- [Local Testing Guide](docs/local-testing.md)
-- [GitHub Secrets Configuration](docs/github-secrets.md)
-- [Deployment Guide](docs/deployment.md)
-- [FinOps Strategy](docs/finops.md)
-- [Azure PostgreSQL](docs/azure-postgresql.md)
-
-**Full documentation**: [Wiki](https://wiki.engram.work)
-
-## Features
-
-- 🧠 **Context Engineering** - 4-layer enterprise context schema
-- 🦴 **Durable Workflows** - Temporal-based orchestration
-- 💾 **Temporal Knowledge Graph** - Zep + Graphiti memory
-- 🚦 **System Navigator** - Comprehensive admin & memory explorer UI
-- 🔑 **Foundry Key Auth** - Azure AI Services via key-only configuration
-- 🔐 **Enterprise Security** - Entra ID + RBAC
-- 💰 **FinOps-First** - Scale-to-zero architecture
+## Key pages
+- `docs/index.md` — overview
+- `docs/architecture.md` — Brain + Spine and context schema
+- `docs/system-navigator.md` — Navigator UI (Chat, Memory, Workflows, Admin)
+- `docs/connectors-plan.md` — ingestion/connectors
+- `docs/app-insights-guide.md` — telemetry
+- `docs/TESTING-GUIDE.md` — Golden Thread validation and test checklist
 
 ## License
-
 MIT
