@@ -21,16 +21,12 @@ services:
       retries: 5
 
   # ------------------------------------------------------------
-  # Zep (Memory) - OPTIONAL self-host for enterprise hardening
+  # Zep (Memory) - Self-hosted (Enterprise Engram Engine)
   #
-  # Default POC uses Zep Cloud (scale-to-zero friendly).
-  # To self-host, run with a different .env where:
-  #   ZEP_API_URL=http://zep:8000
-  # and bring up these services.
+  # Engram uses self-hosted Zep only (no cloud). All environments use this pattern.
   # ------------------------------------------------------------
   zep-postgres:
     image: pgvector/pgvector:pg16
-    profiles: ["zep-selfhost"]
     environment:
       POSTGRES_USER: zep
       POSTGRES_PASSWORD: zep_password
@@ -47,7 +43,6 @@ services:
 
   zep:
     image: getzep/zep:latest
-    profiles: ["zep-selfhost"]
     depends_on:
       zep-postgres:
         condition: service_healthy
@@ -59,6 +54,12 @@ services:
       ZEP_STORE_POSTGRES_DSN: postgresql://zep:zep_password@zep-postgres:5432/zep
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # ------------------------------------------------------------
   # Temporal (Orchestration - Spine Layer)
@@ -127,10 +128,10 @@ services:
       TEMPORAL_NAMESPACE: default
       TEMPORAL_TASK_QUEUE: engram-agents
 
-      # Zep (Cloud)
-      # POC default: Zep Cloud. For self-host, set ZEP_API_URL=http://zep:8000
-      ZEP_API_URL: ${ZEP_API_URL:-https://api.getzep.com/api/v2}
+      # Zep (Self-hosted)
+      ZEP_API_URL: ${ZEP_API_URL:-http://zep:8000}
       ZEP_API_KEY: ${ZEP_API_KEY:-}
+      ZEP_MODE: selfhost
 
       # Azure AI Foundry (optional)
       AZURE_AI_ENDPOINT: ${AZURE_AI_ENDPOINT:-}
@@ -155,6 +156,8 @@ services:
     depends_on:
       temporal:
         condition: service_healthy
+      zep:
+        condition: service_healthy
     environment:
       ENVIRONMENT: development
 
@@ -170,10 +173,10 @@ services:
       TEMPORAL_NAMESPACE: default
       TEMPORAL_TASK_QUEUE: engram-agents
 
-      # Zep (Cloud)
-      # POC default: Zep Cloud. For self-host, set ZEP_API_URL=http://zep:8000
-      ZEP_API_URL: ${ZEP_API_URL:-https://api.getzep.com/api/v2}
+      # Zep (Self-hosted)
+      ZEP_API_URL: ${ZEP_API_URL:-http://zep:8000}
       ZEP_API_KEY: ${ZEP_API_KEY:-}
+      ZEP_MODE: selfhost
 
       # Azure AI Foundry (optional)
       AZURE_AI_ENDPOINT: ${AZURE_AI_ENDPOINT:-}
@@ -190,8 +193,9 @@ services:
     build: ./etl-pipeline
     depends_on:
       - unstructured
+      - zep
     environment:
-      ZEP_API_URL: ${ZEP_API_URL:-https://api.getzep.com/api/v2}
+      ZEP_API_URL: ${ZEP_API_URL:-http://zep:8000}
       ZEP_API_KEY: ${ZEP_API_KEY:-}
       UNSTRUCTURED_API_URL: http://unstructured:8000
     volumes:

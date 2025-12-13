@@ -1,9 +1,15 @@
 @description('Location for all resources.')
 param location string = resourceGroup().location
 
-@description('Name of the environment.')
+@description('Name of the environment (used for resource naming).')
 param envName string = 'engram-env'
 
+@description('Environment type: staging, dev, test, uat, or prod.')
+@allowed(['staging', 'dev', 'test', 'uat', 'prod'])
+param environment string = 'staging'
+
+@description('Enable Private Link for Blob, Postgres, Key Vault (off for staging POC).')
+param enablePrivateLink bool = false
 
 @description('Postgres Admin Password')
 @secure()
@@ -43,19 +49,32 @@ param registryPassword string
 @secure()
 param zepApiKey string = ''
 
-@description('Tags to apply to all resources.')
-param tags object = {
+// Enhanced tagging schema for enterprise data-plane split
+var baseTags = {
   Project: 'Engram'
-  Environment: 'Production'
+  Environment: environment
+  Component: ''  // Set per resource
+  Plane: ''  // record (Blob) or recall (Zep/Postgres)
+  Owner: 'zimax-engram-team'
+  CostCenter: 'engram-platform'
+  DataClass: 'internal'  // internal, confidential, restricted (set per resource)
 }
+
+@description('Tags to apply to all resources.')
+param tags object = baseTags
 
 // =============================================================================
 // Log Analytics
 // =============================================================================
+var logAnalyticsTags = union(tags, {
+  Component: 'LogAnalytics'
+  DataClass: 'internal'
+})
+
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
   name: '${envName}-logs'
   location: location
-  tags: tags
+  tags: logAnalyticsTags
   properties: {
     sku: {
       name: 'PerGB2018'
@@ -67,10 +86,15 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
 // =============================================================================
 // Container Apps Environment
 // =============================================================================
+var acaEnvTags = union(tags, {
+  Component: 'ContainerAppsEnvironment'
+  DataClass: 'internal'
+})
+
 resource acaEnv 'Microsoft.App/managedEnvironments@2022-03-01' = {
   name: '${envName}-aca'
   location: location
-  tags: tags
+  tags: acaEnvTags
   properties: {
     appLogsConfiguration: {
       destination: 'log-analytics'
@@ -83,26 +107,40 @@ resource acaEnv 'Microsoft.App/managedEnvironments@2022-03-01' = {
 }
 
 // =============================================================================
-// PostgreSQL Flexible Server
+// PostgreSQL Flexible Server (Temporal + Zep storage)
 // =============================================================================
+var postgresTags = union(tags, {
+  Component: 'PostgreSQL'
+  Plane: 'recall'  // System of recall (memory/knowledge graph)
+  DataClass: 'internal'
+})
+
+// Postgres SKU selection based on environment
+var postgresSku = environment == 'prod' || environment == 'uat' 
+  ? { name: 'Standard_D2s_v3', tier: 'GeneralPurpose' }  // HA for uat/prod
+  : { name: 'Standard_B1ms', tier: 'Burstable' }  // Cost-optimized for staging/dev/test
+
+var postgresBackupDays = environment == 'prod' ? 35 : (environment == 'uat' ? 14 : 7)
+var postgresGeoRedundant = environment == 'prod' ? 'Enabled' : 'Disabled'
+
 resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2021-06-01' = {
   name: '${envName}-db'
   location: location
-  tags: tags
-  sku: {
-    name: 'Standard_B1ms'
-    tier: 'Burstable'
-  }
+  tags: postgresTags
+  sku: postgresSku
   properties: {
     administratorLogin: 'cogadmin'
     administratorLoginPassword: postgresPassword
-    version: '13'
+    version: '16'  // Use PG16 for pgvector support
     storage: {
-      storageSizeGB: 32
+      storageSizeGB: environment == 'prod' ? 128 : (environment == 'uat' ? 64 : 32)
     }
     backup: {
-      backupRetentionDays: 7
-      geoRedundantBackup: 'Disabled'
+      backupRetentionDays: postgresBackupDays
+      geoRedundantBackup: postgresGeoRedundant
+    }
+    highAvailability: {
+      mode: (environment == 'prod' || environment == 'uat') ? 'ZoneRedundant' : 'Disabled'
     }
   }
 
@@ -116,31 +154,51 @@ resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2021-06-01' = {
 }
 
 // =============================================================================
-// Storage Account
+// Storage Account (System of Record - raw artifacts)
 // =============================================================================
+var storageTags = union(tags, {
+  Component: 'BlobStorage'
+  Plane: 'record'  // System of record (raw docs, artifacts, provenance)
+  DataClass: 'internal'
+})
+
 resource storage 'Microsoft.Storage/storageAccounts@2021-09-01' = {
   name: replace('${envName}store', '-', '')
   location: location
-  tags: tags
-  sku: {
-    name: 'Standard_LRS'
-  }
+  tags: storageTags
   kind: 'StorageV2'
+  sku: {
+    name: environment == 'prod' ? 'Standard_GRS' : 'Standard_LRS'  // Geo-redundant for prod
+  }
+  properties: {
+    supportsHttpsTrafficOnly: true
+    minimumTlsVersion: 'TLS1_2'
+    allowBlobPublicAccess: false
+    networkAcls: {
+      defaultAction: enablePrivateLink ? 'Deny' : 'Allow'  // Deny public access when Private Link enabled
+      bypass: 'AzureServices'
+    }
+  }
 }
 
 // =============================================================================
 // Managed Identities (User Assigned)
 // =============================================================================
+var identityTags = union(tags, {
+  Component: 'ManagedIdentity'
+  DataClass: 'internal'
+})
+
 resource backendIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
   name: '${envName}-backend-identity'
   location: location
-  tags: tags
+  tags: union(identityTags, { Component: 'ManagedIdentity-Backend' })
 }
 
 resource workerIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
   name: '${envName}-worker-identity'
   location: location
-  tags: tags
+  tags: union(identityTags, { Component: 'ManagedIdentity-Worker' })
 }
 
 // =============================================================================
@@ -153,7 +211,7 @@ module keyVaultModule 'modules/keyvault.bicep' = {
     // Key Vault names must be 3-24 alphanumeric only; strip hyphens from envName and suffix a short unique string
     // The prior name is stuck in soft-deleted state; add a static differentiator to avoid the collision
     keyVaultName: '${toLower(replace(envName, '-', ''))}kvy${take(uniqueString(resourceGroup().id), 5)}'
-    tags: tags
+    tags: union(tags, { Component: 'KeyVault', DataClass: 'confidential' })
   }
 }
 
@@ -207,15 +265,51 @@ module temporalModule 'modules/temporal-aca.bicep' = {
     postgresUser: 'cogadmin'
     postgresPassword: postgresPassword
     postgresDb: 'engram'
-    tags: tags
+    tags: union(tags, { Component: 'Temporal' })
   }
 }
 
 // =============================================================================
-// Zep Configuration
+// Zep Self-hosted Deployment
 // =============================================================================
-// SaaS URL (v2 API)
-var zepApiUrl = 'https://api.getzep.com/api/v2'
+// Create Zep database on Postgres
+resource zepDb 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2021-06-01' = {
+  parent: postgres
+  name: 'zep'
+  properties: {
+    charset: 'UTF8'
+    collation: 'en_US.utf8'
+  }
+}
+
+// Enable pgvector extension on Zep database
+// Note: This requires azure.extensions parameter to include 'vector' in Postgres server config
+// The extension is created via init script or manual setup after deployment
+
+var zepTags = union(tags, {
+  Component: 'Zep'
+  Plane: 'recall'  // System of recall (memory/knowledge graph)
+  DataClass: 'internal'
+})
+
+module zepModule 'modules/zep-aca.bicep' = {
+  name: 'zep'
+  params: {
+    location: location
+    acaEnvId: acaEnv.id
+    acaEnvName: acaEnv.name
+    appName: '${envName}-zep'
+    zepPostgresFqdn: postgres.properties.fullyQualifiedDomainName
+    zepPostgresUser: 'cogadmin'
+    zepPostgresPassword: postgresPassword
+    zepPostgresDb: 'zep'
+    zepApiKey: zepApiKey
+    tags: zepTags
+  }
+}
+
+// Self-hosted Zep API URL (internal to ACA environment)
+var zepApiUrl = zepModule.outputs.zepApiUrl
 
 // =============================================================================
 // Backend API Container App
@@ -239,7 +333,7 @@ module backendModule 'modules/backend-aca.bicep' = {
     registryPassword: registryPassword
     keyVaultUri: keyVaultModule.outputs.keyVaultUri
     identityResourceId: backendIdentity.id
-    tags: tags
+    tags: union(tags, { Component: 'BackendAPI' })
   }
 }
 
@@ -265,7 +359,7 @@ module workerModule 'modules/worker-aca.bicep' = {
     registryPassword: registryPassword
     keyVaultUri: keyVaultModule.outputs.keyVaultUri
     identityResourceId: workerIdentity.id
-    tags: tags
+    tags: union(tags, { Component: 'Worker' })
   }
 }
 
@@ -307,4 +401,6 @@ output backendUrl string = backendModule.outputs.backendUrl
 output swaDefaultHostname string = swaModule.outputs.swaDefaultHostname
 output temporalUIFqdn string = temporalModule.outputs.temporalUIDefaultFqdn
 output zepApiUrl string = zepApiUrl
+output zepHost string = zepModule.outputs.zepInternalHost
 output openAiEndpoint string = azureAiEndpoint
+output storageAccountName string = storage.name

@@ -44,10 +44,13 @@ class Settings(BaseSettings):
         return f"postgresql://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
 
     # ==========================================================================
-    # Zep Memory Service
+    # Zep Memory Service (Self-hosted in Azure Container Apps)
     # ==========================================================================
-    zep_api_url: str = Field("http://localhost:8000", alias="ZEP_API_URL")
+    # ZEP_API_URL must be set to the Zep Container App internal FQDN (e.g., http://zep-app-name.internal:8000)
+    # In ACA, internal services use: http://{app-name}.internal:{port} or the ingress FQDN
+    zep_api_url: str = Field("", alias="ZEP_API_URL")  # Must be provided via environment variable
     zep_api_key: Optional[str] = Field(None, alias="ZEP_API_KEY")
+    zep_mode: str = Field("selfhost", alias="ZEP_MODE")  # Always self-hosted for enterprise
 
     # ==========================================================================
     # Temporal Orchestration

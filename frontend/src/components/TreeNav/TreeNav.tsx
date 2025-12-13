@@ -30,7 +30,7 @@ export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
   const location = useLocation();
 
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['agents', 'sources', 'validation', 'memory', 'workflows', 'bau', 'settings', 'admin'])
+    new Set(['agents', 'chat-voice', 'ingestion', 'validation', 'memory', 'workflows', 'bau', 'settings', 'admin'])
   )
 
   const toggleSection = (id: string) => {
@@ -48,7 +48,7 @@ export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
   const sections: TreeSection[] = [
     {
       id: 'agents',
-      label: 'Agents',
+      label: 'Cognition (Agents)',
       icon: '🧠',
       children: [
         { id: 'overview', label: 'Overview', icon: 'ℹ️', path: '/agents' },
@@ -73,41 +73,51 @@ export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
       ]
     },
     {
-      id: 'sources',
-      label: 'Sources',
-      icon: '🗂️',
+      id: 'chat-voice',
+      label: 'Chat & Voice',
+      icon: '💬',
       children: [
-        { id: 'sources-home', label: 'Unstructured Intake', icon: '🧾', path: '/sources' },
-        { id: 'sources-uploads', label: 'Uploads', icon: '📤', path: '/sources' }
+        { id: 'chat', label: 'Chat (Episodic)', icon: '💬', path: '/' },
+        { id: 'voice', label: 'Voice Interaction', icon: '🎤', path: '/voice' }
+      ]
+    },
+    {
+      id: 'ingestion',
+      label: 'Ingestion',
+      icon: '📥',
+      children: [
+        { id: 'sources', label: 'Connectors', icon: '🔌', path: '/sources' },
+        { id: 'uploads', label: 'Document Upload', icon: '📤', path: '/sources' },
+        { id: 'ingestion-progress', label: 'Progress', icon: '📊', path: '/sources/progress' }
       ]
     },
     {
       id: 'validation',
-      label: 'Validation',
+      label: 'Evidence & Validation',
       icon: '✅',
       children: [
-        { id: 'golden-thread', label: 'Golden Thread', icon: '🧪', path: '/validation/golden-thread' },
+        { id: 'golden-thread', label: 'Golden Thread Runner', icon: '🧪', path: '/validation/golden-thread' },
         { id: 'evidence', label: 'Evidence & Telemetry', icon: '📡', path: '/evidence' }
       ]
     },
     {
       id: 'memory',
-      label: 'Memory',
+      label: 'Memory (Provenance-First)',
       icon: '💾',
       children: [
-        { id: 'graph', label: 'Knowledge Graph', icon: '🔗', path: '/memory/graph' },
-        { id: 'episodes', label: 'Episodes', icon: '📝', path: '/memory/episodes' },
-        { id: 'search', label: 'Search', icon: '🔍', path: '/memory/search' }
+        { id: 'search', label: 'Search with Provenance', icon: '🔍', path: '/memory/search' },
+        { id: 'episodes', label: 'Episodes (Episodic Memory)', icon: '📝', path: '/memory/episodes' },
+        { id: 'graph', label: 'Knowledge Graph (Semantic)', icon: '🔗', path: '/memory/graph' }
       ]
     },
     {
       id: 'workflows',
-      label: 'Workflows',
+      label: 'Workflows (Durable Spine)',
       icon: '⚡',
       children: [
-        { id: 'active', label: 'Active', icon: '▶️', path: '/workflows/active' },
-        { id: 'history', label: 'History', icon: '📋', path: '/workflows/history' },
-        { id: 'signals', label: 'Signals', icon: '🔔', path: '/workflows/signals' }
+        { id: 'active', label: 'Active Workflows', icon: '▶️', path: '/workflows/active' },
+        { id: 'history', label: 'Workflow History', icon: '📋', path: '/workflows/history' },
+        { id: 'signals', label: 'Signals & Events', icon: '🔔', path: '/workflows/signals' }
       ]
     },
     {
