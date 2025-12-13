@@ -4,9 +4,6 @@ param location string = resourceGroup().location
 @description('ID of the Container Apps Environment.')
 param acaEnvId string
 
-@description('Name of the Container Apps Environment (for internal networking).')
-param acaEnvName string
-
 @description('Name of the Zep container app.')
 param appName string = 'zep'
 
@@ -31,10 +28,6 @@ param zepApiKey string = ''
 param tags object = {
   Project: 'Engram'
   Component: 'Zep'
-}
-
-resource acaEnv 'Microsoft.App/managedEnvironments@2022-03-01' existing = {
-  name: acaEnvName
 }
 
 // Zep Container App

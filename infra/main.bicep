@@ -300,7 +300,6 @@ module zepModule 'modules/zep-aca.bicep' = {
   params: {
     location: location
     acaEnvId: acaEnv.id
-    acaEnvName: acaEnv.name
     appName: '${envName}-zep'
     zepPostgresFqdn: postgres.properties.fullyQualifiedDomainName
     zepPostgresUser: 'cogadmin'
