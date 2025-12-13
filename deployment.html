@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Deployment Guide | Engram - Context Engineering Platform</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Deployment Guide" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Enterprise AI Memory &amp; Cognition Platform" />
+<meta property="og:description" content="Enterprise AI Memory &amp; Cognition Platform" />
+<link rel="canonical" href="https://wiki.engram.work/deployment.html" />
+<meta property="og:url" content="https://wiki.engram.work/deployment.html" />
+<meta property="og:site_name" content="Engram - Context Engineering Platform" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Deployment Guide" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"Enterprise AI Memory &amp; Cognition Platform","headline":"Deployment Guide","url":"https://wiki.engram.work/deployment.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+    <!--[if lt IE 9]>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <![endif]-->
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1><a href="https://wiki.engram.work/">Engram - Context Engineering Platform</a></h1>
+
+        
+
+        <p>Enterprise AI Memory & Cognition Platform</p>
+
+        
+
+        
+
+        
+      </header>
+      <section>
+
+      <h1 id="home--deployment-guide"><a href="/">Home</a> › Deployment Guide</h1>
+
+<h1 id="deployment-guide">Deployment Guide</h1>
+
+<p>This guide covers deploying the Engram platform to Azure and local development setup.</p>
+
+<h2 id="prerequisites">Prerequisites</h2>
+
+<h3 id="required-tools">Required Tools</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Tool</th>
+      <th>Version</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Azure CLI</td>
+      <td>2.50+</td>
+      <td>Azure resource management</td>
+    </tr>
+    <tr>
+      <td>Docker</td>
+      <td>24+</td>
+      <td>Container builds</td>
+    </tr>
+    <tr>
+      <td>Node.js</td>
+      <td>20+</td>
+      <td>Frontend build</td>
+    </tr>
+    <tr>
+      <td>Python</td>
+      <td>3.11+</td>
+      <td>Backend development</td>
+    </tr>
+    <tr>
+      <td>Bicep CLI</td>
+      <td>Latest</td>
+      <td>Infrastructure as code</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="azure-resources">Azure Resources</h3>
+
+<p>Ensure you have:</p>
+<ul>
+  <li>Azure subscription with Owner or Contributor access</li>
+  <li>Resource provider registrations for:
+    <ul>
+      <li>Microsoft.App (Container Apps)</li>
+      <li>Microsoft.KeyVault</li>
+      <li>Microsoft.DBforPostgreSQL</li>
+      <li>Microsoft.Storage</li>
+      <li>Microsoft.CognitiveServices</li>
+    </ul>
+  </li>
+</ul>
+
+<hr />
+
+<h2 id="local-development">Local Development</h2>
+
+<h3 id="quick-start">Quick Start</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Clone the repository</span>
+git clone https://github.com/zimaxnet/engram.git
+<span class="nb">cd </span>engram
+
+<span class="c"># Create environment file</span>
+<span class="nb">cp</span> .env.example .env
+<span class="c"># Edit .env with your Azure AI Foundry credentials</span>
+
+<span class="c"># Start all services</span>
+docker-compose up <span class="nt">-d</span>
+
+<span class="c"># View logs</span>
+docker-compose logs <span class="nt">-f</span>
+
+<span class="c"># Access the platform</span>
+open http://localhost:5173
+</code></pre></div></div>
+
+<h3 id="service-urls">Service URLs</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Service</th>
+      <th>URL</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Frontend</td>
+      <td>http://localhost:5173</td>
+      <td>React UI</td>
+    </tr>
+    <tr>
+      <td>API</td>
+      <td>http://localhost:8082</td>
+      <td>FastAPI backend</td>
+    </tr>
+    <tr>
+      <td>Temporal UI</td>
+      <td>http://localhost:8080</td>
+      <td>Workflow monitoring</td>
+    </tr>
+    <tr>
+      <td>Zep</td>
+      <td>http://localhost:8000</td>
+      <td>Memory service</td>
+    </tr>
+    <tr>
+      <td>PostgreSQL</td>
+      <td>localhost:5432</td>
+      <td>Database</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="environment-variables">Environment Variables</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># .env file</span>
+<span class="nv">ENVIRONMENT</span><span class="o">=</span>development
+<span class="nv">DEBUG</span><span class="o">=</span><span class="nb">true</span>
+
+<span class="c"># Azure AI Foundry (required for agent functionality)</span>
+<span class="nv">AZURE_AI_ENDPOINT</span><span class="o">=</span>https://your-endpoint.services.ai.azure.com/
+<span class="nv">AZURE_AI_KEY</span><span class="o">=</span>your-key-here
+<span class="nv">AZURE_AI_DEPLOYMENT</span><span class="o">=</span>gpt-4o-mini
+
+<span class="c"># Database (defaults work for docker-compose)</span>
+<span class="nv">POSTGRES_HOST</span><span class="o">=</span>localhost
+<span class="nv">POSTGRES_PORT</span><span class="o">=</span>5432
+<span class="nv">POSTGRES_USER</span><span class="o">=</span>postgres
+<span class="nv">POSTGRES_PASSWORD</span><span class="o">=</span>password
+<span class="nv">POSTGRES_DB</span><span class="o">=</span>engram
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="azure-deployment">Azure Deployment</h2>
+
+<h3 id="1-infrastructure-setup">1. Infrastructure Setup</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Login to Azure</span>
+az login
+
+<span class="c"># Set subscription</span>
+az account <span class="nb">set</span> <span class="nt">--subscription</span> <span class="s2">"Your Subscription Name"</span>
+
+<span class="c"># Create resource group</span>
+az group create <span class="se">\</span>
+  <span class="nt">--name</span> engram-rg <span class="se">\</span>
+  <span class="nt">--location</span> eastus
+
+<span class="c"># Deploy infrastructure</span>
+az deployment group create <span class="se">\</span>
+  <span class="nt">--resource-group</span> engram-rg <span class="se">\</span>
+  <span class="nt">--template-file</span> infra/main.bicep <span class="se">\</span>
+  <span class="nt">--parameters</span> <span class="nv">environment</span><span class="o">=</span>production
+</code></pre></div></div>
+
+<h3 id="2-key-vault-secrets">2. Key Vault Secrets</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Get Key Vault name from deployment output</span>
+<span class="nv">KV_NAME</span><span class="o">=</span><span class="si">$(</span>az deployment group show <span class="se">\</span>
+  <span class="nt">--resource-group</span> engram-rg <span class="se">\</span>
+  <span class="nt">--name</span> main <span class="se">\</span>
+  <span class="nt">--query</span> properties.outputs.keyVaultName.value <span class="nt">-o</span> tsv<span class="si">)</span>
+
+<span class="c"># Set required secrets</span>
+az keyvault secret <span class="nb">set</span> <span class="nt">--vault-name</span> <span class="nv">$KV_NAME</span> <span class="se">\</span>
+  <span class="nt">--name</span> <span class="s2">"azure-ai-key"</span> <span class="nt">--value</span> <span class="s2">"your-foundry-key"</span>
+
+az keyvault secret <span class="nb">set</span> <span class="nt">--vault-name</span> <span class="nv">$KV_NAME</span> <span class="se">\</span>
+  <span class="nt">--name</span> <span class="s2">"azure-client-id"</span> <span class="nt">--value</span> <span class="s2">"your-entra-client-id"</span>
+
+az keyvault secret <span class="nb">set</span> <span class="nt">--vault-name</span> <span class="nv">$KV_NAME</span> <span class="se">\</span>
+  <span class="nt">--name</span> <span class="s2">"azure-client-secret"</span> <span class="nt">--value</span> <span class="s2">"your-entra-client-secret"</span>
+
+az keyvault secret <span class="nb">set</span> <span class="nt">--vault-name</span> <span class="nv">$KV_NAME</span> <span class="se">\</span>
+  <span class="nt">--name</span> <span class="s2">"azure-tenant-id"</span> <span class="nt">--value</span> <span class="s2">"your-tenant-id"</span>
+</code></pre></div></div>
+
+<h3 id="3-container-deployment">3. Container Deployment</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Build and push images</span>
+docker build <span class="nt">-t</span> ghcr.io/zimaxnet/engram/backend:latest ./backend
+docker build <span class="nt">-t</span> ghcr.io/zimaxnet/engram/worker:latest <span class="nt">-f</span> ./backend/workflows/Dockerfile ./backend
+
+docker push ghcr.io/zimaxnet/engram/backend:latest
+docker push ghcr.io/zimaxnet/engram/worker:latest
+
+<span class="c"># Deploy to Container Apps (via GitHub Actions or manual)</span>
+az containerapp update <span class="se">\</span>
+  <span class="nt">--name</span> engram-api <span class="se">\</span>
+  <span class="nt">--resource-group</span> engram-rg <span class="se">\</span>
+  <span class="nt">--image</span> ghcr.io/zimaxnet/engram/backend:latest
+</code></pre></div></div>
+
+<h3 id="4-frontend-deployment">4. Frontend Deployment</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Build frontend</span>
+<span class="nb">cd </span>frontend
+npm ci
+npm run build
+
+<span class="c"># Deploy to Static Web Apps</span>
+az staticwebapp create <span class="se">\</span>
+  <span class="nt">--name</span> engram-frontend <span class="se">\</span>
+  <span class="nt">--resource-group</span> engram-rg <span class="se">\</span>
+  <span class="nt">--source</span> ./dist <span class="se">\</span>
+  <span class="nt">--location</span> eastus
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="cicd-pipeline">CI/CD Pipeline</h2>
+
+<p>The repository includes GitHub Actions workflows:</p>
+
+<h3 id="ci-pipeline-githubworkflowsciyml">CI Pipeline (<code class="language-plaintext highlighter-rouge">.github/workflows/ci.yml</code>)</h3>
+
+<p>Triggers: Push to <code class="language-plaintext highlighter-rouge">main</code>/<code class="language-plaintext highlighter-rouge">develop</code>, Pull Requests</p>
+
+<p>Steps:</p>
+<ol>
+  <li>Backend tests with PostgreSQL service</li>
+  <li>Frontend linting and build</li>
+  <li>Security scanning with Trivy</li>
+  <li>Docker image builds</li>
+</ol>
+
+<h3 id="deploy-pipeline-githubworkflowsdeployyml">Deploy Pipeline (<code class="language-plaintext highlighter-rouge">.github/workflows/deploy.yml</code>)</h3>
+
+<p>Triggers: CI success on <code class="language-plaintext highlighter-rouge">main</code>, Manual dispatch</p>
+
+<p>Steps:</p>
+<ol>
+  <li>Deploy infrastructure (Bicep)</li>
+  <li>Deploy backend to Container Apps</li>
+  <li>Deploy worker to Container Apps</li>
+  <li>Deploy frontend to Static Web Apps</li>
+  <li>Health checks</li>
+  <li>Notifications</li>
+</ol>
+
+<h3 id="required-secrets">Required Secrets</h3>
+
+<p>Set these in GitHub repository settings:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Secret</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">AZURE_CREDENTIALS</code></td>
+      <td>Service principal JSON</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">AZURE_KEY_VAULT_URL</code></td>
+      <td>Key Vault URL</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">AZURE_STATIC_WEB_APPS_API_TOKEN</code></td>
+      <td>SWA deployment token</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">API_URL</code></td>
+      <td>Production API URL</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">WS_URL</code></td>
+      <td>Production WebSocket URL</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">SLACK_WEBHOOK_URL</code></td>
+      <td>(Optional) Notifications</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2 id="entra-id-setup">Entra ID Setup</h2>
+
+<h3 id="app-registration">App Registration</h3>
+
+<ol>
+  <li>Go to Azure Portal &gt; Microsoft Entra ID &gt; App registrations</li>
+  <li>Click “New registration”</li>
+  <li>Configure:
+    <ul>
+      <li>Name: <code class="language-plaintext highlighter-rouge">Engram Platform</code></li>
+      <li>Supported account types: Single tenant (or as needed)</li>
+      <li>Redirect URI: <code class="language-plaintext highlighter-rouge">https://your-frontend.azurestaticapps.net/callback</code></li>
+    </ul>
+  </li>
+  <li>
+    <p>Note the Application (client) ID and Directory (tenant) ID</p>
+  </li>
+  <li>Create client secret:
+    <ul>
+      <li>Certificates &amp; secrets &gt; New client secret</li>
+      <li>Copy the secret value immediately</li>
+    </ul>
+  </li>
+  <li>Configure API permissions:
+    <ul>
+      <li>Microsoft Graph &gt; User.Read</li>
+      <li>Add custom scopes as needed</li>
+    </ul>
+  </li>
+  <li>Update app manifest with roles:
+    <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">"appRoles"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+ </span><span class="nl">"allowedMemberTypes"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"User"</span><span class="p">],</span><span class="w">
+ </span><span class="nl">"displayName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Admin"</span><span class="p">,</span><span class="w">
+ </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"generate-uuid"</span><span class="p">,</span><span class="w">
+ </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Admin"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+ </span><span class="nl">"allowedMemberTypes"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"User"</span><span class="p">],</span><span class="w">
+ </span><span class="nl">"displayName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Analyst"</span><span class="p">,</span><span class="w">
+ </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"generate-uuid"</span><span class="p">,</span><span class="w">
+ </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Analyst"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">]</span><span class="w">
+</span></code></pre></div>    </div>
+  </li>
+</ol>
+
+<hr />
+
+<h2 id="health-checks">Health Checks</h2>
+
+<h3 id="api-health">API Health</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl https://your-api.azurecontainerapps.io/health
+</code></pre></div></div>
+
+<p>Expected response:</p>
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"healthy"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0.1.0"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"services"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"database"</span><span class="p">:</span><span class="w"> </span><span class="s2">"healthy"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"temporal"</span><span class="p">:</span><span class="w"> </span><span class="s2">"healthy"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"zep"</span><span class="p">:</span><span class="w"> </span><span class="s2">"healthy"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<h3 id="temporal-health">Temporal Health</h3>
+
+<p>Access Temporal UI at your deployed URL to verify:</p>
+<ul>
+  <li>Workers are running</li>
+  <li>Task queues have active pollers</li>
+  <li>No failed workflows</li>
+</ul>
+
+<hr />
+
+<h2 id="troubleshooting">Troubleshooting</h2>
+
+<h3 id="common-issues">Common Issues</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Issue</th>
+      <th>Cause</th>
+      <th>Solution</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>401 Unauthorized</td>
+      <td>Invalid/expired token</td>
+      <td>Check Entra ID config</td>
+    </tr>
+    <tr>
+      <td>500 on agent calls</td>
+      <td>Missing AZURE_AI_KEY</td>
+      <td>Verify Key Vault secrets</td>
+    </tr>
+    <tr>
+      <td>Workflows not running</td>
+      <td>Worker not started</td>
+      <td>Check worker logs, task queue</td>
+    </tr>
+    <tr>
+      <td>Memory errors</td>
+      <td>Zep connection failed</td>
+      <td>Verify Zep URL and health</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="viewing-logs">Viewing Logs</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Container Apps logs</span>
+az containerapp logs show <span class="se">\</span>
+  <span class="nt">--name</span> engram-api <span class="se">\</span>
+  <span class="nt">--resource-group</span> engram-rg <span class="se">\</span>
+  <span class="nt">--follow</span>
+
+<span class="c"># Worker logs</span>
+az containerapp logs show <span class="se">\</span>
+  <span class="nt">--name</span> engram-worker <span class="se">\</span>
+  <span class="nt">--resource-group</span> engram-rg <span class="se">\</span>
+  <span class="nt">--follow</span>
+</code></pre></div></div>
+
+<h3 id="debug-mode">Debug Mode</h3>
+
+<p>Set <code class="language-plaintext highlighter-rouge">DEBUG=true</code> in environment to enable:</p>
+<ul>
+  <li>Detailed error messages</li>
+  <li>API documentation at <code class="language-plaintext highlighter-rouge">/docs</code></li>
+  <li>Verbose logging</li>
+</ul>
+
+
+
+      </section>
+      <footer>
+        
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="/assets/js/scale.fix.js"></script>
+  </body>
+</html>

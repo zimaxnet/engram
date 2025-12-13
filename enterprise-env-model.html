@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Enterprise Environment Model (dev/test/uat/prod) | Engram - Context Engineering Platform</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Enterprise Environment Model (dev/test/uat/prod)" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Enterprise AI Memory &amp; Cognition Platform" />
+<meta property="og:description" content="Enterprise AI Memory &amp; Cognition Platform" />
+<link rel="canonical" href="https://wiki.engram.work/docs/enterprise-env-model.html" />
+<meta property="og:url" content="https://wiki.engram.work/docs/enterprise-env-model.html" />
+<meta property="og:site_name" content="Engram - Context Engineering Platform" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Enterprise Environment Model (dev/test/uat/prod)" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"Enterprise AI Memory &amp; Cognition Platform","headline":"Enterprise Environment Model (dev/test/uat/prod)","url":"https://wiki.engram.work/docs/enterprise-env-model.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1><a href="https://wiki.engram.work/">Engram - Context Engineering Platform</a></h1>
+        <p>Enterprise AI Memory &amp; Cognition Platform</p>
+      </header>
+      <section>
+      <p><a href="/">Home</a> › Enterprise Environment Model</p>
+
+      <h1 id="env-model">Enterprise Environment Model (dev/test/uat/prod)</h1>
+
+      <blockquote>
+        <p><strong>Goal</strong>: turn the current “staging” POC into a repeatable enterprise IaC pattern that can deploy dev/test/uat/prod into a customer tenant.</p>
+      </blockquote>
+
+      <hr />
+
+      <h2 id="principles">1) Principles</h2>
+      <ul>
+        <li><strong>Same modules</strong> across environments; only parameters change.</li>
+        <li><strong>Environment isolation</strong>: separate namespaces/resource groups and separate secrets.</li>
+        <li><strong>Promotion pipeline</strong>: immutable images promoted dev → test → uat → prod.</li>
+        <li><strong>Compliance</strong>: audit logs and retention policies enabled before prod cutover.</li>
+      </ul>
+
+      <hr />
+
+      <h2 id="naming">2) Naming convention</h2>
+
+      <p>Recommend a consistent prefix and environment suffix:</p>
+
+      <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{org}-{product}-{env}-{component}
+
+Examples:
+  {org}-engram-dev-api
+  {org}-engram-uat-worker
+  {org}-engram-prod-temporal-server
+  {org}-engram-prod-zep
+</code></pre></div></div>
+
+      <p>For Azure Container Apps the environment container group can remain <code class="language-plaintext highlighter-rouge">{org}-{product}-{env}-aca</code>.</p>
+
+      <hr />
+
+      <h2 id="iac">3) IaC parameterization plan</h2>
+
+      <p>Current Bicep already supports an <code class="language-plaintext highlighter-rouge">envName</code> parameter. To reach enterprise readiness, extend parameters to include:</p>
+      <ul>
+        <li><strong>Environment</strong>: dev/test/uat/prod tags and naming</li>
+        <li><strong>Endpoints</strong>: custom domain toggles per env</li>
+        <li><strong>Vendor mode</strong>: cloud vs self-host for Temporal/Zep/Unstructured</li>
+        <li><strong>Data plane</strong>: storage account/container names per env</li>
+      </ul>
+
+      <hr />
+
+      <h2 id="promotion">4) Promotion lifecycle</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Env</th>
+            <th>Goal</th>
+            <th>What changes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>dev</strong></td>
+            <td>feature iteration</td>
+            <td>scale-to-zero; relaxed quotas</td>
+          </tr>
+          <tr>
+            <td><strong>test</strong></td>
+            <td>integration</td>
+            <td>synthetic datasets + automated tests</td>
+          </tr>
+          <tr>
+            <td><strong>uat</strong></td>
+            <td>customer acceptance</td>
+            <td>production-like config; approval workflows</td>
+          </tr>
+          <tr>
+            <td><strong>prod</strong></td>
+            <td>BAU</td>
+            <td>SLOs + audit + backups + incident playbooks</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <hr />
+
+      <h2 id="next">5) Next steps</h2>
+
+      <ul>
+        <li>Add explicit Zep/Unstructured/Temporal self-host toggles to IaC.</li>
+        <li>Define secrets and identity model per environment (Key Vault + Managed Identity).</li>
+        <li>Run Golden Thread in each env as a release gate.</li>
+      </ul>
+
+      </section>
+      <footer>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="/assets/js/scale.fix.js"></script>
+  </body>
+</html>
