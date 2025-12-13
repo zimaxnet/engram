@@ -24,6 +24,19 @@ param zepPostgresDb string = 'zep'
 @secure()
 param zepApiKey string = ''
 
+@description('Container image for Zep.')
+param zepImage string = 'ghcr.io/getzep/zep:latest'
+
+@description('Container registry server for Zep image.')
+param registryServer string = 'ghcr.io'
+
+@description('Registry username (optional, if image is private).')
+param registryUsername string = ''
+
+@description('Registry password (optional, if image is private).')
+@secure()
+param registryPassword string = ''
+
 // Optionally include API key secret/env only when provided to avoid invalid empty secret
 var zepApiSecret = empty(zepApiKey) ? [] : [
   {
@@ -36,6 +49,21 @@ var zepApiEnv = empty(zepApiKey) ? [] : [
   {
     name: 'ZEP_API_KEY'
     secretRef: 'zep-api-key'
+  }
+]
+
+var zepRegistrySecret = empty(registryUsername) ? [] : [
+  {
+    name: 'zep-registry-password'
+    value: registryPassword
+  }
+]
+
+var zepRegistries = empty(registryUsername) ? [] : [
+  {
+    server: registryServer
+    username: registryUsername
+    passwordSecretRef: 'zep-registry-password'
   }
 ]
 
@@ -66,13 +94,14 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
           name: 'zep-postgres-password'
           value: zepPostgresPassword
         }
-      ], zepApiSecret)
+      ], zepApiSecret, zepRegistrySecret)
+      registries: zepRegistries
     }
     template: {
       containers: [
         {
           name: 'zep'
-          image: 'getzep/zep:latest'
+          image: zepImage
           env: concat([
             {
               name: 'ZEP_SERVER_ADDRESS'

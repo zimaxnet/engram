@@ -23,6 +23,9 @@ param backendImage string = 'ghcr.io/zimaxnet/engram/backend:latest'
 @description('Container image for worker.')
 param workerImage string = 'ghcr.io/zimaxnet/engram/worker:latest'
 
+@description('Container image for Zep (memory).')
+param zepImage string = 'ghcr.io/getzep/zep:latest'
+
 // param azureOpenAiKey removed
 // param azureSpeechKey removed
 
@@ -306,6 +309,10 @@ module zepModule 'modules/zep-aca.bicep' = {
     zepPostgresPassword: postgresPassword
     zepPostgresDb: 'zep'
     zepApiKey: zepApiKey
+    zepImage: zepImage
+    registryServer: 'ghcr.io'
+    registryUsername: registryUsername
+    registryPassword: registryPassword
     tags: zepTags
   }
 }
