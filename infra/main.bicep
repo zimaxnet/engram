@@ -61,12 +61,15 @@ var baseTags = {
 }
 
 @description('Tags to apply to all resources.')
-param tags object = baseTags
+param tags object = {}
+
+// Merge base tags with overrides
+var mergedTags = union(baseTags, tags)
 
 // =============================================================================
 // Log Analytics
 // =============================================================================
-var logAnalyticsTags = union(tags, {
+var logAnalyticsTags = union(mergedTags, {
   Component: 'LogAnalytics'
   DataClass: 'internal'
 })
@@ -86,7 +89,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
 // =============================================================================
 // Container Apps Environment
 // =============================================================================
-var acaEnvTags = union(tags, {
+var acaEnvTags = union(mergedTags, {
   Component: 'ContainerAppsEnvironment'
   DataClass: 'internal'
 })
@@ -109,7 +112,7 @@ resource acaEnv 'Microsoft.App/managedEnvironments@2022-03-01' = {
 // =============================================================================
 // PostgreSQL Flexible Server (Temporal + Zep storage)
 // =============================================================================
-var postgresTags = union(tags, {
+var postgresTags = union(mergedTags, {
   Component: 'PostgreSQL'
   Plane: 'recall'  // System of recall (memory/knowledge graph)
   DataClass: 'internal'
@@ -156,7 +159,7 @@ resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2021-06-01' = {
 // =============================================================================
 // Storage Account (System of Record - raw artifacts)
 // =============================================================================
-var storageTags = union(tags, {
+var storageTags = union(mergedTags, {
   Component: 'BlobStorage'
   Plane: 'record'  // System of record (raw docs, artifacts, provenance)
   DataClass: 'internal'
@@ -184,7 +187,7 @@ resource storage 'Microsoft.Storage/storageAccounts@2021-09-01' = {
 // =============================================================================
 // Managed Identities (User Assigned)
 // =============================================================================
-var identityTags = union(tags, {
+var identityTags = union(mergedTags, {
   Component: 'ManagedIdentity'
   DataClass: 'internal'
 })
@@ -211,7 +214,7 @@ module keyVaultModule 'modules/keyvault.bicep' = {
     // Key Vault names must be 3-24 alphanumeric only; strip hyphens from envName and suffix a short unique string
     // The prior name is stuck in soft-deleted state; add a static differentiator to avoid the collision
     keyVaultName: '${toLower(replace(envName, '-', ''))}kvy${take(uniqueString(resourceGroup().id), 5)}'
-    tags: union(tags, { Component: 'KeyVault', DataClass: 'confidential' })
+    tags: union(mergedTags, { Component: 'KeyVault', DataClass: 'confidential' })
   }
 }
 
@@ -265,7 +268,7 @@ module temporalModule 'modules/temporal-aca.bicep' = {
     postgresUser: 'cogadmin'
     postgresPassword: postgresPassword
     postgresDb: 'engram'
-    tags: union(tags, { Component: 'Temporal' })
+    tags: union(mergedTags, { Component: 'Temporal' })
   }
 }
 
@@ -286,7 +289,7 @@ resource zepDb 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2021-06-01' 
 // Note: This requires azure.extensions parameter to include 'vector' in Postgres server config
 // The extension is created via init script or manual setup after deployment
 
-var zepTags = union(tags, {
+var zepTags = union(mergedTags, {
   Component: 'Zep'
   Plane: 'recall'  // System of recall (memory/knowledge graph)
   DataClass: 'internal'
@@ -333,7 +336,7 @@ module backendModule 'modules/backend-aca.bicep' = {
     registryPassword: registryPassword
     keyVaultUri: keyVaultModule.outputs.keyVaultUri
     identityResourceId: backendIdentity.id
-    tags: union(tags, { Component: 'BackendAPI' })
+    tags: union(mergedTags, { Component: 'BackendAPI' })
   }
 }
 
@@ -359,7 +362,7 @@ module workerModule 'modules/worker-aca.bicep' = {
     registryPassword: registryPassword
     keyVaultUri: keyVaultModule.outputs.keyVaultUri
     identityResourceId: workerIdentity.id
-    tags: union(tags, { Component: 'Worker' })
+    tags: union(mergedTags, { Component: 'Worker' })
   }
 }
 
@@ -401,6 +404,5 @@ output backendUrl string = backendModule.outputs.backendUrl
 output swaDefaultHostname string = swaModule.outputs.swaDefaultHostname
 output temporalUIFqdn string = temporalModule.outputs.temporalUIDefaultFqdn
 output zepApiUrl string = zepApiUrl
-output zepHost string = zepModule.outputs.zepInternalHost
 output openAiEndpoint string = azureAiEndpoint
 output storageAccountName string = storage.name
