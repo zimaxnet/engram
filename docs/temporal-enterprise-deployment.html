@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temporal Enterprise Deployment Strategy - Engram Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #00d4ff;
+            border-bottom: 3px solid #a855f7;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        h2 {
+            color: #00d4ff;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            padding-top: 1rem;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        h3 {
+            color: #a855f7;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        h4 {
+            color: #10b981;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .executive-summary {
+            background: #0a0e1a;
+            color: #e2e8f0;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .executive-summary h2 {
+            color: #00d4ff;
+            border: none;
+            margin-top: 0;
+        }
+        
+        .executive-summary ul {
+            margin-left: 2rem;
+            margin-top: 1rem;
+        }
+        
+        .executive-summary li {
+            margin-bottom: 0.5rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+        }
+        
+        th {
+            background: #0a0e1a;
+            color: #00d4ff;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .critical {
+            background: #fee2e2;
+            color: #991b1b;
+            font-weight: 600;
+        }
+        
+        .required {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        code {
+            background: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            background: #0a0e1a;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+        
+        pre code {
+            background: transparent;
+            padding: 0;
+            color: #e2e8f0;
+        }
+        
+        .architecture-diagram {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            font-family: monospace;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        
+        .risk-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .risk-box h4 {
+            color: #92400e;
+            margin-top: 0;
+        }
+        
+        .mitigation {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .mitigation h4 {
+            color: #065f46;
+            margin-top: 0;
+        }
+        
+        .phase {
+            background: #e0e7ff;
+            border-left: 4px solid #6366f1;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .phase h4 {
+            color: #312e81;
+            margin-top: 0;
+        }
+        
+        .references {
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 3rem;
+        }
+        
+        .references ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        
+        .references li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .references a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+        
+        .references a:hover {
+            text-decoration: underline;
+        }
+        
+        .toc {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .toc h3 {
+            margin-top: 0;
+        }
+        
+        .toc ul {
+            list-style: none;
+            margin-left: 1rem;
+        }
+        
+        .toc li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .toc a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Temporal Enterprise Deployment Strategy for Engram Platform</h1>
+        
+        <div class="executive-summary">
+            <h2>Executive Summary</h2>
+            <p>This document outlines Zimax Networks LC's strategy for deploying Temporal OSS in customer Kubernetes environments (dev/test/UAT/prod). Temporal is central to Engram's success as the durable execution "Spine" layer, requiring dedicated resources and expertise. This plan addresses enterprise requirements including immutable history shard configuration, customer-managed key encryption, and NIST AI RMF compliance.</p>
+            
+            <p><strong>Key Decision</strong>: Temporal OSS (not Cloud) for customer environments to enable:</p>
+            <ul>
+                <li>Full control over data encryption with customer-managed keys</li>
+                <li>Custom RBAC and SSO integration</li>
+                <li>Compliance with customer-specific security requirements</li>
+                <li>Cost optimization through right-sizing (vs. consumption-based Cloud pricing)</li>
+            </ul>
+        </div>
+        
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#section1">1. Temporal OSS vs Temporal Cloud: Enterprise Comparison</a></li>
+                <li><a href="#section2">2. History Shard Count: Immutable Configuration Strategy</a></li>
+                <li><a href="#section3">3. Data Encryption: Customer-Managed Keys with Codec Server</a></li>
+                <li><a href="#section4">4. Kubernetes Deployment with Helm Charts</a></li>
+                <li><a href="#section5">5. NIST AI RMF Compliance Integration</a></li>
+                <li><a href="#section6">6. Operational Responsibilities</a></li>
+                <li><a href="#section7">7. Implementation Roadmap</a></li>
+                <li><a href="#section8">8. Risk Mitigation</a></li>
+                <li><a href="#section9">9. Success Metrics</a></li>
+                <li><a href="#section10">10. Next Steps</a></li>
+            </ul>
+        </div>
+        
+        <section id="section1">
+            <h2>1. Temporal OSS vs Temporal Cloud: Enterprise Comparison</h2>
+            
+            <h3>Feature Comparison Matrix</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Temporal OSS (Self-Hosted)</th>
+                        <th>Temporal Cloud</th>
+                        <th>Engram Requirement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>RBAC</strong></td>
+                        <td>Custom plugin required</td>
+                        <td>Built-in</td>
+                        <td class="required">✅ Required - Custom integration with Entra ID</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SSO/SAML/SCIM</strong></td>
+                        <td>Custom implementation</td>
+                        <td>Included in Enterprise</td>
+                        <td class="required">✅ Required - Customer-specific SSO</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Compliance</strong></td>
+                        <td>Internal implementation (SOC 2, HIPAA)</td>
+                        <td>SOC 2 Type II, HIPAA included</td>
+                        <td class="required">✅ Required - Customer-specific compliance</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Private Link</strong></td>
+                        <td>Manual setup</td>
+                        <td>Managed</td>
+                        <td class="required">✅ Required - Customer VNet integration</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Service Accounts/API Keys</strong></td>
+                        <td>Custom implementation</td>
+                        <td>Managed</td>
+                        <td class="required">✅ Required - Customer-managed keys</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Audit Logging</strong></td>
+                        <td>Custom implementation</td>
+                        <td>Centralized, built-in</td>
+                        <td class="required">✅ Required - Customer audit requirements</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cloud Availability</strong></td>
+                        <td>Manual configuration (AWS/GCP/Azure)</td>
+                        <td>Seamless integrations</td>
+                        <td class="required">✅ Required - Customer's cloud choice</td>
+                    </tr>
+                    <tr>
+                        <td><strong>MRN Support</strong></td>
+                        <td>Complex setup with Replicated Namespaces</td>
+                        <td>Fully managed</td>
+                        <td class="required">✅ Required - Multi-region for enterprise</td>
+                    </tr>
+                    <tr>
+                        <td><strong>On-Call Support</strong></td>
+                        <td>Zimax Networks LC team</td>
+                        <td>24x7 Temporal support</td>
+                        <td class="required">✅ Zimax Networks LC provides support</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Data Encryption</strong></td>
+                        <td>Custom Data Converter + Codec Server</td>
+                        <td>Managed (limited customization)</td>
+                        <td class="critical">✅ <strong>CRITICAL</strong> - Customer-managed keys required</td>
+                    </tr>
+                    <tr>
+                        <td><strong>History Shard Count</strong></td>
+                        <td>Immutable after creation</td>
+                        <td>Managed by Temporal</td>
+                        <td class="critical">✅ <strong>CRITICAL</strong> - Must plan correctly upfront</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Decision Rationale for OSS</h3>
+            <p><strong>Why Temporal OSS for Customer Environments:</strong></p>
+            <ol>
+                <li><strong>Customer-Managed Keys (CMK)</strong>: Required for security assessments. Temporal Cloud's encryption is managed; OSS allows full control via Data Converter + Codec Server.</li>
+                <li><strong>Custom Compliance</strong>: Customers may require specific compliance frameworks (beyond SOC 2/HIPAA). OSS enables custom audit logging, data residency, and compliance controls.</li>
+                <li><strong>Cost Predictability</strong>: For enterprise customers with predictable workloads, OSS on customer infrastructure provides cost predictability vs. consumption-based Cloud pricing ($25/1M actions + $200/month base).</li>
+                <li><strong>Integration Requirements</strong>: Custom RBAC, SSO, and audit logging require OSS flexibility.</li>
+                <li><strong>Data Residency</strong>: Customer data must remain in customer-controlled infrastructure.</li>
+            </ol>
+            <p><strong>Staging POC Exception</strong>: Current ACA deployment is acceptable for testing only. Production requires Kubernetes deployment.</p>
+        </section>
+        
+        <section id="section2">
+            <h2>2. History Shard Count: Immutable Configuration Strategy</h2>
+            
+            <h3>The Problem</h3>
+            <p>Temporal's history shard count <strong>cannot be changed after cluster creation</strong>. This requires:</p>
+            <ul>
+                <li>Over-provisioning for peak demand (wasteful)</li>
+                <li>Under-provisioning risks (bottlenecks)</li>
+                <li>Careful upfront planning</li>
+            </ul>
+            
+            <h3>Shard Count Sizing Formula</h3>
+            <pre><code>Shard Count = (Peak Workflow Throughput / Shard Capacity) × Safety Factor
+
+Where:
+- Peak Workflow Throughput = Max workflows/second expected
+- Shard Capacity = ~1,000-2,000 workflows/second per shard (conservative)
+- Safety Factor = 1.5-2.0 (for growth and spikes)</code></pre>
+            
+            <h3>Engram Platform Shard Sizing</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Environment</th>
+                        <th>Expected Peak Throughput</th>
+                        <th>Recommended Shards</th>
+                        <th>Rationale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Dev</strong></td>
+                        <td>10 workflows/sec</td>
+                        <td>4 shards</td>
+                        <td>Minimal, cost-optimized</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Test</strong></td>
+                        <td>50 workflows/sec</td>
+                        <td>8 shards</td>
+                        <td>Testing load scenarios</td>
+                    </tr>
+                    <tr>
+                        <td><strong>UAT</strong></td>
+                        <td>200 workflows/sec</td>
+                        <td>16 shards</td>
+                        <td>Production-like load</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Production</strong></td>
+                        <td>1,000+ workflows/sec</td>
+                        <td>32-64 shards</td>
+                        <td>Enterprise scale with headroom</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p><strong>Formula Applied (Production)</strong>:</p>
+            <pre><code>1,000 workflows/sec ÷ 1,500 workflows/shard = 0.67 shards
+0.67 × 2.0 (safety factor) = 1.34 → Round to 32 shards (power of 2)
+For enterprise with growth: 64 shards recommended</code></pre>
+            
+            <h3>Management Strategy</h3>
+            
+            <h4>1. Pre-Deployment Assessment</h4>
+            <p><strong>Workload Analysis Tool</strong> (to be built):</p>
+            <pre><code># tools/shard-calculator.py
+def calculate_shard_count(
+    peak_workflows_per_second: int,
+    avg_workflow_duration_seconds: int,
+    peak_concurrent_workflows: int,
+    growth_factor: float = 2.0
+) -> int:
+    """
+    Calculate recommended shard count with growth projection.
+    
+    Returns: Power-of-2 shard count (4, 8, 16, 32, 64, 128)
+    """
+    base_shards = (peak_workflows_per_second / 1500) * growth_factor
+    return 2 ** math.ceil(math.log2(base_shards))</code></pre>
+            
+            <h4>2. Helm Chart Configuration</h4>
+            <p><strong>values-production.yaml</strong>:</p>
+            <pre><code>server:
+  config:
+    numHistoryShards: 64  # Immutable - set correctly upfront
+    persistence:
+      default:
+        historyShardCount: 64</code></pre>
+            
+            <h4>3. Monitoring and Alerting</h4>
+            <p><strong>Metrics to Track</strong>:</p>
+            <ul>
+                <li><code>temporal_history_shard_utilization</code> - Alert if > 80%</li>
+                <li><code>temporal_workflow_throughput_per_shard</code> - Alert if > 1,500/sec</li>
+                <li><code>temporal_shard_hotspots</code> - Identify uneven distribution</li>
+            </ul>
+            <p><strong>Alert Thresholds</strong>:</p>
+            <ul>
+                <li><strong>Warning</strong>: Any shard > 70% utilization</li>
+                <li><strong>Critical</strong>: Any shard > 90% utilization (indicates need for migration)</li>
+            </ul>
+            
+            <h4>4. Migration Strategy (If Under-Provisioned)</h4>
+            <p>If shard count is insufficient:</p>
+            <ol>
+                <li><strong>Create new cluster</strong> with correct shard count</li>
+                <li><strong>Replicate namespaces</strong> to new cluster (MRN)</li>
+                <li><strong>Gradual migration</strong> of workflows</li>
+                <li><strong>Decommission</strong> old cluster</li>
+            </ol>
+            <p><strong>Cost</strong>: Significant operational overhead. Prevention via proper sizing is critical.</p>
+        </section>
+        
+        <section id="section3">
+            <h2>3. Data Encryption: Customer-Managed Keys with Codec Server</h2>
+            
+            <h3>NIST AI RMF Alignment</h3>
+            <p>Per <a href="https://www.nist.gov/itl/ai-risk-management-framework">NIST AI RMF</a>, data encryption requirements:</p>
+            
+            <p><strong>Govern Function</strong>:</p>
+            <ul>
+                <li>Establish encryption policies for AI workflow data</li>
+                <li>Define key management responsibilities</li>
+            </ul>
+            
+            <p><strong>Map Function</strong>:</p>
+            <ul>
+                <li>Identify sensitive data in workflow payloads (PII, PHI, business secrets)</li>
+                <li>Map encryption requirements to workflow types</li>
+            </ul>
+            
+            <p><strong>Measure Function</strong>:</p>
+            <ul>
+                <li>Verify encryption at rest and in transit</li>
+                <li>Audit key rotation and access</li>
+            </ul>
+            
+            <p><strong>Manage Function</strong>:</p>
+            <ul>
+                <li>Implement customer-managed key rotation</li>
+                <li>Monitor encryption compliance</li>
+            </ul>
+            
+            <h3>Temporal Encryption Architecture</h3>
+            <div class="architecture-diagram">┌─────────────────────────────────────────────────────────┐
+│                    Engram Platform                       │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│  Workflow Payload (Plaintext)                           │
+│         │                                                │
+│         ▼                                                │
+│  ┌──────────────────┐                                   │
+│  │ Data Converter   │ ← Customer-managed encryption     │
+│  │ (Client-side)    │   - Uses customer's KMS           │
+│  └──────────────────┘   - Azure Key Vault / AWS KMS    │
+│         │                  / GCP KMS                     │
+│         ▼                                                │
+│  Encrypted Payload (Stored in Temporal)                 │
+│         │                                                │
+│         ▼                                                │
+│  ┌──────────────────┐                                   │
+│  │ Codec Server     │ ← Decryption service              │
+│  │ (Separate Pod)   │   - Isolated from Temporal        │
+│  └──────────────────┘   - Customer-managed keys only   │
+│         │                                                │
+│         ▼                                                │
+│  Decrypted Payload (For workflow execution)             │
+└─────────────────────────────────────────────────────────┘</div>
+            
+            <h3>Implementation Plan</h3>
+            
+            <h4>Phase 1: Data Converter (Client-Side Encryption)</h4>
+            <p><strong>Location</strong>: <code>backend/workflows/codec/</code></p>
+            <p><strong>Files to Create</strong>:</p>
+            <ul>
+                <li><code>data_converter.py</code> - Custom Data Converter with encryption</li>
+                <li><code>encryption_codec.py</code> - Payload encryption/decryption</li>
+                <li><code>key_management.py</code> - Integration with customer KMS</li>
+            </ul>
+            
+            <h4>Phase 2: Codec Server (Server-Side Decryption)</h4>
+            <p><strong>Why Codec Server?</strong></p>
+            <ul>
+                <li>Temporal server cannot decrypt (doesn't have keys)</li>
+                <li>Codec Server runs in customer's K8s cluster with key access</li>
+                <li>Isolated security boundary</li>
+            </ul>
+            
+            <h4>Phase 3: Key Rotation Strategy</h4>
+            <p><strong>NIST AI RMF Requirement</strong>: Regular key rotation</p>
+            <p><strong>Implementation</strong>:</p>
+            <ol>
+                <li><strong>Dual-Key Support</strong>: Maintain current + previous key during rotation</li>
+                <li><strong>Gradual Migration</strong>: Re-encrypt workflows with new key over time</li>
+                <li><strong>Key Versioning</strong>: Track key versions in payload metadata</li>
+                <li><strong>Automated Rotation</strong>: Scheduled rotation (e.g., quarterly)</li>
+            </ol>
+        </section>
+        
+        <section id="section4">
+            <h2>4. Kubernetes Deployment with Helm Charts</h2>
+            
+            <h3>Current State (Staging POC)</h3>
+            <p><strong>Current</strong>: Temporal deployed in Azure Container Apps (ACA)</p>
+            <ul>
+                <li><code>temporal-server</code> Container App</li>
+                <li><code>temporal-ui</code> Container App</li>
+                <li>PostgreSQL backend</li>
+            </ul>
+            
+            <p><strong>Limitation</strong>: ACA doesn't support advanced K8s features needed for enterprise:</p>
+            <ul>
+                <li>Custom RBAC integration</li>
+                <li>Pod security policies</li>
+                <li>Network policies</li>
+                <li>Service mesh integration</li>
+            </ul>
+            
+            <h3>Target State (Customer Environments)</h3>
+            <p><strong>Deployment</strong>: Temporal OSS via <a href="https://github.com/temporalio/helm-charts">Helm Charts</a></p>
+            
+            <div class="architecture-diagram">Kubernetes Cluster (Customer's)
+├── Temporal Namespace
+│   ├── Temporal Server (StatefulSet)
+│   │   ├── Frontend (3 replicas)
+│   │   ├── History (3 replicas)
+│   │   ├── Matching (3 replicas)
+│   │   └── Worker (2 replicas)
+│   ├── Temporal Admin Tools
+│   ├── Temporal Web UI
+│   └── Codec Server (Separate deployment)
+├── PostgreSQL (Customer's managed database)
+└── Monitoring (Prometheus/Grafana)</div>
+        </section>
+        
+        <section id="section5">
+            <h2>5. NIST AI RMF Compliance Integration</h2>
+            
+            <h3>Framework Mapping</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>NIST AI RMF Function</th>
+                        <th>Temporal Implementation</th>
+                        <th>Engram Controls</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Govern</strong></td>
+                        <td>Temporal namespace policies</td>
+                        <td>Customer-defined governance</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Map</strong></td>
+                        <td>Workflow type classification</td>
+                        <td>Sensitivity tagging in metadata</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Measure</strong></td>
+                        <td>Temporal metrics + Evidence Telemetry</td>
+                        <td>Cost, performance, security metrics</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Manage</strong></td>
+                        <td>Workflow signals, human-in-the-loop</td>
+                        <td>Approval workflows, incident response</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Data Encryption Controls (NIST AI RMF)</h3>
+            <p><strong>Control ID</strong>: AI-SEC-01 (Data Encryption)</p>
+            <p><strong>Implementation</strong>:</p>
+            <ol>
+                <li>✅ <strong>Encryption at Rest</strong>: All workflow history encrypted via Data Converter</li>
+                <li>✅ <strong>Encryption in Transit</strong>: TLS 1.3 for all Temporal communications</li>
+                <li>✅ <strong>Key Management</strong>: Customer-managed keys via Codec Server</li>
+                <li>✅ <strong>Key Rotation</strong>: Automated quarterly rotation</li>
+                <li>✅ <strong>Access Control</strong>: RBAC + SSO integration</li>
+            </ol>
+        </section>
+        
+        <section id="section6">
+            <h2>6. Operational Responsibilities</h2>
+            
+            <h3>Zimax Networks LC Support Model</h3>
+            <p><strong>For Customer Environments (dev/test/UAT/prod)</strong>:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Responsibility</th>
+                        <th>Zimax Networks LC</th>
+                        <th>Customer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Temporal deployment</td>
+                        <td class="required">✅ Helm chart deployment</td>
+                        <td>Infrastructure provisioning</td>
+                    </tr>
+                    <tr>
+                        <td>History shard sizing</td>
+                        <td class="required">✅ Assessment & recommendation</td>
+                        <td>Approval</td>
+                    </tr>
+                    <tr>
+                        <td>Codec Server deployment</td>
+                        <td class="required">✅ Implementation</td>
+                        <td>Key management</td>
+                    </tr>
+                    <tr>
+                        <td>Monitoring & alerting</td>
+                        <td class="required">✅ Setup & maintenance</td>
+                        <td>Alert response</td>
+                    </tr>
+                    <tr>
+                        <td>Updates & patches</td>
+                        <td class="required">✅ Planning & execution</td>
+                        <td>Maintenance windows</td>
+                    </tr>
+                    <tr>
+                        <td>Troubleshooting</td>
+                        <td class="required">✅ 24/7 support</td>
+                        <td>Issue reporting</td>
+                    </tr>
+                    <tr>
+                        <td>Compliance documentation</td>
+                        <td class="required">✅ Preparation</td>
+                        <td>Audit participation</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p><strong>Dedicated Resources Required</strong>:</p>
+            <ul>
+                <li><strong>Temporal SME</strong>: Deep expertise in OSS deployment</li>
+                <li><strong>K8s Engineer</strong>: Helm charts, deployment automation</li>
+                <li><strong>Security Engineer</strong>: Encryption, compliance, NIST AI RMF</li>
+                <li><strong>SRE</strong>: Monitoring, alerting, incident response</li>
+            </ul>
+        </section>
+        
+        <section id="section7">
+            <h2>7. Implementation Roadmap</h2>
+            
+            <div class="phase">
+                <h4>Phase 1: Foundation (Months 1-2)</h4>
+                <ul>
+                    <li>Research and document history shard sizing methodology</li>
+                    <li>Build shard calculator tool</li>
+                    <li>Create Helm chart customizations</li>
+                    <li>Design Codec Server architecture</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 2: Encryption Implementation (Months 2-3)</h4>
+                <ul>
+                    <li>Implement Data Converter with customer KMS integration</li>
+                    <li>Build Codec Server (separate K8s deployment)</li>
+                    <li>Create key rotation workflow</li>
+                    <li>Test encryption end-to-end</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 3: Helm Chart Deployment (Months 3-4)</h4>
+                <ul>
+                    <li>Customize Temporal Helm chart for enterprise</li>
+                    <li>Create deployment automation</li>
+                    <li>Test in dev environment</li>
+                    <li>Document deployment procedures</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 4: Compliance & Documentation (Months 4-5)</h4>
+                <ul>
+                    <li>Map NIST AI RMF controls to implementation</li>
+                    <li>Create security assessment documentation</li>
+                    <li>Prepare audit evidence</li>
+                    <li>Train support team</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 5: Production Deployment (Months 5-6)</h4>
+                <ul>
+                    <li>Deploy to customer dev environment</li>
+                    <li>Validate shard count sizing</li>
+                    <li>Test encryption with customer keys</li>
+                    <li>Gradual rollout to test/UAT/prod</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section id="section8">
+            <h2>8. Risk Mitigation</h2>
+            
+            <div class="risk-box">
+                <h4>Risk: History Shard Under-Provisioning</h4>
+                <div class="mitigation">
+                    <h4>Mitigation</h4>
+                    <ul>
+                        <li>Conservative sizing (2x safety factor)</li>
+                        <li>Monitoring with early warning alerts</li>
+                        <li>Migration plan documented upfront</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="risk-box">
+                <h4>Risk: Encryption Key Compromise</h4>
+                <div class="mitigation">
+                    <h4>Mitigation</h4>
+                    <ul>
+                        <li>Key rotation workflow</li>
+                        <li>Dual-key support during rotation</li>
+                        <li>Audit logging of all key access</li>
+                        <li>Isolated Codec Server (separate security boundary)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="risk-box">
+                <h4>Risk: Operational Complexity</h4>
+                <div class="mitigation">
+                    <h4>Mitigation</h4>
+                    <ul>
+                        <li>Comprehensive documentation</li>
+                        <li>Automated deployment (Helm charts)</li>
+                        <li>Dedicated support team</li>
+                        <li>Training and runbooks</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <section id="section9">
+            <h2>9. Success Metrics</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Target</th>
+                        <th>Measurement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>History shard utilization</td>
+                        <td>&lt; 70%</td>
+                        <td>Prometheus metrics</td>
+                    </tr>
+                    <tr>
+                        <td>Encryption coverage</td>
+                        <td>100% of sensitive workflows</td>
+                        <td>Audit logs</td>
+                    </tr>
+                    <tr>
+                        <td>Key rotation success rate</td>
+                        <td>100%</td>
+                        <td>Rotation workflow logs</td>
+                    </tr>
+                    <tr>
+                        <td>Deployment time</td>
+                        <td>&lt; 2 hours</td>
+                        <td>Deployment automation</td>
+                    </tr>
+                    <tr>
+                        <td>Support response time</td>
+                        <td>&lt; 1 hour (P1)</td>
+                        <td>Incident tracking</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <section id="section10">
+            <h2>10. Next Steps</h2>
+            <ol>
+                <li><strong>Approve this strategy</strong> for customer environment deployment</li>
+                <li><strong>Allocate resources</strong> for Temporal SME, K8s engineer, security engineer</li>
+                <li><strong>Begin Phase 1</strong> implementation (shard calculator, Helm chart research)</li>
+                <li><strong>Engage with customer</strong> security team for KMS integration requirements</li>
+                <li><strong>Schedule security assessment</strong> preparation timeline</li>
+            </ol>
+        </section>
+        
+        <div class="references">
+            <h2>References</h2>
+            <ul>
+                <li><a href="https://github.com/temporalio/helm-charts">Temporal Helm Charts</a></li>
+                <li><a href="https://docs.temporal.io/concepts/what-is-a-data-converter">Temporal Data Converter Documentation</a></li>
+                <li><a href="https://www.nist.gov/itl/ai-risk-management-framework">NIST AI Risk Management Framework</a></li>
+                <li><a href="https://docs.temporal.io/server/production-deployment-guide">Temporal History Shard Configuration</a></li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
+

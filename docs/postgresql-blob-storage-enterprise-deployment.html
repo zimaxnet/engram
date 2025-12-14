@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostgreSQL & Blob Storage Enterprise Deployment Strategy - Engram Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #00d4ff;
+            border-bottom: 3px solid #a855f7;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        h2 {
+            color: #00d4ff;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            padding-top: 1rem;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        h3 {
+            color: #a855f7;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        h4 {
+            color: #10b981;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .executive-summary {
+            background: #0a0e1a;
+            color: #e2e8f0;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .executive-summary h2 {
+            color: #00d4ff;
+            border: none;
+            margin-top: 0;
+        }
+        
+        .executive-summary ul {
+            margin-left: 2rem;
+            margin-top: 1rem;
+        }
+        
+        .executive-summary li {
+            margin-bottom: 0.5rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+        }
+        
+        th {
+            background: #0a0e1a;
+            color: #00d4ff;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .critical {
+            background: #fee2e2;
+            color: #991b1b;
+            font-weight: 600;
+        }
+        
+        .required {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        code {
+            background: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            background: #0a0e1a;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+        
+        pre code {
+            background: transparent;
+            padding: 0;
+            color: #e2e8f0;
+        }
+        
+        .architecture-diagram {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            font-family: monospace;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        
+        .risk-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .risk-box h4 {
+            color: #92400e;
+            margin-top: 0;
+        }
+        
+        .mitigation {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .mitigation h4 {
+            color: #065f46;
+            margin-top: 0;
+        }
+        
+        .phase {
+            background: #e0e7ff;
+            border-left: 4px solid #6366f1;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .phase h4 {
+            color: #312e81;
+            margin-top: 0;
+        }
+        
+        .references {
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 3rem;
+        }
+        
+        .references ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        
+        .references li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .references a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+        
+        .references a:hover {
+            text-decoration: underline;
+        }
+        
+        .toc {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .toc h3 {
+            margin-top: 0;
+        }
+        
+        .toc ul {
+            list-style: none;
+            margin-left: 1rem;
+        }
+        
+        .toc li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .toc a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PostgreSQL & Azure Blob Storage Enterprise Deployment Strategy for Engram Platform</h1>
+        
+        <div class="executive-summary">
+            <h2>Executive Summary</h2>
+            <p>This document outlines Zimax Networks LC's strategy for deploying Azure Database for PostgreSQL Flexible Server (with pgvector) and Azure Blob Storage in customer environments (dev/test/UAT/prod). These services form the foundation of Engram's data storage architecture: PostgreSQL serves as the "System of Recall" (Zep memory layer), while Blob Storage serves as the "System of Record" (document artifacts). This plan addresses enterprise requirements including SKU selection, pgvector configuration, Blob Storage tier optimization, customer-managed key encryption, lifecycle management, and NIST AI RMF compliance.</p>
+            
+            <p><strong>Key Decision</strong>: Azure Database for PostgreSQL Flexible Server + Azure Blob Storage for customer environments to enable:</p>
+            <ul>
+                <li>Full control over database sizing and pgvector configuration</li>
+                <li>Customer-managed encryption keys (BYOK)</li>
+                <li>Data residency in customer-controlled Azure infrastructure</li>
+                <li>Cost optimization through right-sizing and tier selection</li>
+                <li>Integration with customer's existing Azure infrastructure</li>
+            </ul>
+        </div>
+        
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#section1">1. PostgreSQL Flexible Server vs Alternatives: Enterprise Comparison</a></li>
+                <li><a href="#section2">2. PostgreSQL SKU Selection: Critical Sizing Strategy</a></li>
+                <li><a href="#section3">3. Azure Blob Storage Tier Selection: Cost Optimization Strategy</a></li>
+                <li><a href="#section4">4. Data Encryption: Customer-Managed Keys for Both Services</a></li>
+                <li><a href="#section5">5. Integration Patterns: PostgreSQL + Blob Storage</a></li>
+                <li><a href="#section6">6. NIST AI RMF Compliance Integration</a></li>
+                <li><a href="#section7">7. Operational Responsibilities</a></li>
+                <li><a href="#section8">8. Implementation Roadmap</a></li>
+                <li><a href="#section9">9. Risk Mitigation</a></li>
+                <li><a href="#section10">10. Success Metrics</a></li>
+                <li><a href="#section11">11. Next Steps</a></li>
+            </ul>
+        </div>
+        
+        <section id="section1">
+            <h2>1. PostgreSQL Flexible Server vs Alternatives: Enterprise Comparison</h2>
+            
+            <h3>Service Comparison Matrix</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Flexible Server (Recommended)</th>
+                        <th>Single Server (Legacy)</th>
+                        <th>Self-Hosted on VM</th>
+                        <th>HorizonDB (Preview)</th>
+                        <th>Engram Requirement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Deployment</strong></td>
+                        <td>Fully managed Azure service</td>
+                        <td>Fully managed (legacy)</td>
+                        <td>Customer-managed VM</td>
+                        <td>Fully managed (preview)</td>
+                        <td class="required">✅ Required - Managed service</td>
+                    </tr>
+                    <tr>
+                        <td><strong>pgvector Support</strong></td>
+                        <td>Native extension support</td>
+                        <td>Native extension support</td>
+                        <td>Full control</td>
+                        <td>Enhanced vector search</td>
+                        <td class="required">✅ Required - pgvector essential</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SKU Flexibility</strong></td>
+                        <td>Burstable, General Purpose, Memory Optimized</td>
+                        <td>Limited tiers</td>
+                        <td>Full control</td>
+                        <td>High-performance tiers</td>
+                        <td class="required">✅ Required - Right-sizing</td>
+                    </tr>
+                    <tr>
+                        <td><strong>High Availability</strong></td>
+                        <td>Zone-redundant (99.99% SLA)</td>
+                        <td>Built-in HA</td>
+                        <td>Customer-managed</td>
+                        <td>Multi-zone replication</td>
+                        <td class="required">✅ Required - Production HA</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Encryption Keys</strong></td>
+                        <td>Customer-managed keys (CMK)</td>
+                        <td>Azure-managed only</td>
+                        <td>Full control</td>
+                        <td>Customer-managed keys</td>
+                        <td class="critical">✅ <strong>CRITICAL</strong> - CMK required</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Storage Scaling</strong></td>
+                        <td>Independent compute/storage</td>
+                        <td>Coupled</td>
+                        <td>Full control</td>
+                        <td>Auto-scaling storage</td>
+                        <td class="required">✅ Required - Flexible scaling</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cost Model</strong></td>
+                        <td>Pay-per-use, reserved capacity</td>
+                        <td>Pay-per-use</td>
+                        <td>Infrastructure costs</td>
+                        <td>Pay-per-use</td>
+                        <td class="required">✅ Required - Predictable costs</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Stop/Start</strong></td>
+                        <td>Supported (dev/test)</td>
+                        <td>Not supported</td>
+                        <td>Full control</td>
+                        <td>Not supported</td>
+                        <td class="required">✅ Required - Scale-to-zero</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Maintenance Windows</strong></td>
+                        <td>Customer-controlled</td>
+                        <td>Azure-managed</td>
+                        <td>Customer-controlled</td>
+                        <td>Azure-managed</td>
+                        <td class="required">✅ Required - Control</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Compliance</strong></td>
+                        <td>SOC 2, HIPAA, PCI-DSS</td>
+                        <td>SOC 2, HIPAA</td>
+                        <td>Customer-managed</td>
+                        <td>SOC 2, HIPAA</td>
+                        <td class="required">✅ Required - Enterprise compliance</td>
+                    </tr>
+                    <tr>
+                        <td><strong>On-Call Support</strong></td>
+                        <td>Azure support + Zimax Networks LC</td>
+                        <td>Azure support</td>
+                        <td>Zimax Networks LC</td>
+                        <td>Azure support</td>
+                        <td class="required">✅ Zimax Networks LC provides support</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Decision Rationale for Flexible Server</h3>
+            <p><strong>Why Azure Database for PostgreSQL Flexible Server for Customer Environments:</strong></p>
+            <ol>
+                <li><strong>pgvector Native Support</strong>: Flexible Server provides native support for pgvector extension, essential for Zep's vector similarity search. HorizonDB offers enhanced vector search but is in preview.</li>
+                <li><strong>Customer-Managed Keys (CMK)</strong>: Required for security assessments. Flexible Server supports CMK via Azure Key Vault, enabling full customer control over encryption keys.</li>
+                <li><strong>Independent Scaling</strong>: Compute and storage scale independently, allowing cost optimization. Single Server couples compute and storage.</li>
+                <li><strong>Stop/Start Capability</strong>: For dev/test environments, Flexible Server can be stopped when not in use, reducing costs. Single Server cannot be stopped.</li>
+                <li><strong>Maintenance Control</strong>: Flexible Server allows customer-controlled maintenance windows, critical for production environments.</li>
+                <li><strong>Cost Predictability</strong>: Flexible Server offers reserved capacity (up to 55% savings) and predictable pricing vs. self-hosted operational overhead.</li>
+                <li><strong>High Availability</strong>: Zone-redundant HA with 99.99% SLA meets enterprise requirements without customer-managed failover complexity.</li>
+            </ol>
+            
+            <p><strong>HorizonDB Consideration</strong>: HorizonDB (preview) offers 3x performance improvement and enhanced vector search. Consider for future migration after GA, but Flexible Server is recommended for current deployments.</p>
+        </section>
+        
+        <section id="section2">
+            <h2>2. PostgreSQL SKU Selection: Critical Sizing Strategy</h2>
+            
+            <h3>The Challenge</h3>
+            <p>PostgreSQL SKU selection is a <strong>critical decision</strong> that affects:</p>
+            <ul>
+                <li><strong>Performance</strong>: Insufficient compute leads to query latency and connection pool exhaustion</li>
+                <li><strong>Cost</strong>: Over-provisioning wastes budget; under-provisioning causes performance issues</li>
+                <li><strong>Scalability</strong>: SKU changes require downtime (though Flexible Server supports online scaling)</li>
+                <li><strong>Vector Operations</strong>: pgvector operations are compute-intensive; insufficient resources degrade RAG quality</li>
+            </ul>
+            
+            <p>Unlike Temporal's immutable history shard count, PostgreSQL SKUs can be scaled, but <strong>initial sizing must be accurate</strong> to avoid performance degradation and unnecessary scaling operations.</p>
+            
+            <h3>SKU Tier Comparison</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tier</th>
+                        <th>Use Case</th>
+                        <th>vCores</th>
+                        <th>RAM</th>
+                        <th>Cost/Month</th>
+                        <th>Best For</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Burstable (B-series)</strong></td>
+                        <td>Dev/test, low traffic</td>
+                        <td>1-2</td>
+                        <td>2-4GB</td>
+                        <td>$12-25</td>
+                        <td>Development, staging POC</td>
+                    </tr>
+                    <tr>
+                        <td><strong>General Purpose (D-series)</strong></td>
+                        <td>Production workloads</td>
+                        <td>2-64</td>
+                        <td>8-256GB</td>
+                        <td>$100-4000+</td>
+                        <td>Most production use cases</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Memory Optimized (E-series)</strong></td>
+                        <td>High-performance, memory-intensive</td>
+                        <td>2-64</td>
+                        <td>16-512GB</td>
+                        <td>$200-8000+</td>
+                        <td>Large vector datasets, high concurrency</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Engram Platform SKU Sizing</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Environment</th>
+                        <th>Expected Load</th>
+                        <th>Recommended SKU</th>
+                        <th>Rationale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Dev</strong></td>
+                        <td>100 sessions, 1K facts</td>
+                        <td>B1ms (1 vCore, 2GB)</td>
+                        <td>Minimal, cost-optimized, can stop/start</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Test</strong></td>
+                        <td>500 sessions, 10K facts</td>
+                        <td>B2s (2 vCore, 4GB)</td>
+                        <td>Testing load scenarios</td>
+                    </tr>
+                    <tr>
+                        <td><strong>UAT</strong></td>
+                        <td>2K sessions, 100K facts</td>
+                        <td>D2s_v3 (2 vCore, 8GB)</td>
+                        <td>Production-like load, zone-redundant HA</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Production</strong></td>
+                        <td>10K+ sessions, 1M+ facts</td>
+                        <td>D4s_v3 (4 vCore, 16GB) or higher</td>
+                        <td>Enterprise scale with headroom</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Formula Applied (Production)</h4>
+            <pre><code>Compute Requirements:
+- Base: 2 vCores for PostgreSQL operations
+- Vector Operations: +1 vCore per 500K vectors (pgvector indexing/search)
+- Concurrent Connections: +0.5 vCore per 100 active connections
+
+Memory Requirements:
+- Base: 4GB for PostgreSQL
+- Vector Indexes: +2GB per 1M vectors (HNSW index memory)
+- Connection Pool: +100MB per 10 connections
+
+Production Example:
+- 1M vectors → 2 vCores (vector ops) + 2 vCores (base) = 4 vCores
+- 1M vectors → 2GB (indexes) + 4GB (base) + 2GB (connections) = 8GB minimum
+- Recommended: D4s_v3 (4 vCore, 16GB) for headroom</code></pre>
+            
+            <h3>Storage Sizing Strategy</h3>
+            <p><strong>Storage Configuration</strong>:</p>
+            <ul>
+                <li><strong>Minimum</strong>: 32GB (Flexible Server minimum)</li>
+                <li><strong>Auto-grow</strong>: Enabled (prevents over-provisioning)</li>
+                <li><strong>IOPS</strong>: Scales with storage size (3 IOPS per GB, up to 20,000 IOPS)</li>
+            </ul>
+            
+            <h4>Storage Sizing Formula</h4>
+            <pre><code>Storage Required = (Data Size + Index Size + WAL + Growth) × Safety Factor
+
+Where:
+- Data Size = Episodic + Semantic memory (from Zep sizing)
+- Index Size = Vector indexes (HNSW) + B-tree indexes
+- WAL = Write-Ahead Log (typically 10-20% of data size)
+- Growth = 30-day growth projection
+- Safety Factor = 1.5-2.0</code></pre>
+            
+            <h3>Management Strategy</h3>
+            <h4>1. Pre-Deployment Assessment</h4>
+            <p><strong>PostgreSQL Sizing Tool</strong> (to be built):</p>
+            <pre><code># tools/postgres-sku-calculator.py
+def calculate_postgres_sku(
+    expected_sessions: int,
+    expected_facts: int,
+    expected_concurrent_connections: int,
+    growth_factor: float = 2.0
+) -> dict:
+    """
+    Calculate recommended PostgreSQL SKU and storage.
+    
+    Returns: SKU recommendation, vCores, RAM, storage
+    """
+    # Calculate compute
+    base_vcores = 2
+    vector_vcores = math.ceil(expected_facts / 500000)
+    connection_vcores = math.ceil(expected_concurrent_connections / 100) * 0.5
+    total_vcores = math.ceil((base_vcores + vector_vcores + connection_vcores) * growth_factor)
+    
+    # Calculate memory
+    base_memory_gb = 4
+    vector_memory_gb = (expected_facts / 1000000) * 2
+    connection_memory_gb = (expected_concurrent_connections / 10) * 0.1
+    total_memory_gb = math.ceil((base_memory_gb + vector_memory_gb + connection_memory_gb) * growth_factor)
+    
+    # Map to Azure SKU
+    if total_vcores <= 1 and total_memory_gb <= 2:
+        return {"sku": "B1ms", "vcores": 1, "ram_gb": 2, "storage_gb": 32}
+    elif total_vcores <= 2 and total_memory_gb <= 8:
+        return {"sku": "D2s_v3", "vcores": 2, "ram_gb": 8, "storage_gb": 64}
+    elif total_vcores <= 4 and total_memory_gb <= 16:
+        return {"sku": "D4s_v3", "vcores": 4, "ram_gb": 16, "storage_gb": 128}
+    else:
+        return {"sku": "D8s_v3", "vcores": 8, "ram_gb": 32, "storage_gb": 256}</code></pre>
+            
+            <h4>2. SKU Scaling Strategy</h4>
+            <p><strong>Online Scaling</strong> (Flexible Server):</p>
+            <ul>
+                <li>Compute scaling: Supported with minimal downtime (5-10 minutes)</li>
+                <li>Storage scaling: Supported online (no downtime)</li>
+                <li><strong>Recommendation</strong>: Start conservative, scale up based on metrics</li>
+            </ul>
+            
+            <p><strong>Scaling Triggers</strong>:</p>
+            <ul>
+                <li>CPU utilization > 70% sustained</li>
+                <li>Memory utilization > 80%</li>
+                <li>Connection pool > 80% utilization</li>
+                <li>Query latency p95 > 500ms</li>
+            </ul>
+            
+            <h4>3. Monitoring and Alerting</h4>
+            <p><strong>Metrics to Track</strong>:</p>
+            <ul>
+                <li><code>postgres_cpu_percent</code> - Alert if > 70%</li>
+                <li><code>postgres_memory_percent</code> - Alert if > 80%</li>
+                <li><code>postgres_connections_active</code> - Alert if > 80% of max_connections</li>
+                <li><code>postgres_storage_percent</code> - Alert if > 85%</li>
+                <li><code>postgres_query_duration_p95</code> - Alert if > 500ms</li>
+            </ul>
+            
+            <p><strong>Alert Thresholds</strong>:</p>
+            <ul>
+                <li><strong>Warning</strong>: CPU > 60%, Memory > 70%, Connections > 70%</li>
+                <li><strong>Critical</strong>: CPU > 80%, Memory > 90%, Connections > 90%, Storage > 90%</li>
+            </ul>
+        </section>
+        
+        <section id="section3">
+            <h2>3. Azure Blob Storage Tier Selection: Cost Optimization Strategy</h2>
+            
+            <h3>The Challenge</h3>
+            <p>Azure Blob Storage tier selection directly impacts cost and performance:</p>
+            <ul>
+                <li><strong>Hot Tier</strong>: High access costs, low storage costs (frequently accessed data)</li>
+                <li><strong>Cool Tier</strong>: Lower access costs, higher storage costs (infrequently accessed)</li>
+                <li><strong>Archive Tier</strong>: Lowest storage costs, highest retrieval costs (rarely accessed)</li>
+                <li><strong>Immutable Policies</strong>: Once set, cannot be easily changed (compliance requirement)</li>
+            </ul>
+            
+            <p><strong>Tier selection must be optimized</strong> based on data access patterns to minimize costs while meeting performance requirements.</p>
+            
+            <h3>Blob Storage Tier Comparison</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tier</th>
+                        <th>Use Case</th>
+                        <th>Storage Cost/GB</th>
+                        <th>Access Cost/10K</th>
+                        <th>Retrieval Time</th>
+                        <th>Min Retention</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Hot</strong></td>
+                        <td>Frequently accessed documents</td>
+                        <td>$0.018</td>
+                        <td>$0.05</td>
+                        <td>Immediate</td>
+                        <td>None</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cool</strong></td>
+                        <td>Infrequently accessed (30+ days)</td>
+                        <td>$0.01</td>
+                        <td>$0.10</td>
+                        <td>Immediate</td>
+                        <td>30 days</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Archive</strong></td>
+                        <td>Rarely accessed (180+ days)</td>
+                        <td>$0.002</td>
+                        <td>$5.00</td>
+                        <td>15 hours</td>
+                        <td>180 days</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Engram Platform Tier Strategy</h3>
+            <p><strong>Two-Plane Architecture</strong>:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data Plane</th>
+                        <th>Tier Strategy</th>
+                        <th>Rationale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Record Plane (Blob Storage)</strong></td>
+                        <td>Hot → Cool → Archive lifecycle</td>
+                        <td>Documents accessed frequently initially, then archived</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Recall Plane (PostgreSQL)</strong></td>
+                        <td>Always Hot (database)</td>
+                        <td>Vector search requires immediate access</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Lifecycle Policy Configuration</h4>
+            <pre><code>{
+  "rules": [
+    {
+      "name": "RecordPlaneLifecycle",
+      "enabled": true,
+      "type": "Lifecycle",
+      "definition": {
+        "filters": {
+          "blobTypes": ["blockBlob"],
+          "prefixMatch": ["record-plane/"]
+        },
+        "actions": {
+          "baseBlob": {
+            "tierToCool": {
+              "daysAfterModificationGreaterThan": 30
+            },
+            "tierToArchive": {
+              "daysAfterModificationGreaterThan": 90
+            },
+            "delete": {
+              "daysAfterModificationGreaterThan": 2555
+            }
+          }
+        }
+      }
+    }
+  ]
+}</code></pre>
+            
+            <h3>Management Strategy</h3>
+            <h4>1. Pre-Deployment Assessment</h4>
+            <p><strong>Blob Storage Sizing Tool</strong> (to be built):</p>
+            <pre><code># tools/blob-sizer.py
+def calculate_blob_storage_requirements(
+    expected_documents_per_month: int,
+    avg_document_size_mb: float,
+    retention_days: int,
+    access_pattern: str  # "frequent", "moderate", "rare"
+) -> dict:
+    """
+    Calculate Blob Storage requirements and tier recommendations.
+    
+    Returns: Storage size, tier distribution, estimated cost
+    """
+    total_data_gb = (expected_documents_per_month * avg_document_size_mb * retention_days / 30) / 1024
+    
+    # Tier distribution based on access pattern
+    if access_pattern == "frequent":
+        hot_pct, cool_pct, archive_pct = 0.7, 0.2, 0.1
+    elif access_pattern == "moderate":
+        hot_pct, cool_pct, archive_pct = 0.3, 0.5, 0.2
+    else:  # rare
+        hot_pct, cool_pct, archive_pct = 0.1, 0.3, 0.6
+    
+    return {
+        "total_storage_gb": total_data_gb,
+        "tier_distribution": {
+            "hot_gb": total_data_gb * hot_pct,
+            "cool_gb": total_data_gb * cool_pct,
+            "archive_gb": total_data_gb * archive_pct
+        },
+        "estimated_monthly_cost": calculate_cost(total_data_gb, hot_pct, cool_pct, archive_pct)
+    }</code></pre>
+            
+            <h4>2. Lifecycle Management</h4>
+            <p><strong>Automated Tier Transitions</strong>:</p>
+            <ul>
+                <li><strong>Hot → Cool</strong>: After 30 days of no access</li>
+                <li><strong>Cool → Archive</strong>: After 90 days of no access</li>
+                <li><strong>Archive → Delete</strong>: After 7 years (compliance retention)</li>
+            </ul>
+            
+            <h4>3. Immutable Storage (Compliance)</h4>
+            <p><strong>Legal Hold & Immutable Policies</strong>:</p>
+            <ul>
+                <li><strong>Legal Hold</strong>: Prevents deletion/modification (compliance requirement)</li>
+                <li><strong>Time-Based Retention</strong>: WORM (Write Once, Read Many) policies</li>
+                <li><strong>Configuration</strong>: Set via Azure Portal or ARM/Bicep</li>
+            </ul>
+            <p><strong>Use Case</strong>: Documents subject to legal hold or regulatory retention requirements.</p>
+        </section>
+        
+        <section id="section4">
+            <h2>4. Data Encryption: Customer-Managed Keys for Both Services</h2>
+            
+            <h3>NIST AI RMF Alignment</h3>
+            <p>Per <a href="https://www.nist.gov/itl/ai-risk-management-framework">NIST AI RMF</a>, data encryption requirements:</p>
+            
+            <p><strong>Govern Function</strong>:</p>
+            <ul>
+                <li>Establish encryption policies for database and blob storage data</li>
+                <li>Define key management responsibilities</li>
+            </ul>
+            
+            <p><strong>Map Function</strong>:</p>
+            <ul>
+                <li>Identify sensitive data in PostgreSQL (memory data) and Blob Storage (documents)</li>
+                <li>Map encryption requirements to data types</li>
+            </ul>
+            
+            <p><strong>Measure Function</strong>:</p>
+            <ul>
+                <li>Verify encryption at rest and in transit</li>
+                <li>Audit key rotation and access</li>
+            </ul>
+            
+            <p><strong>Manage Function</strong>:</p>
+            <ul>
+                <li>Implement customer-managed key rotation</li>
+                <li>Monitor encryption compliance</li>
+            </ul>
+            
+            <h3>Encryption Architecture</h3>
+            <div class="architecture-diagram">┌─────────────────────────────────────────────────────────┐
+│                    Engram Platform                       │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│  PostgreSQL (System of Recall)                           │
+│         │                                                │
+│         ▼                                                │
+│  ┌──────────────────┐                                   │
+│  │ PostgreSQL TDE    │ ← Database-level encryption       │
+│  │ (Flexible Server) │   - Customer-managed keys        │
+│  └──────────────────┘   - Azure Key Vault integration   │
+│         │                                                │
+│         ▼                                                │
+│  ┌──────────────────┐                                   │
+│  │ Azure Key Vault  │ ← Customer-managed encryption keys│
+│  │ (Customer KMS)   │   - Full control over keys        │
+│  └──────────────────┘   - Key rotation capability       │
+│                                                          │
+│  Azure Blob Storage (System of Record)                  │
+│         │                                                │
+│         ▼                                                │
+│  ┌──────────────────┐                                   │
+│  │ Blob Storage TDE  │ ← Storage-level encryption       │
+│  │ (Storage Account)│   - Customer-managed keys        │
+│  └──────────────────┘   - Azure Key Vault integration   │
+│         │                                                │
+│         ▼                                                │
+│  ┌──────────────────┐                                   │
+│  │ Azure Key Vault  │ ← Same customer-managed keys      │
+│  │ (Customer KMS)   │   - Unified key management        │
+│  └──────────────────┘                                   │
+└─────────────────────────────────────────────────────────┘</div>
+            
+            <h3>Implementation Plan</h3>
+            <h4>Phase 1: PostgreSQL TDE with Customer-Managed Keys</h4>
+            <p><strong>Azure PostgreSQL Flexible Server TDE</strong>:</p>
+            <ul>
+                <li>Built-in TDE using Azure Key Vault</li>
+                <li>Customer-managed keys (CMK) supported</li>
+                <li>Zero application changes required</li>
+            </ul>
+            
+            <h4>Phase 2: Blob Storage TDE with Customer-Managed Keys</h4>
+            <p><strong>Azure Blob Storage TDE</strong>:</p>
+            <ul>
+                <li>Built-in encryption using Azure Key Vault</li>
+                <li>Customer-managed keys (CMK) supported</li>
+                <li>Applies to all blobs in storage account</li>
+            </ul>
+            
+            <h4>Phase 3: Unified Key Management</h4>
+            <p><strong>Single Key Vault for Both Services</strong>:</p>
+            <ul>
+                <li>Use same customer-managed key for PostgreSQL and Blob Storage</li>
+                <li>Simplifies key rotation and management</li>
+                <li>Single audit trail for key access</li>
+            </ul>
+            
+            <p><strong>Key Rotation Strategy</strong>:</p>
+            <ol>
+                <li><strong>PostgreSQL TDE Key Rotation</strong>: Azure PostgreSQL supports online key rotation</li>
+                <li><strong>Blob Storage Key Rotation</strong>: Update key version in storage account configuration</li>
+                <li><strong>Dual-Key Support</strong>: Maintain current + previous key during rotation</li>
+                <li><strong>Automated Rotation</strong>: Scheduled rotation (e.g., quarterly)</li>
+            </ol>
+        </section>
+        
+        <section id="section5">
+            <h2>5. Integration Patterns: PostgreSQL + Blob Storage</h2>
+            
+            <h3>Two-Plane Architecture</h3>
+            <p><strong>System of Record (Blob Storage)</strong>:</p>
+            <ul>
+                <li>Raw documents (PDF, DOCX, etc.)</li>
+                <li>Parsed artifacts from Unstructured</li>
+                <li>Provenance metadata</li>
+                <li>Access control lists (ACLs)</li>
+            </ul>
+            
+            <p><strong>System of Recall (PostgreSQL)</strong>:</p>
+            <ul>
+                <li>Episodic memory (conversation sessions)</li>
+                <li>Semantic memory (knowledge graph facts)</li>
+                <li>Vector embeddings (for similarity search)</li>
+                <li>Entity relationships</li>
+            </ul>
+            
+            <h3>Data Flow</h3>
+            <div class="architecture-diagram">Document Upload
+     │
+     ▼
+┌─────────────┐
+│ Blob Storage│ ← Store raw document (System of Record)
+│  (Record)   │
+└─────────────┘
+     │
+     ▼
+┌─────────────┐
+│ Unstructured│ ← Process document
+│     OSS     │
+└─────────────┘
+     │
+     ├──► Chunks → PostgreSQL (Zep) ← System of Recall
+     │              - Vector embeddings
+     │              - Facts, entities
+     │
+     └──► Parsed artifacts → Blob Storage (Record)
+                  - Preserve for reprocessing
+                  - Compliance/audit</div>
+            
+            <h3>Azure Storage Extension Integration</h3>
+            <p><strong>PostgreSQL → Blob Storage</strong>:</p>
+            <ul>
+                <li>Use <code>azure_storage</code> extension for data export</li>
+                <li>Archive episodic memory to Blob Storage after retention period</li>
+                <li>Export backup files to Blob Storage</li>
+            </ul>
+            
+            <p><strong>Blob Storage → PostgreSQL</strong>:</p>
+            <ul>
+                <li>Use <code>azure_storage</code> extension for data import</li>
+                <li>Bulk import historical data</li>
+                <li>Restore from backups</li>
+            </ul>
+        </section>
+        
+        <section id="section6">
+            <h2>6. NIST AI RMF Compliance Integration</h2>
+            
+            <h3>Framework Mapping</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>NIST AI RMF Function</th>
+                        <th>PostgreSQL Implementation</th>
+                        <th>Blob Storage Implementation</th>
+                        <th>Engram Controls</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Govern</strong></td>
+                        <td>Database retention policies, access controls</td>
+                        <td>Blob lifecycle policies, immutable storage</td>
+                        <td>Customer-defined governance</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Map</strong></td>
+                        <td>Data classification (episodic vs. semantic)</td>
+                        <td>Document classification, sensitivity tagging</td>
+                        <td>PII/PHI detection and handling</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Measure</strong></td>
+                        <td>Database performance metrics, query latency</td>
+                        <td>Blob access patterns, tier utilization</td>
+                        <td>Cost, performance, security metrics</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Manage</strong></td>
+                        <td>Database backups, PITR, key rotation</td>
+                        <td>Blob lifecycle management, deletion policies</td>
+                        <td>Data lifecycle management</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Data Encryption Controls (NIST AI RMF)</h3>
+            <p><strong>Control ID</strong>: AI-SEC-01 (Data Encryption)</p>
+            
+            <p><strong>Implementation</strong>:</p>
+            <ol>
+                <li>✅ <strong>Encryption at Rest</strong>: 
+                    <ul>
+                        <li>PostgreSQL: TDE with customer-managed keys</li>
+                        <li>Blob Storage: TDE with customer-managed keys</li>
+                    </ul>
+                </li>
+                <li>✅ <strong>Encryption in Transit</strong>: TLS 1.3 for all communications</li>
+                <li>✅ <strong>Key Management</strong>: Customer-managed keys via Azure Key Vault (unified)</li>
+                <li>✅ <strong>Key Rotation</strong>: Automated quarterly rotation for both services</li>
+                <li>✅ <strong>Access Control</strong>: RBAC, Private Endpoints, network isolation</li>
+            </ol>
+            
+            <p><strong>Evidence</strong>:</p>
+            <ul>
+                <li>PostgreSQL TDE configuration manifest</li>
+                <li>Blob Storage TDE configuration manifest</li>
+                <li>Key rotation workflow logs</li>
+                <li>Encryption metadata in both services</li>
+                <li>Audit logs of key access</li>
+            </ul>
+        </section>
+        
+        <section id="section7">
+            <h2>7. Operational Responsibilities</h2>
+            
+            <h3>Zimax Networks LC Support Model</h3>
+            <p><strong>For Customer Environments (dev/test/UAT/prod)</strong>:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Responsibility</th>
+                        <th>Zimax Networks LC</th>
+                        <th>Customer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>PostgreSQL deployment</td>
+                        <td class="required">✅ SKU selection & provisioning</td>
+                        <td>Infrastructure approval</td>
+                    </tr>
+                    <tr>
+                        <td>pgvector configuration</td>
+                        <td class="required">✅ Setup & optimization</td>
+                        <td>Database access</td>
+                    </tr>
+                    <tr>
+                        <td>Blob Storage deployment</td>
+                        <td class="required">✅ Storage account setup</td>
+                        <td>Infrastructure approval</td>
+                    </tr>
+                    <tr>
+                        <td>Lifecycle policy configuration</td>
+                        <td class="required">✅ Tier optimization</td>
+                        <td>Access pattern requirements</td>
+                    </tr>
+                    <tr>
+                        <td>Encryption setup</td>
+                        <td class="required">✅ TDE configuration with CMK</td>
+                        <td>Key management</td>
+                    </tr>
+                    <tr>
+                        <td>Monitoring & alerting</td>
+                        <td class="required">✅ Setup & maintenance</td>
+                        <td>Alert response</td>
+                    </tr>
+                    <tr>
+                        <td>Backups & disaster recovery</td>
+                        <td class="required">✅ Configuration & testing</td>
+                        <td>RPO/RTO requirements</td>
+                    </tr>
+                    <tr>
+                        <td>Updates & patches</td>
+                        <td class="required">✅ Planning & execution</td>
+                        <td>Maintenance windows</td>
+                    </tr>
+                    <tr>
+                        <td>Troubleshooting</td>
+                        <td class="required">✅ 24/7 support</td>
+                        <td>Issue reporting</td>
+                    </tr>
+                    <tr>
+                        <td>Compliance documentation</td>
+                        <td class="required">✅ Preparation</td>
+                        <td>Audit participation</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p><strong>Dedicated Resources Required</strong>:</p>
+            <ul>
+                <li><strong>PostgreSQL DBA</strong>: SKU sizing, pgvector optimization, performance tuning</li>
+                <li><strong>Storage Engineer</strong>: Blob Storage tier optimization, lifecycle management</li>
+                <li><strong>Security Engineer</strong>: Encryption, compliance, NIST AI RMF</li>
+                <li><strong>SRE</strong>: Monitoring, alerting, incident response</li>
+            </ul>
+        </section>
+        
+        <section id="section8">
+            <h2>8. Implementation Roadmap</h2>
+            
+            <div class="phase">
+                <h4>Phase 1: Foundation (Months 1-2)</h4>
+                <ul>
+                    <li>Research and document PostgreSQL SKU sizing methodology</li>
+                    <li>Build PostgreSQL sizing calculator tool</li>
+                    <li>Research and document Blob Storage tier selection strategy</li>
+                    <li>Build Blob Storage sizing calculator tool</li>
+                    <li>Design unified encryption architecture</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 2: Encryption Implementation (Months 2-3)</h4>
+                <ul>
+                    <li>Configure PostgreSQL TDE with customer-managed keys</li>
+                    <li>Configure Blob Storage TDE with customer-managed keys</li>
+                    <li>Create unified key rotation workflow</li>
+                    <li>Test encryption end-to-end</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 3: Configuration Optimization (Months 3-4)</h4>
+                <ul>
+                    <li>Tune PostgreSQL SKU per environment</li>
+                    <li>Configure Blob Storage lifecycle policies</li>
+                    <li>Optimize pgvector indexes</li>
+                    <li>Document configuration procedures</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 4: Compliance & Documentation (Months 4-5)</h4>
+                <ul>
+                    <li>Map NIST AI RMF controls to implementation</li>
+                    <li>Create security assessment documentation</li>
+                    <li>Prepare audit evidence</li>
+                    <li>Train support team</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 5: Production Deployment (Months 5-6)</h4>
+                <ul>
+                    <li>Deploy to customer dev environment</li>
+                    <li>Validate PostgreSQL SKU sizing</li>
+                    <li>Validate Blob Storage tier selection</li>
+                    <li>Test encryption with customer keys</li>
+                    <li>Gradual rollout to test/UAT/prod</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section id="section9">
+            <h2>9. Risk Mitigation</h2>
+            
+            <div class="risk-box">
+                <h4>Risk: PostgreSQL Under-Sizing</h4>
+                <p><strong>Mitigation</strong>:</p>
+                <ul>
+                    <li>Conservative sizing (2x growth factor)</li>
+                    <li>Monitoring with early warning alerts</li>
+                    <li>Online SKU scaling (minimal downtime)</li>
+                    <li>Reserved capacity for predictable workloads</li>
+                </ul>
+            </div>
+            
+            <div class="risk-box">
+                <h4>Risk: Blob Storage Cost Overrun</h4>
+                <p><strong>Mitigation</strong>:</p>
+                <ul>
+                    <li>Lifecycle policies to automate tier transitions</li>
+                    <li>Monitoring of tier distribution</li>
+                    <li>Cost alerts at 50%, 80%, 100% of budget</li>
+                    <li>Regular cost optimization reviews</li>
+                </ul>
+            </div>
+            
+            <div class="risk-box">
+                <h4>Risk: Encryption Key Compromise</h4>
+                <p><strong>Mitigation</strong>:</p>
+                <ul>
+                    <li>Unified key rotation workflow</li>
+                    <li>Dual-key support during rotation</li>
+                    <li>Audit logging of all key access</li>
+                    <li>Isolated Key Vault (separate security boundary)</li>
+                </ul>
+            </div>
+            
+            <div class="risk-box">
+                <h4>Risk: Data Loss</h4>
+                <p><strong>Mitigation</strong>:</p>
+                <ul>
+                    <li>Automated backups (PostgreSQL: PITR, Blob Storage: geo-redundant)</li>
+                    <li>Regular backup testing</li>
+                    <li>Disaster recovery procedures</li>
+                    <li>Immutable storage policies for compliance</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section id="section10">
+            <h2>10. Success Metrics</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Target</th>
+                        <th>Measurement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>PostgreSQL CPU utilization</td>
+                        <td>&lt; 70%</td>
+                        <td>Azure Monitor metrics</td>
+                    </tr>
+                    <tr>
+                        <td>PostgreSQL memory utilization</td>
+                        <td>&lt; 80%</td>
+                        <td>Azure Monitor metrics</td>
+                    </tr>
+                    <tr>
+                        <td>PostgreSQL connection pool utilization</td>
+                        <td>&lt; 70%</td>
+                        <td>Application metrics</td>
+                    </tr>
+                    <tr>
+                        <td>Blob Storage cost per GB</td>
+                        <td>&lt; $0.015 (weighted average)</td>
+                        <td>Cost Management API</td>
+                    </tr>
+                    <tr>
+                        <td>Blob Storage tier distribution</td>
+                        <td>30% Hot, 50% Cool, 20% Archive</td>
+                        <td>Storage metrics</td>
+                    </tr>
+                    <tr>
+                        <td>Encryption coverage</td>
+                        <td>100% of data</td>
+                        <td>Audit logs</td>
+                    </tr>
+                    <tr>
+                        <td>Key rotation success rate</td>
+                        <td>100%</td>
+                        <td>Rotation workflow logs</td>
+                    </tr>
+                    <tr>
+                        <td>Backup success rate</td>
+                        <td>100%</td>
+                        <td>Backup job logs</td>
+                    </tr>
+                    <tr>
+                        <td>RPO achievement</td>
+                        <td>100%</td>
+                        <td>Backup validation</td>
+                    </tr>
+                    <tr>
+                        <td>Support response time</td>
+                        <td>&lt; 1 hour (P1)</td>
+                        <td>Incident tracking</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <section id="section11">
+            <h2>11. Next Steps</h2>
+            <ol>
+                <li><strong>Approve this strategy</strong> for customer environment deployment</li>
+                <li><strong>Allocate resources</strong> for PostgreSQL DBA, Storage Engineer, Security Engineer, SRE</li>
+                <li><strong>Begin Phase 1</strong> implementation (sizing calculators, tier selection guide)</li>
+                <li><strong>Engage with customer</strong> infrastructure team for Azure integration requirements</li>
+                <li><strong>Schedule security assessment</strong> preparation timeline</li>
+            </ol>
+        </section>
+        
+        <div class="references">
+            <h2>References</h2>
+            <ul>
+                <li><a href="https://learn.microsoft.com/azure/postgresql/flexible-server/">Azure Database for PostgreSQL Flexible Server</a></li>
+                <li><a href="https://github.com/pgvector/pgvector">PostgreSQL pgvector Extension</a></li>
+                <li><a href="https://learn.microsoft.com/azure/storage/blobs/">Azure Blob Storage Documentation</a></li>
+                <li><a href="https://learn.microsoft.com/azure/storage/blobs/lifecycle-management-overview">Azure Blob Storage Lifecycle Management</a></li>
+                <li><a href="https://learn.microsoft.com/azure/key-vault/general/customer-managed-keys-overview">Azure Key Vault Customer-Managed Keys</a></li>
+                <li><a href="https://www.nist.gov/itl/ai-risk-management-framework">NIST AI Risk Management Framework</a></li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation UI Enterprise Deployment Strategy - Engram Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #00d4ff;
+            border-bottom: 3px solid #a855f7;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        h2 {
+            color: #00d4ff;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            padding-top: 1rem;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        h3 {
+            color: #a855f7;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        h4 {
+            color: #10b981;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .executive-summary {
+            background: #0a0e1a;
+            color: #e2e8f0;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .executive-summary h2 {
+            color: #00d4ff;
+            border: none;
+            margin-top: 0;
+        }
+        
+        .executive-summary ul {
+            margin-left: 2rem;
+            margin-top: 1rem;
+        }
+        
+        .executive-summary li {
+            margin-bottom: 0.5rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+        }
+        
+        th {
+            background: #0a0e1a;
+            color: #00d4ff;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .critical {
+            background: #fee2e2;
+            color: #991b1b;
+            font-weight: 600;
+        }
+        
+        .required {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        code {
+            background: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            background: #0a0e1a;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+        
+        pre code {
+            background: transparent;
+            padding: 0;
+            color: #e2e8f0;
+        }
+        
+        .architecture-diagram {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            font-family: monospace;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        
+        .risk-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .risk-box h4 {
+            color: #92400e;
+            margin-top: 0;
+        }
+        
+        .mitigation {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .mitigation h4 {
+            color: #065f46;
+            margin-top: 0;
+        }
+        
+        .phase {
+            background: #e0e7ff;
+            border-left: 4px solid #6366f1;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .phase h4 {
+            color: #312e81;
+            margin-top: 0;
+        }
+        
+        .references {
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 3rem;
+        }
+        
+        .references ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        
+        .references li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .references a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+        
+        .references a:hover {
+            text-decoration: underline;
+        }
+        
+        .toc {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .toc h3 {
+            margin-top: 0;
+        }
+        
+        .toc ul {
+            list-style: none;
+            margin-left: 1rem;
+        }
+        
+        .toc li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .toc a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Navigation UI Enterprise Deployment Strategy for Engram Platform</h1>
+        
+        <div class="executive-summary">
+            <h2>Executive Summary</h2>
+            <p>This document outlines Zimax Networks LC's strategy for deploying the Engram Navigation UI in customer environments (dev/test/UAT/prod). The Navigation UI is the <strong>critical integration layer</strong> that ties together all Engram components—Temporal workflows, Zep memory, Unstructured ETL, PostgreSQL/Blob Storage—into a unified enterprise interface. This plan addresses enterprise requirements including frontend-backend integration, navigation patterns, user flows, authentication/RBAC, performance optimization, and NIST AI RMF compliance from a UI/UX perspective.</p>
+            
+            <p><strong>Key Decision</strong>: React-based Navigation UI (TreeNav) with FastAPI backend integration for customer environments to enable:</p>
+            <ul>
+                <li>Unified interface for all Engram capabilities</li>
+                <li>Real-time workflow orchestration visibility</li>
+                <li>Provenance-first memory search and exploration</li>
+                <li>Enterprise-grade authentication and RBAC</li>
+                <li>Seamless integration with customer identity providers</li>
+                <li>Responsive, accessible, and performant user experience</li>
+            </ul>
+        </div>
+        
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#section1">1. Navigation UI Architecture: Frontend-Backend Integration</a></li>
+                <li><a href="#section2">2. Navigation Patterns and User Flows</a></li>
+                <li><a href="#section3">3. Enterprise Deployment Considerations</a></li>
+                <li><a href="#section4">4. Integration with Engram Components</a></li>
+                <li><a href="#section5">5. NIST AI RMF Compliance: UI/UX Perspective</a></li>
+                <li><a href="#section6">6. Authentication and RBAC Integration</a></li>
+                <li><a href="#section7">7. Operational Responsibilities</a></li>
+                <li><a href="#section8">8. Implementation Roadmap</a></li>
+                <li><a href="#section9">9. Risk Mitigation</a></li>
+                <li><a href="#section10">10. Success Metrics</a></li>
+                <li><a href="#section11">11. Next Steps</a></li>
+            </ul>
+        </div>
+        
+        <section id="section1">
+            <h2>1. Navigation UI Architecture: Frontend-Backend Integration</h2>
+            
+            <h3>Architecture Overview</h3>
+            <div class="architecture-diagram">┌─────────────────────────────────────────────────────────┐
+│              Engram Navigation UI (React)                │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
+│  │  TreeNav     │  │   Routes     │  │   Pages      │ │
+│  │  Component   │  │  (React      │  │  (Feature    │ │
+│  │              │  │   Router)    │  │   Views)     │ │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘ │
+│         │                 │                  │          │
+│         └─────────────────┼──────────────────┘         │
+│                           │                             │
+│                  ┌─────────▼─────────┐                  │
+│                  │   Service Layer   │                  │
+│                  │  (api.ts, bau.ts, │                  │
+│                  │   metrics.ts, etc)│                  │
+│                  └─────────┬─────────┘                  │
+│                           │                             │
+└───────────────────────────┼─────────────────────────────┘
+                            │
+                            │ HTTP/REST
+                            │
+┌───────────────────────────▼─────────────────────────────┐
+│          FastAPI Backend (Python)                        │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐│
+│  │  Agents  │  │  Chat    │  │  Memory  │  │Workflows ││
+│  │  Router  │  │  Router  │  │  Router  │  │  Router  ││
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘│
+│                                                          │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐│
+│  │   BAU    │  │ Metrics  │  │Validation│  │   ETL    ││
+│  │  Router  │  │  Router  │  │  Router   │  │  Router  ││
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘│
+│                                                          │
+│  ┌──────────┐  ┌──────────┐                            │
+│  │  Admin   │  │  Health  │                            │
+│  │  Router  │  │  Router  │                            │
+│  └──────────┘  └──────────┘                            │
+│                                                          │
+└─────────────────────────────────────────────────────────┘
+                            │
+                            │
+        ┌───────────────────┼───────────────────┐
+        │                   │                   │
+        ▼                   ▼                   ▼
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│   Temporal   │    │     Zep      │    │ Unstructured │
+│  (Workflows) │    │   (Memory)   │    │    (ETL)     │
+└──────────────┘    └──────────────┘    └──────────────┘</div>
+            
+            <h3>Navigation Structure (TreeNav Component)</h3>
+            <p>The Navigation UI uses a hierarchical tree structure organized by functional domain:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Section</th>
+                        <th>Sub-Items</th>
+                        <th>Backend Integration</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Cognition (Agents)</strong></td>
+                        <td>Overview, Elena, Marcus</td>
+                        <td><code>/api/v1/agents</code></td>
+                        <td>Agent selection and configuration</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Chat & Voice</strong></td>
+                        <td>Chat (Episodic), Voice Interaction</td>
+                        <td><code>/api/v1/chat</code></td>
+                        <td>Real-time conversation interface</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ingestion</strong></td>
+                        <td>Connectors, Document Upload, Progress</td>
+                        <td><code>/api/v1/etl/ingest</code></td>
+                        <td>Document intake and processing</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Evidence & Validation</strong></td>
+                        <td>Golden Thread Runner, Evidence & Telemetry</td>
+                        <td><code>/api/v1/validation</code>, <code>/api/v1/metrics</code></td>
+                        <td>Quality assurance and monitoring</td>
+                    </tr>
+                    <tr>
+                        <td><strong>BAU</strong></td>
+                        <td>BAU Hub</td>
+                        <td><code>/api/v1/bau</code></td>
+                        <td>Business-as-usual workflows</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Memory (Provenance-First)</strong></td>
+                        <td>Search, Episodes, Knowledge Graph</td>
+                        <td><code>/api/v1/memory</code></td>
+                        <td>Memory exploration and search</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Workflows (Durable Spine)</strong></td>
+                        <td>Active, History, Signals</td>
+                        <td><code>/api/v1/workflows</code></td>
+                        <td>Temporal workflow management</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Settings</strong></td>
+                        <td>General</td>
+                        <td><code>/api/v1/admin/settings</code></td>
+                        <td>System configuration</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Admin</strong></td>
+                        <td>Users, System Health</td>
+                        <td><code>/api/v1/admin</code></td>
+                        <td>Administrative functions</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Frontend-Backend Integration Pattern</h3>
+            <p><strong>Service Layer Architecture</strong>:</p>
+            <ol>
+                <li><strong>API Client (<code>api.ts</code>)</strong>: Centralized HTTP client with:
+                    <ul>
+                        <li>Authentication token management</li>
+                        <li>Error handling and retry logic</li>
+                        <li>Request/response transformation</li>
+                        <li>Type-safe interfaces</li>
+                    </ul>
+                </li>
+                <li><strong>Feature Services</strong>: Domain-specific service wrappers:
+                    <ul>
+                        <li><code>bau.ts</code>: BAU workflow management</li>
+                        <li><code>metrics.ts</code>: Evidence telemetry</li>
+                        <li><code>validation.ts</code>: Golden Thread validation</li>
+                        <li><code>workflowDetail.ts</code>: Workflow detail views</li>
+                        <li><code>ingestion.ts</code>: Document ingestion</li>
+                    </ul>
+                </li>
+                <li><strong>Page Components</strong>: React components that:
+                    <ul>
+                        <li>Call service layer functions</li>
+                        <li>Manage local state</li>
+                        <li>Handle user interactions</li>
+                        <li>Navigate between routes</li>
+                    </ul>
+                </li>
+            </ol>
+            
+            <h4>Integration Flow</h4>
+            <div class="architecture-diagram">User Action (Click/Input)
+    │
+    ▼
+Page Component (React)
+    │
+    ▼
+Service Layer (TypeScript)
+    │
+    ▼
+API Client (HTTP Request)
+    │
+    ▼
+FastAPI Router (Python)
+    │
+    ▼
+Backend Service (Temporal/Zep/Unstructured)
+    │
+    ▼
+Response → Service Layer → Page Component → UI Update</div>
+        </section>
+        
+        <section id="section2">
+            <h2>2. Navigation Patterns and User Flows</h2>
+            
+            <h3>Primary User Flows</h3>
+            
+            <h4>Flow 1: Document Ingestion → Memory → Chat</h4>
+            <div class="architecture-diagram">1. User navigates to "Ingestion" → "Document Upload"
+2. User uploads document via SourcesPage
+3. Document processed by Unstructured (ETL Router)
+4. Chunks indexed to Zep (Memory Router)
+5. User navigates to "Memory" → "Search"
+6. User searches for content from ingested document
+7. User navigates to "Chat" → Starts conversation with Elena
+8. Elena retrieves relevant memory via Memory Router
+9. User views workflow execution in "Workflows" → "Active"</div>
+            
+            <p><strong>Backend Integration Points</strong>:</p>
+            <ul>
+                <li><code>/api/v1/etl/ingest</code> (Unstructured processing)</li>
+                <li><code>/api/v1/memory/search</code> (Zep retrieval)</li>
+                <li><code>/api/v1/chat</code> (Agent conversation)</li>
+                <li><code>/api/v1/workflows</code> (Temporal orchestration)</li>
+            </ul>
+            
+            <h4>Flow 2: BAU Workflow → Validation → Evidence</h4>
+            <div class="architecture-diagram">1. User navigates to "BAU" → "BAU Hub"
+2. User starts "Intake & triage" workflow
+3. Temporal workflow started via /api/v1/bau/flows/{flow_id}/start
+4. User navigates to "Workflows" → "Active" to monitor
+5. User navigates to "Evidence & Validation" → "Golden Thread Runner"
+6. User triggers validation run via /api/v1/validation/run
+7. User views results and evidence bundle
+8. User navigates to "Evidence & Telemetry" for operational metrics</div>
+            
+            <p><strong>Backend Integration Points</strong>:</p>
+            <ul>
+                <li><code>/api/v1/bau/flows/{flow_id}/start</code> (BAU workflow initiation)</li>
+                <li><code>/api/v1/workflows/{workflow_id}</code> (Temporal workflow status)</li>
+                <li><code>/api/v1/validation/run</code> (Golden Thread execution)</li>
+                <li><code>/api/v1/metrics/evidence</code> (Operational telemetry)</li>
+            </ul>
+            
+            <h4>Flow 3: Memory Exploration → Knowledge Graph → Workflow Detail</h4>
+            <div class="architecture-diagram">1. User navigates to "Memory" → "Search"
+2. User searches for specific topic via /api/v1/memory/search
+3. User views search results with provenance metadata
+4. User navigates to "Memory" → "Knowledge Graph"
+5. User explores semantic relationships
+6. User navigates to "Workflows" → "Active"
+7. User clicks workflow to view detail
+8. User views workflow steps, signals, and context via /api/v1/workflows/{workflow_id}</div>
+            
+            <p><strong>Backend Integration Points</strong>:</p>
+            <ul>
+                <li><code>/api/v1/memory/search</code> (Zep semantic search)</li>
+                <li><code>/api/v1/memory/episodes</code> (Episodic memory)</li>
+                <li><code>/api/v1/workflows/{workflow_id}</code> (Temporal workflow detail)</li>
+            </ul>
+            
+            <h3>Navigation State Management</h3>
+            <p><strong>Route-Based State</strong>:</p>
+            <ul>
+                <li>React Router manages navigation state</li>
+                <li>URL parameters for workflow IDs, session IDs, etc.</li>
+                <li>Deep linking support for sharing specific views</li>
+            </ul>
+            
+            <p><strong>Component State</strong>:</p>
+            <ul>
+                <li>Local component state for UI interactions</li>
+                <li>Service layer caching for API responses</li>
+                <li>Optimistic updates for better UX</li>
+            </ul>
+            
+            <p><strong>Global State</strong> (Future):</p>
+            <ul>
+                <li>Agent selection (currently prop-drilled)</li>
+                <li>User preferences</li>
+                <li>Authentication context</li>
+            </ul>
+        </section>
+        
+        <section id="section3">
+            <h2>3. Enterprise Deployment Considerations</h2>
+            
+            <h3>Frontend Deployment Options</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Option</th>
+                        <th>Description</th>
+                        <th>Use Case</th>
+                        <th>Engram Recommendation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Static Site Hosting</strong></td>
+                        <td>Pre-built React app served from CDN</td>
+                        <td>Production, high traffic</td>
+                        <td class="required">✅ <strong>Recommended</strong> - Azure Static Web Apps</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Server-Side Rendering (SSR)</strong></td>
+                        <td>React rendered on server</td>
+                        <td>SEO, initial load performance</td>
+                        <td>Consider for public-facing pages</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Container Deployment</strong></td>
+                        <td>React app in container</td>
+                        <td>Custom deployment requirements</td>
+                        <td>Alternative for on-premises</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p><strong>Current Implementation</strong>: Static site (Vite build) → Azure Static Web Apps</p>
+            
+            <h3>Backend Integration Architecture</h3>
+            <p><strong>API Gateway Pattern</strong>:</p>
+            <ul>
+                <li>Frontend calls single API endpoint (<code>/api/v1/*</code>)</li>
+                <li>FastAPI routes handle domain-specific logic</li>
+                <li>Backend services (Temporal, Zep, Unstructured) abstracted behind API</li>
+            </ul>
+            
+            <h4>Authentication Flow</h4>
+            <div class="architecture-diagram">1. User logs in via Microsoft Entra ID (or customer IdP)
+2. Frontend receives JWT token
+3. Token stored in localStorage (or secure cookie)
+4. API Client includes token in Authorization header
+5. FastAPI middleware validates token
+6. SecurityContext passed to route handlers</div>
+            
+            <h3>Performance Optimization</h3>
+            <p><strong>Frontend Optimizations</strong>:</p>
+            <ol>
+                <li><strong>Code Splitting</strong>: Route-based code splitting via React Router</li>
+                <li><strong>Lazy Loading</strong>: Components loaded on demand</li>
+                <li><strong>API Response Caching</strong>: Service layer caches frequently accessed data</li>
+                <li><strong>Optimistic Updates</strong>: UI updates immediately, syncs with backend</li>
+            </ol>
+            
+            <p><strong>Backend Optimizations</strong>:</p>
+            <ol>
+                <li><strong>Response Caching</strong>: LRU cache for Evidence Telemetry (60s TTL)</li>
+                <li><strong>Pagination</strong>: List endpoints support limit/offset</li>
+                <li><strong>Connection Pooling</strong>: Database connections pooled</li>
+                <li><strong>Async Processing</strong>: Long-running tasks handled asynchronously</li>
+            </ol>
+        </section>
+        
+        <section id="section4">
+            <h2>4. Integration with Engram Components</h2>
+            
+            <h3>Temporal Workflow Integration</h3>
+            <p><strong>Navigation Points</strong>:</p>
+            <ul>
+                <li>"Workflows" → "Active": List running workflows</li>
+                <li>"Workflows" → "History": List completed workflows</li>
+                <li>"Workflows" → "{workflow_id}": Workflow detail view</li>
+            </ul>
+            
+            <p><strong>Backend Integration</strong>:</p>
+            <ul>
+                <li><code>/api/v1/workflows</code> → Temporal client queries</li>
+                <li><code>/api/v1/workflows/{workflow_id}/signal</code> → Temporal signal API</li>
+                <li><code>/api/v1/workflows/{workflow_id}/cancel</code> → Temporal cancellation API</li>
+            </ul>
+            
+            <h3>Zep Memory Integration</h3>
+            <p><strong>Navigation Points</strong>:</p>
+            <ul>
+                <li>"Memory" → "Search": Semantic search with provenance</li>
+                <li>"Memory" → "Episodes": Episodic memory (conversation history)</li>
+                <li>"Memory" → "Knowledge Graph": Semantic memory visualization</li>
+            </ul>
+            
+            <p><strong>Backend Integration</strong>:</p>
+            <ul>
+                <li><code>/api/v1/memory/search</code> → Zep search API</li>
+                <li><code>/api/v1/memory/episodes</code> → Zep session API</li>
+                <li><code>/api/v1/memory/facts</code> → Zep Graphiti API</li>
+            </ul>
+            
+            <h3>Unstructured ETL Integration</h3>
+            <p><strong>Navigation Points</strong>:</p>
+            <ul>
+                <li>"Ingestion" → "Connectors": Source management</li>
+                <li>"Ingestion" → "Document Upload": Direct upload</li>
+                <li>"Ingestion" → "Progress": Ingestion queue status</li>
+            </ul>
+            
+            <p><strong>Backend Integration</strong>:</p>
+            <ul>
+                <li><code>/api/v1/etl/ingest</code> → Unstructured processing</li>
+                <li>Ingestion queue management (future: dedicated queue endpoint)</li>
+            </ul>
+        </section>
+        
+        <section id="section5">
+            <h2>5. NIST AI RMF Compliance: UI/UX Perspective</h2>
+            
+            <h3>Framework Mapping</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>NIST AI RMF Function</th>
+                        <th>UI Implementation</th>
+                        <th>Navigation Integration</th>
+                        <th>Evidence</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Govern</strong></td>
+                        <td>Settings page, Admin section</td>
+                        <td><code>/settings/general</code>, <code>/admin/users</code></td>
+                        <td>Configuration UI, user management</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Map</strong></td>
+                        <td>Provenance display, metadata chips</td>
+                        <td>Memory search results, workflow detail</td>
+                        <td>Tenant tags, sensitivity labels</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Measure</strong></td>
+                        <td>Evidence Telemetry dashboard</td>
+                        <td><code>/evidence</code></td>
+                        <td>Metrics visualization, alerts</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Manage</strong></td>
+                        <td>Workflow controls, validation runner</td>
+                        <td><code>/workflows</code>, <code>/validation/golden-thread</code></td>
+                        <td>Signal interface, validation UI</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>UI Controls for Compliance</h3>
+            <p><strong>Data Classification Display</strong>:</p>
+            <ul>
+                <li>Sensitivity tags (Silver, Gold, Platinum) shown in memory search</li>
+                <li>Tenant scoping visible in all memory results</li>
+                <li>RBAC indicators in navigation (role-based visibility)</li>
+            </ul>
+            
+            <p><strong>Audit Trail Access</strong>:</p>
+            <ul>
+                <li>Admin → System Health shows audit logs</li>
+                <li>Workflow detail shows execution history</li>
+                <li>Evidence bundles include trace IDs</li>
+            </ul>
+            
+            <p><strong>Transparency Features</strong>:</p>
+            <ul>
+                <li>Provenance metadata always visible</li>
+                <li>Confidence scores for AI-generated content</li>
+                <li>Source citations in chat responses</li>
+                <li>Workflow execution traceability</li>
+            </ul>
+        </section>
+        
+        <section id="section6">
+            <h2>6. Authentication and RBAC Integration</h2>
+            
+            <h3>Authentication Architecture</h3>
+            <p><strong>Current Implementation</strong>:</p>
+            <ul>
+                <li>JWT tokens from Microsoft Entra ID</li>
+                <li>Token stored in localStorage</li>
+                <li>API Client includes token in requests</li>
+                <li>FastAPI middleware validates token</li>
+            </ul>
+            
+            <p><strong>Enterprise Requirements</strong>:</p>
+            <ul>
+                <li>Support customer IdP (Okta, Ping, etc.)</li>
+                <li>SSO integration</li>
+                <li>Session management</li>
+                <li>Token refresh</li>
+            </ul>
+            
+            <h3>RBAC Implementation</h3>
+            <p><strong>Role-Based Navigation</strong>:</p>
+            <ul>
+                <li>Navigation items filtered by user role</li>
+                <li>Admin section only visible to admins</li>
+                <li>Settings access controlled by role</li>
+            </ul>
+            
+            <p><strong>API-Level Enforcement</strong>:</p>
+            <ul>
+                <li>FastAPI middleware checks permissions</li>
+                <li>Memory search filtered by tenant/role</li>
+                <li>Workflow access controlled by permissions</li>
+            </ul>
+        </section>
+        
+        <section id="section7">
+            <h2>7. Operational Responsibilities</h2>
+            
+            <h3>Zimax Networks LC Support Model</h3>
+            <p><strong>For Customer Environments (dev/test/UAT/prod)</strong>:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Responsibility</th>
+                        <th>Zimax Networks LC</th>
+                        <th>Customer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Frontend deployment</td>
+                        <td class="required">✅ Build & deploy to Static Web Apps</td>
+                        <td>Infrastructure approval</td>
+                    </tr>
+                    <tr>
+                        <td>Backend API deployment</td>
+                        <td class="required">✅ FastAPI container deployment</td>
+                        <td>Infrastructure approval</td>
+                    </tr>
+                    <tr>
+                        <td>Navigation customization</td>
+                        <td class="required">✅ Role-based navigation configuration</td>
+                        <td>Role definitions</td>
+                    </tr>
+                    <tr>
+                        <td>Authentication integration</td>
+                        <td class="required">✅ IdP integration & SSO setup</td>
+                        <td>IdP credentials</td>
+                    </tr>
+                    <tr>
+                        <td>Performance optimization</td>
+                        <td class="required">✅ CDN configuration, caching</td>
+                        <td>CDN provider selection</td>
+                    </tr>
+                    <tr>
+                        <td>UI/UX updates</td>
+                        <td class="required">✅ Feature updates & bug fixes</td>
+                        <td>Requirements definition</td>
+                    </tr>
+                    <tr>
+                        <td>Monitoring & alerting</td>
+                        <td class="required">✅ Frontend error tracking</td>
+                        <td>Alert response</td>
+                    </tr>
+                    <tr>
+                        <td>Accessibility compliance</td>
+                        <td class="required">✅ WCAG 2.1 AA compliance</td>
+                        <td>Accessibility requirements</td>
+                    </tr>
+                    <tr>
+                        <td>Browser compatibility</td>
+                        <td class="required">✅ Testing & support</td>
+                        <td>Browser policy</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p><strong>Dedicated Resources Required</strong>:</p>
+            <ul>
+                <li><strong>Frontend Engineer</strong>: React development, UI/UX optimization</li>
+                <li><strong>Backend Engineer</strong>: FastAPI integration, API design</li>
+                <li><strong>DevOps Engineer</strong>: Deployment, CDN configuration, monitoring</li>
+                <li><strong>UX Designer</strong>: User flows, accessibility, enterprise patterns</li>
+            </ul>
+        </section>
+        
+        <section id="section8">
+            <h2>8. Implementation Roadmap</h2>
+            
+            <div class="phase">
+                <h4>Phase 1: Foundation (Months 1-2)</h4>
+                <ul>
+                    <li>Document navigation architecture and user flows</li>
+                    <li>Audit API integration completeness</li>
+                    <li>Identify missing backend endpoints</li>
+                    <li>Design authentication/SSO integration</li>
+                    <li>Plan RBAC implementation</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 2: Integration Completion (Months 2-3)</h4>
+                <ul>
+                    <li>Complete missing API integrations</li>
+                    <li>Implement authentication/SSO</li>
+                    <li>Add RBAC to navigation and API</li>
+                    <li>Optimize API response caching</li>
+                    <li>Add error handling and retry logic</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 3: Enterprise Features (Months 3-4)</h4>
+                <ul>
+                    <li>Implement role-based navigation filtering</li>
+                    <li>Add audit log UI integration</li>
+                    <li>Enhance provenance display</li>
+                    <li>Add accessibility features (WCAG 2.1 AA)</li>
+                    <li>Performance optimization (code splitting, lazy loading)</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 4: Compliance & Documentation (Months 4-5)</h4>
+                <ul>
+                    <li>Map NIST AI RMF controls to UI features</li>
+                    <li>Create user documentation</li>
+                    <li>Prepare security assessment documentation</li>
+                    <li>Train support team</li>
+                    <li>Create deployment runbooks</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 5: Production Deployment (Months 5-6)</h4>
+                <ul>
+                    <li>Deploy to customer dev environment</li>
+                    <li>Validate authentication/SSO</li>
+                    <li>Test RBAC enforcement</li>
+                    <li>Performance testing</li>
+                    <li>Gradual rollout to test/UAT/prod</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section id="section9">
+            <h2>9. Risk Mitigation</h2>
+            
+            <div class="risk-box">
+                <h4>Risk: API Integration Gaps</h4>
+                <p><strong>Mitigation</strong>:</p>
+                <ul>
+                    <li>Comprehensive API audit</li>
+                    <li>Service layer abstraction for easy updates</li>
+                    <li>Mock data for development/testing</li>
+                    <li>Integration tests for all API calls</li>
+                </ul>
+            </div>
+            
+            <div class="risk-box">
+                <h4>Risk: Performance Degradation</h4>
+                <p><strong>Mitigation</strong>:</p>
+                <ul>
+                    <li>Code splitting and lazy loading</li>
+                    <li>API response caching</li>
+                    <li>CDN for static assets</li>
+                    <li>Performance monitoring and alerts</li>
+                </ul>
+            </div>
+            
+            <div class="risk-box">
+                <h4>Risk: Authentication/SSO Failures</h4>
+                <p><strong>Mitigation</strong>:</p>
+                <ul>
+                    <li>Fallback authentication methods</li>
+                    <li>Token refresh logic</li>
+                    <li>Session timeout handling</li>
+                    <li>Error messages for auth failures</li>
+                </ul>
+            </div>
+            
+            <div class="risk-box">
+                <h4>Risk: RBAC Enforcement Gaps</h4>
+                <p><strong>Mitigation</strong>:</p>
+                <ul>
+                    <li>Backend enforcement (not just frontend)</li>
+                    <li>Regular security audits</li>
+                    <li>Permission testing</li>
+                    <li>Audit logging of access attempts</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section id="section10">
+            <h2>10. Success Metrics</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Target</th>
+                        <th>Measurement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Page load time (First Contentful Paint)</td>
+                        <td>&lt; 1.5s</td>
+                        <td>Web Vitals API</td>
+                    </tr>
+                    <tr>
+                        <td>API response time (p95)</td>
+                        <td>&lt; 500ms</td>
+                        <td>Application Insights</td>
+                    </tr>
+                    <tr>
+                        <td>Navigation click-to-render</td>
+                        <td>&lt; 200ms</td>
+                        <td>User interaction tracking</td>
+                    </tr>
+                    <tr>
+                        <td>API error rate</td>
+                        <td>&lt; 1%</td>
+                        <td>Error tracking</td>
+                    </tr>
+                    <tr>
+                        <td>Authentication success rate</td>
+                        <td>&gt; 99.9%</td>
+                        <td>Auth logs</td>
+                    </tr>
+                    <tr>
+                        <td>RBAC enforcement accuracy</td>
+                        <td>100%</td>
+                        <td>Security audit</td>
+                    </tr>
+                    <tr>
+                        <td>Accessibility score (Lighthouse)</td>
+                        <td>&gt; 90</td>
+                        <td>Automated testing</td>
+                    </tr>
+                    <tr>
+                        <td>User satisfaction (NPS)</td>
+                        <td>&gt; 50</td>
+                        <td>User surveys</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <section id="section11">
+            <h2>11. Next Steps</h2>
+            <ol>
+                <li><strong>Approve this strategy</strong> for customer environment deployment</li>
+                <li><strong>Allocate resources</strong> for Frontend Engineer, Backend Engineer, DevOps Engineer, UX Designer</li>
+                <li><strong>Begin Phase 1</strong> implementation (API audit, authentication design)</li>
+                <li><strong>Engage with customer</strong> for IdP integration requirements</li>
+                <li><strong>Schedule security assessment</strong> preparation timeline</li>
+            </ol>
+        </section>
+        
+        <div class="references">
+            <h2>References</h2>
+            <ul>
+                <li><a href="https://reactrouter.com/">React Router Documentation</a></li>
+                <li><a href="https://fastapi.tiangolo.com/">FastAPI Documentation</a></li>
+                <li><a href="https://learn.microsoft.com/azure/static-web-apps/">Azure Static Web Apps</a></li>
+                <li><a href="https://www.w3.org/WAI/WCAG21/quickref/">WCAG 2.1 Guidelines</a></li>
+                <li><a href="https://www.nist.gov/itl/ai-risk-management-framework">NIST AI Risk Management Framework</a></li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
+

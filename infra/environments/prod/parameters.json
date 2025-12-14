@@ -1,0 +1,64 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environment": {
+      "value": "prod"
+    },
+    "envName": {
+      "value": "engram-prod"
+    },
+    "location": {
+      "value": "[resourceGroup().location]"
+    },
+    "aksNodeCount": {
+      "value": 6
+    },
+    "aksNodeSize": {
+      "value": "Standard_D8s_v3"
+    },
+    "aksNodeMinCount": {
+      "value": 6
+    },
+    "aksNodeMaxCount": {
+      "value": 20
+    },
+    "postgresSku": {
+      "value": "D8s_v3"
+    },
+    "postgresStorageGB": {
+      "value": 256
+    },
+    "postgresHighAvailability": {
+      "value": true
+    },
+    "postgresReadReplicas": {
+      "value": 1
+    },
+    "enablePrivateLink": {
+      "value": true
+    },
+    "blobStorageRedundancy": {
+      "value": "GZRS"
+    },
+    "temporalHistoryShards": {
+      "value": 32
+    },
+    "enableCodecServer": {
+      "value": true
+    },
+    "codecServerReplicas": {
+      "value": 2
+    },
+    "logRetentionDays": {
+      "value": 365
+    },
+    "enableBackup": {
+      "value": true
+    },
+    "backupRetentionDays": {
+      "value": 90
+    }
+  }
+}
+

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environment": {
+      "value": "uat"
+    },
+    "envName": {
+      "value": "engram-uat"
+    },
+    "location": {
+      "value": "[resourceGroup().location]"
+    },
+    "aksNodeCount": {
+      "value": 4
+    },
+    "aksNodeSize": {
+      "value": "Standard_D4s_v3"
+    },
+    "aksNodeMinCount": {
+      "value": 4
+    },
+    "aksNodeMaxCount": {
+      "value": 10
+    },
+    "postgresSku": {
+      "value": "D4s_v3"
+    },
+    "postgresStorageGB": {
+      "value": 128
+    },
+    "postgresHighAvailability": {
+      "value": true
+    },
+    "enablePrivateLink": {
+      "value": true
+    },
+    "blobStorageRedundancy": {
+      "value": "GRS"
+    },
+    "temporalHistoryShards": {
+      "value": 16
+    },
+    "enableCodecServer": {
+      "value": true
+    },
+    "codecServerReplicas": {
+      "value": 2
+    },
+    "logRetentionDays": {
+      "value": 90
+    }
+  }
+}
+

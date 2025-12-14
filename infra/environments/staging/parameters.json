@@ -1,0 +1,61 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environment": {
+      "value": "staging"
+    },
+    "envName": {
+      "value": "engram-staging"
+    },
+    "location": {
+      "value": "[resourceGroup().location]"
+    },
+    "postgresSku": {
+      "value": "B1ms"
+    },
+    "enablePrivateLink": {
+      "value": false
+    },
+    "scaleToZero": {
+      "value": true
+    },
+    "postgresPassword": {
+      "reference": {
+        "keyVault": "[resourceId('Microsoft.KeyVault/vaults', 'engram-staging-kv')]",
+        "secretName": "postgres-password"
+      }
+    },
+    "registryUsername": {
+      "reference": {
+        "keyVault": "[resourceId('Microsoft.KeyVault/vaults', 'engram-staging-kv')]",
+        "secretName": "registry-username"
+      }
+    },
+    "registryPassword": {
+      "reference": {
+        "keyVault": "[resourceId('Microsoft.KeyVault/vaults', 'engram-staging-kv')]",
+        "secretName": "registry-password"
+      }
+    },
+    "zepApiKey": {
+      "reference": {
+        "keyVault": "[resourceId('Microsoft.KeyVault/vaults', 'engram-staging-kv')]",
+        "secretName": "zep-api-key"
+      }
+    },
+    "azureAiEndpoint": {
+      "value": ""
+    },
+    "azureAiProjectName": {
+      "value": ""
+    },
+    "azureAiKey": {
+      "reference": {
+        "keyVault": "[resourceId('Microsoft.KeyVault/vaults', 'engram-staging-kv')]",
+        "secretName": "azure-ai-key"
+      }
+    }
+  }
+}
+
