@@ -1,0 +1,29 @@
+{
+  "name": "engram",
+  "version": "1.0.0",
+  "description": "> **Cognition-as-a-Service for the Enterprise**",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:e2e": "playwright test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zimaxnet/engram.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/zimaxnet/engram/issues"
+  },
+  "homepage": "https://github.com/zimaxnet/engram#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.57.0"
+  }
+}

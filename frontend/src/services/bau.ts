@@ -1,3 +1,5 @@
+import { listBauFlows as apiListBauFlows, listBauArtifacts as apiListBauArtifacts } from './api'
+
 export interface BauFlow {
   id: 'intake-triage' | 'policy-qa' | 'decision-log'
   title: string
@@ -13,45 +15,33 @@ export interface BauArtifact {
   chips: string[]
 }
 
+function formatIngestedLabel(ingestedAt: string): string {
+  const date = new Date(ingestedAt)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+  const diffDays = Math.floor(diffHours / 24)
+
+  if (diffDays > 0) {
+    return `ingested ${diffDays}d ago`
+  } else if (diffHours > 0) {
+    return `ingested ${diffHours}h ago`
+  } else {
+    const diffMins = Math.floor(diffMs / (1000 * 60))
+    return `ingested ${diffMins}m ago`
+  }
+}
+
 export async function listBauFlows(): Promise<BauFlow[]> {
-  return [
-    {
-      id: 'intake-triage',
-      title: 'Intake & triage',
-      persona: 'Marcus',
-      description: 'Turn requests into plans, milestones, owners, and risk flags.',
-      cta: 'Start',
-    },
-    {
-      id: 'policy-qa',
-      title: 'Policy Q&A',
-      persona: 'Elena',
-      description: 'Ask questions and get answers with citations and sensitivity warnings.',
-      cta: 'Ask',
-    },
-    {
-      id: 'decision-log',
-      title: 'Decision log search',
-      persona: 'Elena + Marcus',
-      description: 'Recall decisions and provenance across time and projects.',
-      cta: 'Search',
-    },
-  ]
+  return apiListBauFlows()
 }
 
 export async function listRecentArtifacts(): Promise<BauArtifact[]> {
-  return [
-    {
-      id: 'art-1',
-      name: 'Meeting notes — Steering Committee',
-      ingestedLabel: 'ingested 2h ago',
-      chips: ['tenant:zimax', 'project:alpha', 'sensitivity:silver'],
-    },
-    {
-      id: 'art-2',
-      name: 'Policy update — Data retention',
-      ingestedLabel: 'ingested 1d ago',
-      chips: ['tenant:zimax', 'domain:security', 'sensitivity:gold'],
-    },
-  ]
+  const artifacts = await apiListBauArtifacts(20)
+  return artifacts.map((a) => ({
+    id: a.id,
+    name: a.name,
+    ingestedLabel: formatIngestedLabel(a.ingested_at),
+    chips: a.chips,
+  }))
 }

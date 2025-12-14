@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './EvidenceTelemetry.css'
 import { getEvidenceTelemetry, type EvidenceTelemetrySnapshot } from '../../services/metrics'
 
@@ -11,6 +12,7 @@ function statusClass(status: 'ok' | 'warn' | 'bad') {
 }
 
 export function EvidenceTelemetry() {
+  const navigate = useNavigate()
   const [range, setRange] = useState<EvidenceTelemetrySnapshot['rangeLabel']>('15m')
   const [snapshot, setSnapshot] = useState<EvidenceTelemetrySnapshot | null>(null)
   const [loading, setLoading] = useState(true)
@@ -55,7 +57,7 @@ export function EvidenceTelemetry() {
                 ))}
               </select>
             </label>
-            <button className="primary" onClick={() => alert('Wire to /validation/golden-thread')}>Run Golden Thread</button>
+            <button className="primary" onClick={() => navigate('/validation/golden-thread')}>Run Golden Thread</button>
             <span className="pill good">SLO: OK</span>
           </div>
         </div>

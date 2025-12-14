@@ -249,10 +249,205 @@ export class ApiClient {
     return this.request<unknown>(`/workflows/${workflowId}`);
   }
 
+  async getWorkflowDetail(workflowId: string) {
+    return this.request<{
+      workflow_id: string
+      workflow_type: string
+      status: string
+      agent_id?: string
+      session_id?: string
+      started_at?: string
+      completed_at?: string
+      task_summary: string
+      steps: Array<{
+        name: string
+        status: string
+        duration_label?: string
+        attempts?: number
+        meta?: string
+        note?: string
+      }>
+      context_snapshot?: Array<{ k: string; v: string }>
+      trace_id?: string
+    }>(`/workflows/${workflowId}`)
+  }
+
   async signalWorkflow(workflowId: string, signalName: string, payload: unknown = {}) {
-    // Mock signal
-    console.log(`Signaling ${workflowId} with ${signalName}`, payload);
-    return Promise.resolve({ success: true });
+    return this.request<{ success: boolean; message: string }>(`/workflows/${workflowId}/signal`, {
+      method: 'POST',
+      body: JSON.stringify({ signal_name: signalName, payload }),
+    })
+  }
+
+  // BAU
+  async listBauFlows() {
+    return this.request<Array<{
+      id: string
+      title: string
+      persona: string
+      description: string
+      cta: string
+    }>>('/bau/flows')
+  }
+
+  async listBauArtifacts(limit: number = 20) {
+    return this.request<Array<{
+      id: string
+      name: string
+      ingested_at: string
+      chips: string[]
+    }>>(`/bau/artifacts?limit=${limit}`)
+  }
+
+  async startBauFlow(flowId: string, initialMessage?: string) {
+    return this.request<{
+      workflow_id: string
+      session_id: string
+      message: string
+    }>(`/bau/flows/${flowId}/start`, {
+      method: 'POST',
+      body: JSON.stringify({ flow_id: flowId, initial_message: initialMessage }),
+    })
+  }
+
+  // Metrics
+  async getEvidenceTelemetry(range: '15m' | '1h' | '24h' | '7d' = '15m') {
+    return this.request<{
+      range_label: string
+      reliability: Array<{
+        label: string
+        value: string
+        status: 'ok' | 'warn' | 'bad'
+        note?: string
+      }>
+      ingestion: Array<{
+        label: string
+        value: string
+        status: 'ok' | 'warn' | 'bad'
+        note?: string
+      }>
+      memory_quality: Array<{
+        label: string
+        value: string
+        status: 'ok' | 'warn' | 'bad'
+        note?: string
+      }>
+      alerts: Array<{
+        id: string
+        severity: 'P0' | 'P1' | 'P2' | 'P3'
+        title: string
+        detail: string
+        time_label: string
+        status: 'open' | 'closed'
+      }>
+      narrative: {
+        elena: string
+        marcus: string
+      }
+      changes: Array<{ label: string; value: string }>
+    }>(`/metrics/evidence?range=${range}`)
+  }
+
+  // Validation
+  async listGoldenDatasets() {
+    return this.request<Array<{
+      id: string
+      name: string
+      filename: string
+      hash: string
+      size_label: string
+      anchors: string[]
+    }>>('/validation/datasets')
+  }
+
+  async getLatestGoldenRun() {
+    return this.request<{
+      summary: {
+        run_id: string
+        dataset_id: string
+        status: 'PASS' | 'FAIL' | 'WARN' | 'RUNNING'
+        checks_total: number
+        checks_passed: number
+        started_at: string
+        ended_at?: string
+        duration_ms?: number
+        trace_id?: string
+        workflow_id?: string
+        session_id?: string
+      }
+      checks: Array<{
+        id: string
+        name: string
+        status: 'pending' | 'running' | 'pass' | 'fail' | 'warn'
+        duration_ms?: number
+        evidence_summary?: string
+      }>
+      narrative: {
+        elena: string
+        marcus: string
+      }
+    } | null>('/validation/runs/latest')
+  }
+
+  async runGoldenThread(datasetId: string, mode: 'deterministic' | 'acceptance' = 'deterministic') {
+    return this.request<{
+      summary: {
+        run_id: string
+        dataset_id: string
+        status: 'PASS' | 'FAIL' | 'WARN' | 'RUNNING'
+        checks_total: number
+        checks_passed: number
+        started_at: string
+        ended_at?: string
+        duration_ms?: number
+        trace_id?: string
+        workflow_id?: string
+        session_id?: string
+      }
+      checks: Array<{
+        id: string
+        name: string
+        status: 'pending' | 'running' | 'pass' | 'fail' | 'warn'
+        duration_ms?: number
+        evidence_summary?: string
+      }>
+      narrative: {
+        elena: string
+        marcus: string
+      }
+    }>('/validation/run', {
+      method: 'POST',
+      body: JSON.stringify({ dataset_id: datasetId, mode }),
+    })
+  }
+
+  async getGoldenRun(runId: string) {
+    return this.request<{
+      summary: {
+        run_id: string
+        dataset_id: string
+        status: 'PASS' | 'FAIL' | 'WARN' | 'RUNNING'
+        checks_total: number
+        checks_passed: number
+        started_at: string
+        ended_at?: string
+        duration_ms?: number
+        trace_id?: string
+        workflow_id?: string
+        session_id?: string
+      }
+      checks: Array<{
+        id: string
+        name: string
+        status: 'pending' | 'running' | 'pass' | 'fail' | 'warn'
+        duration_ms?: number
+        evidence_summary?: string
+      }>
+      narrative: {
+        elena: string
+        marcus: string
+      }
+    }>(`/validation/runs/${runId}`)
   }
 
   // Admin
@@ -337,7 +532,22 @@ export const addFact = (content: string, metadata?: Record<string, unknown>) => 
 
 export const listWorkflows = (status?: string, limit?: number, offset?: number) => apiClient.listWorkflows(status, limit, offset);
 export const getWorkflow = (workflowId: string) => apiClient.getWorkflow(workflowId);
+export const getWorkflowDetail = (workflowId: string) => apiClient.getWorkflowDetail(workflowId);
 export const signalWorkflow = (workflowId: string, signalName: string, payload?: unknown) => apiClient.signalWorkflow(workflowId, signalName, payload);
+
+// BAU
+export const listBauFlows = () => apiClient.listBauFlows();
+export const listBauArtifacts = (limit?: number) => apiClient.listBauArtifacts(limit);
+export const startBauFlow = (flowId: string, initialMessage?: string) => apiClient.startBauFlow(flowId, initialMessage);
+
+// Metrics
+export const getEvidenceTelemetry = (range?: '15m' | '1h' | '24h' | '7d') => apiClient.getEvidenceTelemetry(range);
+
+// Validation
+export const listGoldenDatasets = () => apiClient.listGoldenDatasets();
+export const getLatestGoldenRun = () => apiClient.getLatestGoldenRun();
+export const runGoldenThread = (datasetId: string, mode?: 'deterministic' | 'acceptance') => apiClient.runGoldenThread(datasetId, mode);
+export const getGoldenRun = (runId: string) => apiClient.getGoldenRun(runId);
 
 export const getSystemSettings = () => apiClient.getSystemSettings();
 export const updateSystemSettings = (settings: unknown) => apiClient.updateSystemSettings(settings);

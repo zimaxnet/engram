@@ -1,23 +1,48 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import './WorkflowDetail.css'
-import { getWorkflowDetailMock, type WorkflowDetailModel } from '../../services/workflowDetail'
+import { getWorkflowDetail, type WorkflowDetailModel } from '../../services/workflowDetail'
+import { signalWorkflow } from '../../services/api'
 
 export function WorkflowDetail() {
   const { workflowId } = useParams()
+  const navigate = useNavigate()
   const [detail, setDetail] = useState<WorkflowDetailModel | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [signaling, setSignaling] = useState(false)
 
   useEffect(() => {
     const load = async () => {
       if (!workflowId) return
       setLoading(true)
-      const data = await getWorkflowDetailMock(workflowId)
-      setDetail(data)
-      setLoading(false)
+      setError(null)
+      try {
+        const data = await getWorkflowDetail(workflowId)
+        setDetail(data)
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Failed to load workflow')
+      } finally {
+        setLoading(false)
+      }
     }
     void load()
   }, [workflowId])
+
+  const handleSignal = async (signalName: string, payload: unknown = {}) => {
+    if (!workflowId) return
+    setSignaling(true)
+    try {
+      await signalWorkflow(workflowId, signalName, payload)
+      // Reload workflow detail after signal
+      const data = await getWorkflowDetail(workflowId)
+      setDetail(data)
+    } catch (e) {
+      alert(`Failed to send signal: ${e instanceof Error ? e.message : 'Unknown error'}`)
+    } finally {
+      setSignaling(false)
+    }
+  }
 
   return (
     <div className="column column-center">
@@ -31,6 +56,12 @@ export function WorkflowDetail() {
         </div>
 
         {loading && <p className="subtle">Loading workflow…</p>}
+
+        {error && (
+          <div className="callout status-error" role="alert">
+            {error}
+          </div>
+        )}
 
         {!loading && detail && (
           <div className="wfd__grid">
@@ -87,9 +118,27 @@ export function WorkflowDetail() {
                 <h4>Signals</h4>
               </div>
               <div className="signal-row">
-                <button className="primary sm" onClick={() => alert('Approve signal (mock)')}>Approve</button>
-                <button className="ghost sm" onClick={() => alert('Provide input (mock)')}>Provide input</button>
-                <button className="danger sm" onClick={() => alert('Cancel (mock)')}>Cancel</button>
+                <button
+                  className="primary sm"
+                  onClick={() => handleSignal('approve', { approved: true })}
+                  disabled={signaling}
+                >
+                  Approve
+                </button>
+                <button
+                  className="ghost sm"
+                  onClick={() => handleSignal('provide_input', { input: prompt('Provide input:') || '' })}
+                  disabled={signaling}
+                >
+                  Provide input
+                </button>
+                <button
+                  className="danger sm"
+                  onClick={() => handleSignal('cancel', {})}
+                  disabled={signaling}
+                >
+                  Cancel
+                </button>
               </div>
 
               <div className="panel-head" style={{ marginTop: '1rem' }}>
@@ -99,7 +148,7 @@ export function WorkflowDetail() {
                 <span className="k">Trace ID</span>
                 <span className="v mono">{detail.traceId ?? '—'}</span>
               </div>
-              <button className="ghost sm" onClick={() => alert('Open in telemetry (mock)')}>Open in telemetry</button>
+              <button className="ghost sm" onClick={() => navigate('/evidence')}>Open in telemetry</button>
             </aside>
           </div>
         )}

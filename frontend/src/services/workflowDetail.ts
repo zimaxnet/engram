@@ -20,35 +20,36 @@ export interface WorkflowDetailModel {
   contextSnapshot: Array<{ k: string; v: string }>
 }
 
-export async function getWorkflowDetailMock(workflowId: string): Promise<WorkflowDetailModel> {
-  const isAgent = workflowId.includes('AgentWorkflow') || workflowId.startsWith('temporal-agent')
+import { getWorkflowDetail as apiGetWorkflowDetail } from './api'
 
-  const steps: WorkflowStep[] = isAgent
-    ? [
-        { name: 'initialize_context', status: 'completed', durationLabel: '120ms', attempts: 1 },
-        { name: 'enrich_memory', status: 'completed', durationLabel: '220ms', attempts: 1, meta: 'facts=3 entities=1' },
-        { name: 'agent_reasoning', status: 'completed', durationLabel: '1.4s', attempts: 2, note: '1 retry due to timeout' },
-        { name: 'validate_response', status: 'completed', durationLabel: '80ms', attempts: 1 },
-        { name: 'persist_memory', status: 'completed', durationLabel: '180ms', attempts: 1 },
-      ]
-    : [
-        { name: 'start', status: 'completed', durationLabel: '40ms', attempts: 1 },
-        { name: 'process', status: 'running', durationLabel: '—', attempts: 1, meta: 'processing' },
-      ]
-
+export async function getWorkflowDetail(workflowId: string): Promise<WorkflowDetailModel> {
+  const detail = await apiGetWorkflowDetail(workflowId)
+  
+  // Map backend response to frontend format
   return {
-    workflowId,
-    workflowType: isAgent ? 'AgentWorkflow' : 'Workflow',
-    status: 'completed',
-    agentId: 'elena',
-    sessionId: 'session-thread',
-    traceId: '7c2d…',
-    steps,
-    contextSnapshot: [
-      { k: 'Active agent', v: 'elena' },
-      { k: 'Last user message', v: 'Why didn’t ingestion show up on gh-pages?' },
-      { k: 'Retrieved facts', v: '3' },
-      { k: 'Validation', v: 'PASS' },
+    workflowId: detail.workflow_id,
+    workflowType: detail.workflow_type,
+    status: detail.status,
+    agentId: detail.agent_id,
+    sessionId: detail.session_id,
+    traceId: detail.trace_id,
+    steps: (detail.steps || []).map((s: any) => ({
+      name: s.name || s.step_name || '',
+      status: (s.status || 'waiting').toLowerCase() as WorkflowStep['status'],
+      durationLabel: s.duration_label || s.duration_ms ? `${s.duration_ms}ms` : undefined,
+      attempts: s.attempts,
+      meta: s.meta || s.metadata,
+      note: s.note,
+    })),
+    contextSnapshot: detail.context_snapshot || [
+      { k: 'Workflow ID', v: detail.workflow_id },
+      { k: 'Status', v: detail.status },
+      { k: 'Type', v: detail.workflow_type },
     ],
   }
+}
+
+// Keep mock function for backward compatibility in tests
+export async function getWorkflowDetailMock(workflowId: string): Promise<WorkflowDetailModel> {
+  return getWorkflowDetail(workflowId)
 }

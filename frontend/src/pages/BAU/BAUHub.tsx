@@ -1,19 +1,40 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './BAUHub.css'
 import { listBauFlows, listRecentArtifacts, type BauArtifact, type BauFlow } from '../../services/bau'
+import { startBauFlow } from '../../services/api'
 
 export function BAUHub() {
+  const navigate = useNavigate()
   const [flows, setFlows] = useState<BauFlow[]>([])
   const [artifacts, setArtifacts] = useState<BauArtifact[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const load = async () => {
-      const [f, a] = await Promise.all([listBauFlows(), listRecentArtifacts()])
-      setFlows(f)
-      setArtifacts(a)
+      try {
+        setLoading(true)
+        const [f, a] = await Promise.all([listBauFlows(), listRecentArtifacts()])
+        setFlows(f)
+        setArtifacts(a)
+      } catch (error) {
+        console.error('Failed to load BAU data:', error)
+      } finally {
+        setLoading(false)
+      }
     }
     void load()
   }, [])
+
+  if (loading) {
+    return (
+      <div className="column column-center">
+        <div className="bau page-pad">
+          <p className="subtle">Loading BAU data…</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="column column-center">
@@ -25,9 +46,9 @@ export function BAUHub() {
             <p className="lede">Daily enterprise workflows powered by durable execution + memory + governance.</p>
           </div>
           <div className="bau__actions">
-            <button className="primary" onClick={() => alert('Wire to Golden Thread runner')}>Run golden thread</button>
-            <button className="ghost" onClick={() => alert('Wire to Sources upload')}>Ingest new doc</button>
-            <button className="ghost" onClick={() => alert('Wire to Evidence & Telemetry')}>View SLOs</button>
+            <button className="primary" onClick={() => navigate('/validation/golden-thread')}>Run golden thread</button>
+            <button className="ghost" onClick={() => navigate('/sources')}>Ingest new doc</button>
+            <button className="ghost" onClick={() => navigate('/evidence')}>View SLOs</button>
           </div>
         </div>
 
@@ -48,7 +69,18 @@ export function BAUHub() {
                   </div>
                   <h3>{f.title}</h3>
                   <p className="subtle">{f.description}</p>
-                  <button className="primary sm" onClick={() => alert(`Open flow: ${f.id}`)}>
+                  <button
+                    className="primary sm"
+                    onClick={async () => {
+                      try {
+                        const { workflow_id } = await startBauFlow(f.id)
+                        navigate(`/workflows/${workflow_id}`)
+                      } catch (error) {
+                        console.error('Failed to start BAU flow:', error)
+                        alert(`Failed to start flow: ${error instanceof Error ? error.message : 'Unknown error'}`)
+                      }
+                    }}
+                  >
                     {f.cta}
                   </button>
                 </div>
@@ -76,7 +108,7 @@ export function BAUHub() {
                       ))}
                     </div>
                   </div>
-                  <button className="ghost sm" onClick={() => alert('Open in Memory view')}>Open</button>
+                  <button className="ghost sm" onClick={() => navigate('/memory/search')}>Open</button>
                 </li>
               ))}
             </ul>
@@ -89,7 +121,7 @@ export function BAUHub() {
                 <li>Run a workflow</li>
                 <li>Review the evidence bundle</li>
               </ol>
-              <button className="primary sm" onClick={() => alert('Start walkthrough')}>Start walkthrough</button>
+              <button className="primary sm" onClick={() => navigate('/sources')}>Start walkthrough</button>
             </div>
           </section>
         </div>

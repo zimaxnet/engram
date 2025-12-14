@@ -185,7 +185,32 @@ export function GoldenThreadRunner() {
                 <p className="eyebrow">Evidence</p>
                 <h4>Traceability</h4>
               </div>
-              <button className="ghost" disabled={!run}>
+              <button
+                className="ghost"
+                disabled={!run}
+                onClick={async () => {
+                  if (!run) return
+                  try {
+                    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8082'}/api/v1/validation/runs/${run.summary.runId}/evidence`, {
+                      headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`,
+                      },
+                    })
+                    const blob = await response.blob()
+                    const url = window.URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = `golden-thread-${run.summary.runId}.json`
+                    document.body.appendChild(a)
+                    a.click()
+                    window.URL.revokeObjectURL(url)
+                    document.body.removeChild(a)
+                  } catch (error) {
+                    console.error('Failed to download evidence:', error)
+                    alert('Failed to download evidence bundle')
+                  }
+                }}
+              >
                 Download evidence
               </button>
             </div>

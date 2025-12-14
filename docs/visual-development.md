@@ -295,6 +295,26 @@ To generate consistent visuals for the Engram platform:
 
 - Use `"render_style": "photorealistic_with_slight_stylization"` for portraits
 - Use `"aesthetic": "modern_tech_dark_theme"` for diagrams
-- Include `"glow": true` for interactive elements
+- Include `"glow": true"` for interactive elements
 - Specify exact hex colors for brand consistency
+
+---
+
+## Design-to-Implementation Contract
+
+Every screen and flow depicted in `/assets/images/` represents required functionality. The visual design drives all functionality that should be built and fully tested. This is the critical part of the ability required to go from POC to enterprise adoption as BAU.
+
+| Image | Screen/Feature | API Endpoints | Test Suite |
+|-------|---------------|---------------|------------|
+| bau-hub.png | BAU Hub | `/api/v1/bau/*` | `BAUHub.test.tsx`, `test_bau_router.py` |
+| evidence-telemetry-panel.png | Evidence & Telemetry | `/api/v1/metrics/evidence` | `EvidenceTelemetry.test.tsx`, `test_metrics_router.py` |
+| golden-thread-validation.png | Golden Thread Runner | `/api/v1/validation/*` | `GoldenThreadRunner.test.tsx`, `test_validation_router.py` |
+| workflow-detail-durable-spine.png | Workflow Detail | `/api/v1/workflows/:id` | `WorkflowDetail.test.tsx` |
+| memory-search-provenance.png | Memory Search | `/api/v1/memory/search` | `Search.test.tsx` |
+
+**Contract Requirements:**
+- All screens must be built with all intended flows, connections, and functions inherent to the visual design
+- The design drives all functionality that should be built
+- All functionality must be fully tested and validated to be completely working
+- This contract is the acceptance criteria for POC-to-enterprise transition
 
