@@ -290,13 +290,13 @@ export class ApiClient {
     }>>('/bau/flows')
   }
 
-  async listBauArtifacts(limit: number = 20) {
+  async listBauArtifacts(limit: number = 20, offset: number = 0) {
     return this.request<Array<{
       id: string
       name: string
       ingested_at: string
       chips: string[]
-    }>>(`/bau/artifacts?limit=${limit}`)
+    }>>(`/bau/artifacts?limit=${limit}&offset=${offset}`)
   }
 
   async startBauFlow(flowId: string, initialMessage?: string) {
@@ -537,7 +537,7 @@ export const signalWorkflow = (workflowId: string, signalName: string, payload?:
 
 // BAU
 export const listBauFlows = () => apiClient.listBauFlows();
-export const listBauArtifacts = (limit?: number) => apiClient.listBauArtifacts(limit);
+export const listBauArtifacts = (limit?: number, offset?: number) => apiClient.listBauArtifacts(limit, offset);
 export const startBauFlow = (flowId: string, initialMessage?: string) => apiClient.startBauFlow(flowId, initialMessage);
 
 // Metrics

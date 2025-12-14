@@ -255,12 +255,23 @@ For predictable workloads, consider:
 
 ## Cost Optimization Checklist
 
-- [ ] Enable scale-to-zero on all container apps
-- [ ] Use gpt-4o-mini for simple queries
-- [ ] Implement conversation summarization
+### Infrastructure
+- [x] Enable scale-to-zero on all container apps
+- [x] Use B1ms PostgreSQL SKU for staging/dev (cost-optimized)
+- [ ] Consider reserved capacity for PostgreSQL (35-50% savings)
+- [ ] Tag all resources for cost attribution
+
+### Application-Level
+- [x] Cache Evidence Telemetry (60s TTL, reduces Monitor API calls by ~95%)
+- [x] Paginate BAU artifacts (reduces memory queries by 50-80%)
+- [ ] Use gpt-4o-mini for simple queries (30x cheaper)
+- [ ] Implement conversation summarization (40% token reduction)
+- [ ] Batch Golden Thread runs for bulk operations (30-40% workflow overhead reduction)
+
+### Monitoring & Alerts
 - [ ] Set up budget alerts at 50%, 80%, 100%
 - [ ] Monitor daily token usage
 - [ ] Review monthly cost reports
-- [ ] Consider reserved capacity for PostgreSQL
-- [ ] Tag all resources for cost attribution
+- [ ] Track Evidence Telemetry cache hit rate (target > 80%)
+- [ ] Alert on Golden Thread run failures (indicates waste)
 

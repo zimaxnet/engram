@@ -9,6 +9,7 @@ Provides API for:
 
 import logging
 from datetime import datetime, timedelta
+from functools import lru_cache
 from typing import List, Literal, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -20,6 +21,10 @@ from backend.core import SecurityContext
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+# Cache for evidence telemetry (60 second TTL per range)
+_evidence_cache: dict[str, tuple[datetime, "EvidenceTelemetrySnapshot"]] = {}
+CACHE_TTL_SECONDS = 60
 
 
 class MetricCard(BaseModel):
@@ -60,7 +65,20 @@ async def get_evidence_telemetry(
     Get evidence telemetry snapshot for the specified time range.
 
     Returns operational metrics, alerts, and agent narratives.
+    
+    Cached for 60 seconds per range to reduce Azure Monitor API calls.
     """
+    # Check cache first
+    cache_key = f"evidence_{range}"
+    now = datetime.utcnow()
+    
+    if cache_key in _evidence_cache:
+        cached_time, cached_snapshot = _evidence_cache[cache_key]
+        age_seconds = (now - cached_time).total_seconds()
+        if age_seconds < CACHE_TTL_SECONDS:
+            logger.debug(f"Returning cached evidence telemetry for range {range} (age: {age_seconds:.1f}s)")
+            return cached_snapshot
+    
     try:
         # In production, this would query:
         # - Application Insights / OpenTelemetry metrics
@@ -120,6 +138,10 @@ async def get_evidence_telemetry(
                 {"label": "SLO", "value": "parse warn threshold 98%"},
             ],
         )
+        
+        # Cache the result
+        _evidence_cache[cache_key] = (now, snapshot)
+        logger.debug(f"Cached evidence telemetry for range {range}")
         
         return snapshot
         

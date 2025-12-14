@@ -92,7 +92,8 @@ async def list_bau_flows(user: SecurityContext = Depends(get_current_user)):
 
 @router.get("/artifacts", response_model=List[BauArtifact])
 async def list_bau_artifacts(
-    limit: int = 20,
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     user: SecurityContext = Depends(get_current_user),
 ):
     """
@@ -152,9 +153,6 @@ async def list_bau_artifacts(
                         )
                     )
                     seen_files[filename] = True
-                    
-                    if len(artifacts) >= limit:
-                        break
         except Exception as e:
             logger.warning(f"Failed to query memory for artifacts: {e}")
         
@@ -175,7 +173,9 @@ async def list_bau_artifacts(
                 ),
             ]
         
-        return artifacts[:limit]
+        # Apply pagination
+        paginated = artifacts[offset:offset + limit]
+        return paginated
         
     except Exception as e:
         logger.error(f"Failed to list artifacts: {e}")
