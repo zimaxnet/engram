@@ -28,7 +28,7 @@ class AgentState(TypedDict):
 
 
 class FoundryChatClient:
-    """Minimal async chat client for Azure AI Foundry (key auth)."""
+    """Minimal async chat client for OpenAI-compatible API (Azure API Gateway)."""
 
     def __init__(
         self,
@@ -41,9 +41,21 @@ class FoundryChatClient:
         max_tokens: int = 4096,
         timeout: float = 60.0,
     ) -> None:
+        # Support OpenAI-compatible endpoint format
         base = endpoint.rstrip("/")
-        self.url = f"{base}/openai/deployments/{deployment}/chat/completions?api-version={api_version}"
-        self.headers = {"api-key": api_key, "Content-Type": "application/json"}
+        # Check if this is an OpenAI-compatible endpoint (contains /openai/v1 or similar)
+        if "/openai/v1" in base or base.endswith("/v1"):
+            # OpenAI-compatible format: endpoint already includes the path
+            self.url = f"{base}/chat/completions"
+            self.headers = {"api-key": api_key, "Content-Type": "application/json"}
+            self.model = deployment  # Use model parameter instead of deployment path
+            self.is_openai_compat = True
+        else:
+            # Azure AI Foundry format
+            self.url = f"{base}/openai/deployments/{deployment}/chat/completions?api-version={api_version}"
+            self.headers = {"api-key": api_key, "Content-Type": "application/json"}
+            self.model = None
+            self.is_openai_compat = False
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.timeout = timeout
@@ -62,9 +74,16 @@ class FoundryChatClient:
     async def ainvoke(self, messages: list[BaseMessage]) -> AIMessage:
         payload = {
             "messages": [self._format_message(m) for m in messages],
-            "temperature": self.temperature,
-            "max_tokens": self.max_tokens,
         }
+        # Add model for OpenAI-compatible endpoints
+        if self.is_openai_compat and self.model:
+            payload["model"] = self.model
+        
+        # Only add temperature and max_tokens for non-OpenAI-compat endpoints
+        # (some models like gpt-5.1-chat don't support custom temperature)
+        if not self.is_openai_compat:
+            payload["temperature"] = self.temperature
+            payload["max_tokens"] = self.max_tokens
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.post(self.url, headers=self.headers, json=payload)
@@ -97,16 +116,18 @@ class BaseAgent(ABC):
 
     @property
     def llm(self) -> FoundryChatClient:
-        """Lazy-load the Azure AI Foundry client."""
+        """Lazy-load the chat client (OpenAI-compatible or Azure AI Foundry)."""
         if self._llm is None:
             endpoint = self.settings.azure_ai_endpoint
-            if self.settings.azure_ai_project_name:
-                endpoint = f"{endpoint.rstrip('/')}/api/projects/{self.settings.azure_ai_project_name}"
             if not endpoint:
                 raise ValueError("Azure AI endpoint not configured. Set AZURE_AI_ENDPOINT.")
 
             if not self.settings.azure_ai_key:
-                raise ValueError("Azure AI API key not configured")
+                raise ValueError("Azure AI API key not configured. Set AZURE_AI_KEY.")
+
+            # Don't modify endpoint for OpenAI-compatible APIs
+            if self.settings.azure_ai_project_name and "/openai/v1" not in endpoint:
+                endpoint = f"{endpoint.rstrip('/')}/api/projects/{self.settings.azure_ai_project_name}"
 
             self._llm = FoundryChatClient(
                 endpoint=endpoint,

@@ -16,6 +16,9 @@ azure-keyvault-secrets>=4.7.0
 azure-core>=1.29.5
 numpy>=1.26.0
 
+# Azure AI VoiceLive (Real-time Voice)
+azure-ai-voicelive[aiohttp]>=1.0.0
+
 # Agent Framework
 langchain>=0.1.0
 langgraph>=0.0.20

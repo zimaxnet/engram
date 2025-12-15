@@ -60,12 +60,12 @@ class Settings(BaseSettings):
     temporal_task_queue: str = Field("engram-agents", alias="TEMPORAL_TASK_QUEUE")
 
     # ==========================================================================
-    # Azure AI Foundry (key-auth)
+    # Chat API Gateway (OpenAI-compatible)
     # ==========================================================================
     azure_ai_endpoint: Optional[str] = Field(None, alias="AZURE_AI_ENDPOINT")
     azure_ai_project_name: Optional[str] = Field(None, alias="AZURE_AI_PROJECT_NAME")
     azure_ai_key: Optional[str] = Field(None, alias="AZURE_AI_KEY")
-    azure_ai_deployment: str = Field("gpt-4o-mini", alias="AZURE_AI_DEPLOYMENT")
+    azure_ai_deployment: str = Field("gpt-5.1-chat", alias="AZURE_AI_DEPLOYMENT")
     azure_ai_api_version: str = Field("2024-10-01-preview", alias="AZURE_AI_API_VERSION")
 
     # Elena voice configuration
@@ -74,9 +74,11 @@ class Settings(BaseSettings):
     marcus_voice_name: str = Field("en-US-GuyNeural", alias="MARCUS_VOICE_NAME")
 
     # ==========================================================================
-    # Azure VoiceLive (Real-time Voice)
+    # Azure VoiceLive (Real-time Voice) - Separate endpoint
     # ==========================================================================
-    azure_voicelive_model: str = Field("gpt-realtime", alias="AZURE_VOICELIVE_MODEL")
+    azure_voicelive_endpoint: Optional[str] = Field(None, alias="AZURE_VOICELIVE_ENDPOINT")
+    azure_voicelive_key: Optional[str] = Field(None, alias="AZURE_VOICELIVE_KEY")
+    azure_voicelive_model: str = Field("gpt-4o-realtime-preview", alias="AZURE_VOICELIVE_MODEL")
     azure_voicelive_voice: str = Field("en-US-Ava:DragonHDLatestNeural", alias="AZURE_VOICELIVE_VOICE")
     # Marcus voice configuration for VoiceLive
     marcus_voicelive_voice: str = Field("en-US-GuyNeural", alias="MARCUS_VOICELIVE_VOICE")

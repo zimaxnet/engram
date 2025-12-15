@@ -22,7 +22,7 @@ from backend.observability import (
     TelemetryMiddleware,
 )
 
-from .routers import admin, agents, bau, chat, health, memory, metrics, validation, workflows, etl
+from .routers import admin, agents, bau, chat, health, memory, metrics, validation, voice, workflows, etl
 from .middleware.logging import RequestLoggingMiddleware
 
 # Configure structured logging
@@ -77,6 +77,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router, tags=["Health"])
     app.include_router(agents.router, prefix="/api/v1/agents", tags=["Agents"])
     app.include_router(chat.router, prefix="/api/v1/chat", tags=["Chat"])
+    app.include_router(voice.router, prefix="/api/v1/voice", tags=["Voice"])
     app.include_router(memory.router, prefix="/api/v1/memory", tags=["Memory"])
     app.include_router(workflows.router, prefix="/api/v1/workflows", tags=["Workflows"])
     app.include_router(etl.router, prefix="/api/v1/etl", tags=["ETL"])
