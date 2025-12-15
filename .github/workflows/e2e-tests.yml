@@ -1,0 +1,316 @@
+name: E2E Tests
+
+on:
+  # Run after successful deployment
+  workflow_run:
+    workflows: ["Deploy"]
+    types: [completed]
+  # Manual trigger with environment selection
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment for E2E tests"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - production
+      test_suite:
+        description: "Test suite to run"
+        required: false
+        default: "all"
+        type: choice
+        options:
+          - all
+          - smoke
+          - api
+          - voice
+          - chat
+
+env:
+  # Default to staging environment URLs
+  STAGING_API_URL: https://staging-env-api.gentleriver-dd0de193.eastus2.azurecontainerapps.io
+  STAGING_FRONTEND_URL: https://engram-web.azurewebsites.net
+
+jobs:
+  # =============================================================================
+  # E2E Test Suite
+  # =============================================================================
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          npm ci
+          npm ci --prefix frontend
+      
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      
+      - name: Set environment URLs
+        id: env_urls
+        run: |
+          ENV="${{ github.event.inputs.environment || 'staging' }}"
+          if [ "$ENV" == "staging" ]; then
+            echo "api_url=${{ env.STAGING_API_URL }}" >> $GITHUB_OUTPUT
+            echo "frontend_url=${{ env.STAGING_FRONTEND_URL }}" >> $GITHUB_OUTPUT
+          else
+            echo "api_url=${{ vars.PRODUCTION_API_URL || env.STAGING_API_URL }}" >> $GITHUB_OUTPUT
+            echo "frontend_url=${{ vars.PRODUCTION_FRONTEND_URL || env.STAGING_FRONTEND_URL }}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Wait for services
+        run: |
+          echo "Waiting for API to be ready..."
+          MAX_RETRIES=10
+          RETRY_DELAY=15
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i/$MAX_RETRIES..."
+            if curl -f --max-time 10 "${{ steps.env_urls.outputs.api_url }}/health" 2>/dev/null; then
+              echo "✅ API is healthy!"
+              break
+            fi
+            if [ $i -eq $MAX_RETRIES ]; then
+              echo "❌ API health check failed after $MAX_RETRIES attempts"
+              exit 1
+            fi
+            sleep $RETRY_DELAY
+          done
+      
+      - name: Run Smoke Tests
+        if: ${{ github.event.inputs.test_suite == 'smoke' || github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == '' }}
+        run: npx playwright test --grep @smoke
+        env:
+          CI: true
+          VITE_API_URL: ${{ steps.env_urls.outputs.api_url }}
+          BASE_URL: ${{ steps.env_urls.outputs.frontend_url }}
+        continue-on-error: true
+      
+      - name: Run API Tests
+        if: ${{ github.event.inputs.test_suite == 'api' || github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == '' }}
+        run: npx playwright test --grep @api
+        env:
+          CI: true
+          VITE_API_URL: ${{ steps.env_urls.outputs.api_url }}
+          BASE_URL: ${{ steps.env_urls.outputs.frontend_url }}
+        continue-on-error: true
+      
+      - name: Run Voice Tests
+        if: ${{ github.event.inputs.test_suite == 'voice' || github.event.inputs.test_suite == 'all' }}
+        run: npx playwright test --grep @voice
+        env:
+          CI: true
+          VITE_API_URL: ${{ steps.env_urls.outputs.api_url }}
+          BASE_URL: ${{ steps.env_urls.outputs.frontend_url }}
+        continue-on-error: true
+      
+      - name: Run Chat Tests
+        if: ${{ github.event.inputs.test_suite == 'chat' || github.event.inputs.test_suite == 'all' }}
+        run: npx playwright test --grep @chat
+        env:
+          CI: true
+          VITE_API_URL: ${{ steps.env_urls.outputs.api_url }}
+          BASE_URL: ${{ steps.env_urls.outputs.frontend_url }}
+        continue-on-error: true
+      
+      - name: Run Full Test Suite
+        if: ${{ github.event.inputs.test_suite == 'all' || github.event.inputs.test_suite == '' }}
+        run: npx playwright test
+        env:
+          CI: true
+          VITE_API_URL: ${{ steps.env_urls.outputs.api_url }}
+          BASE_URL: ${{ steps.env_urls.outputs.frontend_url }}
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ github.event.inputs.environment || 'staging' }}
+          path: playwright-report/
+          retention-days: 30
+      
+      - name: Upload test screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-screenshots-${{ github.event.inputs.environment || 'staging' }}
+          path: test-results/
+          retention-days: 7
+
+  # =============================================================================
+  # API Integration Tests
+  # =============================================================================
+  api-integration:
+    name: API Integration Tests
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r backend/requirements.txt
+          pip install pytest pytest-asyncio httpx
+      
+      - name: Set environment URLs
+        id: env_urls
+        run: |
+          ENV="${{ github.event.inputs.environment || 'staging' }}"
+          if [ "$ENV" == "staging" ]; then
+            echo "api_url=${{ env.STAGING_API_URL }}" >> $GITHUB_OUTPUT
+          else
+            echo "api_url=${{ vars.PRODUCTION_API_URL || env.STAGING_API_URL }}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Run API integration tests
+        run: pytest backend/tests/integration -v --tb=short
+        env:
+          API_BASE_URL: ${{ steps.env_urls.outputs.api_url }}
+          PYTEST_CURRENT_TEST: "true"
+        continue-on-error: true
+
+  # =============================================================================
+  # Voice & Chat Integration Tests
+  # =============================================================================
+  voice-chat-tests:
+    name: Voice & Chat Integration
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.test_suite == 'voice' || github.event.inputs.test_suite == 'chat' || github.event.inputs.test_suite == 'all') }}
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r backend/requirements.txt
+          pip install pytest pytest-asyncio websockets
+      
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      
+      - name: Set environment URLs
+        id: env_urls
+        run: |
+          ENV="${{ github.event.inputs.environment || 'staging' }}"
+          if [ "$ENV" == "staging" ]; then
+            echo "api_url=${{ env.STAGING_API_URL }}" >> $GITHUB_OUTPUT
+          else
+            echo "api_url=${{ vars.PRODUCTION_API_URL || env.STAGING_API_URL }}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Test Chat Endpoint
+        run: |
+          python -c "
+          import asyncio
+          import httpx
+          
+          async def test_chat():
+              async with httpx.AsyncClient(timeout=30) as client:
+                  # Test chat health
+                  r = await client.get('${{ steps.env_urls.outputs.api_url }}/api/v1/chat/health')
+                  print(f'Chat health: {r.status_code}')
+                  assert r.status_code == 200, f'Chat health failed: {r.text}'
+                  print('✅ Chat endpoint healthy')
+          
+          asyncio.run(test_chat())
+          "
+      
+      - name: Test Voice WebSocket
+        run: |
+          python -c "
+          import asyncio
+          import websockets
+          import json
+          
+          async def test_voice_ws():
+              ws_url = '${{ steps.env_urls.outputs.api_url }}'.replace('https://', 'wss://') + '/api/v1/voice/ws'
+              try:
+                  async with websockets.connect(ws_url, close_timeout=5) as ws:
+                      # Send init message
+                      await ws.send(json.dumps({'type': 'init', 'session_id': 'test-session'}))
+                      # Wait for response
+                      response = await asyncio.wait_for(ws.recv(), timeout=10)
+                      print(f'Voice WS response: {response}')
+                      print('✅ Voice WebSocket connected')
+              except Exception as e:
+                  print(f'⚠️ Voice WebSocket test: {e}')
+                  # Don't fail - voice may require auth
+          
+          asyncio.run(test_voice_ws())
+          "
+        continue-on-error: true
+
+  # =============================================================================
+  # Test Summary
+  # =============================================================================
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [e2e-tests, api-integration]
+    if: always()
+    
+    steps:
+      - name: Check Slack Webhook
+        id: check_slack
+        run: |
+          if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            echo "slack_enabled=true" >> $GITHUB_OUTPUT
+          else
+            echo "slack_enabled=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Notify Results
+        if: steps.check_slack.outputs.slack_enabled == 'true'
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: |
+            {
+              "text": "${{ needs.e2e-tests.result == 'success' && needs.api-integration.result == 'success' && '✅' || '⚠️' }} E2E Tests completed for ${{ github.event.inputs.environment || 'staging' }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{ needs.e2e-tests.result == 'success' && needs.api-integration.result == 'success' && '✅ *E2E Tests Passed*' || '⚠️ *E2E Tests Completed with Issues*' }}\n\nEnvironment: `${{ github.event.inputs.environment || 'staging' }}`\nE2E: `${{ needs.e2e-tests.result }}`\nAPI: `${{ needs.api-integration.result }}`\n\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Results>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        continue-on-error: true

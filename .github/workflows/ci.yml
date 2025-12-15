@@ -85,32 +85,5 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  e2e-test:
-    runs-on: ubuntu-latest
-    # Skip e2e in CI - these require full infrastructure
-    # Run manually or against deployed staging environment
-    if: false  # Disabled until infrastructure is stable
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-      - name: Install root dependencies
-        run: npm ci
-      - name: Install frontend dependencies
-        run: npm ci --prefix frontend
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-      - name: Start Backend Services
-        run: |
-          docker compose up -d postgres zep-postgres zep temporal temporal-ui api worker
-          docker compose wait postgres zep-postgres zep temporal worker
-          timeout 90 sh -c 'until nc -z localhost 8082; do sleep 3; done'
-      - name: Run E2E tests
-        run: npx playwright test
-        env:
-          CI: true
-          VITE_API_URL: http://localhost:8082
+  # E2E tests moved to separate workflow: e2e-tests.yml
+  # Run manually via workflow_dispatch or after deployment
