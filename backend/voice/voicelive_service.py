@@ -57,7 +57,7 @@ class VoiceLiveService:
     @property
     def endpoint(self) -> str:
         """Get the VoiceLive endpoint"""
-        return self._endpoint or ""
+        return self._endpoint or "https://zimax.services.ai.azure.com"
     
     @property
     def key(self) -> Optional[str]:

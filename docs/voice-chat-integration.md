@@ -12,7 +12,7 @@ Engram provides two integrated communication channels for interacting with AI ag
 | Channel | Endpoint | Model | Use Case |
 |---------|----------|-------|----------|
 | **Chat** | API Gateway | gpt-5.1-chat | Text-based conversations |
-| **Voice** | VoiceLive Gateway | gpt-realtime | Real-time voice interactions |
+| **Voice** | Azure AI Services | gpt-realtime | Real-time voice interactions |
 
 ---
 
@@ -103,7 +103,7 @@ VoiceLive provides real-time speech-to-speech conversations using Azure AI Servi
 
 ```bash
 # Environment Variables
-AZURE_VOICELIVE_ENDPOINT=https://zimax-gw.azure-api.net/zimax
+AZURE_VOICELIVE_ENDPOINT=https://zimax.services.ai.azure.com
 AZURE_VOICELIVE_KEY=<your-api-key>
 AZURE_VOICELIVE_MODEL=gpt-realtime
 AZURE_VOICELIVE_VOICE=en-US-Ava:DragonHDLatestNeural
@@ -138,7 +138,7 @@ GET /api/v1/voice/status
 ```json
 {
   "voicelive_configured": true,
-  "endpoint": "https://zimax-gw.azure-api.net/zimax...",
+  "endpoint": "https://zimax.services.ai.azure.com...",
   "model": "gpt-realtime",
   "active_sessions": 0,
   "agents": {
@@ -263,7 +263,7 @@ cd backend
 export AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax/openai/v1
 export AZURE_AI_KEY=<your-key>
 export AZURE_AI_DEPLOYMENT=gpt-5.1-chat
-export AZURE_VOICELIVE_ENDPOINT=https://zimax-gw.azure-api.net/zimax
+export AZURE_VOICELIVE_ENDPOINT=https://zimax.services.ai.azure.com
 export AZURE_VOICELIVE_KEY=<your-key>
 export AZURE_VOICELIVE_MODEL=gpt-realtime
 
