@@ -53,9 +53,7 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci --prefix frontend
       - name: Install Playwright browsers
-        uses: microsoft/playwright-github-action@v1
-        with:
-          version: '1.57.0'
+        run: npx playwright install --with-deps chromium
       - name: Start Backend Services
         run: |
           docker compose up -d postgres zep-postgres zep temporal temporal-ui api worker
