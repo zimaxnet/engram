@@ -12,7 +12,7 @@ Engram provides two integrated communication channels for interacting with AI ag
 | Channel | Endpoint | Model | Use Case |
 |---------|----------|-------|----------|
 | **Chat** | API Gateway | gpt-5.1-chat | Text-based conversations |
-| **Voice** | VoiceLive | gpt-4o-realtime-preview | Real-time voice interactions |
+| **Voice** | VoiceLive Gateway | gpt-realtime | Real-time voice interactions |
 
 ---
 
@@ -103,9 +103,9 @@ VoiceLive provides real-time speech-to-speech conversations using Azure AI Servi
 
 ```bash
 # Environment Variables
-AZURE_VOICELIVE_ENDPOINT=https://zimax.services.ai.azure.com
+AZURE_VOICELIVE_ENDPOINT=https://zimax-gw.azure-api.net/zimax
 AZURE_VOICELIVE_KEY=<your-api-key>
-AZURE_VOICELIVE_MODEL=gpt-4o-realtime-preview
+AZURE_VOICELIVE_MODEL=gpt-realtime
 AZURE_VOICELIVE_VOICE=en-US-Ava:DragonHDLatestNeural
 MARCUS_VOICELIVE_VOICE=en-US-GuyNeural
 ```
@@ -123,7 +123,7 @@ GET /api/v1/voice/config/{agent_id}
 {
   "agent_id": "elena",
   "voice_name": "en-US-Ava:DragonHDLatestNeural",
-  "model": "gpt-4o-realtime-preview",
+  "model": "gpt-realtime",
   "endpoint_configured": true
 }
 ```
@@ -138,8 +138,8 @@ GET /api/v1/voice/status
 ```json
 {
   "voicelive_configured": true,
-  "endpoint": "https://zimax.services.ai.azure.com...",
-  "model": "gpt-4o-realtime-preview",
+  "endpoint": "https://zimax-gw.azure-api.net/zimax...",
+  "model": "gpt-realtime",
   "active_sessions": 0,
   "agents": {
     "elena": {"voice": "en-US-Ava:DragonHDLatestNeural"},
@@ -159,7 +159,7 @@ ws.onopen = () => {
   ws.send(JSON.stringify({ type: 'agent', agent_id: 'elena' }));
 };
 
-// Send audio (PCM16, 16kHz, mono)
+// Send audio (PCM16, 24kHz, mono)
 function sendAudio(pcm16Base64) {
   ws.send(JSON.stringify({
     type: 'audio',
@@ -208,9 +208,10 @@ ws.onmessage = (event) => {
 | Property | Value |
 |----------|-------|
 | Format | PCM16 (signed 16-bit) |
-| Sample Rate | 16,000 Hz |
+| Sample Rate | 24,000 Hz |
 | Channels | Mono (1 channel) |
 | Encoding | Base64 |
+| Chunk Size | 1200 samples (50ms) |
 
 ### Voice Personalities
 
@@ -262,8 +263,9 @@ cd backend
 export AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax/openai/v1
 export AZURE_AI_KEY=<your-key>
 export AZURE_AI_DEPLOYMENT=gpt-5.1-chat
-export AZURE_VOICELIVE_ENDPOINT=https://zimax.services.ai.azure.com
+export AZURE_VOICELIVE_ENDPOINT=https://zimax-gw.azure-api.net/zimax
 export AZURE_VOICELIVE_KEY=<your-key>
+export AZURE_VOICELIVE_MODEL=gpt-realtime
 
 # Start server
 uvicorn backend.api.main:app --host 0.0.0.0 --port 8082 --reload

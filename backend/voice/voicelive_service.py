@@ -30,7 +30,7 @@ class VoiceLiveService:
     - Real-time bidirectional audio streaming
     - Server-side VAD (Voice Activity Detection)
     - Natural turn-taking with barge-in support
-    - Direct integration with GPT models (gpt-4o-realtime-preview)
+    - Direct integration with GPT models (gpt-realtime v2025-08-28)
     """
     
     def __init__(self):

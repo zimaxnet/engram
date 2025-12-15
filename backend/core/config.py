@@ -78,7 +78,7 @@ class Settings(BaseSettings):
     # ==========================================================================
     azure_voicelive_endpoint: Optional[str] = Field(None, alias="AZURE_VOICELIVE_ENDPOINT")
     azure_voicelive_key: Optional[str] = Field(None, alias="AZURE_VOICELIVE_KEY")
-    azure_voicelive_model: str = Field("gpt-4o-realtime-preview", alias="AZURE_VOICELIVE_MODEL")
+    azure_voicelive_model: str = Field("gpt-realtime", alias="AZURE_VOICELIVE_MODEL")
     azure_voicelive_voice: str = Field("en-US-Ava:DragonHDLatestNeural", alias="AZURE_VOICELIVE_VOICE")
     # Marcus voice configuration for VoiceLive
     marcus_voicelive_voice: str = Field("en-US-GuyNeural", alias="MARCUS_VOICELIVE_VOICE")
