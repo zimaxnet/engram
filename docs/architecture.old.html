@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Architecture | Engram - Context Engineering Platform</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Architecture" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Enterprise AI Memory &amp; Cognition Platform" />
+<meta property="og:description" content="Enterprise AI Memory &amp; Cognition Platform" />
+<link rel="canonical" href="https://wiki.engram.work/architecture.html" />
+<meta property="og:url" content="https://wiki.engram.work/architecture.html" />
+<meta property="og:site_name" content="Engram - Context Engineering Platform" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Architecture" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"Enterprise AI Memory &amp; Cognition Platform","headline":"Architecture","url":"https://wiki.engram.work/architecture.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+    <!--[if lt IE 9]>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <![endif]-->
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1><a href="https://wiki.engram.work/">Engram - Context Engineering Platform</a></h1>
+
+        
+
+        <p>Enterprise AI Memory & Cognition Platform</p>
+
+        
+
+        
+
+        
+      </header>
+      <section>
+
+      <h1 id="home--architecture"><a href="/">Home</a> › Architecture</h1>
+
+<h1 id="architecture-deep-dive">Architecture Deep Dive</h1>
+
+<h2 id="overview">Overview</h2>
+
+<p>The Engram platform implements a <strong>Brain + Spine</strong> architecture pattern, separating cognitive reasoning (Brain) from durable execution (Spine), with a persistent memory layer providing long-term knowledge storage.</p>
+
+<p><img src="/assets/images/engram-platform-architecture.png" alt="Engram Platform Architecture" /></p>
+
+<h2 id="core-principles">Core Principles</h2>
+
+<h3 id="1-context-engineering-over-prompt-engineering">1. Context Engineering over Prompt Engineering</h3>
+
+<p>Traditional prompt engineering focuses on crafting individual prompts. <strong>Context Engineering</strong> takes a holistic view:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Aspect</th>
+      <th>Prompt Engineering</th>
+      <th>Context Engineering</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Focus</td>
+      <td>Single prompt</td>
+      <td>Full context lifecycle</td>
+    </tr>
+    <tr>
+      <td>State</td>
+      <td>Stateless</td>
+      <td>Stateful across sessions</td>
+    </tr>
+    <tr>
+      <td>Memory</td>
+      <td>Limited context window</td>
+      <td>Unlimited via external memory</td>
+    </tr>
+    <tr>
+      <td>Security</td>
+      <td>Ad-hoc</td>
+      <td>Built into context schema</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="2-brain--spine-separation">2. Brain + Spine Separation</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>Brain (LangGraph)</th>
+      <th>Spine (Temporal)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Purpose</td>
+      <td>Reasoning &amp; decisions</td>
+      <td>Durable execution</td>
+    </tr>
+    <tr>
+      <td>Lifecycle</td>
+      <td>Stateless functions</td>
+      <td>Long-running workflows</td>
+    </tr>
+    <tr>
+      <td>Failure</td>
+      <td>Retry at LLM level</td>
+      <td>Workflow-level recovery</td>
+    </tr>
+    <tr>
+      <td>Scale</td>
+      <td>Horizontal (replicas)</td>
+      <td>Workflow distribution</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2 id="the-4-layer-context-schema">The 4-Layer Context Schema</h2>
+
+<p>Every interaction in Engram flows through a structured context object:</p>
+
+<p><img src="/assets/images/context-schema.svg" alt="4-Layer Context Schema" /></p>
+
+<h3 id="temporal-workflow-execution">Temporal Workflow Execution</h3>
+
+<p><img src="/assets/images/temporal-workflow.png" alt="Temporal Workflow" /></p>
+
+<h3 id="layer-1-security-context">Layer 1: Security Context</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">SecurityContext</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">str</span>           <span class="c1"># Unique user identifier
+</span>    <span class="n">tenant_id</span><span class="p">:</span> <span class="nb">str</span>         <span class="c1"># Multi-tenant isolation
+</span>    <span class="n">roles</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Role</span><span class="p">]</span>      <span class="c1"># RBAC roles (ADMIN, MANAGER, ANALYST, VIEWER)
+</span>    <span class="n">scopes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>      <span class="c1"># Permission scopes
+</span>    <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span>        <span class="c1"># Current session
+</span></code></pre></div></div>
+
+<p><strong>Purpose</strong>: Establishes WHO is making the request and WHAT they can access.</p>
+
+<h3 id="layer-2-episodic-state">Layer 2: Episodic State</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">EpisodicState</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">conversation_id</span><span class="p">:</span> <span class="nb">str</span>              <span class="c1"># Current conversation
+</span>    <span class="n">recent_turns</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ConvTurn</span><span class="p">]</span>      <span class="c1"># Recent message history
+</span>    <span class="n">summary</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>            <span class="c1"># Compressed history
+</span>    <span class="n">last_updated_at</span><span class="p">:</span> <span class="n">datetime</span>         <span class="c1"># Freshness tracking
+</span></code></pre></div></div>
+
+<p><strong>Purpose</strong>: Captures WHAT happened in the current and recent conversations.</p>
+
+<h3 id="layer-3-semantic-knowledge">Layer 3: Semantic Knowledge</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">SemanticKnowledge</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">retrieved_facts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Fact</span><span class="p">]</span>       <span class="c1"># Relevant facts from memory
+</span>    <span class="n">entity_context</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>    <span class="c1"># Known entities and relationships
+</span>    <span class="n">graph_nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">GraphNode</span><span class="p">]</span>      <span class="c1"># Knowledge graph context
+</span></code></pre></div></div>
+
+<p><strong>Purpose</strong>: Provides WHAT we know from long-term memory.</p>
+
+<h3 id="layer-4-operational-state">Layer 4: Operational State</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">OperationalState</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">current_plan</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>           <span class="c1"># Active plan steps
+</span>    <span class="n">active_tools</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>           <span class="c1"># Available tools
+</span>    <span class="n">workflow_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>        <span class="c1"># Temporal workflow ID
+</span>    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span>                       <span class="c1"># Current execution status
+</span>    <span class="n">active_agent</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>       <span class="c1"># Current agent (elena/marcus)
+</span></code></pre></div></div>
+
+<p><strong>Purpose</strong>: Tracks WHAT we’re doing right now.</p>
+
+<hr />
+
+<h2 id="component-architecture">Component Architecture</h2>
+
+<h3 id="brain-layer-langgraph-agents">Brain Layer: LangGraph Agents</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌─────────────────────────────────────────────────────┐
+│                    Agent Router                      │
+│  ┌─────────────┐           ┌─────────────┐         │
+│  │   Elena     │   ←────→  │   Marcus    │         │
+│  │  (Analyst)  │  handoff  │  (Manager)  │         │
+│  └─────────────┘           └─────────────┘         │
+│         │                         │                 │
+│         └───────────┬─────────────┘                 │
+│                     │                               │
+│              ┌──────┴──────┐                        │
+│              │   Tools     │                        │
+│              │ - analyze   │                        │
+│              │ - plan      │                        │
+│              │ - report    │                        │
+│              └─────────────┘                        │
+└─────────────────────────────────────────────────────┘
+</code></pre></div></div>
+
+<p>Each agent is a LangGraph state machine with:</p>
+<ul>
+  <li><strong>System prompt</strong> defining persona and expertise</li>
+  <li><strong>Tools</strong> for specialized operations</li>
+  <li><strong>State management</strong> via EnterpriseContext</li>
+</ul>
+
+<h3 id="spine-layer-temporal-workflows">Spine Layer: Temporal Workflows</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌─────────────────────────────────────────────────────┐
+│                AgentWorkflow                         │
+├─────────────────────────────────────────────────────┤
+│  1. initialize_context_activity                      │
+│  2. enrich_memory_activity                          │
+│  3. agent_reasoning_activity  ← Brain execution     │
+│  4. validate_response_activity                      │
+│  5. persist_memory_activity                         │
+└─────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────┐
+│              ConversationWorkflow                    │
+├─────────────────────────────────────────────────────┤
+│  - Long-running (can span days)                     │
+│  - Signals: send_message, switch_agent              │
+│  - Queries: get_history, get_turn_count            │
+│  - Child workflows for each turn                    │
+└─────────────────────────────────────────────────────┘
+</code></pre></div></div>
+
+<p><strong>Key Benefits</strong>:</p>
+<ul>
+  <li>Survives crashes and restarts</li>
+  <li>Automatic retry with backoff</li>
+  <li>Human-in-the-loop via signals</li>
+  <li>Time-travel debugging</li>
+</ul>
+
+<h3 id="memory-layer-zep--graphiti">Memory Layer: Zep + Graphiti</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌─────────────────────────────────────────────────────┐
+│                    Zep Service                       │
+├─────────────────────────────────────────────────────┤
+│  ┌─────────────┐         ┌─────────────┐           │
+│  │  Episodic   │         │  Semantic   │           │
+│  │   Memory    │         │   Memory    │           │
+│  │ (sessions)  │         │  (Graphiti) │           │
+│  └─────────────┘         └─────────────┘           │
+│         │                       │                   │
+│         └───────────┬───────────┘                   │
+│                     │                               │
+│              ┌──────┴──────┐                        │
+│              │  PostgreSQL │                        │
+│              │  + pgvector │                        │
+│              └─────────────┘                        │
+└─────────────────────────────────────────────────────┘
+</code></pre></div></div>
+
+<p><strong>Episodic Memory</strong> (Layer 2):</p>
+<ul>
+  <li>Conversation history by session</li>
+  <li>Automatic summarization</li>
+  <li>Temporal retrieval</li>
+</ul>
+
+<p><strong>Semantic Memory</strong> (Layer 3):</p>
+<ul>
+  <li>Knowledge graph via Graphiti</li>
+  <li>Entity relationships</li>
+  <li>Fact extraction and storage</li>
+</ul>
+
+<hr />
+
+<h2 id="data-flow">Data Flow</h2>
+
+<h3 id="request-lifecycle">Request Lifecycle</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>User Request
+     │
+     ▼
+┌─────────────┐
+│  FastAPI    │ ── Auth + RBAC
+│   Gateway   │
+└─────────────┘
+     │
+     ▼
+┌─────────────┐
+│  Temporal   │ ── Start workflow
+│   Client    │
+└─────────────┘
+     │
+     ▼
+┌─────────────┐
+│   Worker    │ ── Execute activities
+└─────────────┘
+     │
+     ├──► Memory Enrichment (Zep)
+     │
+     ├──► Agent Reasoning (LangGraph)
+     │
+     ├──► Response Validation
+     │
+     └──► Memory Persistence (Zep)
+     │
+     ▼
+Response to User
+</code></pre></div></div>
+
+<h3 id="voice-interaction-flow-removed">Voice Interaction Flow (removed)</h3>
+
+<p>Voice features are disabled in the current build; no Speech or VoiceLive paths are deployed.</p>
+
+<h2 id="security-architecture">Security Architecture</h2>
+
+<h3 id="authentication-flow">Authentication Flow</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>User ──► Entra ID ──► JWT Token ──► API Gateway ──► Validate ──► SecurityContext
+</code></pre></div></div>
+
+<h3 id="authorization-rbac">Authorization (RBAC)</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Resource</th>
+      <th>Admin</th>
+      <th>Manager</th>
+      <th>Analyst</th>
+      <th>Viewer</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Agents</td>
+      <td>CRUD + Execute</td>
+      <td>Read + Execute</td>
+      <td>Read + Execute</td>
+      <td>Read</td>
+    </tr>
+    <tr>
+      <td>Chat</td>
+      <td>CRUD + Execute</td>
+      <td>Create + Execute</td>
+      <td>Create + Execute</td>
+      <td>Read</td>
+    </tr>
+    <tr>
+      <td>Memory</td>
+      <td>CRUD + Admin</td>
+      <td>Create + Read</td>
+      <td>Create + Read</td>
+      <td>Read</td>
+    </tr>
+    <tr>
+      <td>Workflows</td>
+      <td>CRUD + Execute</td>
+      <td>CRUD + Execute</td>
+      <td>Read + Execute</td>
+      <td>Read</td>
+    </tr>
+    <tr>
+      <td>Settings</td>
+      <td>Admin</td>
+      <td>Read</td>
+      <td>Read</td>
+      <td>-</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="tenant-isolation">Tenant Isolation</h3>
+
+<ul>
+  <li>All data is tenant-scoped</li>
+  <li>Cross-tenant access denied by default</li>
+  <li>Admin override for platform operations</li>
+</ul>
+
+<hr />
+
+<h2 id="observability">Observability</h2>
+
+<h3 id="distributed-tracing">Distributed Tracing</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Request ──► Span: API Gateway
+              │
+              └──► Span: Workflow Execution
+                     │
+                     ├──► Span: Memory Enrichment
+                     │
+                     └──► Span: Agent Reasoning
+                            │
+                            └──► Span: LLM Call
+</code></pre></div></div>
+
+<h3 id="metrics-collected">Metrics Collected</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>Type</th>
+      <th>Labels</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">http_requests_total</code></td>
+      <td>Counter</td>
+      <td>method, path, status</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">agent_executions_total</code></td>
+      <td>Counter</td>
+      <td>agent_id, status</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">agent_tokens_total</code></td>
+      <td>Counter</td>
+      <td>agent_id, model</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">workflow_duration_seconds</code></td>
+      <td>Histogram</td>
+      <td>workflow_type</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">memory_search_duration_seconds</code></td>
+      <td>Histogram</td>
+      <td>operation</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="log-correlation">Log Correlation</h3>
+
+<p>All logs include:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">trace_id</code>: OpenTelemetry trace ID</li>
+  <li><code class="language-plaintext highlighter-rouge">span_id</code>: Current span ID</li>
+  <li><code class="language-plaintext highlighter-rouge">user_id</code>: Authenticated user</li>
+  <li><code class="language-plaintext highlighter-rouge">tenant_id</code>: Active tenant</li>
+</ul>
+
+
+
+      </section>
+      <footer>
+        
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="/assets/js/scale.fix.js"></script>
+  </body>
+</html>

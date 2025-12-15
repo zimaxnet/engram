@@ -1,126 +1,356 @@
 <!DOCTYPE html>
-<html lang="en-US">
-  <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<!-- Begin Jekyll SEO tag v2.8.0 -->
-<title>POC vs Enterprise Deployment: Engram Engine | Engram - Context Engineering Platform</title>
-<meta name="generator" content="Jekyll v4.4.1" />
-<meta property="og:title" content="POC vs Enterprise Deployment: Engram Engine" />
-<meta property="og:locale" content="en_US" />
-<meta name="description" content="Enterprise AI Memory &amp; Cognition Platform" />
-<meta property="og:description" content="Enterprise AI Memory &amp; Cognition Platform" />
-<link rel="canonical" href="https://wiki.engram.work/docs/poc-vs-enterprise.html" />
-<meta property="og:url" content="https://wiki.engram.work/docs/poc-vs-enterprise.html" />
-<meta property="og:site_name" content="Engram - Context Engineering Platform" />
-<meta property="og:type" content="website" />
-<meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="POC vs Enterprise Deployment: Engram Engine" />
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","description":"Enterprise AI Memory &amp; Cognition Platform","headline":"POC vs Enterprise Deployment: Engram Engine","url":"https://wiki.engram.work/docs/poc-vs-enterprise.html"}</script>
-<!-- End Jekyll SEO tag -->
-
-    <link rel="stylesheet" href="/assets/css/style.css?v=">
-  </head>
-  <body>
-    <div class="wrapper">
-      <header>
-        <h1><a href="https://wiki.engram.work/">Engram - Context Engineering Platform</a></h1>
-        <p>Enterprise AI Memory &amp; Cognition Platform</p>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POC vs Enterprise - Engram</title>
+  <meta name="description" content="Compare POC and Enterprise deployment options for the Engram Engine.">
+  <link rel="canonical" href="https://wiki.engram.work/poc-vs-enterprise.html">
+  <link rel="stylesheet" href="/assets/css/engram.css">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+  <style>
+    .compare-table {
+      margin: 2rem 0;
+    }
+    .compare-table th {
+      text-align: left;
+    }
+    .compare-table .check { color: var(--green); }
+    .compare-table .x { color: var(--gray-400); }
+    .env-card {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .env-card h4 {
+      margin: 0 0 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .env-card p {
+      margin: 0;
+      color: var(--gray-600);
+      font-size: 0.9rem;
+    }
+    .arch-list {
+      margin: 1.5rem 0;
+    }
+    .arch-list li {
+      margin-bottom: 0.5rem;
+    }
+    .arch-list code {
+      background: var(--gray-100);
+      padding: 0.125rem 0.375rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <button class="mobile-nav-toggle" aria-label="Toggle navigation" onclick="document.querySelector('.site-nav').classList.toggle('open')">☰</button>
+  
+  <div class="site-wrapper">
+    <!-- Side Navigation -->
+    <nav class="site-nav">
+      <div class="nav-header">
+        <a href="/" class="nav-logo">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="14" stroke="#00d4ff" stroke-width="2"/>
+            <circle cx="16" cy="16" r="6" fill="#a855f7"/>
+            <path d="M16 2v6M16 24v6M2 16h6M24 16h6" stroke="#00d4ff" stroke-width="2"/>
+          </svg>
+          <div>
+            <div class="nav-logo-text">Engram</div>
+            <div class="nav-tagline">Context Engineering Platform</div>
+          </div>
+        </a>
+      </div>
+      
+      <div class="nav-sections">
+        <div class="nav-section">
+          <div class="nav-section-title">Getting Started</div>
+          <ul class="nav-links">
+            <li><a href="/"><span class="icon">🏠</span> Home</a></li>
+            <li><a href="/architecture.html"><span class="icon">🏗️</span> Architecture</a></li>
+            <li><a href="/agents.html"><span class="icon">🤖</span> Agent Personas</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Platform Features</div>
+          <ul class="nav-links">
+            <li><a href="/system-navigator.html"><span class="icon">🧭</span> System Navigator</a></li>
+            <li><a href="/connectors.html"><span class="icon">🔌</span> Connectors</a></li>
+            <li><a href="/storage-strategy.html"><span class="icon">💾</span> Storage Strategy</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Enterprise Deployment</div>
+          <ul class="nav-links">
+            <li><a href="/deployment.html"><span class="icon">🚀</span> Deployment Guide</a></li>
+            <li><a href="/pricing.html"><span class="icon">💰</span> Pricing & Tiers</a></li>
+            <li><a href="/poc-vs-enterprise.html" class="active"><span class="icon">📊</span> POC vs Enterprise</a></li>
+            <li><a href="/enterprise-env-model.html"><span class="icon">🌐</span> Environment Model</a></li>
+            <li><a href="/finops.html"><span class="icon">📈</span> FinOps Strategy</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Component Guides</div>
+          <ul class="nav-links">
+            <li><a href="/temporal-enterprise-deployment.html"><span class="icon">⏱️</span> Temporal</a></li>
+            <li><a href="/zep-enterprise-deployment.html"><span class="icon">🧠</span> Zep Memory</a></li>
+            <li><a href="/postgresql-blob-storage-enterprise-deployment.html"><span class="icon">🗄️</span> PostgreSQL</a></li>
+            <li><a href="/unstructured-enterprise-deployment.html"><span class="icon">📄</span> Unstructured ETL</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Development</div>
+          <ul class="nav-links">
+            <li><a href="/TESTING-GUIDE.html"><span class="icon">🧪</span> Testing Guide</a></li>
+            <li><a href="/LOCAL-TESTING-GUIDE.html"><span class="icon">💻</span> Local Setup</a></li>
+            <li><a href="/app-insights-guide.html"><span class="icon">📊</span> Observability</a></li>
+            <li><a href="/visual-development.html"><span class="icon">🎨</span> Visual Dev</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="nav-footer">
+        Built with Context Engineering<br>
+        <a href="https://github.com/zimaxnet/engram">GitHub</a> · <a href="https://engram.work">engram.work</a>
+      </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="site-content">
+      <header class="page-header">
+        <div class="container">
+          <div class="breadcrumb">
+            <a href="/">Home</a>
+            <span class="sep">›</span>
+            <span>Enterprise Deployment</span>
+            <span class="sep">›</span>
+            <span>POC vs Enterprise</span>
+          </div>
+          <h1 class="page-title">POC vs Enterprise Deployment</h1>
+          <p class="page-subtitle">Understand what runs where — from low-cost proof-of-concept to fully supported enterprise.</p>
+        </div>
       </header>
-      <section>
-      <p><a href="/">Home</a> › POC vs Enterprise</p>
-
-      <h1 id="poc-vs-enterprise">POC vs Enterprise Deployment: What runs where</h1>
-
-      <blockquote>
-        <p><strong>Goal</strong>: make it unambiguous what you run in a low-cost POC vs what you run for a fully supported enterprise tenant deployment.</p>
-      </blockquote>
-
-      <p><strong>Status</strong>: Draft (2025-12-13). Links: <a href="/docs/pricing.html">Pricing</a>, <a href="/docs/test-plan.html">Test Plan</a>, <a href="/docs/success-metrics.html">Success Metrics</a>.</p>
-
-      <hr />
-
-      <h2 id="today">1) What the POC is doing today (current architecture)</h2>
-
-      <p><strong>Engram compute</strong> (your containers):</p>
-      <ul>
-        <li><strong>API</strong>: FastAPI gateway (chat, memory APIs, ETL ingest endpoint)</li>
-        <li><strong>Worker</strong>: Temporal worker (activities: enrich, reason, validate, persist)</li>
-        <li><strong>Temporal Server</strong>: workflow engine (self-hosted in your tenant)</li>
-        <li><strong>Temporal UI</strong>: workflow inspection UI (self-hosted in your tenant)</li>
-      </ul>
-
-      <p><strong>External managed services (POC)</strong>:</p>
-      <ul>
-        <li><strong>Zep</strong>: currently configured as <strong>Zep Cloud</strong> via <code class="language-plaintext highlighter-rouge">ZEP_API_URL=https://api.getzep.com/api/v2</code> (key stored in Key Vault in IaC). This is why your 4 container apps do not include a “zep” container.</li>
-        <li><strong>Unstructured hosted</strong>: optional (POC can call hosted Unstructured, but today the code path can also parse locally via the Unstructured Python library).</li>
-        <li><strong>LangSmith (LangChain Plus)</strong>: optional (engineering observability/evals), not required for runtime.</li>
-      </ul>
-
-      <h3 id="does-it-go-to-postgres">1.1 Does Unstructured output go to Postgres today?</h3>
-
-      <p><strong>No—by default it goes to Zep.</strong> Engram’s ingestion endpoint extracts text and indexes chunks as Zep “facts”.</p>
-      <ul>
-        <li><strong>Unstructured</strong> is the parser/partitioner/chunker.</li>
-        <li><strong>Zep</strong> is the destination memory store for the extracted chunks (facts + episodic sessions).</li>
-        <li>Your Azure Postgres Flexible Server is currently used for Temporal persistence and reserved for future platform data, but it is <strong>not the default destination for ingested chunk content</strong> unless you explicitly implement that path.</li>
-      </ul>
-
-      <hr />
-
-      <h2 id="enterprise">2) What a fully supported enterprise tenant deployment looks like</h2>
-
-      <p>The enterprise “Engram Engine” goal is: <strong>everything self-hostable is self-hosted in the customer tenant</strong>, with vendor agreements in place for any managed/SaaS dependencies.</p>
-
-      <h3 id="enterprise-core">2.1 Enterprise core (customer tenant)</h3>
-      <ul>
-        <li><strong>Engram API</strong> (Kubernetes deployment)</li>
-        <li><strong>Engram Worker</strong> (Kubernetes deployment)</li>
-        <li><strong>Temporal</strong> (self-hosted in K8s/ACA)</li>
-        <li><strong>Zep</strong> (self-hosted in K8s/ACA)</li>
-        <li><strong>Postgres</strong> with encryption + backups (Azure Postgres Flexible Server or in-cluster Postgres w/ PV)</li>
-        <li><strong>Object storage</strong> for raw docs + parsed artifacts (Azure Blob / S3 / customer choice)</li>
-      </ul>
-
-      <h3 id="why-k8s">2.2 Why Kubernetes + PV</h3>
-      <ul>
-        <li><strong>Persistence</strong>: Zep/Temporal/Postgres require durable state; PVs provide the storage substrate.</li>
-        <li><strong>Isolation</strong>: customer tenant boundaries + network policy controls.</li>
-        <li><strong>Supportability</strong>: backups, restore drills, upgrades, and predictable operating model.</li>
-      </ul>
-
-      <hr />
-
-      <h2 id="envs">3) Naming + environments (dev/test/uat/prod)</h2>
-
-      <p>Current naming uses “staging-*” for the POC. That’s fine. For enterprise readiness we will standardize parameterized IaC that can create:</p>
-      <ul>
-        <li><strong>dev</strong>: fast iteration, smaller quotas</li>
-        <li><strong>test</strong>: integration tests, synthetic load</li>
-        <li><strong>uat</strong>: customer acceptance, governance rehearsal</li>
-        <li><strong>prod</strong>: SLO-backed, audited runtime</li>
-      </ul>
-
-      <p>See: <a href="/docs/enterprise-env-model.html">Enterprise Environment Model (dev/test/uat/prod)</a>.</p>
-
-      <hr />
-
-      <h2 id="next">4) Next steps</h2>
-
-      <ul>
-        <li>Zep is deployed self-hosted in Azure Container Apps: <a href="/docs/zep-storage.html">Zep storage &amp; self-hosting options</a>.</li>
-        <li>Define ingestion connectors + destinations: <a href="/docs/connectors-roadmap.html">Connector roadmap</a>.</li>
-        <li>Produce enterprise IaC template with environment parameterization (dev/test/uat/prod).</li>
-      </ul>
-
+      
+      <section class="page-body">
+        <div class="container">
+          
+          <!-- Goal Callout -->
+          <div class="callout callout-info">
+            <p class="callout-title">🎯 Goal</p>
+            <p>Make it unambiguous what you run in a low-cost POC vs what you run for a fully supported enterprise tenant deployment.</p>
+          </div>
+          
+          <!-- Side-by-Side Comparison -->
+          <div class="content-section">
+            <h2>Quick Comparison</h2>
+            
+            <div class="table-wrapper compare-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Capability</th>
+                    <th>POC</th>
+                    <th>Enterprise</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Zep Memory</td>
+                    <td>Zep Cloud (managed)</td>
+                    <td>Self-hosted in tenant</td>
+                  </tr>
+                  <tr>
+                    <td>Temporal</td>
+                    <td>Self-hosted (ACA)</td>
+                    <td>Self-hosted (K8s) or Temporal Cloud</td>
+                  </tr>
+                  <tr>
+                    <td>PostgreSQL</td>
+                    <td>Azure Flexible (B1ms)</td>
+                    <td>Azure Flexible (GP) or in-cluster</td>
+                  </tr>
+                  <tr>
+                    <td>Compute</td>
+                    <td>Container Apps</td>
+                    <td>Kubernetes / AKS</td>
+                  </tr>
+                  <tr>
+                    <td>Scale-to-Zero</td>
+                    <td><span class="check">✓</span></td>
+                    <td><span class="check">✓</span> (with min replicas)</td>
+                  </tr>
+                  <tr>
+                    <td>HA / Multi-Zone</td>
+                    <td><span class="x">—</span></td>
+                    <td><span class="check">✓</span></td>
+                  </tr>
+                  <tr>
+                    <td>Backup & DR</td>
+                    <td>Manual / best-effort</td>
+                    <td>Automated, SLO-backed</td>
+                  </tr>
+                  <tr>
+                    <td>Network Isolation</td>
+                    <td>Basic VNet</td>
+                    <td>Full VNet + Private Endpoints</td>
+                  </tr>
+                  <tr>
+                    <td>SSO / RBAC</td>
+                    <td>Optional</td>
+                    <td><span class="check">✓</span> Entra ID</td>
+                  </tr>
+                  <tr>
+                    <td>Est. Monthly Cost</td>
+                    <td>$23–$80</td>
+                    <td>$400–$5,000+</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- POC Architecture -->
+          <div class="content-section">
+            <h2>1. What the POC Does Today</h2>
+            
+            <h3>Engram Compute (Your Containers)</h3>
+            <ul class="arch-list">
+              <li><strong>API</strong>: FastAPI gateway (chat, memory APIs, ETL ingest endpoint)</li>
+              <li><strong>Worker</strong>: Temporal worker (activities: enrich, reason, validate, persist)</li>
+              <li><strong>Temporal Server</strong>: Workflow engine (self-hosted in your tenant)</li>
+              <li><strong>Temporal UI</strong>: Workflow inspection UI (self-hosted)</li>
+            </ul>
+            
+            <h3>External Managed Services</h3>
+            <ul class="arch-list">
+              <li><strong>Zep Cloud</strong>: Configured via <code>ZEP_API_URL=https://api.getzep.com/api/v2</code> (key in Key Vault). This is why your 4 container apps do not include a "zep" container.</li>
+              <li><strong>Unstructured Hosted</strong>: Optional — POC can call hosted Unstructured, or parse locally via the Python library.</li>
+              <li><strong>LangSmith</strong>: Optional engineering observability/evals — not required for runtime.</li>
+            </ul>
+            
+            <div class="callout callout-warning" style="margin-top: 1.5rem;">
+              <p class="callout-title">📌 Where Does Ingested Data Go?</p>
+              <p><strong>By default: Zep, not Postgres.</strong> Engram's ingestion endpoint extracts text and indexes chunks as Zep "facts." Unstructured is the parser/chunker; Zep is the destination. Postgres is used for Temporal persistence and reserved for future platform data.</p>
+            </div>
+          </div>
+          
+          <!-- Enterprise Architecture -->
+          <div class="content-section">
+            <h2>2. Enterprise Deployment</h2>
+            
+            <p>The enterprise "Engram Engine" goal: <strong>everything self-hostable is self-hosted in the customer tenant</strong>, with vendor agreements for any managed/SaaS dependencies.</p>
+            
+            <h3>Enterprise Core (Customer Tenant)</h3>
+            <ul class="arch-list">
+              <li><strong>Engram API</strong>: Kubernetes deployment</li>
+              <li><strong>Engram Worker</strong>: Kubernetes deployment</li>
+              <li><strong>Temporal</strong>: Self-hosted in K8s/ACA (or Temporal Cloud)</li>
+              <li><strong>Zep</strong>: Self-hosted in K8s/ACA</li>
+              <li><strong>Postgres</strong>: Azure Postgres Flexible Server with encryption + backups (or in-cluster with PV)</li>
+              <li><strong>Object Storage</strong>: Azure Blob / S3 for raw docs + parsed artifacts</li>
+            </ul>
+            
+            <h3>Why Kubernetes + Persistent Volumes?</h3>
+            <div class="features-grid" style="margin-top: 1rem;">
+              <div class="feature-card">
+                <span class="feature-icon">💾</span>
+                <h4>Persistence</h4>
+                <p>Zep, Temporal, Postgres require durable state; PVs provide the storage substrate.</p>
+              </div>
+              <div class="feature-card">
+                <span class="feature-icon">🔒</span>
+                <h4>Isolation</h4>
+                <p>Customer tenant boundaries + network policy controls.</p>
+              </div>
+              <div class="feature-card">
+                <span class="feature-icon">🔧</span>
+                <h4>Supportability</h4>
+                <p>Backups, restore drills, upgrades, and predictable operating model.</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Environments -->
+          <div class="content-section">
+            <h2>3. Environment Model</h2>
+            
+            <p>For enterprise readiness, standardized parameterized IaC creates:</p>
+            
+            <div class="env-card">
+              <h4>🔧 dev</h4>
+              <p>Fast iteration, smaller quotas, minimal replicas.</p>
+            </div>
+            <div class="env-card">
+              <h4>🧪 test</h4>
+              <p>Integration tests, synthetic load, CI/CD target.</p>
+            </div>
+            <div class="env-card">
+              <h4>✅ uat</h4>
+              <p>Customer acceptance, governance rehearsal, near-prod config.</p>
+            </div>
+            <div class="env-card">
+              <h4>🚀 prod</h4>
+              <p>SLO-backed, audited runtime, full HA.</p>
+            </div>
+            
+            <p style="margin-top: 1.5rem;">See: <a href="/enterprise-env-model.html">Enterprise Environment Model →</a></p>
+          </div>
+          
+          <!-- Next Steps -->
+          <div class="content-section">
+            <h2>4. Next Steps</h2>
+            
+            <div class="nav-cards">
+              <a href="/zep-enterprise-deployment.html" class="nav-card">
+                <div class="nav-card-icon">🧠</div>
+                <div class="nav-card-content">
+                  <p class="nav-card-title">Zep Self-Hosting</p>
+                  <p class="nav-card-desc">Deploy Zep in Azure Container Apps or K8s.</p>
+                </div>
+              </a>
+              <a href="/connectors.html" class="nav-card">
+                <div class="nav-card-icon">🔌</div>
+                <div class="nav-card-content">
+                  <p class="nav-card-title">Connector Roadmap</p>
+                  <p class="nav-card-desc">Define ingestion connectors + destinations.</p>
+                </div>
+              </a>
+              <a href="/deployment.html" class="nav-card">
+                <div class="nav-card-icon">🚀</div>
+                <div class="nav-card-content">
+                  <p class="nav-card-title">Deployment Guide</p>
+                  <p class="nav-card-desc">IaC templates with environment parameterization.</p>
+                </div>
+              </a>
+              <a href="/pricing.html" class="nav-card">
+                <div class="nav-card-icon">💰</div>
+                <div class="nav-card-content">
+                  <p class="nav-card-title">Pricing Tiers</p>
+                  <p class="nav-card-desc">5 levels from $23/mo POC to Enterprise+.</p>
+                </div>
+              </a>
+            </div>
+          </div>
+          
+        </div>
       </section>
-      <footer>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      
+      <footer class="site-footer">
+        <p>Built with ❤️ using <strong>Context Engineering</strong></p>
+        <p><a href="https://github.com/zimaxnet/engram">GitHub</a> · <a href="https://engram.work">engram.work</a> · <a href="https://wiki.engram.work">Documentation</a></p>
       </footer>
-    </div>
-    <script src="/assets/js/scale.fix.js"></script>
-  </body>
+    </main>
+  </div>
+</body>
 </html>

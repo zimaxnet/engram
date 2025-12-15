@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinOps Strategy - Engram</title>
+  <meta name="description" content="Cost-conscious architecture and FinOps strategy for the Engram platform.">
+  <link rel="canonical" href="https://wiki.engram.work/finops.html">
+  <link rel="stylesheet" href="/assets/css/engram.css">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+  <style>
+    .cost-card {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .cost-card h4 {
+      margin: 0 0 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .cost-card .cost {
+      color: var(--green);
+      font-weight: 600;
+    }
+    .cost-card p {
+      margin: 0;
+      color: var(--gray-600);
+      font-size: 0.9rem;
+    }
+    .strategy-card {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-left: 4px solid var(--cyan);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .strategy-card h4 {
+      margin: 0 0 0.75rem;
+      color: var(--gray-900);
+    }
+    .strategy-card .impact {
+      display: inline-block;
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--green);
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-top: 0.75rem;
+    }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .metric-card {
+      background: var(--gray-900);
+      color: white;
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .metric-card .value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--cyan);
+    }
+    .metric-card .label {
+      font-size: 0.85rem;
+      color: var(--gray-400);
+      margin-top: 0.25rem;
+    }
+    .budget-alert {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      margin-bottom: 0.75rem;
+    }
+    .budget-alert .percent {
+      font-size: 1.25rem;
+      font-weight: 700;
+      min-width: 4rem;
+    }
+    .budget-alert.yellow .percent { color: #f59e0b; }
+    .budget-alert.orange .percent { color: #f97316; }
+    .budget-alert.red .percent { color: #ef4444; }
+    .budget-alert p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--gray-600);
+    }
+  </style>
+</head>
+<body>
+  <button class="mobile-nav-toggle" aria-label="Toggle navigation" onclick="document.querySelector('.site-nav').classList.toggle('open')">☰</button>
+  
+  <div class="site-wrapper">
+    <!-- Side Navigation -->
+    <nav class="site-nav">
+      <div class="nav-header">
+        <a href="/" class="nav-logo">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="14" stroke="#00d4ff" stroke-width="2"/>
+            <circle cx="16" cy="16" r="6" fill="#a855f7"/>
+            <path d="M16 2v6M16 24v6M2 16h6M24 16h6" stroke="#00d4ff" stroke-width="2"/>
+          </svg>
+          <div>
+            <div class="nav-logo-text">Engram</div>
+            <div class="nav-tagline">Context Engineering Platform</div>
+          </div>
+        </a>
+      </div>
+      
+      <div class="nav-sections">
+        <div class="nav-section">
+          <div class="nav-section-title">Getting Started</div>
+          <ul class="nav-links">
+            <li><a href="/"><span class="icon">🏠</span> Home</a></li>
+            <li><a href="/architecture.html"><span class="icon">🏗️</span> Architecture</a></li>
+            <li><a href="/agents.html"><span class="icon">🤖</span> Agent Personas</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Platform Features</div>
+          <ul class="nav-links">
+            <li><a href="/system-navigator.html"><span class="icon">🧭</span> System Navigator</a></li>
+            <li><a href="/connectors.html"><span class="icon">🔌</span> Connectors</a></li>
+            <li><a href="/storage-strategy.html"><span class="icon">💾</span> Storage Strategy</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Enterprise Deployment</div>
+          <ul class="nav-links">
+            <li><a href="/deployment.html"><span class="icon">🚀</span> Deployment Guide</a></li>
+            <li><a href="/pricing.html"><span class="icon">💰</span> Pricing & Tiers</a></li>
+            <li><a href="/poc-vs-enterprise.html"><span class="icon">📊</span> POC vs Enterprise</a></li>
+            <li><a href="/enterprise-env-model.html"><span class="icon">🌐</span> Environment Model</a></li>
+            <li><a href="/finops.html" class="active"><span class="icon">📈</span> FinOps Strategy</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Component Guides</div>
+          <ul class="nav-links">
+            <li><a href="/temporal-enterprise-deployment.html"><span class="icon">⏱️</span> Temporal</a></li>
+            <li><a href="/zep-enterprise-deployment.html"><span class="icon">🧠</span> Zep Memory</a></li>
+            <li><a href="/postgresql-blob-storage-enterprise-deployment.html"><span class="icon">🗄️</span> PostgreSQL</a></li>
+            <li><a href="/unstructured-enterprise-deployment.html"><span class="icon">📄</span> Unstructured ETL</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Development</div>
+          <ul class="nav-links">
+            <li><a href="/TESTING-GUIDE.html"><span class="icon">🧪</span> Testing Guide</a></li>
+            <li><a href="/LOCAL-TESTING-GUIDE.html"><span class="icon">💻</span> Local Setup</a></li>
+            <li><a href="/app-insights-guide.html"><span class="icon">📊</span> Observability</a></li>
+            <li><a href="/visual-development.html"><span class="icon">🎨</span> Visual Dev</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="nav-footer">
+        Built with Context Engineering<br>
+        <a href="https://github.com/zimaxnet/engram">GitHub</a> · <a href="https://engram.work">engram.work</a>
+      </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="site-content">
+      <header class="page-header">
+        <div class="container">
+          <div class="breadcrumb">
+            <a href="/">Home</a>
+            <span class="sep">›</span>
+            <span>Enterprise Deployment</span>
+            <span class="sep">›</span>
+            <span>FinOps Strategy</span>
+          </div>
+          <h1 class="page-title">FinOps Strategy</h1>
+          <p class="page-subtitle">Cost-conscious architecture as a first-class concern.</p>
+        </div>
+      </header>
+      
+      <section class="page-body">
+        <div class="container">
+          
+          <!-- Philosophy -->
+          <div class="callout callout-success">
+            <p class="callout-title">💡 Cost Philosophy</p>
+            <p><strong>"Pay only for what you use, when you use it."</strong></p>
+          </div>
+          
+          <div class="features-grid" style="margin: 2rem 0;">
+            <div class="feature-card">
+              <span class="feature-icon">📉</span>
+              <h4>Scale-to-Zero</h4>
+              <p>All compute scales to zero when idle.</p>
+            </div>
+            <div class="feature-card">
+              <span class="feature-icon">📏</span>
+              <h4>Right-Sizing</h4>
+              <p>Match resources to actual workload.</p>
+            </div>
+            <div class="feature-card">
+              <span class="feature-icon">⚡</span>
+              <h4>Caching</h4>
+              <p>Reduce redundant API calls.</p>
+            </div>
+            <div class="feature-card">
+              <span class="feature-icon">🔔</span>
+              <h4>Monitoring</h4>
+              <p>Track and alert on cost anomalies.</p>
+            </div>
+          </div>
+          
+          <!-- Cost Breakdown -->
+          <div class="content-section">
+            <h2>Infrastructure Cost Breakdown</h2>
+            
+            <h3>Azure Container Apps (Scale-to-Zero)</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Service</th>
+                    <th>Min</th>
+                    <th>Max</th>
+                    <th>vCPU</th>
+                    <th>Memory</th>
+                    <th>Est. Cost/Mo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>API</strong></td>
+                    <td>0</td>
+                    <td>10</td>
+                    <td>0.5</td>
+                    <td>1GB</td>
+                    <td>$0–15*</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Worker</strong></td>
+                    <td>0</td>
+                    <td>5</td>
+                    <td>0.5</td>
+                    <td>1GB</td>
+                    <td>$0–10*</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Frontend</strong></td>
+                    <td>Static</td>
+                    <td>Static</td>
+                    <td>N/A</td>
+                    <td>N/A</td>
+                    <td>$9</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--gray-500);">*Scales to zero when no requests</p>
+            
+            <h3 style="margin-top: 2rem;">Database & Storage</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Service</th>
+                    <th>Tier</th>
+                    <th>Configuration</th>
+                    <th>Est. Cost/Mo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>PostgreSQL</strong></td>
+                    <td>B1ms</td>
+                    <td>1 vCore, 2GB RAM</td>
+                    <td>$13</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Storage Account</strong></td>
+                    <td>Standard</td>
+                    <td>LRS, Hot tier</td>
+                    <td>$1</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Key Vault</strong></td>
+                    <td>Standard</td>
+                    <td>&lt; 10K operations</td>
+                    <td>~$0.03</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <h3 style="margin-top: 2rem;">AI Services (Azure AI Foundry)</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Model</th>
+                    <th>Input</th>
+                    <th>Output</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>gpt-4o</strong></td>
+                    <td>$5/1M tokens</td>
+                    <td>$15/1M tokens</td>
+                    <td>Full capability</td>
+                  </tr>
+                  <tr>
+                    <td><strong>gpt-4o-mini</strong></td>
+                    <td>$0.15/1M tokens</td>
+                    <td>$0.60/1M tokens</td>
+                    <td>30x cheaper</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- Scenario Costs -->
+          <div class="content-section">
+            <h2>Estimated Monthly Costs by Scenario</h2>
+            
+            <div class="metric-grid">
+              <div class="metric-card">
+                <div class="value">~$23</div>
+                <div class="label">Idle (no active users)</div>
+              </div>
+              <div class="metric-card">
+                <div class="value">$50–80</div>
+                <div class="label">Light (100 conv/day)</div>
+              </div>
+              <div class="metric-card">
+                <div class="value">$200–400</div>
+                <div class="label">Medium (1K conv/day)</div>
+              </div>
+              <div class="metric-card">
+                <div class="value">$1.5K–3K</div>
+                <div class="label">Heavy (10K conv/day)</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Optimization Strategies -->
+          <div class="content-section">
+            <h2>Cost Optimization Strategies</h2>
+            
+            <div class="strategy-card">
+              <h4>1. Model Selection</h4>
+              <pre><code># Route simple queries to cheaper models
+if query_complexity == "simple":
+    model = "gpt-4o-mini"  # 30x cheaper
+else:
+    model = "gpt-4o"</code></pre>
+              <span class="impact">60–80% cost reduction on simple queries</span>
+            </div>
+            
+            <div class="strategy-card">
+              <h4>2. Memory Caching</h4>
+              <pre><code># Cache frequently accessed context
+@lru_cache(maxsize=1000)
+async def get_user_context(user_id: str):
+    return await memory_client.get_context(user_id)</code></pre>
+              <span class="impact">50%+ reduction in memory API calls</span>
+            </div>
+            
+            <div class="strategy-card">
+              <h4>3. Response Streaming</h4>
+              <pre><code># Stream responses instead of waiting for full completion
+async for chunk in agent.stream(message):
+    yield chunk</code></pre>
+              <span class="impact">Better UX, similar cost, faster perceived response</span>
+            </div>
+            
+            <div class="strategy-card">
+              <h4>4. Conversation Summarization</h4>
+              <pre><code># Summarize long conversations to reduce context size
+if len(context.episodic.recent_turns) > 10:
+    context.episodic.summary = await summarize(context.episodic.recent_turns)
+    context.episodic.recent_turns = context.episodic.recent_turns[-3:]</code></pre>
+              <span class="impact">40% token reduction on long conversations</span>
+            </div>
+          </div>
+          
+          <!-- Budget Controls -->
+          <div class="content-section">
+            <h2>Budget Controls</h2>
+            
+            <h3>Azure Budget Alerts</h3>
+            <div class="budget-alert yellow">
+              <span class="percent">50%</span>
+              <p>Informational alert — review spending trends</p>
+            </div>
+            <div class="budget-alert orange">
+              <span class="percent">80%</span>
+              <p>Warning alert — investigate usage patterns</p>
+            </div>
+            <div class="budget-alert red">
+              <span class="percent">100%</span>
+              <p>Critical alert — take immediate action</p>
+            </div>
+            
+            <h3 style="margin-top: 2rem;">Application-Level Limits</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Role</th>
+                    <th>Rate Limit</th>
+                    <th>Token Limit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Viewer</td>
+                    <td>10 req/min</td>
+                    <td>4,096/request</td>
+                  </tr>
+                  <tr>
+                    <td>Analyst</td>
+                    <td>30 req/min</td>
+                    <td>4,096/request</td>
+                  </tr>
+                  <tr>
+                    <td>Manager</td>
+                    <td>60 req/min</td>
+                    <td>8,192/request</td>
+                  </tr>
+                  <tr>
+                    <td>Admin</td>
+                    <td>120 req/min</td>
+                    <td>16,384/request</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- Cost Tracking -->
+          <div class="content-section">
+            <h2>Cost Tracking Metrics</h2>
+            
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th>Description</th>
+                    <th>Alert Threshold</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>tokens_used_total</code></td>
+                    <td>Total tokens consumed</td>
+                    <td>&gt; 1M/day</td>
+                  </tr>
+                  <tr>
+                    <td><code>api_calls_total</code></td>
+                    <td>External API calls</td>
+                    <td>&gt; 10K/day</td>
+                  </tr>
+                  <tr>
+                    <td><code>workflow_executions</code></td>
+                    <td>Temporal workflows run</td>
+                    <td>&gt; 5K/day</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <h3 style="margin-top: 2rem;">Cost Attribution</h3>
+            <pre><code># Tag all resources with cost center
+context.operational.metadata = {
+    "cost_center": user.department,
+    "project": context.operational.workflow_id,
+    "agent": context.operational.active_agent,
+}</code></pre>
+          </div>
+          
+          <!-- CTA -->
+          <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: var(--gray-100); border-radius: var(--radius);">
+            <h3 style="margin: 0 0 0.5rem;">Ready to optimize?</h3>
+            <p style="color: var(--gray-600); margin: 0 0 1.5rem;">Compare deployment tiers or dive into the pricing guide.</p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+              <a href="/pricing.html" class="btn btn-primary">Pricing Tiers →</a>
+              <a href="/poc-vs-enterprise.html" class="btn btn-secondary">POC vs Enterprise</a>
+            </div>
+          </div>
+          
+        </div>
+      </section>
+      
+      <footer class="site-footer">
+        <p>Built with ❤️ using <strong>Context Engineering</strong></p>
+        <p><a href="https://github.com/zimaxnet/engram">GitHub</a> · <a href="https://engram.work">engram.work</a> · <a href="https://wiki.engram.work">Documentation</a></p>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

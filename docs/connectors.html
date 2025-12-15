@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connectors & Ingestion - Engram</title>
+  <meta name="description" content="Enterprise data connectors for ingesting documents from SharePoint, S3, Google Drive, and more.">
+  <link rel="canonical" href="https://wiki.engram.work/connectors.html">
+  <link rel="stylesheet" href="/assets/css/engram.css">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+  <style>
+    .connector-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .connector-card {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    .connector-card .icon {
+      font-size: 1.75rem;
+      flex-shrink: 0;
+    }
+    .connector-card h4 {
+      margin: 0 0 0.25rem;
+      font-size: 1rem;
+    }
+    .connector-card p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--gray-600);
+    }
+    .connector-card .status {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+    }
+    .status.current { background: rgba(16, 185, 129, 0.15); color: var(--green); }
+    .status.planned { background: rgba(168, 85, 247, 0.15); color: var(--purple); }
+    .flow-diagram {
+      background: var(--gray-900);
+      color: var(--gray-100);
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    .step-list {
+      counter-reset: step;
+      list-style: none;
+      padding: 0;
+      margin: 1.5rem 0;
+    }
+    .step-list li {
+      counter-increment: step;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding: 1rem 1.25rem;
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+    }
+    .step-list li::before {
+      content: counter(step);
+      background: var(--cyan);
+      color: var(--gray-900);
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .step-list li div {
+      flex: 1;
+    }
+    .step-list li strong {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+    .step-list li p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--gray-600);
+    }
+    .security-checklist {
+      margin: 1.5rem 0;
+    }
+    .security-checklist li {
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .security-checklist .check {
+      color: var(--green);
+    }
+  </style>
+</head>
+<body>
+  <button class="mobile-nav-toggle" aria-label="Toggle navigation" onclick="document.querySelector('.site-nav').classList.toggle('open')">☰</button>
+  
+  <div class="site-wrapper">
+    <!-- Side Navigation -->
+    <nav class="site-nav">
+      <div class="nav-header">
+        <a href="/" class="nav-logo">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="14" stroke="#00d4ff" stroke-width="2"/>
+            <circle cx="16" cy="16" r="6" fill="#a855f7"/>
+            <path d="M16 2v6M16 24v6M2 16h6M24 16h6" stroke="#00d4ff" stroke-width="2"/>
+          </svg>
+          <div>
+            <div class="nav-logo-text">Engram</div>
+            <div class="nav-tagline">Context Engineering Platform</div>
+          </div>
+        </a>
+      </div>
+      
+      <div class="nav-sections">
+        <div class="nav-section">
+          <div class="nav-section-title">Getting Started</div>
+          <ul class="nav-links">
+            <li><a href="/"><span class="icon">🏠</span> Home</a></li>
+            <li><a href="/architecture.html"><span class="icon">🏗️</span> Architecture</a></li>
+            <li><a href="/agents.html"><span class="icon">🤖</span> Agent Personas</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Platform Features</div>
+          <ul class="nav-links">
+            <li><a href="/system-navigator.html"><span class="icon">🧭</span> System Navigator</a></li>
+            <li><a href="/connectors.html" class="active"><span class="icon">🔌</span> Connectors</a></li>
+            <li><a href="/storage-strategy.html"><span class="icon">💾</span> Storage Strategy</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Enterprise Deployment</div>
+          <ul class="nav-links">
+            <li><a href="/deployment.html"><span class="icon">🚀</span> Deployment Guide</a></li>
+            <li><a href="/pricing.html"><span class="icon">💰</span> Pricing & Tiers</a></li>
+            <li><a href="/poc-vs-enterprise.html"><span class="icon">📊</span> POC vs Enterprise</a></li>
+            <li><a href="/enterprise-env-model.html"><span class="icon">🌐</span> Environment Model</a></li>
+            <li><a href="/finops.html"><span class="icon">📈</span> FinOps Strategy</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Component Guides</div>
+          <ul class="nav-links">
+            <li><a href="/temporal-enterprise-deployment.html"><span class="icon">⏱️</span> Temporal</a></li>
+            <li><a href="/zep-enterprise-deployment.html"><span class="icon">🧠</span> Zep Memory</a></li>
+            <li><a href="/postgresql-blob-storage-enterprise-deployment.html"><span class="icon">🗄️</span> PostgreSQL</a></li>
+            <li><a href="/unstructured-enterprise-deployment.html"><span class="icon">📄</span> Unstructured ETL</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Development</div>
+          <ul class="nav-links">
+            <li><a href="/TESTING-GUIDE.html"><span class="icon">🧪</span> Testing Guide</a></li>
+            <li><a href="/LOCAL-TESTING-GUIDE.html"><span class="icon">💻</span> Local Setup</a></li>
+            <li><a href="/app-insights-guide.html"><span class="icon">📊</span> Observability</a></li>
+            <li><a href="/visual-development.html"><span class="icon">🎨</span> Visual Dev</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="nav-footer">
+        Built with Context Engineering<br>
+        <a href="https://github.com/zimaxnet/engram">GitHub</a> · <a href="https://engram.work">engram.work</a>
+      </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="site-content">
+      <header class="page-header">
+        <div class="container">
+          <div class="breadcrumb">
+            <a href="/">Home</a>
+            <span class="sep">›</span>
+            <span>Platform Features</span>
+            <span class="sep">›</span>
+            <span>Connectors</span>
+          </div>
+          <h1 class="page-title">Connectors & Ingestion</h1>
+          <p class="page-subtitle">Ingest documents from enterprise sources into the system of record and system of recall.</p>
+        </div>
+      </header>
+      
+      <section class="page-body">
+        <div class="container">
+          
+          <!-- Overview -->
+          <div class="content-section">
+            <h2>Overview</h2>
+            <p>Engram supports ingestion from multiple enterprise sources via <strong>connectors</strong> that integrate with Unstructured.io and write to both the:</p>
+            <ul>
+              <li><strong>System of Record</strong>: Azure Blob Storage (raw artifacts + metadata)</li>
+              <li><strong>System of Recall</strong>: Zep (chunks as facts for retrieval)</li>
+            </ul>
+          </div>
+          
+          <!-- Flow Diagram -->
+          <div class="content-section">
+            <h2>Connector Architecture</h2>
+            
+            <div class="flow-diagram">
+<pre>┌──────────────┐     ┌─────────────┐     ┌───────────────┐     ┌──────────────────────────┐
+│ Source System│ ──▶ │  Connector  │ ──▶ │  Unstructured │ ──▶ │      Engram API          │
+│ (SharePoint, │     │ (auth+fetch)│     │ (parse+chunk) │     │ /api/v1/etl/ingest       │
+│  S3, Drive)  │     └─────────────┘     └───────────────┘     └────────────┬─────────────┘
+└──────────────┘                                                            │
+                                                                            ▼
+                                                     ┌──────────────────────────────────────┐
+                                                     │    ┌───────────────┐  ┌───────────┐  │
+                                                     │    │ Blob Storage  │  │    Zep    │  │
+                                                     │    │  (record)     │  │ (recall)  │  │
+                                                     │    └───────────────┘  └───────────┘  │
+                                                     └──────────────────────────────────────┘</pre>
+            </div>
+          </div>
+          
+          <!-- Supported Connectors -->
+          <div class="content-section">
+            <h2>Supported Connectors</h2>
+            
+            <h3>Current (POC)</h3>
+            <div class="connector-grid">
+              <div class="connector-card">
+                <span class="icon">📄</span>
+                <div>
+                  <h4>Document Upload</h4>
+                  <p>Ad-hoc file upload via <code>/api/v1/etl/ingest</code></p>
+                  <span class="status current">Available</span>
+                </div>
+              </div>
+              <div class="connector-card">
+                <span class="icon">💬</span>
+                <div>
+                  <h4>Chat / Voice</h4>
+                  <p>Conversation ingestion (episodic memory)</p>
+                  <span class="status current">Available</span>
+                </div>
+              </div>
+            </div>
+            
+            <h3 style="margin-top: 2rem;">Planned (Enterprise)</h3>
+            <div class="connector-grid">
+              <div class="connector-card">
+                <span class="icon">📁</span>
+                <div>
+                  <h4>SharePoint / OneDrive</h4>
+                  <p>OAuth2 (Microsoft Graph), folder watchers, ACL preservation</p>
+                  <span class="status planned">Planned</span>
+                </div>
+              </div>
+              <div class="connector-card">
+                <span class="icon">☁️</span>
+                <div>
+                  <h4>Azure Blob Storage</h4>
+                  <p>Managed Identity / SAS, native tenant destination</p>
+                  <span class="status planned">Planned</span>
+                </div>
+              </div>
+              <div class="connector-card">
+                <span class="icon">🪣</span>
+                <div>
+                  <h4>Amazon S3</h4>
+                  <p>IAM role / Access Keys, prefix watchers, object tags</p>
+                  <span class="status planned">Planned</span>
+                </div>
+              </div>
+              <div class="connector-card">
+                <span class="icon">📂</span>
+                <div>
+                  <h4>Google Drive</h4>
+                  <p>OAuth2, folder watchers, sharing ACL preservation</p>
+                  <span class="status planned">Planned</span>
+                </div>
+              </div>
+              <div class="connector-card">
+                <span class="icon">📝</span>
+                <div>
+                  <h4>Confluence</h4>
+                  <p>OAuth / API Token, spaces/pages, link graph</p>
+                  <span class="status planned">Planned</span>
+                </div>
+              </div>
+              <div class="connector-card">
+                <span class="icon">💼</span>
+                <div>
+                  <h4>Slack / Teams</h4>
+                  <p>OAuth2, thread preservation, retention policy</p>
+                  <span class="status planned">Planned</span>
+                </div>
+              </div>
+              <div class="connector-card">
+                <span class="icon">📧</span>
+                <div>
+                  <h4>Email (Graph / IMAP)</h4>
+                  <p>Ingest EML/MSG exports, thread + attachments</p>
+                  <span class="status planned">Planned</span>
+                </div>
+              </div>
+              <div class="connector-card">
+                <span class="icon">🎫</span>
+                <div>
+                  <h4>Jira / ServiceNow</h4>
+                  <p>OAuth / API Token, ticket ingestion as knowledge</p>
+                  <span class="status planned">Planned</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Registration Flow -->
+          <div class="content-section">
+            <h2>Connector Registration Flow</h2>
+            
+            <ol class="step-list">
+              <li>
+                <div>
+                  <strong>Navigate to Ingestion</strong>
+                  <p>Go to "Ingestion > Connectors" in the Navigation UI.</p>
+                </div>
+              </li>
+              <li>
+                <div>
+                  <strong>Select Source Type</strong>
+                  <p>Choose SharePoint, S3, Google Drive, etc.</p>
+                </div>
+              </li>
+              <li>
+                <div>
+                  <strong>Configure Credentials</strong>
+                  <p>OAuth redirect → refresh token stored in Key Vault. API keys stored as <code>connector-{id}-credentials</code>.</p>
+                </div>
+              </li>
+              <li>
+                <div>
+                  <strong>Set Scope</strong>
+                  <p>Specify folders, prefixes, sites to ingest.</p>
+                </div>
+              </li>
+              <li>
+                <div>
+                  <strong>Configure Schedule</strong>
+                  <p>On-demand, daily, or hourly sync.</p>
+                </div>
+              </li>
+              <li>
+                <div>
+                  <strong>Save Connector</strong>
+                  <p>API stores config + credentials in Key Vault.</p>
+                </div>
+              </li>
+            </ol>
+          </div>
+          
+          <!-- API Endpoints -->
+          <div class="content-section">
+            <h2>API Endpoints</h2>
+            
+            <pre><code># Register new connector
+POST /api/v1/connectors
+{
+  "type": "sharepoint",
+  "name": "Engineering Docs",
+  "credentials": {...},  # Stored in Key Vault
+  "scope": {"site": "...", "library": "..."},
+  "schedule": "daily"
+}
+
+# Get connector sync status
+GET /api/v1/connectors/{id}/status
+
+# Trigger manual sync
+POST /api/v1/connectors/{id}/sync
+
+# List ingestion jobs
+GET /api/v1/ingestion/jobs</code></pre>
+          </div>
+          
+          <!-- ACL Propagation -->
+          <div class="content-section">
+            <h2>ACL Propagation</h2>
+            
+            <p>Ingestion retains access rules from source systems:</p>
+            
+            <pre><code>{
+  "source": "sharepoint",
+  "filename": "Q4-Planning.docx",
+  "metadata": {
+    "source_acl": ["engineering@company.com:read", "pm@company.com:read"],
+    "tenant_id": "company-tenant",
+    "domain": "engineering"
+  }
+}</code></pre>
+            
+            <ul>
+              <li><strong>Source ACL → Blob metadata</strong>: Preserved for audit</li>
+              <li><strong>Source ACL → Zep fact metadata</strong>: For retrieval filtering</li>
+              <li><strong>Tenant mapping</strong>: Map source users/groups to Engram tenants/roles</li>
+            </ul>
+          </div>
+          
+          <!-- Security Checklist -->
+          <div class="content-section">
+            <h2>Security Checklist</h2>
+            
+            <ul class="security-checklist">
+              <li><span class="check">✓</span> Credentials stored in Key Vault (never in code/config)</li>
+              <li><span class="check">✓</span> Least privilege scope (connector only accesses specified folders/prefixes)</li>
+              <li><span class="check">✓</span> Credential rotation support (re-auth without breaking jobs)</li>
+              <li><span class="check">✓</span> Audit logging (who/what/when/where)</li>
+              <li><span class="check">✓</span> Network isolation (Private Link for Blob/Postgres in uat/prod)</li>
+              <li><span class="check">✓</span> Data classification tagging (Blob metadata, Zep fact metadata)</li>
+            </ul>
+          </div>
+          
+          <!-- Related -->
+          <div class="content-section">
+            <h2>Related Guides</h2>
+            
+            <div class="nav-cards">
+              <a href="/storage-strategy.html" class="nav-card">
+                <div class="nav-card-icon">💾</div>
+                <div class="nav-card-content">
+                  <p class="nav-card-title">Storage Strategy</p>
+                  <p class="nav-card-desc">System of record vs system of recall.</p>
+                </div>
+              </a>
+              <a href="/unstructured-enterprise-deployment.html" class="nav-card">
+                <div class="nav-card-icon">📄</div>
+                <div class="nav-card-content">
+                  <p class="nav-card-title">Unstructured ETL</p>
+                  <p class="nav-card-desc">Document parsing and chunking pipeline.</p>
+                </div>
+              </a>
+              <a href="/zep-enterprise-deployment.html" class="nav-card">
+                <div class="nav-card-icon">🧠</div>
+                <div class="nav-card-content">
+                  <p class="nav-card-title">Zep Memory</p>
+                  <p class="nav-card-desc">Knowledge graph and fact storage.</p>
+                </div>
+              </a>
+            </div>
+          </div>
+          
+        </div>
+      </section>
+      
+      <footer class="site-footer">
+        <p>Built with ❤️ using <strong>Context Engineering</strong></p>
+        <p><a href="https://github.com/zimaxnet/engram">GitHub</a> · <a href="https://engram.work">engram.work</a> · <a href="https://wiki.engram.work">Documentation</a></p>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Engram - Enterprise AI Memory & Context Engineering Platform</title>
+  <meta name="description" content="Cognition-as-a-Service for the Enterprise. Solve the Memory Wall Problem with durable AI agents, temporal knowledge graphs, and enterprise-grade orchestration.">
+  <link rel="canonical" href="https://wiki.engram.work/">
+  <link rel="stylesheet" href="/assets/css/engram.css">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+  <button class="mobile-nav-toggle" aria-label="Toggle navigation" onclick="document.querySelector('.site-nav').classList.toggle('open')">☰</button>
+  
+  <div class="site-wrapper">
+    <!-- Side Navigation -->
+    <nav class="site-nav">
+      <div class="nav-header">
+        <a href="/" class="nav-logo">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="14" stroke="#00d4ff" stroke-width="2"/>
+            <circle cx="16" cy="16" r="6" fill="#a855f7"/>
+            <path d="M16 2v6M16 24v6M2 16h6M24 16h6" stroke="#00d4ff" stroke-width="2"/>
+          </svg>
+          <div>
+            <div class="nav-logo-text">Engram</div>
+            <div class="nav-tagline">Context Engineering Platform</div>
+          </div>
+        </a>
+      </div>
+      
+      <div class="nav-sections">
+        <div class="nav-section">
+          <div class="nav-section-title">Getting Started</div>
+          <ul class="nav-links">
+            <li><a href="/" class="active"><span class="icon">🏠</span> Home</a></li>
+            <li><a href="/architecture.html"><span class="icon">🏗️</span> Architecture</a></li>
+            <li><a href="/agents.html"><span class="icon">🤖</span> Agent Personas</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Platform Features</div>
+          <ul class="nav-links">
+            <li><a href="/system-navigator.html"><span class="icon">🧭</span> System Navigator</a></li>
+            <li><a href="/connectors.html"><span class="icon">🔌</span> Connectors</a></li>
+            <li><a href="/storage-strategy.html"><span class="icon">💾</span> Storage Strategy</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Enterprise Deployment</div>
+          <ul class="nav-links">
+            <li><a href="/deployment.html"><span class="icon">🚀</span> Deployment Guide</a></li>
+            <li><a href="/pricing.html"><span class="icon">💰</span> Pricing & Tiers</a></li>
+            <li><a href="/poc-vs-enterprise.html"><span class="icon">📊</span> POC vs Enterprise</a></li>
+            <li><a href="/enterprise-env-model.html"><span class="icon">🌐</span> Environment Model</a></li>
+            <li><a href="/finops.html"><span class="icon">📈</span> FinOps Strategy</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Component Guides</div>
+          <ul class="nav-links">
+            <li><a href="/temporal-enterprise-deployment.html"><span class="icon">⏱️</span> Temporal</a></li>
+            <li><a href="/zep-enterprise-deployment.html"><span class="icon">🧠</span> Zep Memory</a></li>
+            <li><a href="/postgresql-blob-storage-enterprise-deployment.html"><span class="icon">🗄️</span> PostgreSQL</a></li>
+            <li><a href="/unstructured-enterprise-deployment.html"><span class="icon">📄</span> Unstructured ETL</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Development</div>
+          <ul class="nav-links">
+            <li><a href="/TESTING-GUIDE.html"><span class="icon">🧪</span> Testing Guide</a></li>
+            <li><a href="/LOCAL-TESTING-GUIDE.html"><span class="icon">💻</span> Local Setup</a></li>
+            <li><a href="/app-insights-guide.html"><span class="icon">📊</span> Observability</a></li>
+            <li><a href="/visual-development.html"><span class="icon">🎨</span> Visual Dev</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="nav-footer">
+        Built with Context Engineering<br>
+        <a href="https://github.com/zimaxnet/engram">GitHub</a> · <a href="https://engram.work">engram.work</a>
+      </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="site-content">
+      <!-- Hero Section -->
+      <section class="hero">
+        <div class="container">
+          <span class="hero-badge">Enterprise AI Platform</span>
+          <h1 class="hero-title">
+            <span class="highlight">Context Engineering</span><br>
+            for the Enterprise
+          </h1>
+          <p class="hero-desc">
+            Solve the Memory Wall Problem in LLMs with durable AI agents, temporal knowledge graphs, and enterprise-grade orchestration.
+          </p>
+          <div class="hero-actions">
+            <a href="/architecture.html" class="btn btn-primary">Explore Architecture →</a>
+            <a href="/deployment.html" class="btn btn-secondary">Deployment Guide</a>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Key Features -->
+      <section class="page-body">
+        <div class="container">
+          <div class="section-header">
+            <span class="section-badge">Platform Capabilities</span>
+            <h2 class="section-title">Why Engram?</h2>
+            <p class="section-subtitle">A complete platform for enterprise AI with memory, orchestration, and governance.</p>
+          </div>
+          
+          <div class="features-grid">
+            <div class="feature-card">
+              <div class="feature-icon">🧠</div>
+              <h3 class="feature-title">Context Engineering</h3>
+              <p class="feature-desc">4-layer enterprise context schema for rich, structured AI interactions that persist across sessions.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">🦴</div>
+              <h3 class="feature-title">Durable Workflows</h3>
+              <p class="feature-desc">Temporal-based orchestration surviving crashes, enabling human-in-the-loop approvals and long-running tasks.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">💾</div>
+              <h3 class="feature-title">Temporal Knowledge Graph</h3>
+              <p class="feature-desc">Zep + Graphiti for episodic and semantic memory—your AI remembers everything, securely.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">🚦</div>
+              <h3 class="feature-title">System Navigator</h3>
+              <p class="feature-desc">Unified UI for memory exploration, workflow management, evidence telemetry, and admin oversight.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">🔐</div>
+              <h3 class="feature-title">Enterprise Security</h3>
+              <p class="feature-desc">Microsoft Entra ID authentication with fine-grained RBAC and multi-tenant isolation.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">💰</div>
+              <h3 class="feature-title">FinOps-First</h3>
+              <p class="feature-desc">Scale-to-zero architecture on Azure Container Apps minimizes costs without sacrificing capability.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Architecture Preview -->
+      <section class="page-body" style="background: var(--gray-100);">
+        <div class="container">
+          <div class="section-header">
+            <span class="section-badge">Brain + Spine Pattern</span>
+            <h2 class="section-title">Architecture Overview</h2>
+            <p class="section-subtitle">Separating cognitive reasoning from durable execution.</p>
+          </div>
+          
+          <div class="card">
+            <div class="card-body">
+              <pre><code>┌─────────────────────────────────────────────────────────────┐
+│                      ENGRAM PLATFORM                         │
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐     │
+│  │   BRAIN     │    │   SPINE     │    │   MEMORY    │     │
+│  │  (LangGraph)│◄──►│  (Temporal) │◄──►│    (Zep)    │     │
+│  │   Agents    │    │  Workflows  │    │   Graphiti  │     │
+│  └─────────────┘    └─────────────┘    └─────────────┘     │
+│         │                  │                  │             │
+│         └──────────────────┴──────────────────┘             │
+│                            │                                │
+│              ┌─────────────┴─────────────┐                  │
+│              │    4-Layer Context        │                  │
+│              │  1. Security Context      │                  │
+│              │  2. Episodic State        │                  │
+│              │  3. Semantic Knowledge    │                  │
+│              │  4. Operational State     │                  │
+│              └───────────────────────────┘                  │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin-top: 1.5rem;">
+            <a href="/architecture.html" class="btn btn-primary">Deep Dive into Architecture →</a>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Agent Personas -->
+      <section class="page-body">
+        <div class="container">
+          <div class="section-header">
+            <span class="section-badge">Meet the Team</span>
+            <h2 class="section-title">AI Agent Personas</h2>
+            <p class="section-subtitle">Specialized agents for business analysis and project management.</p>
+          </div>
+          
+          <div class="agent-grid">
+            <div class="agent-card elena">
+              <img src="/assets/images/elena-portrait.png" alt="Dr. Elena Vasquez" class="agent-portrait" onerror="this.style.display='none'">
+              <h3 class="agent-name">Dr. Elena Vasquez</h3>
+              <p class="agent-role">Business Analyst</p>
+              <p class="agent-bio">Expert in requirements analysis, stakeholder management, and digital transformation strategy. Elena excels at policy Q&A with citations and sensitivity warnings.</p>
+            </div>
+            <div class="agent-card marcus">
+              <img src="/assets/images/marcus-portrait.png" alt="Marcus Chen" class="agent-portrait" onerror="this.style.display='none'">
+              <h3 class="agent-name">Marcus Chen</h3>
+              <p class="agent-role">Project Manager</p>
+              <p class="agent-bio">Specialist in program management, Agile transformation, and enterprise delivery. Marcus turns requests into plans, milestones, owners, and risk flags.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Quick Navigation -->
+      <section class="page-body" style="background: var(--gray-100);">
+        <div class="container">
+          <div class="section-header">
+            <span class="section-badge">Explore</span>
+            <h2 class="section-title">Documentation</h2>
+            <p class="section-subtitle">Everything you need to understand, deploy, and operate Engram.</p>
+          </div>
+          
+          <div class="nav-cards">
+            <a href="/architecture.html" class="nav-card">
+              <div class="nav-card-icon">🏗️</div>
+              <div class="nav-card-content">
+                <p class="nav-card-title">Architecture</p>
+                <p class="nav-card-desc">Brain + Spine pattern, 4-layer context schema, component deep dives.</p>
+              </div>
+            </a>
+            <a href="/deployment.html" class="nav-card">
+              <div class="nav-card-icon">🚀</div>
+              <div class="nav-card-content">
+                <p class="nav-card-title">Deployment</p>
+                <p class="nav-card-desc">Local development, Azure deployment, infrastructure as code.</p>
+              </div>
+            </a>
+            <a href="/pricing.html" class="nav-card">
+              <div class="nav-card-icon">💰</div>
+              <div class="nav-card-content">
+                <p class="nav-card-title">Pricing & Tiers</p>
+                <p class="nav-card-desc">5 deployment levels from POC to Enterprise Production.</p>
+              </div>
+            </a>
+            <a href="/poc-vs-enterprise.html" class="nav-card">
+              <div class="nav-card-icon">📊</div>
+              <div class="nav-card-content">
+                <p class="nav-card-title">POC vs Enterprise</p>
+                <p class="nav-card-desc">Compare deployment options and choose your path.</p>
+              </div>
+            </a>
+            <a href="/TESTING-GUIDE.html" class="nav-card">
+              <div class="nav-card-icon">🧪</div>
+              <div class="nav-card-content">
+                <p class="nav-card-title">Testing Guide</p>
+                <p class="nav-card-desc">Golden Thread validation, evidence bundles, and quality gates.</p>
+              </div>
+            </a>
+            <a href="/finops.html" class="nav-card">
+              <div class="nav-card-icon">📈</div>
+              <div class="nav-card-content">
+                <p class="nav-card-title">FinOps Strategy</p>
+                <p class="nav-card-desc">Cost optimization, scale-to-zero, and budget management.</p>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Tech Stack -->
+      <section class="page-body">
+        <div class="container">
+          <div class="section-header">
+            <span class="section-badge">Built With</span>
+            <h2 class="section-title">Technology Stack</h2>
+          </div>
+          
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Layer</th>
+                  <th>Technology</th>
+                  <th>Purpose</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Frontend</strong></td>
+                  <td>React 19 + Vite</td>
+                  <td>System Navigator UI</td>
+                </tr>
+                <tr>
+                  <td><strong>Backend</strong></td>
+                  <td>FastAPI + Python 3.11</td>
+                  <td>API layer and agent orchestration</td>
+                </tr>
+                <tr>
+                  <td><strong>Agent Framework</strong></td>
+                  <td>LangGraph + Azure AI Foundry</td>
+                  <td>Cognitive reasoning (Brain)</td>
+                </tr>
+                <tr>
+                  <td><strong>Orchestration</strong></td>
+                  <td>Temporal</td>
+                  <td>Durable workflows (Spine)</td>
+                </tr>
+                <tr>
+                  <td><strong>Memory</strong></td>
+                  <td>Zep + Graphiti</td>
+                  <td>Episodic & semantic knowledge</td>
+                </tr>
+                <tr>
+                  <td><strong>Infrastructure</strong></td>
+                  <td>Azure Container Apps</td>
+                  <td>Scale-to-zero hosting</td>
+                </tr>
+                <tr>
+                  <td><strong>Authentication</strong></td>
+                  <td>Microsoft Entra ID</td>
+                  <td>Enterprise SSO & RBAC</td>
+                </tr>
+                <tr>
+                  <td><strong>Observability</strong></td>
+                  <td>OpenTelemetry + App Insights</td>
+                  <td>Tracing, metrics, logs</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Getting Started -->
+      <section class="page-body" style="background: var(--engram-navy); color: #fff;">
+        <div class="container" style="text-align: center;">
+          <h2 style="color: var(--engram-cyan); margin-bottom: 1rem;">Ready to Get Started?</h2>
+          <p style="color: var(--gray-300); margin-bottom: 2rem;">Clone the repo and have Engram running locally in minutes.</p>
+          <pre style="text-align: left; max-width: 500px; margin: 0 auto 2rem;"><code># Clone the repository
+git clone https://github.com/zimaxnet/engram.git
+
+# Start local development
+docker-compose up -d
+
+# Access the platform
+open http://localhost:5173</code></pre>
+          <div class="hero-actions">
+            <a href="https://github.com/zimaxnet/engram" class="btn btn-primary" target="_blank">View on GitHub →</a>
+            <a href="/LOCAL-TESTING-GUIDE.html" class="btn btn-secondary">Local Setup Guide</a>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Footer -->
+      <footer class="site-footer">
+        <p>Built with ❤️ using <strong>Context Engineering</strong></p>
+        <p><a href="https://github.com/zimaxnet/engram">GitHub</a> · <a href="https://engram.work">engram.work</a> · <a href="https://wiki.engram.work">Documentation</a></p>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

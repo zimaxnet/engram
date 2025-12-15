@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Visual Development Guide | Engram - Context Engineering Platform</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Visual Development Guide" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Enterprise AI Memory &amp; Cognition Platform" />
+<meta property="og:description" content="Enterprise AI Memory &amp; Cognition Platform" />
+<link rel="canonical" href="https://wiki.engram.work/visual-development.html" />
+<meta property="og:url" content="https://wiki.engram.work/visual-development.html" />
+<meta property="og:site_name" content="Engram - Context Engineering Platform" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Visual Development Guide" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"Enterprise AI Memory &amp; Cognition Platform","headline":"Visual Development Guide","url":"https://wiki.engram.work/visual-development.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+    <!--[if lt IE 9]>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <![endif]-->
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1><a href="https://wiki.engram.work/">Engram - Context Engineering Platform</a></h1>
+
+        
+
+        <p>Enterprise AI Memory & Cognition Platform</p>
+
+        
+
+        
+
+        
+      </header>
+      <section>
+
+      <h1 id="home--visual-development"><a href="/">Home</a> › Visual Development</h1>
+
+<h1 id="visual-development-guide">Visual Development Guide</h1>
+
+<p>This guide documents the visual assets for the Engram platform and provides JSON prompts for generating consistent imagery using AI image generation tools like Nano Banana Pro.</p>
+
+<h2 id="platform-visuals">Platform Visuals</h2>
+
+<h3 id="1-platform-architecture-diagram">1. Platform Architecture Diagram</h3>
+
+<p><img src="/assets/images/engram-platform-architecture.png" alt="Engram Platform Architecture" /></p>
+
+<p><strong>Description</strong>: A comprehensive visual representation of the Engram platform showing the Brain + Spine architecture, data flows, and component interactions.</p>
+
+<h4 id="json-prompt">JSON Prompt</h4>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"diagram_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"technical_architecture"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Engram Context Engineering Platform"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"style"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"aesthetic"</span><span class="p">:</span><span class="w"> </span><span class="s2">"modern_tech_dark_theme"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"color_scheme"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"background"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#0a0e1a"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"primary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#00d4ff"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"secondary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#a855f7"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"accent"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#10b981"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#e2e8f0"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"visual_style"</span><span class="p">:</span><span class="w"> </span><span class="s2">"glassmorphism_with_glow"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"components"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Frontend"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"layer"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"position"</span><span class="p">:</span><span class="w"> </span><span class="s2">"top"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"elements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"React UI"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Voice Controls"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Avatar Display"</span><span class="p">],</span><span class="w">
+      </span><span class="nl">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#3b82f6"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"API Gateway"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"middleware"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"position"</span><span class="p">:</span><span class="w"> </span><span class="s2">"upper-middle"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"elements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"FastAPI"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Auth Middleware"</span><span class="p">,</span><span class="w"> </span><span class="s2">"RBAC"</span><span class="p">],</span><span class="w">
+      </span><span class="nl">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#10b981"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Brain Layer"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"core_component"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"position"</span><span class="p">:</span><span class="w"> </span><span class="s2">"middle-left"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"elements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"LangGraph Agents"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Elena"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Marcus"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Router"</span><span class="p">],</span><span class="w">
+      </span><span class="nl">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#00d4ff"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"glow"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Spine Layer"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"core_component"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"position"</span><span class="p">:</span><span class="w"> </span><span class="s2">"middle-center"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"elements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Temporal Workflows"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Activities"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Signals"</span><span class="p">],</span><span class="w">
+      </span><span class="nl">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#a855f7"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"glow"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Memory Layer"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"core_component"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"position"</span><span class="p">:</span><span class="w"> </span><span class="s2">"middle-right"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"elements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Zep"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Graphiti"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Vector Store"</span><span class="p">],</span><span class="w">
+      </span><span class="nl">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#f59e0b"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"glow"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Infrastructure"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"layer"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"position"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bottom"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"elements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Azure Container Apps"</span><span class="p">,</span><span class="w"> </span><span class="s2">"PostgreSQL"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Key Vault"</span><span class="p">],</span><span class="w">
+      </span><span class="nl">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#6b7280"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="err">###</span><span class="w"> </span><span class="mi">2</span><span class="err">.</span><span class="w"> </span><span class="err">Voice</span><span class="w"> </span><span class="err">Interaction</span><span class="w"> </span><span class="err">Flow</span><span class="w"> </span><span class="err">(removed)</span><span class="w">
+
+  </span><span class="err">Voice</span><span class="w"> </span><span class="err">diagrams</span><span class="w"> </span><span class="err">are</span><span class="w"> </span><span class="err">omitted</span><span class="w"> </span><span class="err">because</span><span class="w"> </span><span class="err">voice</span><span class="w"> </span><span class="err">features</span><span class="w"> </span><span class="err">are</span><span class="w"> </span><span class="err">disabled</span><span class="w"> </span><span class="err">in</span><span class="w"> </span><span class="err">this</span><span class="w"> </span><span class="err">build.</span><span class="w">
+
+      </span><span class="nl">"icon"</span><span class="p">:</span><span class="w"> </span><span class="s2">"avatar_speaking"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Lip-sync animation"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#f59e0b"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="err">,</span><span class="w">
+  </span><span class="nl">"data_labels"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="nl">"between"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="nl">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Audio WAV"</span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="nl">"between"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">],</span><span class="w"> </span><span class="nl">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Transcript"</span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="nl">"between"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">],</span><span class="w"> </span><span class="nl">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Response Text"</span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="nl">"between"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">],</span><span class="w"> </span><span class="nl">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Audio + Visemes"</span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<hr />
+
+<h3 id="3-agent-workflow-diagram">3. Agent Workflow Diagram</h3>
+
+<p><img src="/assets/images/agent-workflow-diagram.png" alt="Agent Workflow Diagram" /></p>
+
+<p><strong>Description</strong>: Illustrates how Elena and Marcus collaborate with handoff patterns.</p>
+
+<h4 id="json-prompt-1">JSON Prompt</h4>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"diagram_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"collaboration_flow"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Agent Collaboration Workflow"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"style"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"aesthetic"</span><span class="p">:</span><span class="w"> </span><span class="s2">"modern_tech_dark_theme"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"layout"</span><span class="p">:</span><span class="w"> </span><span class="s2">"circular_with_center"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"agents"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Elena"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"role"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Business Analyst"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"position"</span><span class="p">:</span><span class="w"> </span><span class="s2">"left"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#00d4ff"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"avatar"</span><span class="p">:</span><span class="w"> </span><span class="s2">"elena_portrait"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Marcus"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"role"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Project Manager"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"position"</span><span class="p">:</span><span class="w"> </span><span class="s2">"right"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#a855f7"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"avatar"</span><span class="p">:</span><span class="w"> </span><span class="s2">"marcus_portrait"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"center_element"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Agent Router"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Context-aware routing"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"icon"</span><span class="p">:</span><span class="w"> </span><span class="s2">"router_switch"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"workflows"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"trigger"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Requirements question"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"User"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Elena"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"arrow_style"</span><span class="p">:</span><span class="w"> </span><span class="s2">"solid"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"trigger"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Planning question"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"User"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Marcus"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"arrow_style"</span><span class="p">:</span><span class="w"> </span><span class="s2">"solid"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"trigger"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Handoff: plan this"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Elena"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Marcus"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"arrow_style"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dashed"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Context Transfer"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"trigger"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Handoff: analyze requirements"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Marcus"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Elena"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"arrow_style"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dashed"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Context Transfer"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<hr />
+
+<h3 id="4-context-schema-visualization">4. Context Schema Visualization</h3>
+
+<p><img src="/assets/images/context-schema.png" alt="4-Layer Context Schema" /></p>
+
+<p><strong>Description</strong>: Visual representation of the 4-layer EnterpriseContext schema.</p>
+
+<h4 id="json-prompt-2">JSON Prompt</h4>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"diagram_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"layered_schema"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"4-Layer Enterprise Context Schema"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"style"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"aesthetic"</span><span class="p">:</span><span class="w"> </span><span class="s2">"modern_tech_dark_theme"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"layout"</span><span class="p">:</span><span class="w"> </span><span class="s2">"stacked_layers_3d"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"layers"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"number"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Security Context"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#ef4444"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"user_id"</span><span class="p">,</span><span class="w"> </span><span class="s2">"tenant_id"</span><span class="p">,</span><span class="w"> </span><span class="s2">"roles"</span><span class="p">,</span><span class="w"> </span><span class="s2">"scopes"</span><span class="p">,</span><span class="w"> </span><span class="s2">"session_id"</span><span class="p">],</span><span class="w">
+      </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WHO is asking"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"number"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Episodic State"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#f59e0b"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"conversation_id"</span><span class="p">,</span><span class="w"> </span><span class="s2">"recent_turns"</span><span class="p">,</span><span class="w"> </span><span class="s2">"summary"</span><span class="p">],</span><span class="w">
+      </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WHAT happened recently"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"number"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Semantic Knowledge"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#10b981"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"retrieved_facts"</span><span class="p">,</span><span class="w"> </span><span class="s2">"entity_context"</span><span class="p">,</span><span class="w"> </span><span class="s2">"graph_nodes"</span><span class="p">],</span><span class="w">
+      </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WHAT we know"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"number"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Operational State"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#3b82f6"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"current_plan"</span><span class="p">,</span><span class="w"> </span><span class="s2">"active_tools"</span><span class="p">,</span><span class="w"> </span><span class="s2">"workflow_id"</span><span class="p">,</span><span class="w"> </span><span class="s2">"status"</span><span class="p">],</span><span class="w">
+      </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WHAT we're doing"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"flow_arrow"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"direction"</span><span class="p">:</span><span class="w"> </span><span class="s2">"top_to_bottom"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Context flows through all layers"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<hr />
+
+<h3 id="5-engram-logo">5. Engram Logo</h3>
+
+<p><img src="/assets/images/engram-logo.png" alt="Engram Logo" /></p>
+
+<p><strong>Description</strong>: The Engram platform logo representing memory and neural connections.</p>
+
+<h4 id="json-prompt-3">JSON Prompt</h4>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"logo_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"abstract_tech"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Engram"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"concept"</span><span class="p">:</span><span class="w"> </span><span class="s2">"memory_trace_neural_pathway"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"style"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"aesthetic"</span><span class="p">:</span><span class="w"> </span><span class="s2">"minimalist_futuristic"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"color_palette"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"primary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#00d4ff"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"secondary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#a855f7"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"glow"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"elements"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"primary_shape"</span><span class="p">:</span><span class="w"> </span><span class="s2">"stylized_brain_outline"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"accent"</span><span class="p">:</span><span class="w"> </span><span class="s2">"neural_pathway_traces"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"integration"</span><span class="p">:</span><span class="w"> </span><span class="s2">"memory_node_constellation"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"variations"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"full_color"</span><span class="p">,</span><span class="w"> </span><span class="nl">"background"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dark"</span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"monochrome"</span><span class="p">,</span><span class="w"> </span><span class="nl">"background"</span><span class="p">:</span><span class="w"> </span><span class="s2">"light"</span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"icon_only"</span><span class="p">,</span><span class="w"> </span><span class="nl">"size"</span><span class="p">:</span><span class="w"> </span><span class="s2">"favicon"</span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<hr />
+
+<h2 id="image-asset-locations">Image Asset Locations</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Asset</th>
+      <th>Path</th>
+      <th>Resolution</th>
+      <th>Format</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Platform Architecture</td>
+      <td><code class="language-plaintext highlighter-rouge">/assets/images/engram-platform-architecture.png</code></td>
+      <td>1920x1080</td>
+      <td>PNG</td>
+    </tr>
+    <tr>
+      <td>Voice Interaction Flow</td>
+      <td><code class="language-plaintext highlighter-rouge">/assets/images/voice-interaction-flow.png</code></td>
+      <td>1920x600</td>
+      <td>PNG</td>
+    </tr>
+    <tr>
+      <td>Agent Workflow</td>
+      <td><code class="language-plaintext highlighter-rouge">/assets/images/agent-workflow-diagram.png</code></td>
+      <td>1200x800</td>
+      <td>PNG</td>
+    </tr>
+    <tr>
+      <td>Context Schema</td>
+      <td><code class="language-plaintext highlighter-rouge">/assets/images/context-schema.png</code></td>
+      <td>1200x900</td>
+      <td>PNG</td>
+    </tr>
+    <tr>
+      <td>Elena Portrait</td>
+      <td><code class="language-plaintext highlighter-rouge">/assets/images/elena-portrait.png</code></td>
+      <td>512x512</td>
+      <td>PNG</td>
+    </tr>
+    <tr>
+      <td>Marcus Portrait</td>
+      <td><code class="language-plaintext highlighter-rouge">/assets/images/marcus-portrait.png</code></td>
+      <td>512x512</td>
+      <td>PNG</td>
+    </tr>
+    <tr>
+      <td>Engram Logo</td>
+      <td><code class="language-plaintext highlighter-rouge">/assets/images/engram-logo.png</code></td>
+      <td>800x200</td>
+      <td>PNG</td>
+    </tr>
+    <tr>
+      <td>Logo Icon</td>
+      <td><code class="language-plaintext highlighter-rouge">/assets/images/engram-icon.png</code></td>
+      <td>512x512</td>
+      <td>PNG</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2 id="generating-new-visuals">Generating New Visuals</h2>
+
+<p>To generate consistent visuals for the Engram platform:</p>
+
+<ol>
+  <li><strong>Use the JSON prompts</strong> above as templates</li>
+  <li><strong>Maintain the color scheme</strong>:
+    <ul>
+      <li>Background: <code class="language-plaintext highlighter-rouge">#0a0e1a</code></li>
+      <li>Primary (Cyan): <code class="language-plaintext highlighter-rouge">#00d4ff</code></li>
+      <li>Secondary (Purple): <code class="language-plaintext highlighter-rouge">#a855f7</code></li>
+      <li>Accent (Green): <code class="language-plaintext highlighter-rouge">#10b981</code></li>
+      <li>Text: <code class="language-plaintext highlighter-rouge">#e2e8f0</code></li>
+    </ul>
+  </li>
+  <li><strong>Apply glassmorphism</strong> effects with subtle glows</li>
+  <li><strong>Export at appropriate resolutions</strong> for web use</li>
+</ol>
+
+<h3 id="tips-for-nano-banana-pro">Tips for Nano Banana Pro</h3>
+
+<ul>
+  <li>Use <code class="language-plaintext highlighter-rouge">"render_style": "photorealistic_with_slight_stylization"</code> for portraits</li>
+  <li>Use <code class="language-plaintext highlighter-rouge">"aesthetic": "modern_tech_dark_theme"</code> for diagrams</li>
+  <li>Include <code class="language-plaintext highlighter-rouge">"glow": true"</code> for interactive elements</li>
+  <li>Specify exact hex colors for brand consistency</li>
+</ul>
+
+<hr />
+
+<h2 id="design-to-implementation-contract">Design-to-Implementation Contract</h2>
+
+<p>Every screen and flow depicted in <code class="language-plaintext highlighter-rouge">/assets/images/</code> represents required functionality. The visual design drives all functionality that should be built and fully tested. This is the critical part of the ability required to go from POC to enterprise adoption as BAU.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Image</th>
+      <th>Screen/Feature</th>
+      <th>API Endpoints</th>
+      <th>Test Suite</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>bau-hub.png</td>
+      <td>BAU Hub</td>
+      <td><code class="language-plaintext highlighter-rouge">/api/v1/bau/*</code></td>
+      <td><code class="language-plaintext highlighter-rouge">BAUHub.test.tsx</code>, <code class="language-plaintext highlighter-rouge">test_bau_router.py</code></td>
+    </tr>
+    <tr>
+      <td>evidence-telemetry-panel.png</td>
+      <td>Evidence &amp; Telemetry</td>
+      <td><code class="language-plaintext highlighter-rouge">/api/v1/metrics/evidence</code></td>
+      <td><code class="language-plaintext highlighter-rouge">EvidenceTelemetry.test.tsx</code>, <code class="language-plaintext highlighter-rouge">test_metrics_router.py</code></td>
+    </tr>
+    <tr>
+      <td>golden-thread-validation.png</td>
+      <td>Golden Thread Runner</td>
+      <td><code class="language-plaintext highlighter-rouge">/api/v1/validation/*</code></td>
+      <td><code class="language-plaintext highlighter-rouge">GoldenThreadRunner.test.tsx</code>, <code class="language-plaintext highlighter-rouge">test_validation_router.py</code></td>
+    </tr>
+    <tr>
+      <td>workflow-detail-durable-spine.png</td>
+      <td>Workflow Detail</td>
+      <td><code class="language-plaintext highlighter-rouge">/api/v1/workflows/:id</code></td>
+      <td><code class="language-plaintext highlighter-rouge">WorkflowDetail.test.tsx</code></td>
+    </tr>
+    <tr>
+      <td>memory-search-provenance.png</td>
+      <td>Memory Search</td>
+      <td><code class="language-plaintext highlighter-rouge">/api/v1/memory/search</code></td>
+      <td><code class="language-plaintext highlighter-rouge">Search.test.tsx</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Contract Requirements:</strong></p>
+<ul>
+  <li>All screens must be built with all intended flows, connections, and functions inherent to the visual design</li>
+  <li>The design drives all functionality that should be built</li>
+  <li>All functionality must be fully tested and validated to be completely working</li>
+  <li>This contract is the acceptance criteria for POC-to-enterprise transition</li>
+</ul>
+
+
+
+      </section>
+      <footer>
+        
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="/assets/js/scale.fix.js"></script>
+  </body>
+</html>

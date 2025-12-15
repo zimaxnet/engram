@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Personas - Engram</title>
+  <meta name="description" content="Meet Elena and Marcus - AI agents built for enterprise business analysis and project management.">
+  <link rel="canonical" href="https://wiki.engram.work/agents.html">
+  <link rel="stylesheet" href="/assets/css/engram.css">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+  <style>
+    .agent-hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+    @media (max-width: 900px) {
+      .agent-hero { grid-template-columns: 1fr; }
+    }
+    .agent-profile {
+      background: linear-gradient(135deg, var(--gray-100), var(--gray-50));
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+    }
+    .agent-profile.elena { border-top: 4px solid var(--cyan); }
+    .agent-profile.marcus { border-top: 4px solid var(--purple); }
+    .agent-avatar {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: var(--gray-200);
+      margin: 0 auto 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      border: 4px solid var(--cyan);
+    }
+    .agent-profile.marcus .agent-avatar { border-color: var(--purple); }
+    .agent-profile h3 {
+      margin: 0 0 0.25rem;
+      font-size: 1.5rem;
+    }
+    .agent-profile .agent-role {
+      color: var(--gray-600);
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+    .agent-profile .agent-bio {
+      font-size: 0.9rem;
+      color: var(--gray-700);
+      line-height: 1.6;
+    }
+    .expertise-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .expertise-card {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+    }
+    .expertise-card h4 {
+      margin: 0 0 0.5rem;
+      font-size: 1rem;
+    }
+    .expertise-card p {
+      margin: 0;
+      font-size: 0.875rem;
+      color: var(--gray-600);
+    }
+    .voice-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--gray-100);
+      border-radius: 999px;
+      font-size: 0.875rem;
+      margin-top: 1rem;
+    }
+    .voice-badge.cyan { color: var(--cyan); }
+    .voice-badge.purple { color: var(--purple); }
+    .handoff-table {
+      margin-top: 1.5rem;
+    }
+    .collab-diagram {
+      background: var(--gray-900);
+      color: var(--gray-100);
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    .tools-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .tool-tag {
+      background: var(--gray-100);
+      padding: 0.375rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+    }
+    .tool-tag.cyan { background: rgba(0, 212, 255, 0.1); color: var(--cyan); }
+    .tool-tag.purple { background: rgba(168, 85, 247, 0.1); color: var(--purple); }
+  </style>
+</head>
+<body>
+  <button class="mobile-nav-toggle" aria-label="Toggle navigation" onclick="document.querySelector('.site-nav').classList.toggle('open')">☰</button>
+  
+  <div class="site-wrapper">
+    <!-- Side Navigation -->
+    <nav class="site-nav">
+      <div class="nav-header">
+        <a href="/" class="nav-logo">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="14" stroke="#00d4ff" stroke-width="2"/>
+            <circle cx="16" cy="16" r="6" fill="#a855f7"/>
+            <path d="M16 2v6M16 24v6M2 16h6M24 16h6" stroke="#00d4ff" stroke-width="2"/>
+          </svg>
+          <div>
+            <div class="nav-logo-text">Engram</div>
+            <div class="nav-tagline">Context Engineering Platform</div>
+          </div>
+        </a>
+      </div>
+      
+      <div class="nav-sections">
+        <div class="nav-section">
+          <div class="nav-section-title">Getting Started</div>
+          <ul class="nav-links">
+            <li><a href="/"><span class="icon">🏠</span> Home</a></li>
+            <li><a href="/architecture.html"><span class="icon">🏗️</span> Architecture</a></li>
+            <li><a href="/agents.html" class="active"><span class="icon">🤖</span> Agent Personas</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Platform Features</div>
+          <ul class="nav-links">
+            <li><a href="/system-navigator.html"><span class="icon">🧭</span> System Navigator</a></li>
+            <li><a href="/connectors.html"><span class="icon">🔌</span> Connectors</a></li>
+            <li><a href="/storage-strategy.html"><span class="icon">💾</span> Storage Strategy</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Enterprise Deployment</div>
+          <ul class="nav-links">
+            <li><a href="/deployment.html"><span class="icon">🚀</span> Deployment Guide</a></li>
+            <li><a href="/pricing.html"><span class="icon">💰</span> Pricing & Tiers</a></li>
+            <li><a href="/poc-vs-enterprise.html"><span class="icon">📊</span> POC vs Enterprise</a></li>
+            <li><a href="/enterprise-env-model.html"><span class="icon">🌐</span> Environment Model</a></li>
+            <li><a href="/finops.html"><span class="icon">📈</span> FinOps Strategy</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Component Guides</div>
+          <ul class="nav-links">
+            <li><a href="/temporal-enterprise-deployment.html"><span class="icon">⏱️</span> Temporal</a></li>
+            <li><a href="/zep-enterprise-deployment.html"><span class="icon">🧠</span> Zep Memory</a></li>
+            <li><a href="/postgresql-blob-storage-enterprise-deployment.html"><span class="icon">🗄️</span> PostgreSQL</a></li>
+            <li><a href="/unstructured-enterprise-deployment.html"><span class="icon">📄</span> Unstructured ETL</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Development</div>
+          <ul class="nav-links">
+            <li><a href="/TESTING-GUIDE.html"><span class="icon">🧪</span> Testing Guide</a></li>
+            <li><a href="/LOCAL-TESTING-GUIDE.html"><span class="icon">💻</span> Local Setup</a></li>
+            <li><a href="/app-insights-guide.html"><span class="icon">📊</span> Observability</a></li>
+            <li><a href="/visual-development.html"><span class="icon">🎨</span> Visual Dev</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="nav-footer">
+        Built with Context Engineering<br>
+        <a href="https://github.com/zimaxnet/engram">GitHub</a> · <a href="https://engram.work">engram.work</a>
+      </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="site-content">
+      <header class="page-header">
+        <div class="container">
+          <div class="breadcrumb">
+            <a href="/">Home</a>
+            <span class="sep">›</span>
+            <span>Agent Personas</span>
+          </div>
+          <h1 class="page-title">Agent Personas</h1>
+          <p class="page-subtitle">Specialized AI agents for enterprise business analysis and project management.</p>
+        </div>
+      </header>
+      
+      <section class="page-body">
+        <div class="container">
+          
+          <!-- Agent Hero Grid -->
+          <div class="agent-hero">
+            <div class="agent-profile elena">
+              <div class="agent-avatar">👩‍💼</div>
+              <h3>Dr. Elena Vasquez</h3>
+              <p class="agent-role">Business Analyst</p>
+              <p class="agent-bio">Ph.D. in Information Systems from MIT, MBA from Stanford. 15 years spanning McKinsey, Fortune 500 digital transformation, and AI research.</p>
+              <div class="voice-badge cyan">
+                <span>🎤</span> Jenny Neural · Warm, Consultative
+              </div>
+            </div>
+            
+            <div class="agent-profile marcus">
+              <div class="agent-avatar">👨‍💼</div>
+              <h3>Marcus Chen</h3>
+              <p class="agent-role">Project Manager</p>
+              <p class="agent-bio">PMP & PMI-ACP certified. 12+ years managing complex programs at Amazon, Salesforce, and high-growth startups. UC Berkeley CS, Wharton MBA.</p>
+              <div class="voice-badge purple">
+                <span>🎤</span> Guy Neural · Confident, Direct
+              </div>
+            </div>
+          </div>
+          
+          <!-- Elena Section -->
+          <div class="content-section">
+            <h2 style="display: flex; align-items: center; gap: 0.75rem;">
+              <span style="color: var(--cyan);">●</span> Elena's Expertise
+            </h2>
+            
+            <div class="expertise-grid">
+              <div class="expertise-card">
+                <h4>📋 Requirements Analysis</h4>
+                <p>Eliciting, documenting, and validating business requirements with structured frameworks.</p>
+              </div>
+              <div class="expertise-card">
+                <h4>👥 Stakeholder Management</h4>
+                <p>Identifying, analyzing, and engaging diverse stakeholder groups effectively.</p>
+              </div>
+              <div class="expertise-card">
+                <h4>🔄 Process Optimization</h4>
+                <p>Mapping current states and designing future-state processes for efficiency.</p>
+              </div>
+              <div class="expertise-card">
+                <h4>💡 Digital Strategy</h4>
+                <p>Aligning technology initiatives with core business objectives.</p>
+              </div>
+              <div class="expertise-card">
+                <h4>🔀 Change Management</h4>
+                <p>Planning and facilitating organizational transitions smoothly.</p>
+              </div>
+            </div>
+            
+            <h3>Communication Style</h3>
+            <ul>
+              <li><strong>Analytical precision</strong> — Breaking complex problems into manageable components</li>
+              <li><strong>Empathetic listening</strong> — Understanding unstated needs and concerns</li>
+              <li><strong>Probing questions</strong> — Uncovering root causes and hidden assumptions</li>
+              <li><strong>Synthesis skills</strong> — Connecting disparate information into coherent insights</li>
+            </ul>
+            
+            <h3>Specialized Tools</h3>
+            <div class="tools-list">
+              <span class="tool-tag cyan">analyze_requirements()</span>
+              <span class="tool-tag cyan">stakeholder_mapping()</span>
+              <span class="tool-tag cyan">create_user_story()</span>
+            </div>
+          </div>
+          
+          <!-- Marcus Section -->
+          <div class="content-section">
+            <h2 style="display: flex; align-items: center; gap: 0.75rem;">
+              <span style="color: var(--purple);">●</span> Marcus's Expertise
+            </h2>
+            
+            <div class="expertise-grid">
+              <div class="expertise-card">
+                <h4>📊 Program Management</h4>
+                <p>Orchestrating complex, multi-workstream initiatives with precision.</p>
+              </div>
+              <div class="expertise-card">
+                <h4>🏃 Agile Transformation</h4>
+                <p>Implementing and scaling agile methodologies across teams.</p>
+              </div>
+              <div class="expertise-card">
+                <h4>⚠️ Risk Management</h4>
+                <p>Identifying, assessing, and mitigating project risks proactively.</p>
+              </div>
+              <div class="expertise-card">
+                <h4>👥 Resource Planning</h4>
+                <p>Optimizing team allocation, capacity, and utilization.</p>
+              </div>
+              <div class="expertise-card">
+                <h4>📈 Executive Communication</h4>
+                <p>Crafting status reports and presentations for leadership.</p>
+              </div>
+            </div>
+            
+            <h3>Communication Style</h3>
+            <ul>
+              <li><strong>Pragmatic focus</strong> — Cutting through ambiguity to actionable plans</li>
+              <li><strong>Direct communication</strong> — Clear, concise updates without fluff</li>
+              <li><strong>Risk awareness</strong> — Proactively surfacing potential issues</li>
+              <li><strong>Timeline discipline</strong> — Keeping teams aligned on milestones</li>
+            </ul>
+            
+            <h3>Specialized Tools</h3>
+            <div class="tools-list">
+              <span class="tool-tag purple">create_project_timeline()</span>
+              <span class="tool-tag purple">assess_project_risks()</span>
+              <span class="tool-tag purple">create_status_report()</span>
+              <span class="tool-tag purple">estimate_effort()</span>
+            </div>
+          </div>
+          
+          <!-- Collaboration Section -->
+          <div class="content-section">
+            <h2>Agent Collaboration</h2>
+            <p>Elena and Marcus are designed to work together seamlessly, handing off context as workflows progress.</p>
+            
+            <div class="collab-diagram">
+<pre>┌─────────────────────────────────────────────────────────────────┐
+│                     AGENT COLLABORATION FLOW                     │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│   User Request                                                   │
+│       │                                                          │
+│       ▼                                                          │
+│   ┌───────────┐         context          ┌───────────┐          │
+│   │   Elena   │◀────────────────────────▶│  Marcus   │          │
+│   │  (Cyan)   │                          │ (Purple)  │          │
+│   └─────┬─────┘                          └─────┬─────┘          │
+│         │                                      │                 │
+│         ▼                                      ▼                 │
+│   Requirements ───────────────────────▶ Timeline                 │
+│   Stakeholder Map ────────────────────▶ Resource Plan            │
+│   User Stories ───────────────────────▶ Sprint Backlog           │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘</pre>
+            </div>
+            
+            <h3>Handoff Scenarios</h3>
+            <div class="table-wrapper handoff-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Trigger Phrase</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Context Passed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>"plan this project"</td>
+                    <td><span style="color: var(--cyan);">Elena</span></td>
+                    <td><span style="color: var(--purple);">Marcus</span></td>
+                    <td>Requirements analysis</td>
+                  </tr>
+                  <tr>
+                    <td>"what are the requirements"</td>
+                    <td><span style="color: var(--purple);">Marcus</span></td>
+                    <td><span style="color: var(--cyan);">Elena</span></td>
+                    <td>Project scope</td>
+                  </tr>
+                  <tr>
+                    <td>"estimate timeline"</td>
+                    <td><span style="color: var(--cyan);">Elena</span></td>
+                    <td><span style="color: var(--purple);">Marcus</span></td>
+                    <td>User stories</td>
+                  </tr>
+                  <tr>
+                    <td>"analyze stakeholders"</td>
+                    <td><span style="color: var(--purple);">Marcus</span></td>
+                    <td><span style="color: var(--cyan);">Elena</span></td>
+                    <td>Project constraints</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- Example Interaction -->
+          <div class="content-section">
+            <h2>Example Interaction</h2>
+            
+            <div class="callout callout-info">
+              <p class="callout-title">💬 Conversation Flow</p>
+            </div>
+            
+            <pre><code>User: "We need to modernize our legacy CRM system"
+
+<span style="color: var(--cyan);">Elena:</span> "I'd be happy to help analyze this modernization initiative. 
+       Let me start by understanding your current pain points..."
+       
+       [Analyzes requirements, maps stakeholders]
+
+<span style="color: var(--cyan);">Elena:</span> "Based on my analysis, I recommend Marcus take the lead on 
+       planning the implementation..."
+
+<span style="color: var(--purple);">Marcus:</span> "Thanks Elena. I'll build out a phased timeline based on 
+        the requirements you've documented. For a CRM modernization 
+        of this scope, I'm estimating 4-6 months..."</code></pre>
+          </div>
+          
+          <!-- CTA -->
+          <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: var(--gray-100); border-radius: var(--radius);">
+            <h3 style="margin: 0 0 0.5rem;">Ready to meet the agents?</h3>
+            <p style="color: var(--gray-600); margin: 0 0 1.5rem;">Deploy Engram locally or explore the System Navigator.</p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+              <a href="/deployment.html" class="btn btn-primary">Deploy Engram →</a>
+              <a href="/system-navigator.html" class="btn btn-secondary">System Navigator</a>
+            </div>
+          </div>
+          
+        </div>
+      </section>
+      
+      <footer class="site-footer">
+        <p>Built with ❤️ using <strong>Context Engineering</strong></p>
+        <p><a href="https://github.com/zimaxnet/engram">GitHub</a> · <a href="https://engram.work">engram.work</a> · <a href="https://wiki.engram.work">Documentation</a></p>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>
