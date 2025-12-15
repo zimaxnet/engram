@@ -9,10 +9,23 @@ title: Voice & Chat Integration
 
 Engram provides two integrated communication channels for interacting with AI agents:
 
-| Channel | Endpoint | Model | Use Case |
-|---------|----------|-------|----------|
-| **Chat** | API Gateway | gpt-5.1-chat | Text-based conversations |
-| **Voice** | Azure AI Services | gpt-realtime | Real-time voice interactions |
+| Channel | Endpoint | Model | Auth | Use Case |
+|---------|----------|-------|------|----------|
+| **Chat** | API Gateway | gpt-5.1-chat | API Key | Text-based conversations |
+| **Voice** | Azure AI Services | gpt-realtime | DefaultAzureCredential | Real-time voice interactions |
+
+## Security Model (NIST AI RMF Compliant)
+
+| Level | Environment | Chat Auth | VoiceLive Auth |
+|-------|-------------|-----------|----------------|
+| 1-2 | POC/Staging | API Key (APIM) | Azure CLI / DefaultAzureCredential |
+| 3-5 | Production/Enterprise | API Key (APIM) | Managed Identity (DefaultAzureCredential) |
+
+**DefaultAzureCredential** automatically selects the best credential for each environment:
+- **Local Dev**: Azure CLI (`az login`)
+- **Azure Container Apps**: Managed Identity
+- **AKS**: Workload Identity
+- **VMs**: System-assigned Managed Identity
 
 ---
 
@@ -99,16 +112,32 @@ ws.onmessage = (event) => {
 
 ### Configuration
 
-VoiceLive provides real-time speech-to-speech conversations using Azure AI Services.
+VoiceLive provides real-time speech-to-speech conversations using Azure AI Services with **NIST AI RMF compliant authentication**.
 
 ```bash
 # Environment Variables
 AZURE_VOICELIVE_ENDPOINT=https://zimax.services.ai.azure.com
-AZURE_VOICELIVE_KEY=<your-api-key>
 AZURE_VOICELIVE_MODEL=gpt-realtime
 AZURE_VOICELIVE_VOICE=en-US-Ava:DragonHDLatestNeural
 MARCUS_VOICELIVE_VOICE=en-US-GuyNeural
+
+# Optional: API key for POC/staging (not needed if using Azure CLI or Managed Identity)
+# AZURE_VOICELIVE_KEY=<optional-for-poc-only>
 ```
+
+### Authentication
+
+VoiceLive uses `DefaultAzureCredential` which automatically selects the appropriate credential:
+
+| Environment | Credential Used |
+|-------------|-----------------|
+| Local Development | Azure CLI (`az login`) |
+| Azure Container Apps | Managed Identity |
+| Azure Kubernetes Service | Workload Identity |
+| Azure VMs | System Managed Identity |
+| GitHub Actions | Federated Identity |
+
+**Enterprise (Level 3-5)**: Managed Identity is required - no API keys in production.
 
 ### API Endpoints
 

@@ -3,11 +3,18 @@ VoiceLive Service
 
 Real-time voice interaction using Azure AI VoiceLive SDK.
 Provides speech-to-speech conversations with Azure AI Foundry.
+
+Security: NIST AI RMF compliant authentication
+- Level 1-2 (POC/Staging): Azure CLI or API Key
+- Level 3-5 (Production/Enterprise): Managed Identity via DefaultAzureCredential
 """
 
 import logging
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Union
+
+from azure.core.credentials import AzureKeyCredential
+from azure.identity import DefaultAzureCredential
 
 from backend.core import get_settings
 
@@ -31,6 +38,10 @@ class VoiceLiveService:
     - Server-side VAD (Voice Activity Detection)
     - Natural turn-taking with barge-in support
     - Direct integration with GPT models (gpt-realtime v2025-08-28)
+    
+    Authentication (NIST AI RMF compliant):
+    - DefaultAzureCredential for enterprise (Managed Identity, Service Principal)
+    - Falls back to API key for POC/staging if provided
     """
     
     def __init__(self):
@@ -61,7 +72,7 @@ class VoiceLiveService:
     
     @property
     def key(self) -> Optional[str]:
-        """Get the VoiceLive API key"""
+        """Get the VoiceLive API key (for POC/staging)"""
         return self._key
     
     @property
@@ -72,7 +83,40 @@ class VoiceLiveService:
     @property
     def is_configured(self) -> bool:
         """Check if VoiceLive is properly configured"""
-        return bool(self._endpoint and self._key)
+        # Configured if we have an endpoint (credential can be DefaultAzureCredential)
+        return bool(self._endpoint)
+    
+    def get_credential(self) -> Union[AzureKeyCredential, DefaultAzureCredential]:
+        """
+        Get the appropriate credential for the environment.
+        
+        NIST AI RMF Compliance:
+        - Enterprise (Level 3-5): Uses DefaultAzureCredential (Managed Identity preferred)
+        - POC/Staging (Level 1-2): Falls back to API key if AZURE_VOICELIVE_KEY is set
+        
+        DefaultAzureCredential tries in order:
+        1. Environment variables (AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID)
+        2. Workload Identity (AKS)
+        3. Managed Identity (Azure Container Apps, VMs)
+        4. Azure CLI (local development)
+        5. Azure PowerShell
+        6. Interactive browser (if enabled)
+        """
+        environment = self.settings.environment.lower()
+        
+        # For production/enterprise, always use DefaultAzureCredential (Managed Identity)
+        if environment in ("production", "enterprise", "prod"):
+            logger.info("Using DefaultAzureCredential for production (Managed Identity)")
+            return DefaultAzureCredential()
+        
+        # For staging/dev, prefer DefaultAzureCredential but allow API key fallback
+        if self._key:
+            logger.info("Using API key credential (POC/Staging mode)")
+            return AzureKeyCredential(self._key)
+        
+        # No API key - use DefaultAzureCredential (works with Azure CLI locally)
+        logger.info("Using DefaultAzureCredential (Azure CLI or Managed Identity)")
+        return DefaultAzureCredential()
     
     def get_agent_voice_config(self, agent_id: str) -> AgentVoiceConfig:
         """Get voice configuration for an agent"""

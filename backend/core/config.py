@@ -74,10 +74,12 @@ class Settings(BaseSettings):
     marcus_voice_name: str = Field("en-US-GuyNeural", alias="MARCUS_VOICE_NAME")
 
     # ==========================================================================
-    # Azure VoiceLive (Real-time Voice) - Separate endpoint
+    # Azure VoiceLive (Real-time Voice) - Direct Azure AI Services
     # ==========================================================================
+    # Authentication: DefaultAzureCredential (Managed Identity) for enterprise
+    # Falls back to API key for POC/staging if AZURE_VOICELIVE_KEY is set
     azure_voicelive_endpoint: Optional[str] = Field(None, alias="AZURE_VOICELIVE_ENDPOINT")
-    azure_voicelive_key: Optional[str] = Field(None, alias="AZURE_VOICELIVE_KEY")
+    azure_voicelive_key: Optional[str] = Field(None, alias="AZURE_VOICELIVE_KEY")  # Optional for POC
     azure_voicelive_model: str = Field("gpt-realtime", alias="AZURE_VOICELIVE_MODEL")
     azure_voicelive_voice: str = Field("en-US-Ava:DragonHDLatestNeural", alias="AZURE_VOICELIVE_VOICE")
     # Marcus voice configuration for VoiceLive
