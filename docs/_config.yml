@@ -38,3 +38,11 @@ github:
 # Footer
 footer_text: "Built with Context Engineering"
 
+# Publish developer guides under a separate path to avoid collisions with HTML exports
+defaults:
+  - scope:
+      path: "dev-guides"
+      type: pages
+    values:
+      permalink: /dev-guides/:path/
+
