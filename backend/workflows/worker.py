@@ -109,7 +109,7 @@ def main():
     except KeyboardInterrupt:
         logger.info("Worker interrupted")
     except Exception as e:
-        logger.error(f"Worker failed: {e}")
+        logger.exception("Worker failed: %s", e)
         sys.exit(1)
 
 

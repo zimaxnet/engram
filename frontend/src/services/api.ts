@@ -27,9 +27,22 @@ export class ApiClient {
   ): Promise<T> {
     const url = `${this.baseUrl}${API_VERSION}${endpoint}`
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...options.headers as Record<string, string>,
+    const headers: Record<string, string> = {}
+    if (options.headers instanceof Headers) {
+      options.headers.forEach((value, key) => {
+        headers[key] = value
+      })
+    } else if (Array.isArray(options.headers)) {
+      for (const [key, value] of options.headers) {
+        headers[key] = value
+      }
+    } else if (options.headers) {
+      Object.assign(headers, options.headers as Record<string, string>)
+    }
+
+    // Default to JSON requests unless we're sending FormData (e.g. file uploads)
+    if (!(options.body instanceof FormData) && !('Content-Type' in headers)) {
+      headers['Content-Type'] = 'application/json'
     }
 
     // Add auth token if available
@@ -69,7 +82,14 @@ export class ApiClient {
 
   private getAuthToken(): string | null {
     // In production, get from auth context or localStorage
-    return localStorage.getItem('auth_token')
+    try {
+      if (typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function') {
+        return localStorage.getItem('auth_token')
+      }
+    } catch (e) {
+      // ignore in test environments without localStorage
+    }
+    return null
   }
 
   // Chat API
@@ -151,6 +171,28 @@ export class ApiClient {
     }>(`/memory/episodes?limit=${limit}&offset=${offset}`)
   }
 
+  async getMemoryGraph(query: string = '') {
+    const params = new URLSearchParams()
+    if (query) params.set('query', query)
+
+    return this.request<{
+      nodes: Array<{
+        id: string
+        content: string
+        node_type: string
+        degree: number
+        metadata: Record<string, unknown>
+      }>
+      edges: Array<{
+        id: string
+        source: string
+        target: string
+        label?: string | null
+        weight: number
+      }>
+    }>(`/memory/graph${params.toString() ? `?${params.toString()}` : ''}`)
+  }
+
   async getEpisode(episodeId: string) {
     return this.request<{
       id: string
@@ -175,74 +217,26 @@ export class ApiClient {
 
   // Workflows
   async listWorkflows(status?: string, limit: number = 20, offset: number = 0) {
-    // Engram Project Workflows (Source of Truth)
-    const workflows = [
-      // GitHub Actions (CI/CD)
-      {
-        workflow_id: 'gh-ci-pipeline',
-        workflow_type: 'GitHubAction',
-        status: 'completed',
-        agent_id: 'system',
-        started_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-        task_summary: 'CI Pipeline: Linting, Unit Tests, and Docker Build (ci.yml)',
-        step_count: 4,
-        current_step: 'Complete',
-      },
-      {
-        workflow_id: 'gh-deploy-azure',
-        workflow_type: 'GitHubAction',
-        status: 'running',
-        agent_id: 'system',
-        started_at: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
-        task_summary: 'Deploy to Azure: Bicep Provisioning & Container App Revision (deploy.yml)',
-        step_count: 6,
-        current_step: 'Deploying Worker Container',
-      },
-      {
-        workflow_id: 'gh-wiki-sync',
-        workflow_type: 'GitHubAction',
-        status: 'waiting',
-        agent_id: 'system',
-        started_at: new Date(Date.now() - 1000 * 60 * 300).toISOString(),
-        task_summary: 'Documentation Sync: Publishing wiki updates to gh-pages (wiki.yml)',
-        step_count: 2,
-        current_step: 'Waiting for merge',
-      },
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+    })
+    if (status) params.set('status', status)
 
-      // Temporal Workflows (Agentic)
-      {
-        workflow_id: 'temporal-agent-execution-001',
-        workflow_type: 'AgentWorkflow',
-        status: 'running',
-        agent_id: 'marcus',
-        started_at: new Date(Date.now() - 1000 * 60 * 2).toISOString(),
-        task_summary: 'Orchestrating multi-step reasoning task (agent_workflow.py)',
-        step_count: 10,
-        current_step: 'Executing Activity: search_memory',
-      },
-      {
-        workflow_id: 'temporal-long-running-etl',
-        workflow_type: 'EtlWorkflow',
-        status: 'completed',
-        agent_id: 'data-bot',
-        started_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-        task_summary: 'Processing Unstructured.io document ingestion pipeline',
-        step_count: 5,
-        current_step: 'Complete',
-      }
-    ];
-
-    let filtered = workflows;
-    if (status) {
-      filtered = workflows.filter(w => w.status === status)
-    }
-
-    const paginated = filtered.slice(offset, offset + limit);
-
-    return {
-      workflows: paginated,
-      total_count: filtered.length
-    };
+    return this.request<{
+      workflows: Array<{
+        workflow_id: string
+        workflow_type: string
+        status: string
+        agent_id?: string
+        started_at: string
+        completed_at?: string | null
+        task_summary: string
+        step_count?: number | null
+        current_step?: string | null
+      }>
+      total_count: number
+    }>(`/workflows?${params.toString()}`)
   }
 
   async getWorkflow(workflowId: string) {
@@ -452,56 +446,47 @@ export class ApiClient {
 
   // Admin
   async getSystemSettings() {
-    return Promise.resolve({
-      model_name: "gemini-1.5-pro",
-      temperature: 0.7,
-      max_tokens: 4096,
-      memory_backend: "zep (cloud)",
-      workflow_backend: "temporal (local)",
-      theme: "engram-dark",
-      log_level: "VERBOSE"
-    });
+    return this.request<{
+      app_name: string
+      maintenance_mode: boolean
+      default_agent: string
+      theme: string
+      log_level: string
+    }>('/admin/settings')
   }
 
   async updateSystemSettings(settings: unknown) {
-    console.log("Updating settings", settings);
-    return Promise.resolve({ success: true });
+    return this.request<{
+      app_name: string
+      maintenance_mode: boolean
+      default_agent: string
+      theme: string
+      log_level: string
+    }>('/admin/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+    })
   }
 
   async listUsers() {
-    return Promise.resolve([
-      {
-        user_id: 'u-derek',
-        email: 'derek@zimax.net',
-        role: 'SUPER_ADMIN',
-        active: true,
-        last_login: new Date().toISOString()
-      },
-      {
-        user_id: 'u-antigravity',
-        email: 'system@engram.work',
-        role: 'SYSTEM_AGENT',
-        active: true,
-        last_login: new Date(Date.now() - 10000).toISOString()
-      },
-      {
-        user_id: 'u-monitor',
-        email: 'monitor@engram.work',
-        role: 'VIEWER',
-        active: true,
-        last_login: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString()
-      }
-    ]);
+    return this.request<Array<{
+      user_id: string
+      email: string
+      role: string
+      active: boolean
+      last_login?: string | null
+    }>>('/admin/users')
   }
 
   async getAuditLogs() {
-    return Promise.resolve([
-      { id: 'l-1025', action: 'DEPLOY_SUCCESS', resource: 'infra/worker-aca', user_id: 'gh-actions', timestamp: new Date().toISOString() },
-      { id: 'l-1024', action: 'INFRA_UPDATE', resource: 'infra/main.bicep', user_id: 'u-derek', timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString() },
-      { id: 'l-1023', action: 'API_KEY_ROTATION', resource: 'settings/keys', user_id: 'u-antigravity', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() },
-      { id: 'l-1022', action: 'USER_LOGIN', resource: 'auth', user_id: 'u-derek', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString() },
-      { id: 'l-1021', action: 'SYSTEM_INIT', resource: 'core', user_id: 'system', timestamp: '2025-11-20T09:00:00Z' }
-    ]);
+    return this.request<Array<{
+      id: string
+      timestamp: string
+      user_id: string
+      action: string
+      resource: string
+      details?: string | null
+    }>>('/admin/audit')
   }
 }
 
@@ -529,6 +514,7 @@ export const listEpisodes = (limit?: number, offset?: number) => apiClient.listE
 export const getEpisode = (episodeId: string) => apiClient.getEpisode(episodeId)
 
 export const addFact = (content: string, metadata?: Record<string, unknown>) => apiClient.addFact(content, metadata)
+export const getMemoryGraph = (query?: string) => apiClient.getMemoryGraph(query)
 
 export const listWorkflows = (status?: string, limit?: number, offset?: number) => apiClient.listWorkflows(status, limit, offset);
 export const getWorkflow = (workflowId: string) => apiClient.getWorkflow(workflowId);

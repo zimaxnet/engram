@@ -8,7 +8,7 @@ describe('BAUHub', () => {
   it('renders flows and recent artifacts from API', async () => {
     renderWithRouter(<BAUHub />, { route: '/bau' })
 
-    expect(screen.getByRole('heading', { name: /bau hub/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /bau hub/i })).toBeInTheDocument()
 
     expect(await screen.findByText(/intake & triage/i)).toBeInTheDocument()
     expect(screen.getByText(/policy q&a/i)).toBeInTheDocument()

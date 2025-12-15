@@ -20,6 +20,7 @@ import { SystemHealth } from './pages/Admin/SystemHealth';
 import { GoldenThreadRunner } from './pages/Validation/GoldenThreadRunner';
 import { EvidenceTelemetry } from './pages/Evidence/EvidenceTelemetry';
 import { BAUHub } from './pages/BAU/BAUHub';
+import { VoiceInteractionPage } from './pages/Voice/VoiceInteractionPage';
 
 function App() {
   // Keep backend containers warm while user is active
@@ -44,6 +45,9 @@ function App() {
         >
           {/* Main Chat Interface */}
           <Route index element={<ChatView />} />
+
+          {/* Voice Interaction */}
+          <Route path="voice" element={<VoiceInteractionPage activeAgent={activeAgent} />} />
 
           {/* Agents Information */}
           <Route path="agents" element={<AgentsPage />} />

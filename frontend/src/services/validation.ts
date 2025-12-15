@@ -102,7 +102,7 @@ export async function runGoldenThread(options: RunGoldenThreadOptions): Promise<
   return {
     summary: {
       runId: result.summary.run_id,
-      datasetId: result.summary.dataset_id,
+      datasetId: result.summary.dataset_id as GoldenDatasetId,
       status: result.summary.status,
       checksTotal: result.summary.checks_total,
       checksPassed: result.summary.checks_passed,

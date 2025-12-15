@@ -1,0 +1,81 @@
+# Zep configuration generated for local docker-compose
+# Uses stubbed LLM/NLP settings and Postgres store.
+
+Server:
+  Host: 0.0.0.0
+  Port: 8000
+  WebEnabled: true
+  MaxRequestSize: 10485760
+
+Store:
+  Type: postgres
+  Postgres:
+    DSN: postgresql://zep:zep_password@zep-postgres:5432/zep?sslmode=disable
+    AvailableIndexes:
+      IVFFLAT: true
+      HSNW: true
+
+Memory:
+  MessageWindow: 5
+
+NLP:
+  ServerURL: http://localhost:5555
+
+LLM:
+  Service: openai
+  Model: gpt-4o-mini
+  AnthropicAPIKey: test
+  OpenAIAPIKey: test
+  AzureOpenAIEndpoint: http://localhost
+  AzureOpenAIModel:
+    LLMDeployment: mock
+    EmbeddingDeployment: mock
+  OpenAIEndpoint: http://localhost
+  OpenAIOrgID: test
+
+Extractors:
+  Messages:
+    Summarizer:
+      Enabled: false
+      Embeddings:
+        Enabled: false
+        Dimensions: 0
+        Service: mock
+        ChunkSize: 0
+      Entities:
+        Enabled: false
+    Embeddings:
+      Enabled: false
+      Dimensions: 0
+      Service: mock
+      ChunkSize: 0
+    Entities:
+      Enabled: false
+    Intent:
+      Enabled: false
+  Documents:
+    Embeddings:
+      Enabled: false
+      Dimensions: 0
+      Service: mock
+      ChunkSize: 0
+
+CustomPrompts:
+  SummarizerPrompts:
+    OpenAI: ""
+    Anthropic: ""
+
+Log:
+  Level: info
+
+Auth:
+  Secret: dev-secret
+  Required: false
+
+OpenTelemetry:
+  Enabled: false
+
+DataConfig:
+  PurgeEvery: 1440
+
+Development: true

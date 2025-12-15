@@ -9,31 +9,37 @@ echo "=========================================="
 echo ""
 
 # Check if venv already exists
-if [ -d "venv" ]; then
-    echo "✓ Virtual environment already exists"
+if [ -d ".venv" ]; then
+    echo "✓ Virtual environment already exists (.venv)"
     echo ""
     echo "To activate:"
-    echo "  source venv/bin/activate"
+    echo "  source .venv/bin/activate"
     echo ""
     read -p "Recreate virtual environment? (y/n): " RECREATE
     if [[ $RECREATE == "y" ]]; then
-        rm -rf venv
+        rm -rf .venv
     else
-        echo "Using existing venv"
+        echo "Using existing .venv"
         exit 0
     fi
 fi
 
 # Create virtual environment
 echo "Creating virtual environment..."
-python3 -m venv venv
+PYTHON_BIN="${PYTHON_BIN:-python3.11}"
+if command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+    "$PYTHON_BIN" -m venv .venv
+else
+    echo "ERROR: $PYTHON_BIN not found. Install Python 3.11 or set PYTHON_BIN=/path/to/python3.11"
+    exit 1
+fi
 
 echo "✓ Virtual environment created"
 echo ""
 
 # Activate and install dependencies
 echo "Installing dependencies..."
-source venv/bin/activate
+source .venv/bin/activate
 
 cd backend
 pip install --upgrade pip

@@ -1,6 +1,6 @@
 /**
  * Lightweight client for Unstructured intake and ingestion metadata.
- * Currently backed by in-memory mock data so the UI can render without a live API.
+ * Sources API now wired to backend /api/v1/etl endpoints. Falls back to empty lists on error.
  */
 export type IngestStatus = 'healthy' | 'indexing' | 'paused' | 'error'
 export type IngestKind = 'Upload' | 'S3' | 'SharePoint' | 'Drive' | 'Email'
@@ -33,92 +33,58 @@ export interface CreateSourcePayload {
   roles?: string[]
 }
 
-const seedSources: IngestSource[] = [
-  {
-    id: 's3-1',
-    name: 'S3 - finance-reports',
-    kind: 'S3',
-    status: 'healthy',
-    lastRun: '6m ago',
-    docs: 128,
-    tags: ['tenant:acme', 'finance', 'gold'],
-  },
-  {
-    id: 'sp-1',
-    name: 'SharePoint - PMO',
-    kind: 'SharePoint',
-    status: 'indexing',
-    lastRun: 'Parsing now…',
-    docs: 42,
-    tags: ['projects', 'pmo'],
-  },
-  {
-    id: 'upl-1',
-    name: 'Ad hoc uploads',
-    kind: 'Upload',
-    status: 'healthy',
-    lastRun: 'just now',
-    docs: 7,
-    tags: ['sandbox', 'demo'],
-  },
-  {
-    id: 'drv-1',
-    name: 'Drive - customer-success',
-    kind: 'Drive',
-    status: 'paused',
-    lastRun: 'Yesterday',
-    docs: 260,
-    tags: ['cs', 'playbooks'],
-  },
-]
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8082'
+const API_VERSION = '/api/v1'
 
-const seedQueue: IngestQueueItem[] = [
-  {
-    id: 'q-sp',
-    name: 'SharePoint - PMO',
-    summary: 'Extracting tables • 16 files • serverless',
-    status: 'running',
-    etaLabel: '1m',
-  },
-  {
-    id: 'q-s3',
-    name: 'S3 - finance-reports',
-    summary: 'Completed • 128 docs • RBAC: Analysts, Managers',
-    status: 'completed',
-    etaLabel: 'done',
-  },
-  {
-    id: 'q-drive',
-    name: 'Drive - customer-success',
-    summary: 'Paused • awaiting approval',
-    status: 'paused',
-    etaLabel: 'paused',
-  },
-]
+const toSource = (s: any): IngestSource => ({
+  id: s.id,
+  name: s.name,
+  kind: s.kind as IngestKind,
+  status: (s.status as IngestStatus) ?? 'healthy',
+  lastRun: s.last_run ?? '—',
+  docs: Number(s.docs ?? 0),
+  tags: Array.isArray(s.tags) ? s.tags : [],
+})
 
-let sourcesState: IngestSource[] = seedSources.map((source) => ({ ...source, tags: [...source.tags] }))
-
-const cloneSources = (items: IngestSource[]) => items.map((item) => ({ ...item, tags: [...item.tags] }))
+const toQueueItem = (q: any): IngestQueueItem => ({
+  id: q.id,
+  name: q.name,
+  summary: q.summary ?? '',
+  status: q.status ?? 'running',
+  etaLabel: q.eta_label ?? '—',
+})
 
 export async function listSources(): Promise<IngestSource[]> {
-  return cloneSources(sourcesState)
+  try {
+    const res = await fetch(`${API_BASE}${API_VERSION}/etl/sources`)
+    if (!res.ok) throw new Error('Failed to list sources')
+    const data = await res.json()
+    return Array.isArray(data.sources) ? data.sources.map(toSource) : []
+  } catch (err) {
+    console.warn('listSources fallback (empty):', err)
+    return []
+  }
 }
 
 export async function createSource(payload: CreateSourcePayload): Promise<IngestSource> {
-  const next: IngestSource = {
-    id: `src-${Date.now()}`,
-    name: payload.name,
-    kind: payload.kind,
-    status: 'indexing',
-    lastRun: 'queued',
-    docs: 0,
-    tags: payload.tags ?? [],
-  }
-
-  sourcesState = [next, ...sourcesState]
-  return { ...next, tags: [...next.tags] }
+  const res = await fetch(`${API_BASE}${API_VERSION}/etl/sources`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) throw new Error('Failed to create source')
+  const data = await res.json()
+  return toSource(data)
 }
 
 export async function listIngestQueue(): Promise<IngestQueueItem[]> {
-  return seedQueue.map((item) => ({ ...item }))
+  try {
+    const res = await fetch(`${API_BASE}${API_VERSION}/etl/queue`)
+    if (!res.ok) throw new Error('Failed to list queue')
+    const data = await res.json()
+    return Array.isArray(data.items) ? data.items.map(toQueueItem) : []
+  } catch (err) {
+    console.warn('listIngestQueue fallback (empty):', err)
+    return []
+  }
 }

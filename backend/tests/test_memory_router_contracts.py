@@ -5,10 +5,10 @@ Validates that memory search returns provenance-bearing nodes and remains schema
 
 import os
 
-# Set test environment variables BEFORE any backend imports
-os.environ.setdefault("ENVIRONMENT", "test")
-os.environ.setdefault("AZURE_KEY_VAULT_NAME", "test-vault")
-os.environ.setdefault("AZURE_KEYVAULT_URL", "https://test-vault.vault.azure.net/")
+# Set staging environment for testing
+os.environ.setdefault("ENVIRONMENT", "staging")
+os.environ.setdefault("AZURE_KEY_VAULT_NAME", "engram-staging-vault")
+os.environ.setdefault("AZURE_KEYVAULT_URL", "https://engram-staging-vault.vault.azure.net/")
 os.environ.setdefault("AZURE_AI_ENDPOINT", "")
 os.environ.setdefault("AZURE_AI_KEY", "")
 

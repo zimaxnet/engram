@@ -46,18 +46,53 @@ from .agent_workflow import (
     ConversationWorkflow,
     UserInputSignal,
 )
-from .client import (
-    end_conversation,
-    execute_agent_turn,
-    get_conversation_history,
-    get_temporal_client,
-    get_workflow_status,
-    request_approval,
-    send_approval_decision,
-    send_conversation_message,
-    start_conversation,
-    switch_conversation_agent,
-)
+
+
+def _client_module():
+    # Lazy import to keep workflow sandbox validation small
+    from . import client
+
+    return client
+
+
+def get_temporal_client(*args, **kwargs):
+    return _client_module().get_temporal_client(*args, **kwargs)
+
+
+def execute_agent_turn(*args, **kwargs):
+    return _client_module().execute_agent_turn(*args, **kwargs)
+
+
+def start_conversation(*args, **kwargs):
+    return _client_module().start_conversation(*args, **kwargs)
+
+
+def send_conversation_message(*args, **kwargs):
+    return _client_module().send_conversation_message(*args, **kwargs)
+
+
+def switch_conversation_agent(*args, **kwargs):
+    return _client_module().switch_conversation_agent(*args, **kwargs)
+
+
+def end_conversation(*args, **kwargs):
+    return _client_module().end_conversation(*args, **kwargs)
+
+
+def get_conversation_history(*args, **kwargs):
+    return _client_module().get_conversation_history(*args, **kwargs)
+
+
+def request_approval(*args, **kwargs):
+    return _client_module().request_approval(*args, **kwargs)
+
+
+def send_approval_decision(*args, **kwargs):
+    return _client_module().send_approval_decision(*args, **kwargs)
+
+
+def get_workflow_status(*args, **kwargs):
+    return _client_module().get_workflow_status(*args, **kwargs)
 
 __all__ = [
     # Workflows

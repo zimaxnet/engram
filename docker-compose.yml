@@ -42,7 +42,7 @@ services:
       retries: 10
 
   zep:
-    image: getzep/zep:latest
+    image: ghcr.io/getzep/zep:latest
     depends_on:
       zep-postgres:
         condition: service_healthy
@@ -50,12 +50,17 @@ services:
       # Zep server
       ZEP_SERVER_ADDRESS: 0.0.0.0:8000
       # Storage
-      ZEP_STORE: postgres
-      ZEP_STORE_POSTGRES_DSN: postgresql://zep:zep_password@zep-postgres:5432/zep
+      ZEP_STORE_TYPE: postgres
+      ZEP_STORE__TYPE: postgres
+      ZEP_STORE_POSTGRES_DSN: postgresql://zep:zep_password@zep-postgres:5432/zep?sslmode=disable
+      # Embeddings (disable hard requirement on OpenAI by providing a dummy key)
+      ZEP_OPENAI_API_KEY: ${ZEP_OPENAI_API_KEY:-test}
     ports:
       - "8000:8000"
+    volumes:
+      - ./backend/zep-config.yaml:/app/config.yaml:ro
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/healthz"]
+      test: ["CMD-SHELL", "command -v wget >/dev/null 2>&1 || (apt-get update >/dev/null 2>&1 && apt-get install -y wget >/dev/null 2>&1); wget --quiet --tries=1 --spider http://localhost:8000/healthz"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -79,7 +84,7 @@ services:
       - "7233:7233" # gRPC
       - "8233:8233" # Web UI
     healthcheck:
-      test: [ "CMD", "tctl", "--address", "localhost:7233", "cluster", "health" ]
+      test: [ "CMD-SHELL", "tctl --address ${TEMPORAL_ADDRESS:-temporal:7233} cluster health" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -184,13 +189,18 @@ services:
       AZURE_AI_KEY: ${AZURE_AI_KEY:-}
     volumes:
       - ./backend:/app/backend
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
 
   # ------------------------------------------------------------
   # ETL Pipeline Worker
   # ------------------------------------------------------------
   etl:
-    build: ./etl-pipeline
+    build: ./archive/etl-pipeline
     depends_on:
       - unstructured
       - zep
@@ -199,7 +209,7 @@ services:
       ZEP_API_KEY: ${ZEP_API_KEY:-}
       UNSTRUCTURED_API_URL: http://unstructured:8000
     volumes:
-      - ./etl-pipeline:/app
+      - ./archive/etl-pipeline:/app
 
   # ------------------------------------------------------------
   # Frontend (Development Server)

@@ -10,11 +10,11 @@ Provides:
 import logging
 import time
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from backend.agents import chat as agent_chat, get_agent
 from backend.api.middleware.auth import get_current_user
@@ -39,7 +39,7 @@ def get_or_create_session(session_id: str, security: SecurityContext) -> Enterpr
 
 
 class ChatMessage(BaseModel):
-    content: str
+    content: str = Field(..., min_length=1)
     agent_id: Optional[str] = None
     session_id: Optional[str] = None
 
@@ -97,7 +97,11 @@ async def send_message(message: ChatMessage, user: SecurityContext = Depends(get
         logger.error(f"Agent execution failed: {e}")
         # Fallback response
         agent_id = message.agent_id or "elena"
-        agent = get_agent(agent_id)
+        try:
+            agent = get_agent(agent_id)
+        except Exception:
+            agent_id = "elena"
+            agent = get_agent(agent_id)
         response_text = (
             "I apologize, but I encountered an issue processing your request. "
             "Could you please try again? If the problem persists, "
@@ -111,7 +115,7 @@ async def send_message(message: ChatMessage, user: SecurityContext = Depends(get
         content=response_text,
         agent_id=agent_id,
         agent_name=agent.agent_name,
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(timezone.utc),
         tokens_used=context.operational.total_tokens_used if context else None,
         latency_ms=latency_ms,
         session_id=session_id,

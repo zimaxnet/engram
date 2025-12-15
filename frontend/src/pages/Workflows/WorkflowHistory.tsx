@@ -6,11 +6,11 @@ interface Workflow {
     workflow_id: string;
     workflow_type: string;
     status: string;
-    agent_id: string;
+    agent_id?: string;
     started_at: string;
-    completed_at?: string;
+    completed_at?: string | null;
     task_summary: string;
-    step_count: number;
+    step_count?: number | null;
 }
 
 export function WorkflowHistory() {
@@ -57,7 +57,7 @@ export function WorkflowHistory() {
                             }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <h4 style={{ margin: 0 }}>{wf.agent_id}</h4>
+                                        <h4 style={{ margin: 0 }}>{wf.agent_id ?? 'system'}</h4>
                                         <span style={{
                                             fontSize: '0.75em',
                                             padding: '2px 6px',

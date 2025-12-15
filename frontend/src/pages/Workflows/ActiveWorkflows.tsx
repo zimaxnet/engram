@@ -6,11 +6,11 @@ interface Workflow {
     workflow_id: string;
     workflow_type: string;
     status: string;
-    agent_id: string;
+    agent_id?: string;
     started_at: string;
     task_summary: string;
-    step_count: number;
-    current_step: string;
+    step_count?: number | null;
+    current_step?: string | null;
 }
 
 export function ActiveWorkflows() {
@@ -78,7 +78,7 @@ export function ActiveWorkflows() {
                             }}>
                                 <div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                        <h4 style={{ margin: 0 }}>{wf.agent_id}</h4>
+                                        <h4 style={{ margin: 0 }}>{wf.agent_id ?? 'system'}</h4>
                                         <span style={{
                                             fontSize: '0.75em',
                                             padding: '2px 6px',
@@ -90,7 +90,7 @@ export function ActiveWorkflows() {
                                     </div>
                                     <p style={{ margin: 0, opacity: 0.9 }}>{wf.task_summary}</p>
                                     <p style={{ fontSize: '0.8em', opacity: 0.6, marginTop: '0.25rem' }}>
-                                        Step: {wf.current_step} ({wf.step_count} steps)
+                                        Step: {wf.current_step ?? '—'} ({wf.step_count ?? '—'} steps)
                                     </p>
                                 </div>
                                 <div style={{ display: 'flex', gap: '0.5rem' }}>

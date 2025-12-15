@@ -183,7 +183,7 @@ export const handlers = [
       ],
       context_snapshot: [
         { k: 'Active agent', v: 'elena' },
-        { k: 'Last user message', v: 'Why didn't ingestion show up on gh-pages?' },
+        { k: 'Last user message', v: "Why didn't ingestion show up on gh-pages?" },
         { k: 'Retrieved facts', v: '3' },
         { k: 'Validation', v: 'PASS' },
       ],

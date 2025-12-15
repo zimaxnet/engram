@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { listUsers } from '../../services/api';
 
 export function UserManagement() {
-    const [users, setUsers] = useState<{ user_id: string; email: string; role: string; active: boolean; last_login: string }[]>([]);
+    const [users, setUsers] = useState<{ user_id: string; email: string; role: string; active: boolean; last_login?: string | null }[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -61,7 +61,7 @@ export function UserManagement() {
                                         </span>
                                     </td>
                                     <td style={{ padding: '1rem', fontSize: '0.9em', opacity: 0.7 }}>
-                                        {new Date(user.last_login).toLocaleString()}
+                                        {user.last_login ? new Date(user.last_login).toLocaleString() : '—'}
                                     </td>
                                 </tr>
                             ))}

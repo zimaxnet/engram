@@ -6,13 +6,20 @@ This folder contains working files for incremental development of the Engram pla
 
 ```
 .dev/
-├── scratch/    # Working files, experiments, temp code
-├── spikes/     # Technical spikes and prototypes  
-└── notes/      # Development notes and decisions
+├── test-suites/  # All test files organized by type
+│   ├── unit/        # Unit tests (Python)
+│   ├── integration/ # Integration tests
+│   ├── e2e/         # End-to-end tests (Playwright)
+│   ├── staging/     # Staging environment tests
+│   └── reports/     # Test execution reports
+├── scratch/      # Working files, experiments, temp code
+├── spikes/       # Technical spikes and prototypes  
+└── notes/        # Development notes and decisions
 ```
 
 ## Guidelines
 
+- **test-suites/** - All test development happens here. Organized by test type.
 - **scratch/** - Throwaway code for testing ideas. Delete when done.
 - **spikes/** - Named prototypes (e.g., `spike-azure-speech/`). Keep for reference.
 - **notes/** - Markdown files documenting decisions, learnings, blockers.

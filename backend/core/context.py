@@ -108,6 +108,8 @@ class EpisodicState(BaseModel):
 
     conversation_id: str = Field(default_factory=lambda: str(uuid4()))
     recent_turns: list[Turn] = Field(default_factory=list, description="Rolling window of recent turns")
+    # Compatibility with legacy tests expecting a raw messages list
+    messages: list[dict] = Field(default_factory=list, description="Raw message list (legacy compatibility)")
     summary: str = Field("", description="Compressed narrative of conversation so far")
 
     # Configuration

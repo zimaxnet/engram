@@ -1,7 +1,7 @@
 import { listBauFlows as apiListBauFlows, listBauArtifacts as apiListBauArtifacts } from './api'
 
 export interface BauFlow {
-  id: 'intake-triage' | 'policy-qa' | 'decision-log'
+  id: string
   title: string
   persona: string
   description: string

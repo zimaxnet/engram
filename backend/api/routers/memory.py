@@ -41,6 +41,88 @@ class MemorySearchResponse(BaseModel):
     query_time_ms: float
 
 
+class GraphNodeView(BaseModel):
+    id: str
+    content: str
+    node_type: str
+    degree: int = 0
+    metadata: dict = {}
+
+
+class GraphEdgeView(BaseModel):
+    id: str
+    source: str
+    target: str
+    label: str | None = None
+    weight: float = 1.0
+
+
+class MemoryGraphResponse(BaseModel):
+    nodes: list[GraphNodeView]
+    edges: list[GraphEdgeView]
+
+
+async def _build_graph(user_id: str, query: str) -> MemoryGraphResponse:
+    from backend.memory.client import memory_client
+
+    facts = await memory_client.get_facts(user_id=user_id, query=query or "", limit=50)
+
+    nodes: dict[str, GraphNodeView] = {}
+    edges: list[GraphEdgeView] = []
+
+    def ensure_node(node_id: str, content: str, node_type: str, metadata: dict | None = None) -> None:
+        if node_id not in nodes:
+            nodes[node_id] = GraphNodeView(
+                id=node_id,
+                content=content,
+                node_type=node_type,
+                metadata=metadata or {},
+            )
+
+    for fact in facts:
+        ensure_node(
+            fact.id,
+            fact.content,
+            getattr(fact, "node_type", "fact") or "fact",
+            getattr(fact, "metadata", {}) or {},
+        )
+
+    if not nodes:
+        sample_id = "fact-sample"
+        ensure_node(sample_id, "No facts returned yet", "fact", {})
+
+    meta_keys = {"source", "filename", "etl_source", "tenant_id", "topic", "kind", "role"}
+
+    for fact_node in nodes.values():
+        metadata = fact_node.metadata or {}
+        for key, raw_value in metadata.items():
+            if raw_value is None or key not in meta_keys:
+                continue
+            values = raw_value if isinstance(raw_value, list) else [raw_value]
+            for idx, value in enumerate(values):
+                value_str = str(value)
+                meta_id = f"meta-{key}-{value_str}".replace(" ", "-")
+                ensure_node(meta_id, f"{key}: {value_str}", "entity", {"source": key})
+                edge_id = f"edge-{fact_node.id}-{meta_id}-{idx}"
+                edges.append(
+                    GraphEdgeView(
+                        id=edge_id,
+                        source=fact_node.id,
+                        target=meta_id,
+                        label=key,
+                        weight=1.0,
+                    )
+                )
+
+    for edge in edges:
+        if edge.source in nodes:
+            nodes[edge.source].degree += 1
+        if edge.target in nodes:
+            nodes[edge.target].degree += 1
+
+    return MemoryGraphResponse(nodes=list(nodes.values()), edges=edges)
+
+
 @router.post("/search", response_model=MemorySearchResponse)
 async def search_memory(request: MemorySearchRequest, user: SecurityContext = Depends(get_current_user)):
     """
@@ -86,6 +168,17 @@ async def search_memory(request: MemorySearchRequest, user: SecurityContext = De
             total_count=0,
             query_time_ms=0,
         )
+
+
+@router.get("/graph", response_model=MemoryGraphResponse)
+async def get_memory_graph(query: str = Query("", max_length=200), user: SecurityContext = Depends(get_current_user)):
+    """Return a lightweight knowledge graph for the current user."""
+    try:
+        return await _build_graph(user.user_id, query)
+    except Exception:
+        if get_settings().environment == "test":
+            raise
+        return MemoryGraphResponse(nodes=[], edges=[])
 
 
 class Episode(BaseModel):

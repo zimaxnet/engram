@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Engram Press Briefing | Zimax Technologies</title>
+  <meta name="description" content="Engram: The First AI Platform That Remembers How It Was Built - Cognition as a Service">
+  <style>
+    :root {
+      --primary: #1a56db;
+      --primary-dark: #1e40af;
+      --accent: #10b981;
+      --text: #1f2937;
+      --text-muted: #6b7280;
+      --bg: #ffffff;
+      --bg-alt: #f9fafb;
+      --border: #e5e7eb;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.7;
+      color: var(--text);
+      background: var(--bg);
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+    
+    header {
+      text-align: center;
+      padding: 3rem 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 3rem;
+    }
+    
+    .badge {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      margin-bottom: 1.5rem;
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+    
+    h1 span {
+      color: var(--primary);
+    }
+    
+    .subtitle {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    
+    .date {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    
+    section {
+      margin-bottom: 3rem;
+    }
+    
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text);
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--accent);
+      display: inline-block;
+    }
+    
+    p {
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+    
+    blockquote {
+      background: linear-gradient(135deg, #eff6ff, #f0fdf4);
+      border-left: 4px solid var(--primary);
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      border-radius: 0 8px 8px 0;
+      font-style: italic;
+      font-size: 1.1rem;
+    }
+    
+    blockquote strong {
+      color: var(--primary-dark);
+    }
+    
+    .highlight {
+      background: #fef3c7;
+      padding: 0.125rem 0.375rem;
+      border-radius: 3px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.9rem;
+    }
+    
+    th, td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    th {
+      background: var(--bg-alt);
+      font-weight: 600;
+      color: var(--text);
+    }
+    
+    tr:hover {
+      background: var(--bg-alt);
+    }
+    
+    code {
+      font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+      font-size: 0.875rem;
+      background: var(--bg-alt);
+      padding: 0.125rem 0.375rem;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+    
+    pre {
+      background: #1f2937;
+      color: #e5e7eb;
+      padding: 1.25rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: inherit;
+    }
+    
+    .json-key { color: #93c5fd; }
+    .json-string { color: #86efac; }
+    
+    ul, ol {
+      margin: 1rem 0 1rem 1.5rem;
+    }
+    
+    li {
+      margin-bottom: 0.5rem;
+    }
+    
+    .check { color: var(--accent); font-weight: bold; }
+    .cross { color: #ef4444; font-weight: bold; }
+    
+    .cta {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 2rem;
+      border-radius: 12px;
+      text-align: center;
+      margin: 2rem 0;
+    }
+    
+    .cta h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .cta p {
+      color: rgba(255,255,255,0.9);
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0;
+    }
+    
+    footer {
+      border-top: 1px solid var(--border);
+      padding-top: 2rem;
+      margin-top: 3rem;
+      text-align: center;
+    }
+    
+    .contact {
+      margin-bottom: 1.5rem;
+    }
+    
+    .contact strong {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+    
+    .tagline {
+      font-style: italic;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      margin-top: 2rem;
+      padding: 1rem;
+      background: var(--bg-alt);
+      border-radius: 8px;
+    }
+    
+    @media (max-width: 640px) {
+      h1 { font-size: 1.75rem; }
+      .container { padding: 1rem; }
+      table { font-size: 0.8rem; }
+      th, td { padding: 0.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">PRESS BRIEFING</div>
+      <h1><span>Engram:</span> The First AI Platform That Remembers How It Was Built</h1>
+      <p class="date">FOR IMMEDIATE RELEASE — December 15, 2025</p>
+    </header>
+
+    <section>
+      <h2>Executive Summary</h2>
+      <p>Today marks a milestone in the evolution of enterprise AI: <strong>Engram</strong>, Zimax's Cognition-as-a-Service platform, has achieved recursive self-documentation—the platform now ingests, indexes, and retrieves knowledge from its own development lifecycle in real time.</p>
+      <p>This isn't version control. This isn't documentation. This is <strong>cognitive continuity</strong>.</p>
+    </section>
+
+    <section>
+      <h2>The Breakthrough: Development-Aware AI Memory</h2>
+      <p>Traditional enterprise software suffers from institutional amnesia. Decisions made during architecture reviews, bug fixes applied under pressure, and context lost between sprints accumulate into technical debt that no README can repay.</p>
+      <p>Engram solves this with a fundamentally different approach:</p>
+      <blockquote>
+        <strong>Every engineering conversation, every design decision, every debugging session becomes a retrievable fact in the platform's long-term memory.</strong>
+      </blockquote>
+      <p>When we fixed the Docker ETL build path today, that resolution was immediately seeded into Engram's memory layer. When a future developer—or the AI itself—encounters a similar container orchestration issue, the platform can surface: <em>"On 2025-12-15, the team resolved build failures by correcting the ETL context path to archive/etl-pipeline."</em></p>
+      <p>This is not search. This is <strong>recall</strong>.</p>
+    </section>
+
+    <section>
+      <h2>Technical Architecture: The Memory-First Stack</h2>
+      <p>Engram's memory subsystem comprises:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Technology</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Fact Store</strong></td>
+            <td>PostgreSQL + Zep</td>
+            <td>Persistent, vector-indexed memory with temporal awareness</td>
+          </tr>
+          <tr>
+            <td><strong>Knowledge Graph</strong></td>
+            <td><code>/api/v1/memory/graph</code></td>
+            <td>Entity-relationship visualization of facts and metadata</td>
+          </tr>
+          <tr>
+            <td><strong>Ingestion API</strong></td>
+            <td><code>POST /memory/facts</code></td>
+            <td>Real-time fact injection with typed metadata</td>
+          </tr>
+          <tr>
+            <td><strong>Retrieval</strong></td>
+            <td>Semantic + keyword hybrid</td>
+            <td>Context-aware recall with source attribution</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Facts are first-class citizens with structured metadata:</p>
+      <pre><code>{
+  <span class="json-key">"content"</span>: <span class="json-string">"Implemented ETL connectors with JSON-backed sources/queue..."</span>,
+  <span class="json-key">"metadata"</span>: {
+    <span class="json-key">"topic"</span>: <span class="json-string">"ingestion"</span>,
+    <span class="json-key">"source"</span>: <span class="json-string">"chat-history"</span>,
+    <span class="json-key">"date"</span>: <span class="json-string">"2025-12-15"</span>
+  }
+}</code></pre>
+      <p>This schema enables queries like: <em>"What ingestion work was done this week?"</em> or <em>"Show me all decisions tagged 'containers'."</em></p>
+    </section>
+
+    <section>
+      <h2>Why This Matters: The Golden Thread</h2>
+      <p>Enterprise AI deployments fail when context evaporates between sessions. Engram introduces <strong>the Golden Thread</strong>—an unbroken chain of evidence linking every output to its originating facts, decisions, and sources.</p>
+      <p>For regulated industries (finance, healthcare, government), this isn't a feature. It's a <strong>compliance primitive</strong>:</p>
+      <ul>
+        <li><strong>Auditability:</strong> Every AI response can be traced to the facts that informed it</li>
+        <li><strong>Reproducibility:</strong> Identical inputs + identical memory state = identical outputs</li>
+        <li><strong>Continuity:</strong> Staff turnover doesn't erase institutional knowledge</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>The Recursive Advantage</h2>
+      <p>By seeding Engram with its own development history, we've created an AI platform that:</p>
+      <ol>
+        <li><strong>Learns from its own construction</strong> — Architecture decisions inform future enhancements</li>
+        <li><strong>Onboards itself</strong> — New team members (human or AI) inherit full project context</li>
+        <li><strong>Debugs with hindsight</strong> — Past resolutions surface automatically during troubleshooting</li>
+        <li><strong>Evolves coherently</strong> — Technical debt becomes visible, searchable, and addressable</li>
+      </ol>
+      <p>This is the difference between a stateless tool and a <strong>cognitive partner</strong>.</p>
+    </section>
+
+    <section>
+      <h2>Market Position: Cognition as a Service</h2>
+      <p>Engram is not an LLM wrapper. It is infrastructure for <strong>persistent, enterprise-grade AI cognition</strong>:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Capability</th>
+            <th>Engram</th>
+            <th>Traditional AI Assistants</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cross-session memory</td>
+            <td><span class="check">✓</span> Native</td>
+            <td><span class="cross">✗</span> None</td>
+          </tr>
+          <tr>
+            <td>Structured fact ingestion</td>
+            <td><span class="check">✓</span> API-first</td>
+            <td><span class="cross">✗</span> Prompt-only</td>
+          </tr>
+          <tr>
+            <td>Audit trail</td>
+            <td><span class="check">✓</span> Built-in</td>
+            <td><span class="cross">✗</span> External logging</td>
+          </tr>
+          <tr>
+            <td>Knowledge graph</td>
+            <td><span class="check">✓</span> Visual + queryable</td>
+            <td><span class="cross">✗</span> Flat embeddings</td>
+          </tr>
+          <tr>
+            <td>Self-documenting</td>
+            <td><span class="check">✓</span> Recursive</td>
+            <td><span class="cross">✗</span> N/A</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>What We Demonstrated Today</h2>
+      <p>In a single development session, we:</p>
+      <ul>
+        <li>Built and orchestrated 9 containerized services (API, Temporal, Zep, Postgres, frontend, workers)</li>
+        <li>Resolved infrastructure issues (SSL modes, LLM service configuration, health checks)</li>
+        <li>Ingested 5 structured facts summarizing the work into Engram's memory layer</li>
+        <li>Verified real-time retrieval via the Memory Search and Knowledge Graph UIs</li>
+      </ul>
+      <p>The platform now <strong>remembers this work</strong>. Tomorrow, next month, next year—this context persists.</p>
+    </section>
+
+    <div class="cta">
+      <h3>Engram represents a new category: Context Engineering Platforms</h3>
+      <p>An AI that remembers.</p>
+    </div>
+
+    <footer>
+      <div class="contact">
+        <strong>Media Contact</strong>
+        Zimax Technologies<br>
+        engram@zimax.net
+      </div>
+      <p class="tagline">"The best documentation is the kind that writes itself—and answers back."</p>
+    </footer>
+  </div>
+</body>
+</html>

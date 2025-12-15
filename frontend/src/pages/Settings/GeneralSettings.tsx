@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react';
 import { getSystemSettings, updateSystemSettings } from '../../services/api';
 
+type SystemSettings = {
+    app_name: string
+    maintenance_mode: boolean
+    default_agent: string
+    theme: string
+    log_level: string
+}
+
 export function GeneralSettings() {
-    const [settings, setSettings] = useState<Record<string, unknown>>({});
+    const [settings, setSettings] = useState<SystemSettings | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
@@ -10,7 +18,7 @@ export function GeneralSettings() {
         const loadSettings = async () => {
             try {
                 const data = await getSystemSettings();
-                setSettings(data);
+                setSettings(data as SystemSettings);
             } catch (err) {
                 console.error('Failed to load settings:', err);
             } finally {
@@ -21,6 +29,7 @@ export function GeneralSettings() {
     }, []);
 
     const handleSave = async () => {
+        if (!settings) return
         setSaving(true);
         try {
             await updateSystemSettings(settings);
@@ -34,6 +43,7 @@ export function GeneralSettings() {
     };
 
     if (loading) return <div className="column column-center">Loading settings...</div>;
+    if (!settings) return <div className="column column-center">Unable to load settings.</div>;
 
     return (
         <div className="column column-center">
@@ -53,9 +63,9 @@ export function GeneralSettings() {
                         <label>Application Name</label>
                         <input
                             type="text"
-                            value={(settings['LOG_LEVEL'] as string) || ''}
-                            onChange={(e) => setSettings({ ...settings, LOG_LEVEL: e.target.value })}
-                            style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
+                            value={settings.app_name}
+                            onChange={(e) => setSettings({ ...settings, app_name: e.target.value })}
+                            style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--glass-border)' }}
                         />
                     </div>
 
@@ -63,8 +73,8 @@ export function GeneralSettings() {
                         <label>Maintenance Mode</label>
                         <input
                             type="checkbox"
-                            checked={(settings['ENABLE_AUDIT'] as boolean) || false}
-                            onChange={(e) => setSettings({ ...settings, ENABLE_AUDIT: e.target.checked })}
+                            checked={settings.maintenance_mode}
+                            onChange={(e) => setSettings({ ...settings, maintenance_mode: e.target.checked })}
                         />
                     </div>
 
@@ -72,9 +82,29 @@ export function GeneralSettings() {
                         <label>Default Agent</label>
                         <input
                             type="text"
-                            value={(settings['default_agent'] as string) || ''}
+                            value={settings.default_agent}
                             onChange={(e) => setSettings({ ...settings, default_agent: e.target.value })}
-                            style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
+                            style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--glass-border)' }}
+                        />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <label>Theme</label>
+                        <input
+                            type="text"
+                            value={settings.theme}
+                            onChange={(e) => setSettings({ ...settings, theme: e.target.value })}
+                            style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--glass-border)' }}
+                        />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <label>Log Level</label>
+                        <input
+                            type="text"
+                            value={settings.log_level}
+                            onChange={(e) => setSettings({ ...settings, log_level: e.target.value })}
+                            style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--glass-border)' }}
                         />
                     </div>
 
