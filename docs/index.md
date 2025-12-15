@@ -82,6 +82,7 @@ Meet our AI agents:
 - [Architecture Deep Dive](architecture.md)
 - [System Navigator Guide](system-navigator.md)
 - [Agent Personas](agents.md)
+- [**Voice & Chat Integration**](voice-chat-integration.md) ⭐ NEW
 - [Connectors & Ingestion](connectors-plan.md)
 - [Testing & Golden Thread](TESTING-GUIDE.md)
 - [Telemetry (App Insights)](app-insights-guide.md)
