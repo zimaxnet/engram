@@ -382,6 +382,7 @@ module swaModule 'static-webapp.bicep' = {
     // Use the default SWA name so certificates remain bound to the intended environment
     swaName: '${envName}-web'
     enableCustomDomain: false
+    backendResourceId: backendModule.outputs.backendId
   }
 }
 
