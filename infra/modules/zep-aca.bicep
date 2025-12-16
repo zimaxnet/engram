@@ -123,7 +123,7 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
         }
       ]
       scale: {
-        minReplicas: 0  // Scale-to-zero for POC cost optimization
+        minReplicas: 1  // Scale-to-zero disabled for POC verification (Warm Start)
         maxReplicas: 2
         rules: [
           {
