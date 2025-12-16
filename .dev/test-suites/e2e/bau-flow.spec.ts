@@ -1,5 +1,70 @@
 import { test, expect } from '@playwright/test'
 
+const flowsResponse = [
+  {
+    id: 'intake-triage',
+    title: 'Intake & Triage',
+    persona: 'Elena',
+    description: 'Process incoming requests and route to appropriate workflow',
+    cta: 'Start',
+  },
+  {
+    id: 'document-review',
+    title: 'Document Review',
+    persona: 'Marcus',
+    description: 'Review and approve document changes',
+    cta: 'Start',
+  },
+]
+
+const artifactsResponse = [
+  {
+    id: 'art-1',
+    name: 'Meeting Notes',
+    ingested_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    chips: ['notes', 'team'],
+  },
+  {
+    id: 'art-2',
+    name: 'Policy Update',
+    ingested_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    chips: ['policy', 'compliance'],
+  },
+]
+
+const startFlowResponse = {
+  workflow_id: 'wf-test-123',
+  status: 'running',
+}
+
+test.beforeEach(async ({ page }) => {
+  await page.route('**/api/v1/bau/flows', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(flowsResponse) })
+  )
+
+  await page.route('**/api/v1/bau/artifacts*', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(artifactsResponse) })
+  )
+
+  await page.route('**/api/v1/bau/flows/*/start', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(startFlowResponse) })
+  )
+
+  // Mock workflow detail page data
+  await page.route('**/api/v1/workflows/*', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: 'wf-test-123',
+        name: 'Intake & Triage',
+        status: 'running',
+        started_at: new Date().toISOString(),
+      }),
+    })
+  )
+})
+
 test.describe('BAU Flow', () => {
   test('should start intake flow and navigate to workflow detail', async ({ page }) => {
     await page.goto('/bau')
