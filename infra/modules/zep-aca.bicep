@@ -120,6 +120,28 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
             cpu: json('0.5')
             memory: '1Gi'
           }
+          probes: [
+            {
+              type: 'Readiness'
+              httpGet: {
+                port: 8000
+                path: '/healthz'
+              }
+              initialDelaySeconds: 10
+              periodSeconds: 10
+              failureThreshold: 3
+            }
+            {
+              type: 'Liveness'
+              httpGet: {
+                port: 8000
+                path: '/healthz'
+              }
+              initialDelaySeconds: 20
+              periodSeconds: 30
+              failureThreshold: 3
+            }
+          ]
         }
       ]
       scale: {
