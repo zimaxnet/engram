@@ -127,7 +127,7 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
                 port: 8000
                 path: '/healthz'
               }
-              initialDelaySeconds: 10
+              initialDelaySeconds: 15
               periodSeconds: 10
               failureThreshold: 3
             }
@@ -137,7 +137,7 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
                 port: 8000
                 path: '/healthz'
               }
-              initialDelaySeconds: 20
+              initialDelaySeconds: 120
               periodSeconds: 30
               failureThreshold: 3
             }

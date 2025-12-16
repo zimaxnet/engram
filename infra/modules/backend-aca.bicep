@@ -220,7 +220,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
                 port: 8080
                 path: '/health'
               }
-              initialDelaySeconds: 15
+              initialDelaySeconds: 30
               periodSeconds: 10
               failureThreshold: 3
             }
@@ -230,7 +230,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
                 port: 8080
                 path: '/health'
               }
-              initialDelaySeconds: 30
+              initialDelaySeconds: 120
               periodSeconds: 30
               failureThreshold: 3
             }
