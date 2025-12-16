@@ -81,3 +81,23 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         # Add staging marker to all tests
         item.add_marker(pytest.mark.staging)
+@pytest.fixture
+def mock_agent_services(monkeypatch):
+    """Mock backend services used by MCP tool"""
+    # Mock agent_chat
+    async def mock_chat(query, context, agent_id=None):
+        return f"MCP Response to: {query}", context, agent_id or "elena"
+    
+    monkeypatch.setattr("backend.api.routers.mcp.agent_chat", mock_chat)
+
+    # Mock enrich_context
+    async def mock_enrich(context, text):
+        return context
+    
+    monkeypatch.setattr("backend.api.routers.mcp.enrich_context", mock_enrich)
+
+    # Mock persist_conversation
+    async def mock_persist(context):
+        return True
+    
+    monkeypatch.setattr("backend.api.routers.mcp.persist_conversation", mock_persist)
