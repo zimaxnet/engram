@@ -29,11 +29,14 @@ param zepApiUrl string
 @secure()
 param postgresPassword string
 
-@description('Azure AI Services unified endpoint (base URL).')
+@description('Azure AI Services unified endpoint for Chat (APIM Gateway).')
 param azureAiEndpoint string = ''
 
 @description('Azure AI Services project name.')
 param azureAiProjectName string = ''
+
+@description('Azure VoiceLive endpoint (Azure AI Services direct).')
+param azureVoiceLiveEndpoint string = 'https://zimax.services.ai.azure.com'
 
 @description('Key Vault URI.')
 param keyVaultUri string
@@ -195,6 +198,14 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'AZURE_AI_PROJECT_NAME'
               value: azureAiProjectName
+            }
+            {
+              name: 'AZURE_VOICELIVE_ENDPOINT'
+              value: azureVoiceLiveEndpoint
+            }
+            {
+              name: 'AZURE_VOICELIVE_MODEL'
+              value: 'gpt-realtime'
             }
             {
               name: 'CORS_ORIGINS'
