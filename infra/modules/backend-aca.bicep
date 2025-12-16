@@ -216,9 +216,9 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
         }
       ]
       scale: {
-        minReplicas: 0
+        minReplicas: 1
         // Warm Start: Set minReplicas to 1 if you want to avoid initial cold start.
-        // Current: Scale to Zero enabled, but with long cooldown to simulate "Keep Warm"
+        // Current: Warm start enabled for production verification
         maxReplicas: 1
         rules: [
           {
