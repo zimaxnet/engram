@@ -89,8 +89,19 @@ class Settings(BaseSettings):
     # Microsoft Entra ID (Authentication)
     # ==========================================================================
     azure_tenant_id: Optional[str] = Field(None, alias="AZURE_TENANT_ID")
-    azure_client_id: Optional[str] = Field(None, alias="AZURE_CLIENT_ID")
+    # Entra/App Registration client ID (audience validation for API tokens)
+    # NOTE: This is intentionally NOT AZURE_CLIENT_ID, because that env var is
+    # used by Azure SDKs (DefaultAzureCredential) to select a user-assigned
+    # Managed Identity. See: auth SOP.
+    azure_client_id: Optional[str] = Field(None, alias="AZURE_AD_CLIENT_ID")
     azure_client_secret: Optional[str] = Field(None, alias="AZURE_CLIENT_SECRET")
+
+    # User-assigned Managed Identity client ID for Azure SDKs (DefaultAzureCredential)
+    # This is consumed by azure-identity; we keep it available for diagnostics.
+    azure_managed_identity_client_id: Optional[str] = Field(None, alias="AZURE_CLIENT_ID")
+
+    # POC / validation switch: when false, API auth is bypassed (DO NOT use in prod)
+    auth_required: bool = Field(True, alias="AUTH_REQUIRED")
 
     @property
     def entra_authority_url(self) -> Optional[str]:

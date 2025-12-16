@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: engram-backend
+  namespace: engram-prod
+spec:
+  type: ClusterIP
+  selector:
+    app: engram-backend
+  ports:
+    - port: 80
+      targetPort: 8080
+      name: http
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: engram-prod
+spec:
+  selector:
+    app: backend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+  type: ClusterIP
+

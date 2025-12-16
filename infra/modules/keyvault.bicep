@@ -7,13 +7,14 @@ param keyVaultName string
 @description('The tenant ID for the Key Vault.')
 param tenantId string = subscription().tenantId
 
-// param adminObjectId string
-
 @description('Enable soft delete for the Key Vault.')
-param enableSoftDelete bool = false
+param enableSoftDelete bool = true
 
 @description('Enable purge protection for the Key Vault.')
 param enablePurgeProtection bool = false
+
+@description('Disable public access when using Private Link.')
+param enablePrivateLink bool = false
 
 @description('Tags to apply to all resources.')
 param tags object = {
@@ -38,9 +39,9 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     enabledForDeployment: false
     enabledForDiskEncryption: false
     enabledForTemplateDeployment: true
-    publicNetworkAccess: 'Enabled'
+    publicNetworkAccess: enablePrivateLink ? 'Disabled' : 'Enabled'
     networkAcls: {
-      defaultAction: 'Allow'
+      defaultAction: enablePrivateLink ? 'Deny' : 'Allow'
       bypass: 'AzureServices'
     }
   }

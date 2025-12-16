@@ -40,6 +40,9 @@ param keyVaultUri string
 @description('User-assigned identity resource ID used for Key Vault access.')
 param identityResourceId string
 
+@description('User-assigned identity client ID (for DefaultAzureCredential).')
+param identityClientId string
+
 @description('Registry username.')
 param registryUsername string
 
@@ -113,11 +116,6 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
           identity: identityResourceId
         }
         {
-          name: 'azure-ai-key'
-          keyVaultUrl: '${keyVaultUri}secrets/azure-ai-key'
-          identity: identityResourceId
-        }
-        {
           name: 'registry-password'
           value: registryPassword
         }
@@ -143,6 +141,10 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'AZURE_KEYVAULT_URL'
               value: keyVaultUri
+            }
+            {
+              name: 'AZURE_CLIENT_ID'
+              value: identityClientId
             }
             {
               name: 'POSTGRES_HOST'
@@ -183,10 +185,6 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'ZEP_API_KEY'
               secretRef: 'zep-api-key'
-            }
-            {
-              name: 'AZURE_AI_KEY'
-              secretRef: 'azure-ai-key'
             }
             {
               name: 'AZURE_AI_ENDPOINT'

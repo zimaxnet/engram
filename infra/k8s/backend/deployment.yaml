@@ -1,0 +1,142 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: engram-backend
+  namespace: engram-prod
+  labels:
+    app: engram-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: engram-backend
+  template:
+    metadata:
+      labels:
+        app: engram-backend
+    spec:
+      serviceAccountName: backend-sa
+      containers:
+        - name: api
+          image: ghcr.io/zimaxnet/engram/backend:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ENVIRONMENT
+              value: production
+            - name: AZURE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: backend-mi-client
+                  key: clientId
+            - name: POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-conn
+                  key: host
+            - name: POSTGRES_DB
+              value: engram
+            - name: ZEP_API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: zep-config
+                  key: apiUrl
+          volumeMounts:
+            - name: kv-secrets
+              mountPath: /mnt/secrets
+              readOnly: true
+      volumes:
+        - name: kv-secrets
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: backend-kv
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: engram-prod
+  labels:
+    app: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      serviceAccountName: backend-sa
+      containers:
+        - name: backend
+          image: ghcr.io/zimaxnet/engram/backend:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ENVIRONMENT
+              value: production
+            - name: AZURE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: backend-identity
+                  key: clientId
+            - name: AZURE_KEYVAULT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: backend-config
+                  key: keyVaultUrl
+            - name: POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: backend-config
+                  key: postgresHost
+            - name: POSTGRES_DB
+              value: engram
+            - name: POSTGRES_USER
+              value: cogadmin
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: backend-config
+                  key: postgresPassword
+            - name: TEMPORAL_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: backend-config
+                  key: temporalHost
+            - name: ZEP_API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: backend-config
+                  key: zepApiUrl
+            - name: ZEP_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-config
+                  key: zepApiKey
+            - name: AZURE_AI_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: backend-config
+                  key: azureAiEndpoint
+            - name: AZURE_AI_PROJECT_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: backend-config
+                  key: azureAiProjectName
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 20
+

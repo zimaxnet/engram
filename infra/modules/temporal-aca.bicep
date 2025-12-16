@@ -16,6 +16,40 @@ param customDomainName string = 'temporal.engram.work'
 @description('Whether to provision a managed certificate and bind the custom domain to Temporal UI.')
 param enableCustomDomain bool = false
 
+@description('Optional basic auth username for Temporal UI (ACA).')
+param uiBasicAuthUser string = ''
+
+@description('Optional basic auth password for Temporal UI (ACA).')
+@secure()
+param uiBasicAuthPassword string = ''
+
+// Build optional secrets/env for UI basic auth
+var uiAuthSecrets = empty(uiBasicAuthPassword) ? [] : [
+  {
+    name: 'temporal-ui-password'
+    value: uiBasicAuthPassword
+  }
+]
+
+var uiAuthEnv = empty(uiBasicAuthUser) || empty(uiBasicAuthPassword) ? [] : [
+  {
+    name: 'TEMPORAL_AUTH_ENABLED'
+    value: 'true'
+  }
+  {
+    name: 'TEMPORAL_AUTH_TYPE'
+    value: 'basic'
+  }
+  {
+    name: 'TEMPORAL_AUTH_BASIC_USERNAME'
+    value: uiBasicAuthUser
+  }
+  {
+    name: 'TEMPORAL_AUTH_BASIC_PASSWORD'
+    secretRef: 'temporal-ui-password'
+  }
+]
+
 @description('PostgreSQL FQDN.')
 param postgresFqdn string
 
@@ -67,12 +101,12 @@ resource temporalServer 'Microsoft.App/containerApps@2023-05-01' = {
       dapr: {
         enabled: false
       }
-      secrets: [
+      secrets: concat([
         {
           name: 'postgres-password'
           value: postgresPassword
         }
-      ]
+      ], uiAuthSecrets)
     }
     template: {
       containers: [
@@ -156,13 +190,14 @@ resource temporalUI 'Microsoft.App/containerApps@2023-05-01' = {
       dapr: {
         enabled: false
       }
+      secrets: uiAuthSecrets
     }
     template: {
       containers: [
         {
           name: 'temporal-ui'
           image: 'temporalio/ui:latest'
-          env: [
+          env: concat([
             {
               name: 'TEMPORAL_ADDRESS'
               value: '${temporalServer.name}.${acaEnvName}:7233'
@@ -171,7 +206,7 @@ resource temporalUI 'Microsoft.App/containerApps@2023-05-01' = {
               name: 'TEMPORAL_CORS_ORIGINS'
               value: '*'
             }
-          ]
+          ], uiAuthEnv)
           resources: {
             cpu: json('0.25')
             memory: '0.5Gi'

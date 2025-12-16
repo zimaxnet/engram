@@ -267,6 +267,18 @@ async def get_current_user(
     settings = get_settings()
     auth = get_auth()
 
+    # POC/validation mode: bypass Entra auth (DO NOT use in production).
+    # This keeps friction low for demos while allowing a single switch to
+    # re-enable strong authentication later.
+    if not settings.auth_required:
+        return SecurityContext(
+            user_id="poc-user",
+            tenant_id=settings.azure_tenant_id or "poc-tenant",
+            roles=[Role.ADMIN],
+            scopes=["*"],
+            session_id=request.headers.get("X-Session-ID", "poc-session"),
+        )
+
     # In development without token, return mock user
     if settings.environment == "development":
         if credentials is None:

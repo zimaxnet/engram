@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zep
+  namespace: engram-prod
+  labels:
+    app: zep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zep
+  template:
+    metadata:
+      labels:
+        app: zep
+    spec:
+      containers:
+        - name: zep
+          image: ghcr.io/getzep/zep:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: ZEP_STORE
+              value: postgres
+            - name: ZEP_STORE_POSTGRES_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: zep-config
+                  key: postgresDsn
+            - name: ZEP_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: zep-config
+                  key: apiKey
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zep
+  namespace: engram-prod
+spec:
+  type: ClusterIP
+  selector:
+    app: zep
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zep
+  namespace: engram-prod
+  labels:
+    app: zep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zep
+  template:
+    metadata:
+      labels:
+        app: zep
+    spec:
+      containers:
+        - name: zep
+          image: ghcr.io/getzep/zep:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: ZEP_SERVER_ADDRESS
+              value: "0.0.0.0:8000"
+            - name: ZEP_STORE
+              value: postgres
+            - name: ZEP_STORE_POSTGRES_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: zep-config
+                  key: postgresDsn
+            - name: ZEP_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: zep-config
+                  key: zepApiKey
+

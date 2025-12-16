@@ -8,6 +8,17 @@ param envName string = 'engram-env'
 @allowed(['staging', 'dev', 'test', 'uat', 'prod'])
 param environment string = 'staging'
 
+var isProd = environment == 'prod'
+
+@description('Enable Azure AD authentication for Postgres (recommended for uat/prod).')
+param enablePostgresAad bool = false
+
+@description('Object ID of the AAD admin for Postgres (user or group).')
+param postgresAadAdminObjectId string = ''
+
+@description('Tenant ID for AAD admin (defaults to current tenant).')
+param postgresAadAdminTenantId string = tenant().tenantId
+
 @description('Enable Private Link for Blob, Postgres, Key Vault (off for staging POC).')
 param enablePrivateLink bool = false
 
@@ -26,6 +37,20 @@ param workerImage string = 'ghcr.io/zimaxnet/engram/worker:latest'
 @description('Container image for Zep (memory).')
 param zepImage string = 'ghcr.io/getzep/zep:latest'
 
+@description('AKS node size (prod).')
+param aksNodeSize string = 'Standard_D4s_v3'
+
+@description('AKS node count (prod).')
+param aksNodeCount int = 3
+
+@description('AKS min node count (prod).')
+param aksNodeMinCount int = 3
+
+@description('AKS max node count (prod).')
+param aksNodeMaxCount int = 10
+
+@description('Enable private cluster for AKS (prod).')
+param enableAksPrivateCluster bool = true
 // param azureOpenAiKey removed
 // param azureSpeechKey removed
 
@@ -113,6 +138,25 @@ resource acaEnv 'Microsoft.App/managedEnvironments@2022-03-01' = {
 }
 
 // =============================================================================
+// AKS (Prod only)
+// =============================================================================
+module aksCluster 'modules/aks.bicep' = if (isProd) {
+  name: 'aksCluster'
+  params: {
+    location: location
+    aksName: '${envName}-aks'
+    dnsPrefix: '${envName}-aks'
+    nodeSize: aksNodeSize
+    nodeCount: aksNodeCount
+    nodeMinCount: aksNodeMinCount
+    nodeMaxCount: aksNodeMaxCount
+    enablePrivateCluster: enableAksPrivateCluster
+    enableAzurePolicy: true
+    tags: union(mergedTags, { Component: 'AKS' })
+  }
+}
+
+// =============================================================================
 // PostgreSQL Flexible Server (Temporal + Zep storage)
 // =============================================================================
 var postgresTags = union(mergedTags, {
@@ -125,6 +169,8 @@ var postgresTags = union(mergedTags, {
 var postgresSku = environment == 'prod' || environment == 'uat' 
   ? { name: 'Standard_D2s_v3', tier: 'GeneralPurpose' }  // HA for uat/prod
   : { name: 'Standard_B1ms', tier: 'Burstable' }  // Cost-optimized for staging/dev/test
+
+var enableAadForEnv = enablePostgresAad || environment == 'prod' || environment == 'uat'
 
 var postgresBackupDays = environment == 'prod' ? 35 : (environment == 'uat' ? 14 : 7)
 var postgresGeoRedundant = environment == 'prod' ? 'Enabled' : 'Disabled'
@@ -141,6 +187,11 @@ resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2021-06-01' = {
     storage: {
       storageSizeGB: environment == 'prod' ? 128 : (environment == 'uat' ? 64 : 32)
     }
+    authConfig: {
+      activeDirectoryAuth: enableAadForEnv ? 'Enabled' : 'Disabled'
+      passwordAuth: 'Enabled'
+      tenantId: postgresAadAdminTenantId
+    }
     backup: {
       backupRetentionDays: postgresBackupDays
       geoRedundantBackup: postgresGeoRedundant
@@ -156,6 +207,17 @@ resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2021-06-01' = {
       startIpAddress: '0.0.0.0'
       endIpAddress: '0.0.0.0'
     }
+  }
+}
+
+resource postgresAadAdmin 'Microsoft.DBforPostgreSQL/flexibleServers/administrators@2023-03-01-preview' = if (enableAadForEnv && !empty(postgresAadAdminObjectId)) {
+  parent: postgres
+  name: 'ActiveDirectory'
+  properties: {
+    principalName: 'aad-admin'
+    principalType: 'User'
+    tenantId: postgresAadAdminTenantId
+    sid: postgresAadAdminObjectId
   }
 }
 
@@ -184,6 +246,51 @@ resource storage 'Microsoft.Storage/storageAccounts@2021-09-01' = {
       defaultAction: enablePrivateLink ? 'Deny' : 'Allow'  // Deny public access when Private Link enabled
       bypass: 'AzureServices'
     }
+  }
+}
+
+// RBAC: grant blob contributor to backend/worker identities
+resource storageBlobContributorBackend 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = if (!empty(backendIdentity.properties.principalId)) {
+  name: guid(storage.id, backendIdentity.properties.principalId, 'blob-contrib-backend')
+  scope: storage
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe') // Storage Blob Data Contributor
+    principalId: backendIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource storageBlobContributorWorker 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = if (!empty(workerIdentity.properties.principalId)) {
+  name: guid(storage.id, workerIdentity.properties.principalId, 'blob-contrib-worker')
+  scope: storage
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+    principalId: workerIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Storage role assignment IDs
+var storageBlobDataContributorRole = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+
+// Assign Storage Blob Data Contributor to backend and worker identities
+module backendStorageRole 'modules/role-assignment.bicep' = {
+  name: 'backend-storage-role'
+  scope: storage
+  params: {
+    principalId: backendIdentity.properties.principalId
+    roleDefinitionId: storageBlobDataContributorRole
+    nameSeed: 'backend-storage'
+  }
+}
+
+module workerStorageRole 'modules/role-assignment.bicep' = {
+  name: 'worker-storage-role'
+  scope: storage
+  params: {
+    principalId: workerIdentity.properties.principalId
+    roleDefinitionId: storageBlobDataContributorRole
+    nameSeed: 'worker-storage'
   }
 }
 
@@ -217,6 +324,9 @@ module keyVaultModule 'modules/keyvault.bicep' = {
     // Key Vault names must be 3-24 alphanumeric only; strip hyphens from envName and suffix a short unique string
     // The prior name is stuck in soft-deleted state; add a static differentiator to avoid the collision
     keyVaultName: '${toLower(replace(envName, '-', ''))}kvy${take(uniqueString(resourceGroup().id), 5)}'
+    enableSoftDelete: true
+    enablePurgeProtection: isProd || environment == 'uat'
+    enablePrivateLink: enablePrivateLink
     tags: union(mergedTags, { Component: 'KeyVault', DataClass: 'confidential' })
   }
 }
@@ -237,6 +347,8 @@ module keyVaultSecrets 'modules/keyvault-secrets.bicep' = {
 // =============================================================================
 // Key Vault Secrets User (4633458b-17de-408a-b874-0445c86b69e6)
 var keyVaultSecretsUserRole = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
+// Storage Blob Data Contributor
+var storageBlobDataContributor = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
 
 module backendKvRole 'modules/role-assignment.bicep' = {
   name: 'backend-kv-role'
@@ -253,6 +365,16 @@ module workerKvRole 'modules/role-assignment.bicep' = {
     principalId: workerIdentity.properties.principalId
     roleDefinitionId: keyVaultSecretsUserRole
     nameSeed: 'worker-kv'
+  }
+}
+
+module backendStorageRole 'modules/role-assignment.bicep' = {
+  name: 'backend-storage-role'
+  params: {
+    principalId: backendIdentity.properties.principalId
+    roleDefinitionId: storageBlobDataContributor
+    nameSeed: 'backend-storage'
+    scope: storage.id
   }
 }
 
@@ -343,6 +465,7 @@ module backendModule 'modules/backend-aca.bicep' = {
     registryPassword: registryPassword
     keyVaultUri: keyVaultModule.outputs.keyVaultUri
     identityResourceId: backendIdentity.id
+    identityClientId: backendIdentity.properties.clientId
     tags: union(mergedTags, { Component: 'BackendAPI' })
   }
 }
@@ -368,6 +491,7 @@ module workerModule 'modules/worker-aca.bicep' = {
     registryPassword: registryPassword
     keyVaultUri: keyVaultModule.outputs.keyVaultUri
     identityResourceId: workerIdentity.id
+    identityClientId: workerIdentity.properties.clientId
     tags: union(mergedTags, { Component: 'Worker' })
   }
 }
@@ -413,3 +537,4 @@ output temporalUIFqdn string = temporalModule.outputs.temporalUIDefaultFqdn
 output zepApiUrl string = zepApiUrl
 
 output storageAccountName string = storage.name
+output aksClusterId string = isProd ? aksCluster.outputs.clusterId : ''

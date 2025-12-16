@@ -9,6 +9,9 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Literal, Optional, TypedDict
 
+from azure.core.credentials import TokenCredential
+from azure.identity import DefaultAzureCredential
+
 import httpx
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langgraph.graph import END, StateGraph
@@ -34,12 +37,14 @@ class FoundryChatClient:
         self,
         *,
         endpoint: str,
-        api_key: str,
         deployment: str,
         api_version: str,
         temperature: float = 0.7,
         max_tokens: int = 4096,
         timeout: float = 60.0,
+        api_key: Optional[str] = None,
+        credential: Optional[TokenCredential] = None,
+        scope: str = "https://cognitiveservices.azure.com/.default",
     ) -> None:
         # Support OpenAI-compatible endpoint format
         base = endpoint.rstrip("/")
@@ -47,23 +52,39 @@ class FoundryChatClient:
         if "/openai/v1" in base or base.endswith("/v1"):
             # OpenAI-compatible format: endpoint already includes the path
             self.url = f"{base}/chat/completions"
-            # Use both APIM subscription key and standard api-key for compatibility
-            self.headers = {
-                "Ocp-Apim-Subscription-Key": api_key,  # APIM header
-                "api-key": api_key,  # Standard Azure OpenAI header
-                "Content-Type": "application/json"
-            }
-            self.model = deployment  # Use model parameter instead of deployment path
             self.is_openai_compat = True
+            self.model = deployment  # Use model parameter instead of deployment path
         else:
             # Azure AI Foundry format
             self.url = f"{base}/openai/deployments/{deployment}/chat/completions?api-version={api_version}"
-            self.headers = {"api-key": api_key, "Content-Type": "application/json"}
             self.model = None
             self.is_openai_compat = False
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.timeout = timeout
+        self.credential = credential
+        self.scope = scope
+
+        # Determine auth mode
+        if api_key:
+            self.auth_mode = "api_key"
+        elif credential:
+            self.auth_mode = "bearer"
+        else:
+            raise ValueError("Provide azure_ai_key or a TokenCredential (DefaultAzureCredential) for authentication.")
+
+        # Base headers (Authorization added per request when using bearer)
+        self.base_headers = {"Content-Type": "application/json"}
+
+        if self.auth_mode == "api_key":
+            if self.is_openai_compat:
+                # APIM/OpenAI-compatible endpoints often expect either header name
+                self.base_headers.update({
+                    "Ocp-Apim-Subscription-Key": api_key,
+                    "api-key": api_key,
+                })
+            else:
+                self.base_headers.update({"api-key": api_key})
 
     @staticmethod
     def _format_message(message: BaseMessage) -> dict:
@@ -96,9 +117,15 @@ class FoundryChatClient:
         logger.info(f"FoundryChatClient: Calling {self.url}")
         logger.info(f"FoundryChatClient: is_openai_compat={self.is_openai_compat}, model={self.model}")
         
+        # Compute headers for this request (add bearer token if using managed identity)
+        headers = dict(self.base_headers)
+        if self.credential:
+            token = self.credential.get_token(self.scope)
+            headers["Authorization"] = f"Bearer {token.token}"
+
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             try:
-                response = await client.post(self.url, headers=self.headers, json=payload)
+                response = await client.post(self.url, headers=headers, json=payload)
                 logger.info(f"FoundryChatClient: Response status={response.status_code}")
                 response.raise_for_status()
             except Exception as e:
@@ -138,9 +165,6 @@ class BaseAgent(ABC):
             if not endpoint:
                 raise ValueError("Azure AI endpoint not configured. Set AZURE_AI_ENDPOINT.")
 
-            if not self.settings.azure_ai_key:
-                raise ValueError("Azure AI API key not configured. Set AZURE_AI_KEY.")
-
             # Only add project path for Azure AI Foundry endpoints (not Azure OpenAI or APIM)
             # Azure OpenAI: *.openai.azure.com
             # APIM Gateway: contains /openai/v1
@@ -151,13 +175,21 @@ class BaseAgent(ABC):
             if self.settings.azure_ai_project_name and not is_azure_openai and not is_apim_gateway:
                 endpoint = f"{endpoint.rstrip('/')}/api/projects/{self.settings.azure_ai_project_name}"
 
+            # Prefer managed identity (DefaultAzureCredential) when no API key is supplied
+            credential: Optional[TokenCredential] = None
+            api_key: Optional[str] = self.settings.azure_ai_key
+            if not api_key:
+                credential = DefaultAzureCredential()
+
             self._llm = FoundryChatClient(
                 endpoint=endpoint,
-                api_key=self.settings.azure_ai_key,
                 deployment=self.settings.azure_ai_deployment,
                 api_version=self.settings.azure_ai_api_version,
                 temperature=0.7,
                 max_tokens=4096,
+                api_key=api_key,
+                credential=credential,
+                scope="https://cognitiveservices.azure.com/.default",
             )
         return self._llm
 
