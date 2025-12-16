@@ -1,0 +1,75 @@
+# Engram MCP Integration: Context and Design
+
+## Design Document
+(Content from design_mcp_integration.md)
+
+# Engram MCP Integration Design
+
+## Objective
+Enable Engram to serve as a **Model Context Protocol (MCP)** server, exposing its rich `EnterpriseContext` (Security, Episodic, Semantic, Operational) to external AI clients (e.g., Claude Desktop, IDEs, other agents).
+
+## Architecture: Engram as MCP Server
+Engram will host an MCP Server endpoint. Given that Engram is a FastAPI application, we will use **SSE (Server-Sent Events)** for transport, which is standard for HTTP-based MCP servers.
+
+### 1. Transport Layer
+- **Endpoint**: `/api/v1/mcp/sse`
+- **Protocol**: SSE (Server-Sent Events) over HTTP.
+- **Library**: `mcp` (Python SDK).
+
+### 2. Resources (Exposing Context)
+Engram will expose its 4-layer context as READable resources.
+
+| URI | Description | Corresponds To |
+| :--- | :--- | :--- |
+| `context://current` | The real-time context of the current session/user. | `EnterpriseContext` (JSON dump) |
+| `context://episodic/recent` | Recent conversation history. | `EpisodicState` |
+| `context://semantic/search?q={query}` | Search semantic memory (RAG). | `SemanticKnowledge` (Zep Search) |
+| `context://agents/list` | List of available agents (Elena, Marcus). | `Agent registry` |
+
+### 3. Tools (Exposing Capabilities)
+Engram will expose internal functions as executable tools.
+
+| Tool Name | Description | Arguments |
+| :--- | :--- | :--- |
+| `get_agent_response` | value from a specific agent | `agent_id`, `query` |
+| `add_memory_fact` | Add a fact to the semantic graph | `text`, `metadata` |
+| `switch_agent` | Switch the active session agent | `agent_id` |
+
+### 4. Security
+- Use the existing `SecurityContext`.
+- MCP endpoints will be protected behind `Depending(get_current_user)`.
+- **Note**: For local dev (Claude Desktop), we might need a bypass or a generated Long-Lived Token (PAT) since Claude Desktop doesn't easily handle OIDC flows. For Phase 1, we will allow local loopback or simple API Key.
+
+## Implementation Plan - Phase 1 (MVP)
+1. **Dependency**: Add `mcp` to `requirements.txt`.
+2. **Router**: Create `backend/api/routers/mcp.py`.
+3. **Server**: Initialize `FastMCP("Engram")`.
+4. **Resource**: Implement `context://current` returning a simple status string.
+5. **Mount**: Mount the MCP router in `main.py`.
+
+## Implementation Plan
+(Content from implementation_plan.md)
+
+## Goal
+Fix the broken MCP integration, verify the entire stack locally using Docker Compose, and deploy to Azure.
+
+## Phase 1: MCP Fix
+### 1. Fix MCP Server Definition
+- Remove `APIRouter` code.
+- Expose the `mcp_server` object directly.
+
+### 2. Mount ASGI App
+- Instead of partial `include_router`, **MOUNT** the `mcp_server.sse_app` at `/api/v1/mcp/sse`.
+- Mount `mcp_server.streamable_http_app` at `/api/v1/mcp/messages`.
+
+## Phase 2: Local Container Verification
+1.  **Build & Run**: `docker-compose up --build -d`
+2.  **Verify Backend**: `curl http://localhost:8082/health`
+3.  **Verify VoiceLive**: `curl http://localhost:8082/api/v1/voice/status`
+4.  **Verify Chat**: `curl -X POST http://localhost:8082/api/v1/chat ...`
+5.  **Verify MCP**: `curl -N http://localhost:8082/api/v1/mcp/sse`
+
+## Phase 3: Deployment
+1.  **Commit**: `git add . && git commit -m "feat: add mcp support and fix deployment"`
+2.  **Push**: `git push origin main`
+3.  **Monitor**: Watch GitHub Actions for "Deploy" workflow.
