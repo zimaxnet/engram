@@ -140,7 +140,12 @@ export default function VoiceChat({
           break;
 
         case 'error':
-          setError(data.message || 'Unknown error');
+          // Check if it's a configuration error - show friendly message
+          if (data.message?.includes('not configured') || data.message?.includes('AZURE_VOICELIVE')) {
+            setError('Voice coming soon - Azure VoiceLive integration pending');
+          } else {
+            setError(data.message || 'Unknown error');
+          }
           setIsProcessing(false);
           break;
       }
@@ -343,7 +348,8 @@ export default function VoiceChat({
 
         <span className="voice-status">
           {connectionStatus === 'connecting' && 'Connecting to voice...'}
-          {connectionStatus === 'error' && 'Voice connection error'}
+          {connectionStatus === 'error' && error?.includes('coming soon') && 'Voice integration pending'}
+          {connectionStatus === 'error' && !error?.includes('coming soon') && 'Voice connection error'}
           {isListening && 'Listening...'}
           {isProcessing && 'Processing...'}
           {isSpeaking && `${agentId === 'marcus' ? 'Marcus' : 'Elena'} speaking...`}
@@ -359,9 +365,9 @@ export default function VoiceChat({
         </div>
       )}
 
-      {/* Error Display */}
+      {/* Error/Info Display */}
       {error && (
-        <div className="voice-error">
+        <div className={`voice-error ${error.includes('coming soon') ? 'voice-info' : ''}`}>
           {error}
         </div>
       )}

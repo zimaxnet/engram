@@ -101,7 +101,7 @@ class Settings(BaseSettings):
     # ==========================================================================
     # CORS & Security
     # ==========================================================================
-    cors_origins: list[str] = Field(default=["http://localhost:5173", "http://localhost:3000"], alias="CORS_ORIGINS")
+    cors_origins: list[str] = Field(default=["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"], alias="CORS_ORIGINS")
     api_key_header: str = "X-API-Key"
 
     # ==========================================================================

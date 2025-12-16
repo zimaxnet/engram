@@ -76,6 +76,10 @@
   color: var(--color-text-primary);
   white-space: nowrap;
 }
+.voice-connection-badge.status-idle {
+  color: var(--color-primary);
+  border-color: rgba(0, 212, 255, 0.4);
+}
 .voice-connection-badge.status-connecting {
   color: #f59e0b;
   border-color: rgba(245, 158, 11, 0.4);
@@ -85,8 +89,12 @@
   border-color: rgba(16, 185, 129, 0.4);
 }
 .voice-connection-badge.status-error {
-  color: #ef4444;
-  border-color: rgba(239, 68, 68, 0.4);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+.voice-connection-badge.status-pending {
+  color: var(--color-primary);
+  border-color: rgba(0, 212, 255, 0.4);
 }
 
 /* Voice Section */
@@ -94,6 +102,33 @@
   margin-top: var(--space-lg);
   padding-top: var(--space-md);
   border-top: 1px solid var(--glass-border);
+}
+
+/* Voice Activate Button */
+.voice-activate-btn {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+}
+
+.voice-activate-btn:hover {
+  background: rgba(0, 212, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.voice-activate-btn:active {
+  transform: translateY(0);
 }
 
 /* Avatar Card */

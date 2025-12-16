@@ -27,7 +27,7 @@ function App() {
   useKeepAlive();
 
   const [activeAgent, setActiveAgent] = useState<AgentId>('elena');
-  const [selectedModel, setSelectedModel] = useState('gpt-4o');
+  const [selectedModel, setSelectedModel] = useState('gpt-5-chat');
 
   return (
     <BrowserRouter>

@@ -28,8 +28,9 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [currentVisemes, setCurrentVisemes] = useState<Viseme[]>([])
   const [expression, setExpression] = useState<'neutral' | 'smile' | 'thinking' | 'listening'>('neutral')
-  const [voiceEnabled, setVoiceEnabled] = useState(true)
-  const [voiceStatus, setVoiceStatus] = useState<'connecting' | 'connected' | 'error'>('connecting')
+  const [voiceEnabled, setVoiceEnabled] = useState(true)  // Voice channel open by default
+  const [voiceStatus, setVoiceStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle')
+  const [voiceReady, setVoiceReady] = useState(false)  // Track if voice component should render
 
   const handleVisemes = (visemes: Viseme[]) => {
     setCurrentVisemes(visemes)
@@ -64,14 +65,23 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
       <div className="panel-card avatar-card">
         <div className="card-header">
           <h4 className="card-title">Active Agent</h4>
-          <div className={`voice-connection-badge status-${voiceStatus}`}>
-            {voiceStatus === 'connected' && 'VoiceLive: Connected'}
-            {voiceStatus === 'connecting' && 'VoiceLive: Connecting'}
-            {voiceStatus === 'error' && 'VoiceLive: Error'}
-          </div>
+          {voiceEnabled && (
+            <div className={`voice-connection-badge status-${voiceReady ? (voiceStatus === 'error' ? 'pending' : voiceStatus) : 'idle'}`}>
+              {!voiceReady && 'VoiceLive: Ready'}
+              {voiceReady && voiceStatus === 'connected' && 'VoiceLive: Connected'}
+              {voiceReady && voiceStatus === 'connecting' && 'VoiceLive: Connecting'}
+              {voiceReady && voiceStatus === 'error' && 'VoiceLive: Pending'}
+              {voiceReady && voiceStatus === 'idle' && 'VoiceLive: Ready'}
+            </div>
+          )}
           <button
             className={`voice-toggle ${voiceEnabled ? 'enabled' : ''}`}
-            onClick={() => setVoiceEnabled(!voiceEnabled)}
+            onClick={() => {
+              setVoiceEnabled(!voiceEnabled)
+              if (!voiceEnabled) {
+                setVoiceReady(false)  // Reset ready state when disabling
+              }
+            }}
             title={voiceEnabled ? 'Disable voice' : 'Enable voice'}
           >
             {voiceEnabled ? '🔊' : '🔇'}
@@ -91,13 +101,22 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
         {/* Voice Chat Component */}
         {voiceEnabled && (
           <div className="voice-section">
-            <VoiceChat
-              agentId={agent.id}
-              onMessage={handleVoiceMessage}
-              onVisemes={handleVisemes}
-              onStatusChange={setVoiceStatus}
-              disabled={!voiceEnabled}
-            />
+            {!voiceReady ? (
+              <button 
+                className="voice-activate-btn"
+                onClick={() => setVoiceReady(true)}
+              >
+                🎙️ Activate Voice
+              </button>
+            ) : (
+              <VoiceChat
+                agentId={agent.id}
+                onMessage={handleVoiceMessage}
+                onVisemes={handleVisemes}
+                onStatusChange={setVoiceStatus}
+                disabled={!voiceEnabled}
+              />
+            )}
           </div>
         )}
       </div>
@@ -162,9 +181,7 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
               onChange={(e) => onModelChange(e.target.value)}
               className="config-select"
             >
-              <option value="gpt-4o">gpt-4o</option>
-              <option value="gpt-4o-mini">gpt-4o-mini</option>
-              <option value="gpt-4-turbo">gpt-4-turbo</option>
+              <option value="gpt-5-chat">gpt-5-chat</option>
             </select>
           </div>
           <div className="config-row">
