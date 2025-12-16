@@ -77,6 +77,9 @@ class FoundryChatClient:
         return {"role": role, "content": message.content}
 
     async def ainvoke(self, messages: list[BaseMessage]) -> AIMessage:
+        import logging
+        logger = logging.getLogger(__name__)
+        
         payload = {
             "messages": [self._format_message(m) for m in messages],
         }
@@ -90,9 +93,17 @@ class FoundryChatClient:
             payload["temperature"] = self.temperature
             payload["max_tokens"] = self.max_tokens
 
+        logger.info(f"FoundryChatClient: Calling {self.url}")
+        logger.info(f"FoundryChatClient: is_openai_compat={self.is_openai_compat}, model={self.model}")
+        
         async with httpx.AsyncClient(timeout=self.timeout) as client:
-            response = await client.post(self.url, headers=self.headers, json=payload)
-            response.raise_for_status()
+            try:
+                response = await client.post(self.url, headers=self.headers, json=payload)
+                logger.info(f"FoundryChatClient: Response status={response.status_code}")
+                response.raise_for_status()
+            except Exception as e:
+                logger.error(f"FoundryChatClient: Error calling LLM: {e}")
+                raise
             data = response.json()
 
         choice = data.get("choices", [{}])[0]
