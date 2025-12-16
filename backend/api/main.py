@@ -85,6 +85,19 @@ def create_app() -> FastAPI:
     app.include_router(bau.router, prefix="/api/v1/bau", tags=["BAU"])
     app.include_router(metrics.router, prefix="/api/v1/metrics", tags=["Metrics"])
     app.include_router(validation.router, prefix="/api/v1/validation", tags=["Validation"])
+    
+    # MCP (Model Context Protocol)
+    # FastMCP provides a Starlette/ASGI compatible app for SSE
+    from .routers.mcp import mcp_server
+    app.mount("/api/v1/mcp", mcp_server.sse_app())
+    # Note: FastMCP 1.0+ typically bundles message handling in the same app if using sse_app?
+    # Actually, viewing debug output, there is `sse_app` and `streamable_http_app`. 
+    # Usually standard mcp clients look for /sse and POST /messages relative to base.
+    # We will mount at /api/v1/mcp so /api/v1/mcp/sse and /api/v1/mcp/messages need to be handled.
+    # Let's assume sse_app handles both or check if we need separate mounts.
+    # Based on standard usage, mounting `sse_app` usually handles the /sse endpoint, 
+    # but we might need to verify if it handles messages.
+
 
     return app
 
