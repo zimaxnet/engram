@@ -7,6 +7,7 @@ Provides:
 - Integration with LangGraph agents and Zep memory
 """
 
+import asyncio
 import logging
 import time
 import uuid
@@ -20,6 +21,9 @@ from backend.agents import chat as agent_chat, get_agent
 from backend.api.middleware.auth import get_current_user
 from backend.core import EnterpriseContext, SecurityContext
 from backend.memory import enrich_context, persist_conversation
+
+# Timeout for memory operations (seconds) - prevents blocking on slow/unreachable Zep
+MEMORY_TIMEOUT = 2.0
 
 logger = logging.getLogger(__name__)
 
@@ -69,9 +73,14 @@ async def send_message(message: ChatMessage, user: SecurityContext = Depends(get
     session_id = message.session_id or str(uuid.uuid4())
     context = get_or_create_session(session_id, user)
 
-    # Enrich context with memory
+    # Enrich context with memory (with short timeout to avoid blocking)
     try:
-        context = await enrich_context(context, message.content)
+        context = await asyncio.wait_for(
+            enrich_context(context, message.content),
+            timeout=MEMORY_TIMEOUT
+        )
+    except asyncio.TimeoutError:
+        logger.warning(f"Memory enrichment timed out after {MEMORY_TIMEOUT}s")
     except Exception as e:
         logger.warning(f"Memory enrichment failed: {e}")
 
@@ -84,11 +93,19 @@ async def send_message(message: ChatMessage, user: SecurityContext = Depends(get
         # Update session
         _sessions[session_id] = updated_context
 
-        # Persist to memory
-        try:
-            await persist_conversation(updated_context)
-        except Exception as e:
-            logger.warning(f"Memory persistence failed: {e}")
+        # Persist to memory (fire-and-forget - don't block response)
+        async def _persist_with_timeout():
+            try:
+                await asyncio.wait_for(
+                    persist_conversation(updated_context),
+                    timeout=10.0  # Longer timeout for background task
+                )
+            except asyncio.TimeoutError:
+                logger.warning("Memory persistence timed out (background)")
+            except Exception as e:
+                logger.warning(f"Memory persistence failed (background): {e}")
+
+        asyncio.create_task(_persist_with_timeout())
 
         # Get agent info
         agent = get_agent(agent_id)
