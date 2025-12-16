@@ -130,8 +130,14 @@ class BaseAgent(ABC):
             if not self.settings.azure_ai_key:
                 raise ValueError("Azure AI API key not configured. Set AZURE_AI_KEY.")
 
-            # Don't modify endpoint for OpenAI-compatible APIs
-            if self.settings.azure_ai_project_name and "/openai/v1" not in endpoint:
+            # Only add project path for Azure AI Foundry endpoints (not Azure OpenAI or APIM)
+            # Azure OpenAI: *.openai.azure.com
+            # APIM Gateway: contains /openai/v1
+            # Azure AI Foundry: *.services.ai.azure.com (needs project path)
+            is_azure_openai = "openai.azure.com" in endpoint
+            is_apim_gateway = "/openai/v1" in endpoint
+            
+            if self.settings.azure_ai_project_name and not is_azure_openai and not is_apim_gateway:
                 endpoint = f"{endpoint.rstrip('/')}/api/projects/{self.settings.azure_ai_project_name}"
 
             self._llm = FoundryChatClient(
