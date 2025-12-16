@@ -137,9 +137,9 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
                 port: 8000
                 path: '/healthz'
               }
-              initialDelaySeconds: 120
-              periodSeconds: 30
-              failureThreshold: 3
+              initialDelaySeconds: 60
+              periodSeconds: 20
+              failureThreshold: 10
             }
           ]
         }
