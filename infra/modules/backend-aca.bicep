@@ -217,7 +217,8 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
       ]
       scale: {
         minReplicas: 0
-        // Keep max low for cost control; allow scale-to-zero after idle
+        // Warm Start: Set minReplicas to 1 if you want to avoid initial cold start.
+        // Current: Scale to Zero enabled, but with long cooldown to simulate "Keep Warm"
         maxReplicas: 1
         rules: [
           {
@@ -225,7 +226,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             http: {
               metadata: {
                 concurrentRequests: '10'
-                cooldownPeriod: '1800' // seconds (30 minutes) before scaling down
+                cooldownPeriod: '1800' // 30 minutes idle before stopping
               }
             }
           }

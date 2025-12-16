@@ -167,20 +167,8 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
         }
       ]
       scale: {
-        minReplicas: 0
-        // Keep max low for cost control; allow scale-to-zero after idle
+        minReplicas: 1
         maxReplicas: 1
-        rules: [
-          {
-            name: 'http-scale'
-            http: {
-              metadata: {
-                concurrentRequests: '5'
-                cooldownPeriod: '1800' // seconds (30 minutes) before scaling down
-              }
-            }
-          }
-        ]
       }
     }
   }
