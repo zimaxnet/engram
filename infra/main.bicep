@@ -221,11 +221,12 @@ module keyVaultModule 'modules/keyvault.bicep' = {
   }
 }
 
-// Seed required secrets (Zep API key)
+// Seed required secrets (postgres, zep, azure-ai)
 module keyVaultSecrets 'modules/keyvault-secrets.bicep' = {
   name: 'keyVaultSecrets'
   params: {
     keyVaultName: keyVaultModule.outputs.keyVaultName
+    postgresPassword: postgresPassword
     zepApiKey: zepApiKey
     azureAiKey: azureAiKey
   }
@@ -331,7 +332,6 @@ module backendModule 'modules/backend-aca.bicep' = {
     appName: '${envName}-api'
     containerImage: backendImage
     postgresFqdn: postgres.properties.fullyQualifiedDomainName
-    postgresPassword: postgresPassword
     temporalHost: temporalModule.outputs.temporalHost
 
     zepApiUrl: zepApiUrl
@@ -358,7 +358,6 @@ module workerModule 'modules/worker-aca.bicep' = {
     appName: '${envName}-worker'
     containerImage: workerImage
     postgresFqdn: postgres.properties.fullyQualifiedDomainName
-    postgresPassword: postgresPassword
     temporalHost: temporalModule.outputs.temporalHost
 
     zepApiUrl: zepApiUrl

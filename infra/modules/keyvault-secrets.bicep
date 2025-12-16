@@ -5,6 +5,10 @@ param keyVaultName string
 @secure()
 param postgresConnectionString string = ''
 
+@description('PostgreSQL password.')
+@secure()
+param postgresPassword string = ''
+
 @description('Zep API key.')
 @secure()
 param zepApiKey string = ''
@@ -34,6 +38,19 @@ resource postgresSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!em
   name: 'postgres-connection-string'
   properties: {
     value: postgresConnectionString
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+}
+
+// PostgreSQL Password
+resource postgresPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'postgres-password'
+  properties: {
+    value: empty(postgresPassword) ? 'placeholder-postgres-password' : postgresPassword
     contentType: 'text/plain'
     attributes: {
       enabled: true
@@ -108,6 +125,7 @@ resource entraTenantIdSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if
 
 // Outputs
 output secretNames array = [
+  'postgres-password'
   'postgres-connection-string'
   'zep-api-key'
   'azure-ai-key'

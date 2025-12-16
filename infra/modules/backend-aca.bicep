@@ -25,10 +25,6 @@ param temporalHost string
 @description('Zep API URL.')
 param zepApiUrl string
 
-@description('PostgreSQL password.')
-@secure()
-param postgresPassword string
-
 @description('Azure AI Services unified endpoint for Chat (APIM Gateway).')
 param azureAiEndpoint string = ''
 
@@ -108,7 +104,8 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
       secrets: [
         {
           name: 'postgres-password'
-          value: postgresPassword
+          keyVaultUrl: '${keyVaultUri}secrets/postgres-password'
+          identity: identityResourceId
         }
         {
           name: 'zep-api-key'
