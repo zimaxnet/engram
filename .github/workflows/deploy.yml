@@ -65,7 +65,6 @@ jobs:
             azureAiEndpoint=${{ secrets.AZURE_AI_ENDPOINT || secrets.AZURE_OPENAI_ENDPOINT || '' }}
             azureAiProjectName=${{ secrets.AZURE_AI_PROJECT_NAME || '' }}
             azureAiKey=${{ secrets.AZURE_OPENAI_KEY || '' }}
-            apimApiKey=${{ secrets.APIM_API_KEY || '' }}
             backendImage=ghcr.io/${{ github.repository }}/backend:latest
             workerImage=ghcr.io/${{ github.repository }}/worker:latest
             registryUsername=${{ github.actor }}
