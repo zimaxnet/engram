@@ -47,7 +47,12 @@ class FoundryChatClient:
         if "/openai/v1" in base or base.endswith("/v1"):
             # OpenAI-compatible format: endpoint already includes the path
             self.url = f"{base}/chat/completions"
-            self.headers = {"api-key": api_key, "Content-Type": "application/json"}
+            # Use both APIM subscription key and standard api-key for compatibility
+            self.headers = {
+                "Ocp-Apim-Subscription-Key": api_key,  # APIM header
+                "api-key": api_key,  # Standard Azure OpenAI header
+                "Content-Type": "application/json"
+            }
             self.model = deployment  # Use model parameter instead of deployment path
             self.is_openai_compat = True
         else:
