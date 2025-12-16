@@ -89,14 +89,27 @@ def create_app() -> FastAPI:
     # MCP (Model Context Protocol)
     # FastMCP provides a Starlette/ASGI compatible app for SSE
     from .routers.mcp import mcp_server
-    app.mount("/api/v1/mcp", mcp_server.sse_app())
-    # Note: FastMCP 1.0+ typically bundles message handling in the same app if using sse_app?
-    # Actually, viewing debug output, there is `sse_app` and `streamable_http_app`. 
-    # Usually standard mcp clients look for /sse and POST /messages relative to base.
-    # We will mount at /api/v1/mcp so /api/v1/mcp/sse and /api/v1/mcp/messages need to be handled.
-    # Let's assume sse_app handles both or check if we need separate mounts.
-    # Based on standard usage, mounting `sse_app` usually handles the /sse endpoint, 
-    # but we might need to verify if it handles messages.
+    
+    # Get the underlying Starlette app
+    mcp_app = mcp_server.sse_app()
+    
+    # Fix: FastMCP/Starlette default TrustedHostMiddleware blocks 'engram.work'
+    # We add TrustedHostMiddleware explicitly or rely on CORSMiddleware if handled?
+    # Actually, FastMCP adds its own TrustedHostMiddleware with ["localhost"] by default?
+    # Let's add Starlette's TrustedHostMiddleware with allowed_hosts=["*"] or specific domains
+    # to override or wrap it.
+    from starlette.middleware import Middleware
+    from starlette.middleware.trustedhost import TrustedHostMiddleware
+    
+    # Since we are mounting it, FastAPI's middleware stack executes BEFORE the mounted app.
+    # But if the mounted app has its own middleware stack rejecting the host, we need to fix IT.
+    # FastMCP doesn't seem to expose a clean way to add middleware via constructor.
+    # Check if mcp_app has .add_middleware
+    if hasattr(mcp_app, "add_middleware"):
+        # This adds to the TOP of the stack, hopefully wrapping connection
+        mcp_app.add_middleware(TrustedHostMiddleware, allowed_hosts=["engram.work", "*.engram.work", "localhost", "127.0.0.1", "*"])
+
+    app.mount("/api/v1/mcp", mcp_app)
 
 
     return app

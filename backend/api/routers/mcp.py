@@ -19,7 +19,23 @@ from backend.memory import enrich_context, persist_conversation
 logger = logging.getLogger(__name__)
 
 # Initialize FastMCP server
-mcp_server = FastMCP("Engram MCP Server")
+# Note: FastMCP 0.1.0+ validates Host header. "localhost" is default in dev.
+# For production (Azure Container Apps + SWA), we must allow our domains.
+mcp_server = FastMCP(
+    "Engram MCP Server",
+    dependencies=["mcp"], 
+    warn_on_duplicate_resources=False
+)
+
+# Monkey-patch or configure starlette app settings if exposed directly?
+# FastMCP uses Starlette internally. To fix "Invalid Host header", usually need TrustedHostMiddleware.
+# Since we mount it in FastAPI, FastAPI *should* handle hosts if we didn't use .sse_app() directly.
+# However, .sse_app() creates a sub-application.
+# Fix: We will configure the FastMCP instance environment if possible, or
+# rely on the fact that we can modify the internal Starlette app middleware *after* creation if needed.
+# BETTER FIX: FastMCP doesn't expose host config easily in constructor in v0.4.0?
+# Let's try adding '*' to allowed hosts if supported, or rely on X-Forwarded-Host.
+
 
 # Session storage (in-memory for now, same as chat.py)
 _sessions: dict[str, EnterpriseContext] = {}
