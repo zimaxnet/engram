@@ -93,21 +93,22 @@ def create_app() -> FastAPI:
     # Get the underlying Starlette app
     mcp_app = mcp_server.sse_app()
     
-    # Fix: FastMCP/Starlette default TrustedHostMiddleware blocks 'engram.work'
-    # We add TrustedHostMiddleware explicitly or rely on CORSMiddleware if handled?
-    # Actually, FastMCP adds its own TrustedHostMiddleware with ["localhost"] by default?
-    # Let's add Starlette's TrustedHostMiddleware with allowed_hosts=["*"] or specific domains
-    # to override or wrap it.
-    from starlette.middleware import Middleware
+    # Fix: FastMCP defaults to strict "localhost" TrustedHostMiddleware.
+    # We must REMOVE the existing middleware to allow custom domains or permissive access.
+    # Starlette apps store middleware definitions in `user_middleware` (before build).
     from starlette.middleware.trustedhost import TrustedHostMiddleware
     
-    # Since we are mounting it, FastAPI's middleware stack executes BEFORE the mounted app.
-    # But if the mounted app has its own middleware stack rejecting the host, we need to fix IT.
-    # FastMCP doesn't seem to expose a clean way to add middleware via constructor.
-    # Check if mcp_app has .add_middleware
-    if hasattr(mcp_app, "add_middleware"):
-        # This adds to the TOP of the stack, hopefully wrapping connection
-        mcp_app.add_middleware(TrustedHostMiddleware, allowed_hosts=["engram.work", "*.engram.work", "localhost", "127.0.0.1", "*"])
+    # Filter out existing TrustedHostMiddleware from FastMCP's default stack
+    if hasattr(mcp_app, "user_middleware"):
+        mcp_app.user_middleware = [
+             mw for mw in mcp_app.user_middleware 
+             if mw.cls != TrustedHostMiddleware
+        ]
+        
+    # Re-add our permissive TrustedHostMiddleware
+    # Note: Middleware is applied in reverse order (last added = first executed).
+    # Since we cleared the old one, we can add ours.
+    mcp_app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 
     app.mount("/api/v1/mcp", mcp_app)
 
