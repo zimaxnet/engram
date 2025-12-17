@@ -9,7 +9,7 @@ Provides API for:
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 
@@ -70,30 +70,68 @@ async def list_workflows(
     except Exception as e:
         logger.warning(f"Failed to list workflows: {e}")
         # Return mock data for development
+        # Return mock data for development - Populated with Real Project History
+        start_time = datetime.now(timezone.utc)
         return WorkflowListResponse(
             workflows=[
+                # Active Workflows
                 WorkflowSummary(
-                    workflow_id="mock-wf-1",
-                    workflow_type="AgentWorkflow",
+                    workflow_id="wf-sys-ver-001",
+                    workflow_type="ValidationWorkflow",
                     status=WorkflowStatus.RUNNING,
                     agent_id="elena",
-                    started_at=datetime.utcnow(),
-                    task_summary="Analyzing Q1 financial reports",
-                    step_count=5,
-                    current_step="Extracting data from PDF",
+                    started_at=start_time,
+                    task_summary="Performing full system verification of memory and ingestion subsystems.",
+                    step_count=12,
+                    current_step="Verifying Zep Mock client response",
                 ),
                 WorkflowSummary(
-                    workflow_id="mock-wf-2",
-                    workflow_type="AgentWorkflow",
-                    status=WorkflowStatus.WAITING,
+                    workflow_id="wf-uat-prep-001",
+                    workflow_type="UATWorkflow",
+                    status=WorkflowStatus.RUNNING,
                     agent_id="marcus",
-                    started_at=datetime.utcnow(),
-                    task_summary="Project Alpha timeline review",
-                    step_count=3,
-                    current_step="Waiting for human approval",
+                    started_at=start_time,
+                    task_summary="Preparing User Acceptance Testing scripts and environment",
+                    step_count=8,
+                    current_step="Generating test accounts",
+                ),
+                # Historical Workflows
+                WorkflowSummary(
+                    workflow_id="wf-ci-fix-001",
+                    workflow_type="DevOpsWorkflow",
+                    status=WorkflowStatus.COMPLETED,
+                    agent_id="elena",
+                    started_at="2024-12-15T11:20:00Z",
+                    completed_at="2024-12-15T11:45:00Z",
+                    task_summary="CI/CD Pipeline Repair - Fixed backend service health checks and updated ETL tests.",
+                    step_count=5,
+                    current_step="Completed",
+                    context_snapshot={"result": "Success", "fixes": "docker-compose.yml, test_etl_router.py"}
+                ),
+                WorkflowSummary(
+                    workflow_id="wf-fe-vis-001",
+                    workflow_type="FrontendWorkflow",
+                    status=WorkflowStatus.COMPLETED,
+                    agent_id="marcus",
+                    started_at="2024-12-12T14:00:00Z",
+                    completed_at="2024-12-12T16:15:00Z",
+                    task_summary="Visual Access Interface - Implemented glassmorphism UI and TreeNav component.",
+                    step_count=15,
+                    current_step="Completed",
+                ),
+                WorkflowSummary(
+                    workflow_id="wf-arch-def-001",
+                    workflow_type="ArchitectureWorkflow",
+                    status=WorkflowStatus.COMPLETED,
+                    agent_id="elena",
+                    started_at="2024-12-10T09:00:00Z",
+                    completed_at="2024-12-10T10:30:00Z",
+                    task_summary="Initial Architecture Definition - Defined 4-layer context schema and selected Zep.",
+                    step_count=1,
+                    current_step="Completed",
                 ),
             ],
-            total_count=2,
+            total_count=5,
         )
 
 

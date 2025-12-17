@@ -392,7 +392,80 @@ class MockZepClient:
             return {"user_id": user_id, "metadata": metadata}
 
     class MockMemory:
+        def __init__(self):
+            # Canonical Engram Project History
+            self.sessions_data = [
+                {
+                    "session_id": "sess-arch-001",
+                    "created_at": "2024-12-10T09:00:00Z",
+                    "updated_at": "2024-12-10T10:30:00Z",
+                    "user_id": "user-derek",
+                    "metadata": {
+                        "summary": "Initial architecture review of Engram. Defined 4-layer context schema (Security, Episodic, Semantic, Operational) and chose Zep for memory.",
+                        "turn_count": 14,
+                        "agent_id": "elena",
+                        "topics": ["Architecture", "Schema", "Zep"],
+                    },
+                    "messages": [
+                        {"role": "user", "content": "Elena, I need a robust schema for the context engine. It needs to handle long-term memory and permissions.", "metadata": {}},
+                        {"role": "assistant", "content": "I propose a 4-layer Context Schema. Layer 1 is Security (RBAC via Entra ID). Layer 2 is Episodic (short-term conversation). Layer 3 is Semantic (Zep Knowledge Graph). Layer 4 is Operational (Temporal workflows).", "metadata": {"agent_id": "elena"}},
+                        {"role": "user", "content": "Why Zep for Layer 3?", "metadata": {}},
+                        {"role": "assistant", "content": "Zep offers a hybrid search (vector + knowledge graph) which is critical for 'provenance-first' memory. It allows us to track exactly where facts came from.", "metadata": {"agent_id": "elena"}},
+                    ]
+                },
+                {
+                    "session_id": "sess-fe-001",
+                    "created_at": "2024-12-12T14:00:00Z",
+                    "updated_at": "2024-12-12T16:15:00Z",
+                    "user_id": "user-derek",
+                    "metadata": {
+                        "summary": "Frontend implementation of the 'Visual Access' interface. Built React components for ChatPanel and TreeNav using glassmorphism design.",
+                        "turn_count": 22,
+                        "agent_id": "marcus",
+                        "topics": ["Frontend", "React", "UX"],
+                    },
+                    "messages": [
+                        {"role": "user", "content": "Marcus, update the UI. We need a 'Visual Access' aesthetic. Glassmorphism, dark mode.", "metadata": {}},
+                        {"role": "assistant", "content": "On it. I'm implementing a sidebar navigation with a frosted glass effect using `backdrop-filter: blur(12px)`. I'll also add a 'System Navigator' tree view.", "metadata": {"agent_id": "marcus"}},
+                        {"role": "user", "content": "Make sure the chat bubbles distinguish between agents clearly.", "metadata": {}},
+                        {"role": "assistant", "content": "Done. Elena uses a cyan accent, and I (Marcus) use pink. I've updated `ChatPanel.tsx` to render these styles dynamically based on the `agent_id` in the message metadata.", "metadata": {"agent_id": "marcus"}},
+                    ]
+                },
+                {
+                    "session_id": "sess-debug-001",
+                    "created_at": "2024-12-15T11:20:00Z",
+                    "updated_at": "2024-12-15T11:45:00Z",
+                    "user_id": "user-derek",
+                    "metadata": {
+                        "summary": "Debugging CI/CD pipeline failures. Fixed backend service connection in GitHub Actions and resolved `test_etl_router.py` failures.",
+                        "turn_count": 8,
+                        "agent_id": "elena",
+                        "topics": ["DevOps", "CI/CD", "Testing"],
+                    },
+                    "messages": [
+                        {"role": "user", "content": "The E2E tests are failing in CI. The backend isn't reachable.", "metadata": {}},
+                        {"role": "assistant", "content": "I see the logs. The `backend` service definition in `docker-compose.yml` didn't have a health check, so `api` started before the DB was ready. I'll add a `healthcheck` block.", "metadata": {"agent_id": "elena"}},
+                        {"role": "user", "content": "Also `test_etl_router.py` failed.", "metadata": {}},
+                        {"role": "assistant", "content": "That was an incorrect `monkeypatch` target. I fixed it by patching the module import instead of the instance attribute. Tests are passing now.", "metadata": {"agent_id": "elena"}},
+                    ]
+                }
+            ]
+
         async def aget_session(self, session_id: str):
+            for s in self.sessions_data:
+                if s["session_id"] == session_id:
+                    # Return object that mimics Zep Session
+                    class MockSessionObj:
+                        session_id = s["session_id"]
+                        user_id = s["user_id"]
+                        metadata = s["metadata"]
+                        created_at = s["created_at"]
+                        updated_at = s["updated_at"]
+                        messages = [
+                             type("MockMsg", (), {"role": m["role"], "content": m["content"], "metadata": m["metadata"]}) 
+                             for m in s["messages"]
+                        ]
+                    return MockSessionObj()
             raise Exception("Session not found")
 
         async def aadd_session(self, session_id: str, user_id: str, metadata: dict = None):
@@ -429,10 +502,34 @@ class MockZepClient:
         async def get_session_messages(self, session_id: str, limit: int = 20):
             class MockMessagesResponse:
                 messages = []
+            
+            for s in self.sessions_data:
+                if s["session_id"] == session_id:
+                     MockMessagesResponse.messages = [
+                         type("MockMsg", (), {"role": m["role"], "content": m["content"], "metadata": m["metadata"]}) 
+                         for m in s["messages"]
+                     ]
+                     break
+            
             return MockMessagesResponse()
 
-        async def list_sessions(self, limit=20, offset=0, user_id=None):
-            return []
+        async def list_sessions(self, *args, **kwargs):
+            class MockResponse:
+                sessions = []
+            
+            # Map dicts to objects for API consistency
+            obj_sessions = []
+            for s in self.sessions_data:
+                class MockSessionObj:
+                    session_id = s["session_id"]
+                    user_id = s["user_id"]
+                    metadata = s["metadata"]
+                    created_at = s["created_at"]
+                    updated_at = s["updated_at"]
+                obj_sessions.append(MockSessionObj())
+
+            MockResponse.sessions = obj_sessions
+            return MockResponse()
 
     class MockGraph:
         async def asearch(self, user_id: str, query: str = None, limit: int = 20):

@@ -86,9 +86,7 @@ export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
       label: 'Ingestion',
       icon: '📥',
       children: [
-        { id: 'sources', label: 'Connectors', icon: '🔌', path: '/sources' },
-        { id: 'uploads', label: 'Document Upload', icon: '📤', path: '/sources' },
-        { id: 'ingestion-progress', label: 'Progress', icon: '📊', path: '/sources/progress' }
+        { id: 'sources', label: 'Overview', icon: '📊', path: '/sources' }
       ]
     },
     {
