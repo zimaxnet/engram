@@ -106,6 +106,60 @@ curl -sS -H "Content-Type: application/json" \
 curl -sS "$API_BASE/api/v1/voice/status"
 ```
 
+### Reference: Azure AI Foundry VoiceLive Playground (env vars + SDK behavior)
+
+The Azure AI Foundry “**Azure Speech Voice Live**” playground uses the same `azure-ai-voicelive` SDK patterns that Engram uses.
+This is a **sanitized** version of the variables you’ll commonly see in Foundry/`azd` sample templates:
+
+```bash
+# Base AI Services endpoint (account-scoped)
+AZURE_VOICELIVE_ENDPOINT="https://<AI_ACCOUNT>.services.ai.azure.com/"
+
+# Optional: AI Project context (project-scoped endpoint)
+AZURE_VOICELIVE_PROJECT_NAME="<AI_PROJECT_NAME>"
+AZURE_EXISTING_AIPROJECT_ENDPOINT="https://<AI_ACCOUNT>.services.ai.azure.com/api/projects/<AI_PROJECT_NAME>"
+AZURE_EXISTING_AIPROJECT_RESOURCE_ID="/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<RG>/providers/Microsoft.CognitiveServices/accounts/<AI_ACCOUNT>/projects/<AI_PROJECT_NAME>"
+
+# API version used by the VoiceLive realtime WS
+AZURE_VOICELIVE_API_VERSION="2025-10-01"
+```
+
+#### What URL the SDK actually connects to
+
+`azure.ai.voicelive.aio.connect()` **derives** the final WebSocket URL by appending `/voice-live/realtime` and query params:
+
+```text
+wss://<AI_ACCOUNT>.services.ai.azure.com/voice-live/realtime?api-version=2025-10-01&model=gpt-realtime
+```
+
+If you pass the **project endpoint** instead:
+
+```text
+https://<AI_ACCOUNT>.services.ai.azure.com/api/projects/<AI_PROJECT_NAME>
+```
+
+the SDK will connect under that path:
+
+```text
+wss://<AI_ACCOUNT>.services.ai.azure.com/api/projects/<AI_PROJECT_NAME>/voice-live/realtime?api-version=2025-10-01&model=gpt-realtime
+```
+
+#### Authentication modes (important)
+
+The VoiceLive SDK supports **two** auth modes:
+
+- **API key mode**: sends `api-key: <KEY>` during the WS handshake.
+  - Use an **AI Services** key (Cognitive Services account key), **not** an APIM/OpenAI gateway subscription key.
+- **Token credential mode**: sends `Authorization: Bearer <TOKEN>` during the WS handshake.
+  - The SDK requests tokens for scope **`https://ai.azure.com/.default`**.
+  - For Engram in Azure Container Apps, this means the backend **Managed Identity** must have:
+    - **Role**: `Cognitive Services Speech User`
+    - **Scope**: the AI Services account (or narrower approved scope)
+
+Engram recommendation:
+- **Use Managed Identity** for VoiceLive (preferred).
+- Only use `AZURE_VOICELIVE_KEY` when the customer cannot use MI yet (and store it as a separate secret).
+
 ## 2. Level 1: Staging POC
 
 ### 2.1 Purpose
@@ -672,7 +726,7 @@ audit-storage-key          # Audit log storage
 | `Failed to establish WebSocket connection: 401` | Managed Identity lacks VoiceLive permission | Assign `Cognitive Services Speech User` to the backend MI at the AI Services resource scope |
 | 401 Unauthorized | Invalid credential | Check Managed Identity / Key Vault |
 | WebSocket disconnect | Network timeout | Increase client timeout, check firewall |
-| Audio quality poor | Codec mismatch | Ensure PCM16, 16kHz, mono |
+| Audio quality poor | Codec mismatch | Ensure PCM16, mono; prefer 24kHz (Foundry samples), and resample if needed |
 
 ### 9.2 Chat Issues
 
