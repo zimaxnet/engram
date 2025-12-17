@@ -39,6 +39,33 @@ class MockWebSocket extends EventTarget {
 // @ts-ignore override global for tests
 globalThis.WebSocket = MockWebSocket
 
+// Mock AudioContext for VoiceChat
+globalThis.AudioContext = class {
+	createAnalyser() { return { frequencyBinCount: 256, getByteFrequencyData: () => { } } as any }
+	createScriptProcessor() { return { connect: () => { }, disconnect: () => { }, onaudioprocess: null } as any }
+	createMediaStreamSource() { return { connect: () => { } } as any }
+	createBufferSource() { return { connect: () => { }, start: () => { }, buffer: null } as any }
+	createBuffer() { return { getChannelData: () => new Float32Array(0), duration: 0 } as any }
+	destination = {} as any
+	currentTime = 0
+	close() { return Promise.resolve() }
+} as any
+
+// Mock SpeechRecognition for ChatPanel
+const MockSpeechRecognition = class {
+	continuous = false
+	interimResults = false
+	lang = ''
+	start() { }
+	stop() { }
+	abort() { }
+	onresult: ((event: any) => void) | null = null
+	onend: ((event: any) => void) | null = null
+	onerror: ((event: any) => void) | null = null
+}
+globalThis.SpeechRecognition = MockSpeechRecognition as any
+globalThis.webkitSpeechRecognition = MockSpeechRecognition as any
+
 // Establish API mocking before all tests
 beforeAll(() => server.listen({
 	onUnhandledRequest: (req, print) => {
