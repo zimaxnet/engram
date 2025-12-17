@@ -62,16 +62,18 @@ def test_ingest_document_indexes_chunks_with_provenance(client, monkeypatch):
 
     monkeypatch.setattr(processor, "process_file", lambda *args, **kwargs: chunks)
 
-    # Spy on memory_client.add_fact
-    from backend.api.routers import etl as etl_router
-
+    # Spy on ingestion_service.memory_client.add_fact
+    # The router delegates to ingestion_service, which uses memory_client
+    from backend.etl.ingestion_service import ingestion_service
+    
     calls = []
 
     async def fake_add_fact(*, user_id: str, fact: str, metadata: dict):
         calls.append({"user_id": user_id, "fact": fact, "metadata": metadata})
         return "mock-fact-id"
-
-    monkeypatch.setattr(etl_router.memory_client, "add_fact", fake_add_fact)
+    
+    # We must patch the memory_client instance ON the ingestion_service
+    monkeypatch.setattr(ingestion_service.memory_client, "add_fact", fake_add_fact)
 
     resp = client.post(
         "/api/v1/etl/ingest",

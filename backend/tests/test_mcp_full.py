@@ -30,7 +30,8 @@ async def test_mcp_search_memory(mock_agent_services):
     )
     # Simulation returns string
     text_result = str(result) if not isinstance(result, list) else result[0].text
-    assert "Memory search for 'test query' initiated" in text_result
+    # Expect "No relevant memories found." when mock returns empty
+    assert "No relevant memories found." in text_result
 
 @pytest.mark.asyncio
 async def test_mcp_voice_config(mock_agent_services):

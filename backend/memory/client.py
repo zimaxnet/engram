@@ -410,6 +410,27 @@ class MockZepClient:
         ):
             return []
 
+        async def search_sessions(
+            self,
+            session_ids: list[str],
+            text: str,
+            limit: int = 10,
+            search_scope: str = "messages",
+            search_type: str = "similarity",
+        ):
+            class MockSession:
+                messages = []
+            
+            class MockResponse:
+                sessions = [MockSession()]
+
+            return MockResponse()
+
+        async def get_session_messages(self, session_id: str, limit: int = 20):
+            class MockMessagesResponse:
+                messages = []
+            return MockMessagesResponse()
+
         async def list_sessions(self, limit=20, offset=0, user_id=None):
             return []
 
