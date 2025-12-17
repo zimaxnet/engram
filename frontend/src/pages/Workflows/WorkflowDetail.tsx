@@ -128,18 +128,18 @@ export function WorkflowDetail() {
                         </span>
                       </div>
                       {s.note && <div className="callout">{s.note}</div>}
-                      {(s.inputs || s.outputs) && (
+                      {(!!s.inputs || !!s.outputs) && (
                         <div className="step-io">
                           <details>
                             <summary>IO Trace</summary>
                             <div className="step-io-content">
-                              {s.inputs && (
+                              {!!s.inputs && (
                                 <div>
                                   <label>Inputs</label>
                                   <pre>{JSON.stringify(s.inputs, null, 2)}</pre>
                                 </div>
                               )}
-                              {s.outputs && (
+                              {!!s.outputs && (
                                 <div>
                                   <label>Outputs</label>
                                   <pre>{JSON.stringify(s.outputs, null, 2)}</pre>

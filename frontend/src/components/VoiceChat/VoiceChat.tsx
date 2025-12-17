@@ -149,7 +149,6 @@ export default function VoiceChat({
   // Play audio and trigger visemes
   const playAudio = useCallback(async (
     audioBase64: string,
-    format: string, // eslint-disable-line @typescript-eslint/no-unused-vars
     visemes: Viseme[]
   ) => {
     try {
@@ -235,7 +234,7 @@ export default function VoiceChat({
 
         case 'audio':
           // Server sends assistant PCM16 audio as base64
-          playAudio(data.data, data.format || 'audio/wav', []);
+          playAudio(data.data, []);
           setIsSpeaking(true);
           // Fallback timer to clear speaking state
           setTimeout(() => setIsSpeaking(false), 1500);
