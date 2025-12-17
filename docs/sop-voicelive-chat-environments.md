@@ -61,13 +61,21 @@ AZURE_AI_KEY=<secret>  # store in Key Vault; inject via container-app secretRef
 AZURE_VOICELIVE_ENDPOINT=https://<CUSTOMER_AI_SERVICES>.services.ai.azure.com
 AZURE_VOICELIVE_MODEL=gpt-realtime
 AZURE_VOICELIVE_VOICE=en-US-Ava:DragonHDLatestNeural
-AZURE_VOICELIVE_KEY=<secret>  # store in Key Vault; inject via container-app secretRef
+# Preferred auth: Managed Identity (no key env var).
+# Optional API-key mode (NOT recommended long-term): AZURE_VOICELIVE_KEY=<ai-services-key>
 ```
 
 Production hardening (summary):
 - Set `ENVIRONMENT=production` and `AUTH_REQUIRED=true` and enforce Entra JWT validation.
 - Restrict CORS to the exact SWA origin(s).
-- Prefer Managed Identity to access Key Vault and (where supported) Azure AI; otherwise use short-lived/rotated keys.
+- Prefer Managed Identity to access Key Vault and Azure AI (VoiceLive + chat where supported); otherwise use rotated keys.
+
+### VoiceLive RBAC prerequisite (Managed Identity)
+
+When using Managed Identity, grant the backend identity permission on the **Azure AI Services account** (or narrower project scope if your org requires):
+
+- **Role**: `Cognitive Services Speech User`
+- **Scope**: `/subscriptions/<SUB>/resourceGroups/<RG>/providers/Microsoft.CognitiveServices/accounts/<AI_ACCOUNT>`
 
 ### Frontend (SWA) required build configuration
 
@@ -661,6 +669,7 @@ audit-storage-key          # Audit log storage
 |---------|-------|------------|
 | `voicelive_configured: false` | Missing endpoint | Set `AZURE_VOICELIVE_ENDPOINT` |
 | `key must be a string` | Missing/empty key in API-key mode | Set `AZURE_VOICELIVE_KEY` (or use Managed Identity auth) |
+| `Failed to establish WebSocket connection: 401` | Managed Identity lacks VoiceLive permission | Assign `Cognitive Services Speech User` to the backend MI at the AI Services resource scope |
 | 401 Unauthorized | Invalid credential | Check Managed Identity / Key Vault |
 | WebSocket disconnect | Network timeout | Increase client timeout, check firewall |
 | Audio quality poor | Codec mismatch | Ensure PCM16, 16kHz, mono |

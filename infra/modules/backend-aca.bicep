@@ -223,10 +223,6 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
               value: 'gpt-realtime'
             }
             {
-              name: 'AZURE_VOICELIVE_KEY'
-              secretRef: 'azure-ai-key'
-            }
-            {
               name: 'CORS_ORIGINS'
               value: '["https://engram.work", "https://*.azurestaticapps.net", "http://localhost:5173", "*"]'
             }
