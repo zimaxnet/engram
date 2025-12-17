@@ -21,6 +21,83 @@
 
 ---
 
+## 1.1 Customer Tenant Replication Checklist (Minimum Viable Chat + Voice)
+
+This section is written to be **customer-safe** (no tenant IDs, no secrets). Replace placeholders with customer values.
+
+### Required Azure components (minimum)
+
+- **Frontend (UI)**: Azure Static Web Apps (SWA) hosting the Engram UI.
+- **Backend API**: Azure Container Apps (ACA) running the Engram FastAPI service.
+- **Azure AI Gateway (Chat)**: an OpenAI-compatible gateway (often APIM) that exposes `.../openai/v1/...` and supports `POST /chat/completions`.
+- **Azure AI Services (VoiceLive)**: an Azure AI endpoint that supports VoiceLive realtime sessions (via the `azure-ai-voicelive` SDK).
+- **Secrets store**: Azure Key Vault (recommended) or equivalent for API keys.
+
+Optional but recommended:
+- **Zep** (memory service): chat will still run if Zep is unavailable (best-effort enrich/persist), but memory features degrade.
+
+### Backend (ACA) required configuration
+
+Set these environment variables on the Engram API container app:
+
+```bash
+# --- POC mode (fast validation; NOT for production) ---
+ENVIRONMENT=development
+AUTH_REQUIRED=false
+
+# --- CORS: must include your SWA hostname and any local dev origins ---
+# Example: ["https://<CUSTOMER_APP>.azurestaticapps.net","http://localhost:5173"]
+CORS_ORIGINS=["https://<CUSTOMER_SWA_HOSTNAME>"]
+
+# --- Chat (OpenAI-compatible gateway) ---
+AZURE_AI_ENDPOINT=https://<CUSTOMER_AI_GATEWAY_HOST>/<PATH>/openai/v1
+AZURE_AI_DEPLOYMENT=gpt-5-chat
+AZURE_AI_KEY=<secret>  # store in Key Vault; inject via container-app secretRef
+
+# Optional (only when using *.services.ai.azure.com Foundry endpoints, not APIM /openai/v1):
+# AZURE_AI_PROJECT_NAME=<CUSTOMER_PROJECT_NAME>   # example in this tenant: zimax
+
+# --- VoiceLive (Realtime) ---
+AZURE_VOICELIVE_ENDPOINT=https://<CUSTOMER_AI_SERVICES>.services.ai.azure.com
+AZURE_VOICELIVE_MODEL=gpt-realtime
+AZURE_VOICELIVE_VOICE=en-US-Ava:DragonHDLatestNeural
+AZURE_VOICELIVE_KEY=<secret>  # store in Key Vault; inject via container-app secretRef
+```
+
+Production hardening (summary):
+- Set `ENVIRONMENT=production` and `AUTH_REQUIRED=true` and enforce Entra JWT validation.
+- Restrict CORS to the exact SWA origin(s).
+- Prefer Managed Identity to access Key Vault and (where supported) Azure AI; otherwise use short-lived/rotated keys.
+
+### Frontend (SWA) required build configuration
+
+Set these build-time variables for the UI build:
+
+```bash
+VITE_API_URL=https://<CUSTOMER_ENGRAM_API_FQDN>
+VITE_WS_URL=https://<CUSTOMER_ENGRAM_API_FQDN>  # frontend converts https→wss internally
+```
+
+SWA routing prerequisite:
+- Ensure `staticwebapp.config.json` is deployed (place it in `frontend/public/` so Vite copies it into `dist/`). It must include a SPA fallback so deep links like `/voice` don’t 404.
+
+### Validation (copy/paste)
+
+```bash
+API_BASE="https://<CUSTOMER_ENGRAM_API_FQDN>"
+
+# Health
+curl -sS "$API_BASE/health"
+
+# Chat (POC mode: no Authorization header required)
+curl -sS -H "Content-Type: application/json" \
+  -d '{"content":"What is the capital of France?","agent_id":"elena"}' \
+  "$API_BASE/api/v1/chat"
+
+# VoiceLive status
+curl -sS "$API_BASE/api/v1/voice/status"
+```
+
 ## 2. Level 1: Staging POC
 
 ### 2.1 Purpose
@@ -34,28 +111,33 @@
 ```bash
 # Environment Variables
 ENVIRONMENT=development
+AUTH_REQUIRED=false
 DEBUG=true
 
 # VoiceLive Configuration
 AZURE_VOICELIVE_ENDPOINT=https://zimax.services.ai.azure.com
 AZURE_VOICELIVE_MODEL=gpt-realtime
 AZURE_VOICELIVE_VOICE=en-US-Ava:DragonHDLatestNeural
+AZURE_VOICELIVE_KEY=<key-vault-secretref>
 
 # Chat Configuration (APIM Gateway)
 AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax/openai/v1
-AZURE_AI_DEPLOYMENT=gpt-5.1-chat
+AZURE_AI_DEPLOYMENT=gpt-5-chat
+AZURE_AI_KEY=<key-vault-secretref>
+
+# Optional when using Foundry endpoints (this tenant example):
+# AZURE_AI_PROJECT_NAME=zimax
 ```
 
 ### 2.3 Authentication
 ```bash
-# Dev token format (no validation)
-Authorization: Bearer dev_<user_id>
+# POC mode (AUTH_REQUIRED=false): no auth header required.
+# If AUTH_REQUIRED=true, use dev tokens in development or Entra JWTs in production.
 
 # Example
 curl -X POST https://staging-env-api.../api/v1/chat \
-  -H "Authorization: Bearer dev_testuser" \
   -H "Content-Type: application/json" \
-  -d '{"message": "Hello", "session_id": "demo-1"}'
+  -d '{"content": "Hello", "agent_id": "elena"}'
 ```
 
 ### 2.4 Azure Resources
@@ -83,15 +165,14 @@ az containerapp update --name staging-env-api --resource-group engram-rg \
 curl https://staging-env-api.gentleriver-dd0de193.eastus2.azurecontainerapps.io/api/v1/voice/status
 
 # WebSocket connection (from frontend)
-wss://staging-env-api.gentleriver-dd0de193.eastus2.azurecontainerapps.io/api/v1/voice/ws
+wss://staging-env-api.gentleriver-dd0de193.eastus2.azurecontainerapps.io/api/v1/voice/voicelive/<session_id>
 ```
 
 #### Test Chat
 ```bash
 curl -X POST https://staging-env-api.../api/v1/chat \
-  -H "Authorization: Bearer dev_demo" \
   -H "Content-Type: application/json" \
-  -d '{"message": "Analyze requirements for CRM migration", "session_id": "poc-demo"}'
+  -d '{"content": "Analyze requirements for CRM migration", "agent_id": "elena"}'
 ```
 
 ### 2.6 Monitoring
@@ -123,7 +204,7 @@ AZURE_VOICELIVE_MODEL=gpt-realtime
 
 # Chat - Development deployment
 AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax/openai/v1
-AZURE_AI_DEPLOYMENT=gpt-5.1-chat
+AZURE_AI_DEPLOYMENT=gpt-5-chat
 
 # Tracing enabled
 APPLICATIONINSIGHTS_CONNECTION_STRING=<dev-app-insights>
@@ -214,7 +295,7 @@ AZURE_VOICELIVE_MODEL=gpt-realtime
 
 # Chat - Test deployment with rate limiting
 AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax-test/openai/v1
-AZURE_AI_DEPLOYMENT=gpt-5.1-chat
+AZURE_AI_DEPLOYMENT=gpt-5-chat
 
 # Test database
 DATABASE_URL=postgresql://test_user@test-postgres/engram_test
@@ -297,7 +378,7 @@ AZURE_VOICELIVE_VOICE=en-US-Ava:DragonHDLatestNeural
 
 # Chat - Production gateway, UAT deployment
 AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax/openai/v1
-AZURE_AI_DEPLOYMENT=gpt-5.1-chat
+AZURE_AI_DEPLOYMENT=gpt-5-chat
 
 # UAT database with anonymized data
 DATABASE_URL=postgresql://uat_user@uat-postgres/engram_uat
@@ -401,7 +482,7 @@ AZURE_VOICELIVE_VOICE=en-US-Ava:DragonHDLatestNeural
 
 # Chat - Production gateway with premium tier
 AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax/openai/v1
-AZURE_AI_DEPLOYMENT=gpt-5.1-chat
+AZURE_AI_DEPLOYMENT=gpt-5-chat
 
 # Production database
 DATABASE_URL=postgresql://prod_user@prod-postgres/engram_prod
@@ -579,9 +660,10 @@ audit-storage-key          # Audit log storage
 | Symptom | Cause | Resolution |
 |---------|-------|------------|
 | `voicelive_configured: false` | Missing endpoint | Set `AZURE_VOICELIVE_ENDPOINT` |
+| `key must be a string` | Missing/empty key in API-key mode | Set `AZURE_VOICELIVE_KEY` (or use Managed Identity auth) |
 | 401 Unauthorized | Invalid credential | Check Managed Identity / Key Vault |
 | WebSocket disconnect | Network timeout | Increase client timeout, check firewall |
-| Audio quality poor | Codec mismatch | Ensure PCM16, 24kHz, mono |
+| Audio quality poor | Codec mismatch | Ensure PCM16, 16kHz, mono |
 
 ### 9.2 Chat Issues
 
@@ -621,23 +703,22 @@ curl https://<api-url>/api/v1/voice/status | jq
 | `/health` | GET | None | Health check |
 | `/api/v1/voice/status` | GET | None | VoiceLive status |
 | `/api/v1/voice/config/{agent}` | GET | None | Agent voice config |
-| `/api/v1/voice/ws` | WS | Token | Voice WebSocket |
-| `/api/v1/chat` | POST | Token | Chat message |
+| `/api/v1/voice/voicelive/{session_id}` | WS | None (POC) | Voice WebSocket (VoiceLive proxy) |
+| `/api/v1/chat` | POST | Depends | Chat message (POC: no auth; Prod: Bearer JWT) |
 | `/api/v1/agents` | GET | None | List agents |
 
 ### 10.2 Voice WebSocket Protocol
 
 ```json
 // Client -> Server
-{"type": "init", "session_id": "...", "agent_id": "elena"}
 {"type": "audio", "data": "<base64-pcm16>"}
-{"type": "switch_agent", "agent_id": "marcus"}
-{"type": "end"}
+{"type": "agent", "agent_id": "marcus"}
+{"type": "cancel"}
 
 // Server -> Client
-{"type": "ready", "session_id": "...", "agent": {...}}
+{"type": "agent_switched", "agent_id": "elena"}
 {"type": "transcription", "status": "listening|processing|complete", "text": "..."}
-{"type": "audio", "data": "<base64-pcm16>"}
+{"type": "audio", "data": "<base64-pcm16>", "format": "audio/pcm16"}
 {"type": "agent_switched", "agent_id": "marcus"}
 {"type": "error", "message": "..."}
 ```

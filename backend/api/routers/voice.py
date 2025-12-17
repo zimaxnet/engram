@@ -116,7 +116,7 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
     if not voicelive_service.is_configured:
         await websocket.send_json({
             "type": "error",
-            "message": "VoiceLive not configured. Set AZURE_VOICELIVE_ENDPOINT and AZURE_VOICELIVE_KEY."
+            "message": "VoiceLive not configured. Set AZURE_VOICELIVE_ENDPOINT and provide auth (AZURE_VOICELIVE_KEY or Managed Identity)."
         })
         await websocket.close()
         return
@@ -125,7 +125,6 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
     
     try:
         # Import VoiceLive SDK
-        from azure.core.credentials import AzureKeyCredential
         from azure.ai.voicelive.aio import connect
         from azure.ai.voicelive.models import (
             RequestSession, Modality, InputAudioFormat, OutputAudioFormat,
@@ -136,7 +135,7 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
         agent_config = session["voice_config"]
         
         # Get VoiceLive credential
-        credential = AzureKeyCredential(voicelive_service.key)
+        credential = voicelive_service.get_credential()
         
         # Connect to VoiceLive
         async with connect(
