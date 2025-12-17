@@ -27,7 +27,6 @@ logger = logging.getLogger(__name__)
 # For production (Azure Container Apps + SWA), we must allow our domains.
 mcp_server = FastMCP(
     "Engram MCP Server",
-    dependencies=["mcp"], 
     warn_on_duplicate_resources=False
 )
 
