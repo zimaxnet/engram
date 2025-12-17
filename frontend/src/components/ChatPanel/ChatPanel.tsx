@@ -120,6 +120,16 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // Cleanup microphone on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+    };
+  }, []);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isTyping) return

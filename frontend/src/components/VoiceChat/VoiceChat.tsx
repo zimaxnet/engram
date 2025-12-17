@@ -75,6 +75,25 @@ export default function VoiceChat({
     onStatusChangeRef.current = onStatusChange;
   }, [onMessage, onVisemes, onStatusChange]);
 
+  // Cleanup microphone on unmount
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => { });
+        audioContextRef.current = null;
+      }
+      if (processorRef.current) {
+        processorRef.current.disconnect();
+        processorRef.current = null;
+      }
+      cancelAnimationFrame(animationFrameRef.current);
+    };
+  }, []);
+
   // Audio Queue
   const audioQueueRef = useRef<Float32Array[]>([]);
   const isPlayingRef = useRef(false);
