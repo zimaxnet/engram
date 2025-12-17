@@ -310,8 +310,21 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
                 </div>
               )}
               <div className="message-text">{message.content}</div>
-              <div className="message-time">
-                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              <div className="message-footer">
+                <span className="message-time">
+                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+                {message.role === 'assistant' && message.tokensUsed !== undefined && (
+                  <span className="message-metrics">
+                    · {message.tokensUsed} tokens
+                    {/* Latency support requires updating the Message interface or passing it down. 
+                         For now, we'll placeholder or just show tokens. 
+                         Actually, we only have tokensUsed in Message interface. 
+                         Let's assume latency might be added or we just show tokens. 
+                         Metrics update does receive latency.
+                      */}
+                  </span>
+                )}
               </div>
             </div>
           </div>

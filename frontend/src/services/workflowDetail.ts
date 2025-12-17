@@ -7,6 +7,8 @@ export interface WorkflowStep {
   attempts?: number
   meta?: string
   note?: string
+  inputs?: unknown
+  outputs?: unknown
 }
 
 export interface WorkflowDetailModel {
@@ -24,7 +26,7 @@ import { getWorkflowDetail as apiGetWorkflowDetail } from './api'
 
 export async function getWorkflowDetail(workflowId: string): Promise<WorkflowDetailModel> {
   const detail = await apiGetWorkflowDetail(workflowId)
-  
+
   // Map backend response to frontend format
   return {
     workflowId: detail.workflow_id,
@@ -40,6 +42,8 @@ export async function getWorkflowDetail(workflowId: string): Promise<WorkflowDet
       attempts: s.attempts,
       meta: s.meta || s.metadata,
       note: s.note,
+      inputs: s.inputs,
+      outputs: s.outputs,
     })),
     contextSnapshot: detail.context_snapshot || [
       { k: 'Workflow ID', v: detail.workflow_id },

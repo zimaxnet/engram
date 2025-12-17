@@ -108,9 +108,25 @@
   border-top-right-radius: var(--radius-sm);
 }
 
-.message-time {
-  font-size: 0.6875rem;
+/* Message Footer with Metrics */
+.message-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-top: 4px;
+  font-size: 0.70rem;
   color: var(--color-text-muted);
+  opacity: 0.8;
+}
+
+.message-metrics {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.message-time {
+  font-size: inherit; /* Inherit from footer */
+  color: inherit;
 }
 
 /* Typing Indicator */

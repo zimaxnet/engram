@@ -1,5 +1,23 @@
 import { useEffect, useMemo, useState } from 'react';
 import './SourcesPage.css';
+
+/* Inline styles for quick implementation - normally goes in SourcesPage.css */
+const errorStyle = `
+  .error-details {
+    margin-top: 8px;
+    padding: 8px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 4px;
+    color: #ef4444; /* var(--color-error) */
+    font-size: 0.8rem;
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+    line-height: 1.4;
+  }
+`;
+
 import {
   createSource,
   listIngestQueue,
@@ -111,6 +129,7 @@ export function SourcesPage() {
 
   return (
     <div className="sources-page">
+      <style>{errorStyle}</style>
       {error && (
         <div className="callout status-error" role="alert">
           {error}
@@ -180,6 +199,12 @@ export function SourcesPage() {
                   <span key={tag} className="tag">{tag}</span>
                 ))}
               </div>
+              {source.status === 'error' && source.errorMessage && (
+                <div className="error-details">
+                  <span className="error-icon">⚠️</span>
+                  {source.errorMessage}
+                </div>
+              )}
               <div className="card-actions">
                 <button className="ghost sm">View activity</button>
                 <button className="ghost sm">Pause</button>
@@ -407,9 +432,9 @@ function StatusChip({ status }: { status: IngestStatus }) {
     status === 'healthy'
       ? 'Healthy'
       : status === 'indexing'
-      ? 'Indexing'
-      : status === 'paused'
-      ? 'Paused'
-      : 'Error';
+        ? 'Indexing'
+        : status === 'paused'
+          ? 'Paused'
+          : 'Error';
   return <span className={`pill status-${status}`}>{label}</span>;
 }

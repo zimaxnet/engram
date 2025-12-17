@@ -14,7 +14,11 @@ from mcp.server.fastmcp import FastMCP, Context
 
 from backend.agents import chat as agent_chat, get_agent
 from backend.core import EnterpriseContext, SecurityContext, Role
-from backend.memory import enrich_context, persist_conversation
+from backend.memory import enrich_context, persist_conversation, search_memory as mem_search
+from backend.validation import validation_service
+from backend.bau import bau_service
+from backend.orchestration import workflow_service
+from backend.etl import ingestion_service
 
 logger = logging.getLogger(__name__)
 
@@ -153,16 +157,136 @@ async def enrich_memory(text: str, session_id: Optional[str] = None) -> str:
 @mcp_server.tool()
 async def search_memory(query: str, session_id: Optional[str] = None) -> str:
     """
-    Search the semantic memory (RAG).
+    Search the semantic memory (RAG) for relevant facts and episodes.
     
     Args:
         query: The search query.
-        session_id: Optional session ID for context-aware search.
+        session_id: Optional session ID context.
     """
-    # In a real implementation, we would expose memory.search or similar.
-    # For now, we simulate or reuse enrich_context which retrieves facts.
-    # A dedicated search function would be better in backend.memory.
-    return f"Memory search for '{query}' initiated. (Result simulation)"
+    try:
+        # 1. Security Context (Simulated for MCP)
+        security = SecurityContext(
+            user_id="mcp-user", 
+            tenant_id="mcp-tenant", 
+            roles=[Role.ANALYST], 
+            scopes=["*"]
+        )
+        
+        # 2. Perform Search
+        results = await mem_search(query, security)
+        
+        # 3. Format Results
+        if not results:
+            return "No relevant memories found."
+            
+        formatted = "\n".join([f"- [{r.node_type}] {r.content} (Confidence: {r.confidence:.2f})" for r in results[:5]])
+        return f"Found relevant memories:\n{formatted}"
+        
+    except Exception as e:
+        logger.error(f"Memory search failed: {e}")
+        return f"Error searching memory: {str(e)}"
+
+
+@mcp_server.tool()
+async def run_golden_thread(dataset_id: str = "cogai-thread", mode: str = "deterministic") -> str:
+    """
+    Run the Golden Thread validation suite to verify system integrity.
+    
+    Args:
+        dataset_id: The ID of the dataset to run (default: 'cogai-thread').
+        mode: Execution mode, 'deterministic' (mock) or 'acceptance' (real).
+    """
+    try:
+        run = await validation_service.run_golden_thread(dataset_id, mode)
+        return (
+            f"Golden Thread Run Complete.\n"
+            f"Run ID: {run.summary.run_id}\n"
+            f"Status: {run.summary.status}\n"
+            f"Passed: {run.summary.checks_passed}/{run.summary.checks_total}\n"
+            f"Link: /validation/runs/{run.summary.run_id}"
+        )
+    except Exception as e:
+        return f"Failed to run Golden Thread: {str(e)}"
+
+
+@mcp_server.tool()
+async def list_bau_flows() -> str:
+    """
+    List available Business As Usual (BAU) workflows.
+    """
+    try:
+        flows = await bau_service.list_flows()
+        formatted = "\n".join([f"- [{f.id}] {f.title}: {f.description}" for f in flows])
+        return f"Available BAU Flows:\n{formatted}"
+    except Exception as e:
+        return f"Error listing BAU flows: {str(e)}"
+
+
+@mcp_server.tool()
+async def start_bau_flow(flow_id: str, initial_message: Optional[str] = None) -> str:
+    """
+    Start a specific BAU workflow.
+    
+    Args:
+        flow_id: The ID of the flow to start (get from list_bau_flows).
+        initial_message: Optional initial input for the flow.
+    """
+    try:
+        result = await bau_service.start_flow(flow_id, initial_message)
+        return (
+            f"BAU Flow Started.\n"
+            f"Workflow ID: {result.workflow_id}\n"
+            f"Session ID: {result.session_id}\n"
+            f"Initial Response: {result.message}"
+        )
+    except Exception as e:
+        return f"Failed to start flow {flow_id}: {str(e)}"
+
+
+@mcp_server.tool()
+async def trigger_ingestion(source_name: str, kind: str = "Upload", url: Optional[str] = None) -> str:
+    """
+    Trigger a new data ingestion/ETL source.
+    
+    Args:
+        source_name: Name for the source.
+        kind: Type of source ('Upload', 'S3', 'SharePoint', 'Web').
+        url: URL or path for the source (optional for Upload).
+    """
+    try:
+        # Security stub
+        security = SecurityContext(user_id="mcp-user", tenant_id="mcp-tenant", roles=[Role.ADMIN], scopes=["*"])
+        
+        source = await ingestion_service.create_source({
+            "name": source_name,
+            "kind": kind,
+            "config": {"url": url} if url else {}
+        }, security)
+        
+        return f"Ingestion Source Created: {source.id} (Status: {source.status})"
+    except Exception as e:
+        return f"Failed to trigger ingestion: {str(e)}"
+
+
+@mcp_server.tool()
+async def get_workflow_status(workflow_id: str) -> str:
+    """
+    Get the status of a Temporal workflow.
+    
+    Args:
+        workflow_id: The ID of the workflow to check.
+    """
+    try:
+        wf = await workflow_service.get_workflow(workflow_id)
+        return (
+            f"Workflow: {workflow_id}\n"
+            f"Type: {wf.workflow_type}\n"
+            f"Status: {wf.status}\n"
+            f"Step: {wf.current_step}\n"
+            f"Summary: {wf.task_summary}"
+        )
+    except Exception as e:
+        return f"Error getting workflow status: {str(e)}"
 
 
 @mcp_server.tool()

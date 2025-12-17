@@ -1,6 +1,39 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import './WorkflowDetail.css'
+
+/* Inline styles for step IO */
+const stepIoStyle = `
+  .step-io {
+    margin-top: 8px;
+    font-size: 0.75rem;
+  }
+  .step-io summary {
+    cursor: pointer;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+  }
+  .step-io-content {
+    margin-top: 4px;
+    padding: 8px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 4px;
+  }
+  .step-io pre {
+    margin: 4px 0 8px 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-family: var(--font-mono);
+    color: var(--color-text-dim);
+  }
+  .step-io label {
+    display: block;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    margin-bottom: 2px;
+  }
+`;
+
 import { getWorkflowDetail, type WorkflowDetailModel } from '../../services/workflowDetail'
 import { signalWorkflow } from '../../services/api'
 
@@ -46,6 +79,7 @@ export function WorkflowDetail() {
 
   return (
     <div className="column column-center">
+      <style>{stepIoStyle}</style>
       <div className="wfd page-pad">
         <div className="wfd__header">
           <div>
@@ -94,6 +128,27 @@ export function WorkflowDetail() {
                         </span>
                       </div>
                       {s.note && <div className="callout">{s.note}</div>}
+                      {(s.inputs || s.outputs) && (
+                        <div className="step-io">
+                          <details>
+                            <summary>IO Trace</summary>
+                            <div className="step-io-content">
+                              {s.inputs && (
+                                <div>
+                                  <label>Inputs</label>
+                                  <pre>{JSON.stringify(s.inputs, null, 2)}</pre>
+                                </div>
+                              )}
+                              {s.outputs && (
+                                <div>
+                                  <label>Outputs</label>
+                                  <pre>{JSON.stringify(s.outputs, null, 2)}</pre>
+                                </div>
+                              )}
+                            </div>
+                          </details>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

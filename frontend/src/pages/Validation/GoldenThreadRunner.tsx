@@ -1,5 +1,30 @@
 import { useEffect, useMemo, useState } from 'react'
 import './GoldenThreadRunner.css'
+
+/* Inline styles for check details */
+const checkDetailsStyle = `
+  .check-details {
+    margin-top: 8px;
+    font-size: 0.75rem;
+    width: 100%;
+  }
+  .check-details summary {
+    cursor: pointer;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    margin-bottom: 4px;
+  }
+  .check-details pre {
+    background: rgba(0,0,0,0.2);
+    padding: 8px;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-family: var(--font-mono);
+    color: var(--color-text-dim);
+  }
+`;
+
 import {
   getLatestGoldenRun,
   listGoldenDatasets,
@@ -55,6 +80,7 @@ export function GoldenThreadRunner() {
 
   return (
     <div className="column column-center">
+      <style>{checkDetailsStyle}</style>
       <div className="gtr page-pad">
         <div className="gtr__header">
           <div>
@@ -172,6 +198,12 @@ export function GoldenThreadRunner() {
                         <span className="subtle">{c.evidenceSummary ?? '—'}</span>
                         {c.durationMs != null && <span className="pill muted">{c.durationMs}ms</span>}
                       </div>
+                      {c.details && (
+                        <details className="check-details">
+                          <summary>Details</summary>
+                          <pre>{JSON.stringify(c.details, null, 2)}</pre>
+                        </details>
+                      )}
                     </div>
                   </li>
                 ))}
@@ -251,6 +283,6 @@ export function GoldenThreadRunner() {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   )
 }

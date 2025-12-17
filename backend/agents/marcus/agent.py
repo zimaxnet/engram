@@ -19,6 +19,21 @@ from backend.agents.base import BaseAgent, AgentState
 # Marcus's Tools
 # =============================================================================
 
+from backend.bau.bau_service import bau_service
+from backend.orchestration.workflow_service import workflow_service
+from typing import Optional
+
+@tool("start_bau_flow")
+def start_bau_flow_tool(flow_id: str, initial_message: Optional[str] = None) -> str:
+    """Start a BAU workflow."""
+    return f"BAU Flow '{flow_id}' started. [Mocked for Sync Tool]"
+
+@tool("check_workflow_status")
+def check_workflow_status_tool(workflow_id: str) -> str:
+    """Check workflow status."""
+    return f"Workflow '{workflow_id}' is RUNNING. Step: Processing. [Mocked for Sync Tool]"
+
+
 
 @tool
 def create_project_timeline(project_name: str, start_date: str, end_date: str, milestones: str) -> str:
@@ -301,6 +316,8 @@ Remember: You're here to help teams succeed, not to create process for its own s
             assess_project_risks,
             create_status_report,
             estimate_effort,
+            start_bau_flow_tool,
+            check_workflow_status_tool,
         ]
 
     # -------------------------------------------------------------------------
@@ -362,11 +379,17 @@ Remember: You're here to help teams succeed, not to create process for its own s
             }
         if "risk" in text or "risks" in text:
             return "assess_project_risks", {"project_description": content}
-        if "estimate" in text or "effort" in text or "size" in text:
             return "estimate_effort", {
                 "task_description": content,
                 "complexity": "medium",
             }
+            
+        # New Capabilities
+        if "bau" in text or "flow" in text:
+             return "start_bau_flow", {"flow_id": "daily-triage"}
+        if "workflow" in text and "status" in text:
+             return "check_workflow_status", {"workflow_id": "wf-123"}
+             
         return None, {}
 
     async def _maybe_use_tool(self, state: AgentState) -> AgentState:

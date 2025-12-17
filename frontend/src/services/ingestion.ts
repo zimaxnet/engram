@@ -13,6 +13,7 @@ export interface IngestSource {
   lastRun: string
   docs: number
   tags: string[]
+  errorMessage?: string
 }
 
 export interface IngestQueueItem {
@@ -44,6 +45,7 @@ const toSource = (s: any): IngestSource => ({
   lastRun: s.last_run ?? '—',
   docs: Number(s.docs ?? 0),
   tags: Array.isArray(s.tags) ? s.tags : [],
+  errorMessage: s.error_message || s.last_error,
 })
 
 const toQueueItem = (q: any): IngestQueueItem => ({
