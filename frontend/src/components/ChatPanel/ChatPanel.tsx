@@ -297,7 +297,7 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
                 <img
                   src={agent.avatarUrl}
                   alt={agent.name}
-                  onError={(e) => {
+                  onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
                     (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%233b82f6"/></svg>'
                   }}
                 />
@@ -317,12 +317,6 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
                 {message.role === 'assistant' && message.tokensUsed !== undefined && (
                   <span className="message-metrics">
                     · {message.tokensUsed} tokens
-                    {/* Latency support requires updating the Message interface or passing it down. 
-                         For now, we'll placeholder or just show tokens. 
-                         Actually, we only have tokensUsed in Message interface. 
-                         Let's assume latency might be added or we just show tokens. 
-                         Metrics update does receive latency.
-                      */}
                   </span>
                 )}
               </div>

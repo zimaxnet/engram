@@ -63,7 +63,13 @@ export default function VoiceChat({
   const animationFrameRef = useRef<number>(0);
   const streamRef = useRef<MediaStream | null>(null);
   const onStatusChangeRef = useRef(onStatusChange);
-  const defaultSessionIdRef = useRef<string>(`voicelive-${Date.now()}`);
+  // Use a state or effect to set the default session ID to ensure purity
+  const defaultSessionIdRef = useRef<string>('');
+  useEffect(() => {
+    if (!defaultSessionIdRef.current) {
+      defaultSessionIdRef.current = `voicelive-${Date.now()}`;
+    }
+  }, []);
 
   // Store callbacks in refs to avoid stale closures
   const onMessageRef = useRef(onMessage);
@@ -106,7 +112,8 @@ export default function VoiceChat({
     }
   }, []);
 
-  const processAudioQueue = useCallback(() => {
+  // Use a named function expression to allow safe recursion without circular const reference
+  const processAudioQueue = useCallback(function processQueue() {
     if (!audioContextRef.current || audioQueueRef.current.length === 0) {
       isPlayingRef.current = false;
       return;
@@ -132,7 +139,7 @@ export default function VoiceChat({
     nextStartTimeRef.current = startTime + buffer.duration;
 
     source.onended = () => {
-      processAudioQueue();
+      processQueue();
       if (audioQueueRef.current.length === 0) {
         setIsSpeaking(false);
       }
@@ -142,7 +149,7 @@ export default function VoiceChat({
   // Play audio and trigger visemes
   const playAudio = useCallback(async (
     audioBase64: string,
-    format: string,
+    format: string, // eslint-disable-line @typescript-eslint/no-unused-vars
     visemes: Viseme[]
   ) => {
     try {
@@ -252,7 +259,7 @@ export default function VoiceChat({
           break;
       }
     },
-    [playAudio]
+    [playAudio, agentId]
   );
 
   // Initialize WebSocket connection
