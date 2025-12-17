@@ -88,32 +88,27 @@ def create_app() -> FastAPI:
     
     # MCP (Model Context Protocol)
     # FastMCP provides a Starlette/ASGI compatible app for SSE
-    try:
-        from .routers.mcp import mcp_server
-        
-        # Get the underlying Starlette app
-        mcp_app = mcp_server.sse_app()
-        
-        # Fix: FastMCP defaults to strict "localhost" TrustedHostMiddleware.
-        # We must REMOVE the existing middleware to allow custom domains or permissive access.
-        from starlette.middleware.trustedhost import TrustedHostMiddleware
-        
-        # Filter out existing TrustedHostMiddleware from FastMCP's default stack
-        if hasattr(mcp_app, "user_middleware"):
-            mcp_app.user_middleware = [
-                 mw for mw in mcp_app.user_middleware 
-                 if mw.cls != TrustedHostMiddleware
-            ]
-            
-        # Re-add our permissive TrustedHostMiddleware
-        mcp_app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
+    from .routers.mcp_server import mcp_server
     
-        app.mount("/api/v1/mcp", mcp_app)
-        logger.info("Mounted MCP server at /api/v1/mcp")
+    # Get the underlying Starlette app
+    mcp_app = mcp_server.sse_app()
+    
+    # Fix: FastMCP defaults to strict "localhost" TrustedHostMiddleware.
+    # We must REMOVE the existing middleware to allow custom domains or permissive access.
+    from starlette.middleware.trustedhost import TrustedHostMiddleware
+    
+    # Filter out existing TrustedHostMiddleware from FastMCP's default stack
+    if hasattr(mcp_app, "user_middleware"):
+        mcp_app.user_middleware = [
+             mw for mw in mcp_app.user_middleware 
+             if mw.cls != TrustedHostMiddleware
+        ]
         
-    except Exception as e:
-        logger.error(f"Failed to mount MCP server: {e}")
-        # Continue startup without MCP
+    # Re-add our permissive TrustedHostMiddleware
+    mcp_app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
+
+    app.mount("/api/v1/mcp", mcp_app)
+    logger.info("Mounted MCP server at /api/v1/mcp")
 
 
     return app
