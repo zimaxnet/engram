@@ -130,6 +130,26 @@ Implementation notes:
 
 If you want per-interaction sessions instead, pass a different `session_id` for chat and voice (they will become separate Zep sessions/episodes).
 
+#### Validate voice→memory end-to-end (manual)
+
+1) Open Engram UI and run a short voice exchange (2–3 turns).
+
+2) In browser DevTools, read the shared session id:
+
+```js
+sessionStorage.getItem("engram_session_id")
+```
+
+3) Fetch the transcript from the backend:
+
+```bash
+API_BASE="https://<CUSTOMER_ENGRAM_API_FQDN>"
+SESSION_ID="<paste from sessionStorage>"
+curl -sS "$API_BASE/api/v1/memory/episodes/$SESSION_ID"
+```
+
+You should see new `user` + `assistant` messages corresponding to what was spoken/heard.
+
 ### Reference: Azure AI Foundry VoiceLive Playground (env vars + SDK behavior)
 
 The Azure AI Foundry “**Azure Speech Voice Live**” playground uses the same `azure-ai-voicelive` SDK patterns that Engram uses.
