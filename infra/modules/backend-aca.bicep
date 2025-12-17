@@ -119,6 +119,11 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
           identity: identityResourceId
         }
         {
+          name: 'azure-ai-key'
+          keyVaultUrl: '${keyVaultUri}secrets/azure-ai-key'
+          identity: identityResourceId
+        }
+        {
           name: 'registry-password'
           value: registryPassword
         }
@@ -198,12 +203,28 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
               value: azureAiProjectName
             }
             {
+              name: 'AZURE_AI_DEPLOYMENT'
+              value: 'gpt-5-chat'
+            }
+            {
+              name: 'AZURE_AI_API_VERSION'
+              value: '2024-10-01-preview'
+            }
+            {
+              name: 'AZURE_AI_KEY'
+              secretRef: 'azure-ai-key'
+            }
+            {
               name: 'AZURE_VOICELIVE_ENDPOINT'
               value: azureVoiceLiveEndpoint
             }
             {
               name: 'AZURE_VOICELIVE_MODEL'
               value: 'gpt-realtime'
+            }
+            {
+              name: 'AZURE_VOICELIVE_KEY'
+              secretRef: 'azure-ai-key'
             }
             {
               name: 'CORS_ORIGINS'
