@@ -133,6 +133,9 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
             roles=[Role.ADMIN],
             scopes=["*"],
             session_id=session_id,
+            token_expiry=None,
+            email=None,
+            display_name=None,
         )
     else:
         # Future: validate Entra token for WS and map to SecurityContext.
@@ -143,9 +146,12 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
             roles=[Role.ANALYST],
             scopes=["*"],
             session_id=session_id,
+            token_expiry=None,
+            email=None,
+            display_name=None,
         )
 
-    voice_context = EnterpriseContext(security=security)
+    voice_context = EnterpriseContext(security=security, context_version="1.0.0")
     voice_context.episodic.conversation_id = session_id
     session["context"] = voice_context
 
@@ -183,8 +189,8 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
     
     try:
         # Import VoiceLive SDK
-        from azure.ai.voicelive.aio import connect
-        from azure.ai.voicelive.models import (
+        from azure.ai.voicelive.aio import connect  # type: ignore[import-not-found]
+        from azure.ai.voicelive.models import (  # type: ignore[import-not-found]
             RequestSession, Modality, InputAudioFormat, OutputAudioFormat,
             ServerVad, ServerEventType, AzureStandardVoice
         )
@@ -229,6 +235,10 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                 user_transcript_buf = ""
                 assistant_text_buf = ""
                 assistant_audio_transcript_buf = ""
+                # Per-response flags to avoid duplicate UI emits / duplicate memory persistence
+                assistant_text_seen = False
+                assistant_turn_committed = False
+                assistant_transcript_final_sent = False
 
                 async def _persist_latest_turns():
                     """Best-effort persistence of the latest user+assistant turns into Zep."""
@@ -262,6 +272,7 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                             user_transcript_buf += str(delta)
                             await websocket.send_json({
                                 "type": "transcription",
+                                "speaker": "user",
                                 "status": "processing",
                                 "text": user_transcript_buf,
                             })
@@ -282,14 +293,30 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                                 # Send to UI as "You said"
                                 await websocket.send_json({
                                     "type": "transcription",
+                                    "speaker": "user",
                                     "status": "complete",
                                     "text": final_text,
                                 })
 
                                 # Store as episodic memory (user turn)
                                 voice_context.episodic.add_turn(
-                                    Turn(role=MessageRole.USER, content=final_text)
+                                    Turn(
+                                        role=MessageRole.USER,
+                                        content=final_text,
+                                        agent_id=None,
+                                        tool_calls=None,
+                                        token_count=None,
+                                    )
                                 )
+
+                        elif event.type == ServerEventType.RESPONSE_CREATED:
+                            # New assistant response: reset per-response buffers/flags to avoid
+                            # cross-response transcript bleed and duplicate persistence.
+                            assistant_text_buf = ""
+                            assistant_audio_transcript_buf = ""
+                            assistant_text_seen = False
+                            assistant_turn_committed = False
+                            assistant_transcript_final_sent = False
 
                         elif event.type == ServerEventType.RESPONSE_AUDIO_DELTA:
                             # Send audio chunk to client
@@ -301,26 +328,64 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                             })
                         
                         elif event.type == ServerEventType.RESPONSE_AUDIO_TRANSCRIPT_DELTA:
-                            # Assistant audio transcript (partial) - useful for memory fallback
                             delta = getattr(event, "delta", "") or ""
-                            assistant_audio_transcript_buf += str(delta)
+                            if delta:
+                                assistant_audio_transcript_buf += str(delta)
+                                # Stream assistant transcript to UI only when text events aren't available.
+                                if not assistant_text_seen:
+                                    await websocket.send_json({
+                                        "type": "transcription",
+                                        "speaker": "assistant",
+                                        "status": "processing",
+                                        "text": assistant_audio_transcript_buf,
+                                    })
 
                         elif event.type == ServerEventType.RESPONSE_AUDIO_TRANSCRIPT_DONE:
-                            # Assistant audio transcript (final) - fallback if RESPONSE_TEXT_* isn't emitted
-                            # Some SDK event shapes expose transcript/text; otherwise use accumulated buffer.
                             final_text = (
                                 getattr(event, "transcript", None)
                                 or getattr(event, "text", None)
                                 or assistant_audio_transcript_buf
                                 or ""
                             )
-                            # Don't immediately persist here; prefer RESPONSE_TEXT_DONE, but keep buffer.
-                            assistant_audio_transcript_buf = str(final_text)
+                            final_text = str(final_text).strip()
+                            assistant_audio_transcript_buf = final_text
+
+                            # If we didn't get RESPONSE_TEXT_* events, treat audio transcript as canonical.
+                            if final_text and not assistant_text_seen:
+                                if not assistant_transcript_final_sent:
+                                    await websocket.send_json({
+                                        "type": "transcription",
+                                        "speaker": "assistant",
+                                        "status": "complete",
+                                        "text": final_text,
+                                    })
+                                    assistant_transcript_final_sent = True
+
+                                if not assistant_turn_committed:
+                                    voice_context.episodic.add_turn(
+                                        Turn(
+                                            role=MessageRole.ASSISTANT,
+                                            content=final_text,
+                                            agent_id=session.get("agent_id", "elena"),
+                                            tool_calls=None,
+                                            token_count=None,
+                                        )
+                                    )
+                                    assistant_turn_committed = True
+                                    asyncio.create_task(_persist_latest_turns())
 
                         elif event.type == ServerEventType.RESPONSE_TEXT_DELTA:
                             # Assistant text output (partial)
                             delta = getattr(event, "delta", "") or ""
-                            assistant_text_buf += str(delta)
+                            if delta:
+                                assistant_text_seen = True
+                                assistant_text_buf += str(delta)
+                                await websocket.send_json({
+                                    "type": "transcription",
+                                    "speaker": "assistant",
+                                    "status": "processing",
+                                    "text": assistant_text_buf,
+                                })
 
                         elif event.type == ServerEventType.RESPONSE_TEXT_DONE:
                             # Assistant text output (final)
@@ -332,31 +397,62 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                             )
                             final_text = str(final_text).strip()
                             assistant_text_buf = ""
+                            assistant_text_seen = True
+                            # Clear audio transcript buffer to prevent RESPONSE_DONE fallback from
+                            # duplicating the assistant turn when audio transcript content exists.
+                            assistant_audio_transcript_buf = ""
 
                             if final_text:
+                                await websocket.send_json({
+                                    "type": "transcription",
+                                    "speaker": "assistant",
+                                    "status": "complete",
+                                    "text": final_text,
+                                })
+                                assistant_transcript_final_sent = True
+
                                 voice_context.episodic.add_turn(
                                     Turn(
                                         role=MessageRole.ASSISTANT,
                                         content=final_text,
                                         agent_id=session.get("agent_id", "elena"),
+                                        tool_calls=None,
+                                        token_count=None,
                                     )
                                 )
+                                assistant_turn_committed = True
                                 asyncio.create_task(_persist_latest_turns())
 
                         elif event.type == ServerEventType.RESPONSE_DONE:
-                            # Fallback: persist assistant transcript if we didn't get RESPONSE_TEXT_DONE
-                            if not assistant_text_buf and assistant_audio_transcript_buf:
-                                final_text = str(assistant_audio_transcript_buf).strip()
-                                assistant_audio_transcript_buf = ""
-                                if final_text:
+                            # Final fallback: if we still haven't committed an assistant turn,
+                            # persist whatever transcript we have (text preferred, then audio).
+                            if not assistant_turn_committed:
+                                fallback_text = (assistant_text_buf or assistant_audio_transcript_buf or "").strip()
+                                if fallback_text:
+                                    if not assistant_transcript_final_sent:
+                                        await websocket.send_json({
+                                            "type": "transcription",
+                                            "speaker": "assistant",
+                                            "status": "complete",
+                                            "text": fallback_text,
+                                        })
+                                        assistant_transcript_final_sent = True
+
                                     voice_context.episodic.add_turn(
                                         Turn(
                                             role=MessageRole.ASSISTANT,
-                                            content=final_text,
+                                            content=fallback_text,
                                             agent_id=session.get("agent_id", "elena"),
+                                            tool_calls=None,
+                                            token_count=None,
                                         )
                                     )
+                                    assistant_turn_committed = True
                                     asyncio.create_task(_persist_latest_turns())
+
+                            # Always clear buffers at end of response.
+                            assistant_text_buf = ""
+                            assistant_audio_transcript_buf = ""
                         
                         elif event.type == ServerEventType.ERROR:
                             error_msg = event.error.message if hasattr(event, 'error') else "Unknown error"

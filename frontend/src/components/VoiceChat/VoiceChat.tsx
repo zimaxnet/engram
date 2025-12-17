@@ -24,7 +24,7 @@ interface Viseme {
 }
 
 type IncomingMessage =
-  | { type: 'transcription'; status: 'listening' | 'processing' | 'complete' | 'error'; text?: string }
+  | { type: 'transcription'; speaker?: 'user' | 'assistant'; status: 'listening' | 'processing' | 'complete' | 'error'; text?: string }
   | { type: 'audio'; data: string; format?: string }
   | { type: 'agent_switched'; agent_id: string }
   | { type: 'error'; message: string };
@@ -49,7 +49,8 @@ export default function VoiceChat({
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [transcription, setTranscription] = useState('');
+  const [userTranscription, setUserTranscription] = useState('');
+  const [assistantTranscription, setAssistantTranscription] = useState('');
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
   const [error, setError] = useState<string | null>(null);
   const [audioLevel, setAudioLevel] = useState(0);
@@ -111,7 +112,25 @@ export default function VoiceChat({
     (data: IncomingMessage) => {
       switch (data.type) {
         case 'transcription':
-          setTranscription(data.text || '');
+          if (data.speaker === 'assistant') {
+            setAssistantTranscription(data.text || '');
+            if (data.status === 'complete' && data.text) {
+              onMessageRef.current?.({
+                id: `assistant-${Date.now()}`,
+                type: 'agent',
+                agentId,
+                text: data.text,
+                timestamp: new Date(),
+              });
+            }
+            if (data.status === 'error') {
+              setError(data.text || 'Assistant transcription error');
+            }
+            break;
+          }
+
+          // Default: user transcription
+          setUserTranscription(data.text || '');
           setIsProcessing(data.status === 'processing');
           if (data.status === 'complete' && data.text) {
             onMessageRef.current?.({
@@ -137,7 +156,8 @@ export default function VoiceChat({
           break;
 
         case 'agent_switched':
-          setTranscription('');
+          setUserTranscription('');
+          setAssistantTranscription('');
           setIsProcessing(false);
           setIsSpeaking(false);
           break;
@@ -234,6 +254,7 @@ export default function VoiceChat({
   const startListening = async () => {
     try {
       setError(null);
+      setAssistantTranscription('');
       if (connectionStatus !== 'connected') {
         setError('Voice connection not ready');
         return;
@@ -270,7 +291,7 @@ export default function VoiceChat({
       processorRef.current = processor;
 
       setIsListening(true);
-      setTranscription('');
+      setUserTranscription('');
       setIsProcessing(true);
     } catch (e) {
       console.error('Failed to start recording:', e);
@@ -387,10 +408,19 @@ export default function VoiceChat({
       </div>
 
       {/* Transcription Display */}
-      {transcription && (
+      {userTranscription && (
         <div className="transcription">
           <span className="transcription-label">You said:</span>
-          <span className="transcription-text">{transcription}</span>
+          <span className="transcription-text">{userTranscription}</span>
+        </div>
+      )}
+
+      {assistantTranscription && (
+        <div className="transcription">
+          <span className="transcription-label">
+            {agentId === 'marcus' ? 'Marcus said:' : 'Elena said:'}
+          </span>
+          <span className="transcription-text">{assistantTranscription}</span>
         </div>
       )}
 
