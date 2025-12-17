@@ -251,8 +251,9 @@ resource storage 'Microsoft.Storage/storageAccounts@2021-09-01' = {
 }
 
 // RBAC: grant blob contributor to backend/worker identities
-resource storageBlobContributorBackend 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = if (!empty(backendIdentity.properties.principalId)) {
-  name: guid(storage.id, backendIdentity.properties.principalId, 'blob-contrib-backend')
+// RBAC: grant blob contributor to backend/worker identities
+resource storageBlobContributorBackend 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storage.id, backendIdentity.name, 'blob-contrib-backend')
   scope: storage
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe') // Storage Blob Data Contributor
@@ -261,37 +262,13 @@ resource storageBlobContributorBackend 'Microsoft.Authorization/roleAssignments@
   }
 }
 
-resource storageBlobContributorWorker 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = if (!empty(workerIdentity.properties.principalId)) {
-  name: guid(storage.id, workerIdentity.properties.principalId, 'blob-contrib-worker')
+resource storageBlobContributorWorker 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storage.id, workerIdentity.name, 'blob-contrib-worker')
   scope: storage
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
     principalId: workerIdentity.properties.principalId
     principalType: 'ServicePrincipal'
-  }
-}
-
-// Storage role assignment IDs
-var storageBlobDataContributorRole = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
-
-// Assign Storage Blob Data Contributor to backend and worker identities
-module backendStorageRole 'modules/role-assignment.bicep' = {
-  name: 'backend-storage-role'
-  scope: storage
-  params: {
-    principalId: backendIdentity.properties.principalId
-    roleDefinitionId: storageBlobDataContributorRole
-    nameSeed: 'backend-storage'
-  }
-}
-
-module workerStorageRole 'modules/role-assignment.bicep' = {
-  name: 'worker-storage-role'
-  scope: storage
-  params: {
-    principalId: workerIdentity.properties.principalId
-    roleDefinitionId: storageBlobDataContributorRole
-    nameSeed: 'worker-storage'
   }
 }
 
@@ -323,7 +300,6 @@ module keyVaultModule 'modules/keyvault.bicep' = {
   params: {
     location: location
     // Key Vault names must be 3-24 alphanumeric only; strip hyphens from envName and suffix a short unique string
-    // The prior name is stuck in soft-deleted state; add a static differentiator to avoid the collision
     keyVaultName: '${toLower(replace(envName, '-', ''))}kvy${take(uniqueString(resourceGroup().id), 5)}'
     enableSoftDelete: true
     enablePurgeProtection: isProd || environment == 'uat'
@@ -348,8 +324,6 @@ module keyVaultSecrets 'modules/keyvault-secrets.bicep' = {
 // =============================================================================
 // Key Vault Secrets User (4633458b-17de-408a-b874-0445c86b69e6)
 var keyVaultSecretsUserRole = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
-// Storage Blob Data Contributor
-var storageBlobDataContributor = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
 
 module backendKvRole 'modules/role-assignment.bicep' = {
   name: 'backend-kv-role'
@@ -366,16 +340,6 @@ module workerKvRole 'modules/role-assignment.bicep' = {
     principalId: workerIdentity.properties.principalId
     roleDefinitionId: keyVaultSecretsUserRole
     nameSeed: 'worker-kv'
-  }
-}
-
-module backendStorageRole 'modules/role-assignment.bicep' = {
-  name: 'backend-storage-role'
-  params: {
-    principalId: backendIdentity.properties.principalId
-    roleDefinitionId: storageBlobDataContributor
-    nameSeed: 'backend-storage'
-    scope: storage.id
   }
 }
 
@@ -539,4 +503,4 @@ output temporalUIFqdn string = temporalModule.outputs.temporalUIDefaultFqdn
 output zepApiUrl string = zepApiUrl
 
 output storageAccountName string = storage.name
-output aksClusterId string = isProd ? aksCluster.outputs.clusterId : ''
+// output aksClusterId string = isProd ? aksCluster.outputs.clusterId : ''

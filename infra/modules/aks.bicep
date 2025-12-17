@@ -39,12 +39,10 @@ resource aks 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
     name: 'Base'
     tier: 'Standard'
   }
-  properties: {
+    properties: {
     dnsPrefix: empty(dnsPrefix) ? aksName : dnsPrefix
     enableRBAC: true
-    privateClusterProfile: {
-      enabled: enablePrivateCluster
-    }
+    // privateClusterProfile is set in apiServerAccessProfile for this API version
     securityProfile: {
       workloadIdentity: {
         enabled: true
@@ -96,6 +94,6 @@ resource aks 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
   }
 }
 
-output kubeletIdentityClientId string = aks.identityProfile.kubeletidentity.clientId
-output kubeletIdentityObjectId string = aks.identityProfile.kubeletidentity.objectId
+output kubeletIdentityClientId string = aks.properties.identityProfile.kubeletidentity.clientId
+output kubeletIdentityObjectId string = aks.properties.identityProfile.kubeletidentity.objectId
 output clusterId string = aks.id
