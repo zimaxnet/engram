@@ -122,7 +122,7 @@ class FoundryChatClient:
         if self.credential:
             token = self.credential.get_token(self.scope)
             headers["Authorization"] = f"Bearer {token.token}"
-
+        
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             try:
                 response = await client.post(self.url, headers=headers, json=payload)

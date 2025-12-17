@@ -198,6 +198,29 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
         # Get agent configuration
         agent_config = session["voice_config"]
         
+        # ---------------------------------------------------------------------
+        # Enrichment: Fetch user context (facts) from Zep to personalize the session.
+        # We do this once at session start to avoid latency during the call.
+        # ---------------------------------------------------------------------
+        enriched_instructions = agent_config.instructions
+        try:
+            logger.info(f"Enriching voice session for user: {security.user_id}")
+            facts = await asyncio.wait_for(
+                memory_client.get_facts(user_id=security.user_id, limit=20),
+                timeout=VOICE_MEMORY_TIMEOUT
+            )
+            if facts:
+                fact_list = [f"- {f.content}" for f in facts]
+                fact_block = "\n".join(fact_list)
+                enriched_instructions += f"\n\n## User Context (from Memory)\nThe following facts about the user are available context. Use them to personalize the conversation naturally, but do not recite them unless asked:\n{fact_block}"
+                logger.info(f"Injected {len(facts)} facts into voice instructions")
+            else:
+                logger.info("No facts found for enrichment")
+        except asyncio.TimeoutError:
+            logger.warning("Voice enrichment timed out - proceeding without context")
+        except Exception as e:
+            logger.warning(f"Voice enrichment failed: {e}")
+
         # Get VoiceLive credential
         credential = voicelive_service.get_credential()
         
@@ -211,7 +234,7 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
             # Configure session
             session_config = RequestSession(
                 modalities=[Modality.TEXT, Modality.AUDIO],
-                instructions=agent_config.instructions,
+                instructions=enriched_instructions,
                 input_audio_format=InputAudioFormat.PCM16,
                 output_audio_format=OutputAudioFormat.PCM16,
                 voice=AzureStandardVoice(name=agent_config.voice_name),

@@ -34,6 +34,7 @@ This section is written to be **customer-safe** (no tenant IDs, no secrets). Rep
 - **Secrets store**: Azure Key Vault (recommended) or equivalent for API keys.
 
 Optional but recommended:
+
 - **Zep** (memory service): chat will still run if Zep is unavailable (best-effort enrich/persist), but memory features degrade.
 
 ### Backend (ACA) required configuration
@@ -66,6 +67,7 @@ AZURE_VOICELIVE_VOICE=en-US-Ava:DragonHDLatestNeural
 ```
 
 Production hardening (summary):
+
 - Set `ENVIRONMENT=production` and `AUTH_REQUIRED=true` and enforce Entra JWT validation.
 - Restrict CORS to the exact SWA origin(s).
 - Prefer Managed Identity to access Key Vault and Azure AI (VoiceLive + chat where supported); otherwise use rotated keys.
@@ -87,6 +89,7 @@ VITE_WS_URL=https://<CUSTOMER_ENGRAM_API_FQDN>  # frontend converts https→wss 
 ```
 
 SWA routing prerequisite:
+
 - Ensure `staticwebapp.config.json` is deployed (place it in `frontend/public/` so Vite copies it into `dist/`). It must include a SPA fallback so deep links like `/voice` don’t 404.
 
 ### Validation (copy/paste)
@@ -115,7 +118,9 @@ Engram persists **VoiceLive** interactions into **Zep** so voice becomes part of
 - **Write path**: best-effort (timeouts + errors swallowed) so real-time voice does not stall if Zep is slow/unavailable
 
 Implementation notes:
+
 - **Backend**: `backend/api/routers/voice.py` appends `Turn`s to an `EnterpriseContext` and calls `persist_conversation(...)` after each assistant response.
+- **Enrichment**: At session start, the backend fetches up to 20 facts from Zep and injects them into the system instructions.
 - **Event sources**:
   - user: `CONVERSATION_ITEM_INPUT_AUDIO_TRANSCRIPTION_COMPLETED`
   - assistant: `RESPONSE_TEXT_DONE` (fallback: `RESPONSE_AUDIO_TRANSCRIPT_DONE`/`RESPONSE_DONE`)
@@ -201,12 +206,14 @@ The VoiceLive SDK supports **two** auth modes:
     - **Scope**: the AI Services account (or narrower approved scope)
 
 Engram recommendation:
+
 - **Use Managed Identity** for VoiceLive (preferred).
 - Only use `AZURE_VOICELIVE_KEY` when the customer cannot use MI yet (and store it as a separate secret).
 
 ## 2. Level 1: Staging POC
 
 ### 2.1 Purpose
+
 - Demonstrate capabilities to stakeholders
 - Validate Azure AI integration
 - Test VoiceLive real-time features
@@ -236,6 +243,7 @@ AZURE_AI_KEY=<key-vault-secretref>
 ```
 
 ### 2.3 Authentication
+
 ```bash
 # POC mode (AUTH_REQUIRED=false): no auth header required.
 # If AUTH_REQUIRED=true, use dev tokens in development or Entra JWTs in production.
@@ -247,6 +255,7 @@ curl -X POST https://staging-env-api.../api/v1/chat \
 ```
 
 ### 2.4 Azure Resources
+
 | Resource | Name | Configuration |
 |----------|------|---------------|
 | Container App | staging-env-api | 0.5 vCPU, 1GB RAM, scale 0-3 |
@@ -256,6 +265,7 @@ curl -X POST https://staging-env-api.../api/v1/chat \
 ### 2.5 Operational Procedures
 
 #### Deploy
+
 ```bash
 # Trigger via GitHub Actions
 gh workflow run deploy.yml -f environment=staging
@@ -266,6 +276,7 @@ az containerapp update --name staging-env-api --resource-group engram-rg \
 ```
 
 #### Test Voice
+
 ```bash
 # Check status
 curl https://staging-env-api.gentleriver-dd0de193.eastus2.azurecontainerapps.io/api/v1/voice/status
@@ -275,6 +286,7 @@ wss://staging-env-api.gentleriver-dd0de193.eastus2.azurecontainerapps.io/api/v1/
 ```
 
 #### Test Chat
+
 ```bash
 curl -X POST https://staging-env-api.../api/v1/chat \
   -H "Content-Type: application/json" \
@@ -282,6 +294,7 @@ curl -X POST https://staging-env-api.../api/v1/chat \
 ```
 
 ### 2.6 Monitoring
+
 - Azure Container Apps logs (basic)
 - No alerting required
 - Manual health checks
@@ -291,6 +304,7 @@ curl -X POST https://staging-env-api.../api/v1/chat \
 ## 3. Level 2: Development
 
 ### 3.1 Purpose
+
 - Active feature development
 - Developer testing
 - Integration with local IDEs
@@ -318,6 +332,7 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
 ```
 
 ### 3.3 Authentication
+
 ```bash
 # Dev tokens with role simulation
 Authorization: Bearer dev_<user_id>_<role>
@@ -329,6 +344,7 @@ dev_carol_viewer      # Read-only role
 ```
 
 ### 3.4 Local Development Setup
+
 ```bash
 # Clone and setup
 git clone https://github.com/zimaxnet/engram.git
@@ -350,6 +366,7 @@ curl http://localhost:8082/api/v1/voice/status
 ### 3.5 Operational Procedures
 
 #### Feature Branch Workflow
+
 ```bash
 # Create feature branch
 git checkout -b feature/voice-enhancement
@@ -363,6 +380,7 @@ gh pr create --title "Voice: Add interruption handling"
 ```
 
 #### Debug VoiceLive
+
 ```python
 # Enable detailed logging in code
 import logging
@@ -373,6 +391,7 @@ logging.getLogger("backend.voice").setLevel(logging.DEBUG)
 ```
 
 ### 3.6 Monitoring
+
 - Local logging to stdout
 - Application Insights (dev workspace)
 - Jaeger for distributed tracing (optional)
@@ -382,6 +401,7 @@ logging.getLogger("backend.voice").setLevel(logging.DEBUG)
 ## 4. Level 3: Test
 
 ### 4.1 Purpose
+
 - Automated testing
 - CI/CD integration
 - Performance baseline
@@ -408,6 +428,7 @@ DATABASE_URL=postgresql://test_user@test-postgres/engram_test
 ```
 
 ### 4.3 Authentication
+
 ```bash
 # Service Principal (non-interactive)
 AZURE_CLIENT_ID=<test-sp-client-id>
@@ -418,6 +439,7 @@ AZURE_TENANT_ID=<tenant-id>
 ```
 
 ### 4.4 Azure Resources
+
 | Resource | Name | Configuration |
 |----------|------|---------------|
 | Container App | test-env-api | 0.5 vCPU, 1GB RAM, scale 0-2 |
@@ -427,6 +449,7 @@ AZURE_TENANT_ID=<tenant-id>
 ### 4.5 Operational Procedures
 
 #### Run E2E Tests
+
 ```bash
 # Via GitHub Actions
 gh workflow run e2e-tests.yml -f environment=test -f test_suite=all
@@ -437,6 +460,7 @@ npx playwright test --grep @chat
 ```
 
 #### Performance Testing
+
 ```bash
 # Load test chat endpoint
 k6 run scripts/load-tests/chat-load.js
@@ -446,6 +470,7 @@ k6 run scripts/load-tests/voice-ws-stress.js
 ```
 
 #### Security Scan
+
 ```bash
 # Dependency scan
 pip-audit -r backend/requirements.txt
@@ -455,6 +480,7 @@ trivy image ghcr.io/zimaxnet/engram/backend:latest
 ```
 
 ### 4.6 Monitoring
+
 - Application Insights (test workspace)
 - Test result artifacts in GitHub Actions
 - Weekly security reports
@@ -464,6 +490,7 @@ trivy image ghcr.io/zimaxnet/engram/backend:latest
 ## 5. Level 4: UAT (User Acceptance Testing)
 
 ### 5.1 Purpose
+
 - Business user validation
 - Workflow verification
 - Accessibility testing
@@ -491,6 +518,7 @@ DATABASE_URL=postgresql://uat_user@uat-postgres/engram_uat
 ```
 
 ### 5.3 Authentication
+
 ```bash
 # Entra ID with test tenant
 # Users authenticate via browser SSO
@@ -503,6 +531,7 @@ DATABASE_URL=postgresql://uat_user@uat-postgres/engram_uat
 ```
 
 ### 5.4 User Provisioning
+
 ```bash
 # Create UAT test users in Entra ID
 az ad user create \
@@ -520,6 +549,7 @@ az ad app role assignment add \
 ### 5.5 Operational Procedures
 
 #### UAT Deployment
+
 ```bash
 # Deploy to UAT
 gh workflow run deploy.yml -f environment=uat
@@ -530,6 +560,7 @@ curl https://uat-env-api.../api/v1/voice/status
 ```
 
 #### UAT Test Scenarios
+
 ```markdown
 ## Voice Test Cases
 1. [ ] Start voice session with Elena
@@ -548,6 +579,7 @@ curl https://uat-env-api.../api/v1/voice/status
 ```
 
 #### Sign-off Process
+
 ```markdown
 ## UAT Sign-off Checklist
 - [ ] All test cases passed
@@ -559,6 +591,7 @@ curl https://uat-env-api.../api/v1/voice/status
 ```
 
 ### 5.6 Monitoring
+
 - Application Insights (UAT workspace)
 - User feedback collection
 - Session recordings (with consent)
@@ -568,6 +601,7 @@ curl https://uat-env-api.../api/v1/voice/status
 ## 6. Level 5: Production
 
 ### 6.1 Purpose
+
 - Live customer operations
 - Full security enforcement
 - High availability
@@ -599,6 +633,7 @@ DATA_RETENTION_DAYS=90
 ```
 
 ### 6.3 Authentication
+
 ```bash
 # Entra ID production tenant
 # MFA enforced
@@ -612,6 +647,7 @@ DATA_RETENTION_DAYS=90
 ```
 
 ### 6.4 Azure Resources
+
 | Resource | Name | Configuration |
 |----------|------|---------------|
 | Container App | prod-env-api | 1 vCPU, 2GB RAM, scale 1-10, zone redundant |
@@ -623,6 +659,7 @@ DATA_RETENTION_DAYS=90
 ### 6.5 Operational Procedures
 
 #### Production Deployment
+
 ```bash
 # Requires approval gate
 gh workflow run deploy.yml -f environment=production
@@ -636,6 +673,7 @@ gh workflow run deploy.yml -f environment=production
 ```
 
 #### Rollback Procedure
+
 ```bash
 # Immediate rollback
 az containerapp revision activate \
@@ -648,6 +686,7 @@ curl https://prod-env-api.../health
 ```
 
 #### Incident Response
+
 ```markdown
 ## VoiceLive Incident
 1. Check Azure AI Services status
@@ -728,6 +767,7 @@ curl https://prod-env-api.../health
 ## 8. Secrets Management
 
 ### 8.1 GitHub Secrets (CI/CD)
+
 ```bash
 # Required for all environments
 AZURE_CREDENTIALS          # Service Principal JSON
@@ -740,6 +780,7 @@ POSTGRES_PASSWORD          # Database password
 ```
 
 ### 8.2 Key Vault Secrets
+
 ```bash
 # Staging POC
 azure-ai-key               # AI Services key
@@ -751,6 +792,7 @@ audit-storage-key          # Audit log storage
 ```
 
 ### 8.3 Rotation Schedule
+
 | Secret | Rotation | Procedure |
 |--------|----------|-----------|
 | API Keys | 90 days | Automated via Key Vault |

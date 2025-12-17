@@ -22,6 +22,7 @@ Engram provides two integrated communication channels for interacting with AI ag
 | 3-5 | Production/Enterprise | API Key (APIM) | Managed Identity (DefaultAzureCredential) |
 
 **DefaultAzureCredential** automatically selects the best credential for each environment:
+
 - **Local Dev**: Azure CLI (`az login`)
 - **Azure Container Apps**: Managed Identity
 - **AKS**: Workload Identity
@@ -58,6 +59,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "message_id": "uuid",
@@ -148,6 +150,7 @@ GET /api/v1/voice/config/{agent_id}
 ```
 
 **Response:**
+
 ```json
 {
   "agent_id": "elena",
@@ -164,6 +167,7 @@ GET /api/v1/voice/status
 ```
 
 **Response:**
+
 ```json
 {
   "voicelive_configured": true,
@@ -237,10 +241,20 @@ ws.onmessage = (event) => {
 | Property | Value |
 |----------|-------|
 | Format | PCM16 (signed 16-bit) |
-| Sample Rate | 24,000 Hz |
+| Sample Rate | 24,000 Hz (Required for low-latency) |
 | Channels | Mono (1 channel) |
 | Encoding | Base64 |
 | Chunk Size | 1200 samples (50ms) |
+
+### Memory Enrichment (New)
+
+The Voice system automatically enriches the session with user context at the start of the call:
+
+1. **Session Start**: Upon connection, the system retrieves up to **20 relevant facts** from the user's Zep memory graph.
+2. **Injection**: These facts are injected into the Agent's system instructions.
+3. **Personalization**: The agent starts the conversation with awareness of the user's valid context (e.g., role, current projects).
+
+*Note: Enrichment happens only at session start. Context learned during the call is persisted but not immediately chemically available until the next session.*
 
 ### Voice Personalities
 

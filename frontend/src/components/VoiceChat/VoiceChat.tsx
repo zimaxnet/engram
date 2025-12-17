@@ -261,12 +261,12 @@ export default function VoiceChat({
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { channelCount: 1, sampleRate: 16000 },
+        audio: { channelCount: 1, sampleRate: 24000 },
       });
       streamRef.current = stream;
 
       // Audio context for level visualization and PCM16 capture
-      audioContextRef.current = new AudioContext({ sampleRate: 16000 });
+      audioContextRef.current = new AudioContext({ sampleRate: 24000 });
       const source = audioContextRef.current.createMediaStreamSource(stream);
       analyserRef.current = audioContextRef.current.createAnalyser();
       analyserRef.current.fftSize = 256;
