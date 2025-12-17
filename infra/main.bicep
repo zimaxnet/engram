@@ -176,7 +176,7 @@ var enableAadForEnv = enablePostgresAad || environment == 'prod' || environment 
 var postgresBackupDays = environment == 'prod' ? 35 : (environment == 'uat' ? 14 : 7)
 var postgresGeoRedundant = environment == 'prod' ? 'Enabled' : 'Disabled'
 
-resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2021-06-01' = {
+resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2022-12-01' = {
   name: '${envName}-db'
   location: location
   tags: postgresTags
@@ -218,7 +218,7 @@ resource postgresAadAdmin 'Microsoft.DBforPostgreSQL/flexibleServers/administrat
     principalName: 'aad-admin'
     principalType: 'User'
     tenantId: postgresAadAdminTenantId
-    sid: postgresAadAdminObjectId
+    objectId: postgresAadAdminObjectId
   }
 }
 

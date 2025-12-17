@@ -47,9 +47,6 @@ resource aks 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
       workloadIdentity: {
         enabled: true
       }
-      defender: {
-        enabled: false
-      }
       azureKeyVaultKms: {
         enabled: false
       }
