@@ -18,14 +18,19 @@ export class ApiClient {
   private baseUrl: string
 
   constructor(baseUrl: string = API_BASE_URL) {
-    this.baseUrl = baseUrl
+    // Normalize trailing slash to avoid accidental double slashes
+    this.baseUrl = baseUrl.replace(/\/$/, '')
   }
 
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${this.baseUrl}${API_VERSION}${endpoint}`
+    // Health is served at root (`/health`) rather than under `/api/v1`
+    const url =
+      endpoint === '/health'
+        ? `${this.baseUrl}${endpoint}`
+        : `${this.baseUrl}${API_VERSION}${endpoint}`
 
     const headers: Record<string, string> = {}
     if (options.headers instanceof Headers) {

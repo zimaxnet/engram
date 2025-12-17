@@ -156,10 +156,36 @@ export default function VoiceChat({
   // Initialize WebSocket connection
   useEffect(() => {
     const sessionId = `voicelive-${Date.now()}`;
-    const baseWs = import.meta.env.VITE_WS_URL || 'ws://localhost:8082';
+    const baseRaw =
+      import.meta.env.VITE_WS_URL ||
+      import.meta.env.VITE_API_URL ||
+      'http://localhost:8082';
+
+    const toWsBase = (raw: string) => {
+      try {
+        const u = new URL(raw);
+        if (u.protocol === 'https:') u.protocol = 'wss:';
+        else if (u.protocol === 'http:') u.protocol = 'ws:';
+        // ws/wss are already correct
+        return u.toString().replace(/\/$/, '');
+      } catch {
+        // Last resort: assume caller passed a ws(s) URL already
+        return raw.replace(/\/$/, '');
+      }
+    };
+
+    const baseWs = toWsBase(baseRaw);
     const wsUrl = `${baseWs}/api/v1/voice/voicelive/${sessionId}`;
 
-    const ws = new WebSocket(wsUrl);
+    let ws: WebSocket;
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch (e) {
+      console.error('Voice WebSocket failed to initialize:', e);
+      setError('Connection error');
+      setConnectionStatus('error');
+      return;
+    }
 
     ws.onopen = () => {
       setConnectionStatus('connected');

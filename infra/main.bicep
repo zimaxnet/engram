@@ -9,6 +9,7 @@ param envName string = 'engram-env'
 param environment string = 'staging'
 
 var isProd = environment == 'prod'
+var authRequired = environment == 'uat' || environment == 'prod'
 
 @description('Enable Azure AD authentication for Postgres (recommended for uat/prod).')
 param enablePostgresAad bool = false
@@ -466,6 +467,7 @@ module backendModule 'modules/backend-aca.bicep' = {
     keyVaultUri: keyVaultModule.outputs.keyVaultUri
     identityResourceId: backendIdentity.id
     identityClientId: backendIdentity.properties.clientId
+    authRequired: authRequired
     tags: union(mergedTags, { Component: 'BackendAPI' })
   }
 }

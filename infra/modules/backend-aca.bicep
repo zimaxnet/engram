@@ -43,6 +43,9 @@ param identityResourceId string
 @description('User-assigned identity client ID (for DefaultAzureCredential).')
 param identityClientId string
 
+@description('Whether API requests require user auth (Entra JWT). Set false for POC/staging to reduce friction.')
+param authRequired bool = true
+
 @description('Registry username.')
 param registryUsername string
 
@@ -205,6 +208,10 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'CORS_ORIGINS'
               value: '["https://engram.work", "https://*.azurestaticapps.net", "http://localhost:5173", "*"]'
+            }
+            {
+              name: 'AUTH_REQUIRED'
+              value: authRequired ? 'true' : 'false'
             }
           ]
           resources: {
