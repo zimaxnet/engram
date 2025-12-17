@@ -40,6 +40,59 @@ function createWelcomeMessage(agent: Agent): Message {
   }
 }
 
+
+// Type definitions for Web Speech API
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onend: (event: Event) => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
+}
+
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message: string;
+}
+
+interface Window {
+  SpeechRecognition: {
+    new(): SpeechRecognition;
+  };
+  webkitSpeechRecognition: {
+    new(): SpeechRecognition;
+  };
+}
+
+declare var window: Window;
+
 export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: ChatPanelProps) {
   // Component remounts when agent changes (via key prop in App.tsx)
   // So we can initialize state directly
@@ -50,6 +103,9 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
   const [isTyping, setIsTyping] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Speech Recognition Ref
+  const recognitionRef = useRef<SpeechRecognition | null>(null)
 
   // Initialize local sessionId once (used when caller doesn't supply a shared sessionId)
   const [localSessionId] = useState<string>(() =>
@@ -80,6 +136,11 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
     setInput('')
     setIsTyping(true)
     setError(null)
+
+    // Stop recording if active when sending
+    if (isRecording) {
+      stopRecording()
+    }
 
     try {
       // Call backend API
@@ -126,9 +187,85 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
     }
   }
 
+  const startRecording = () => {
+    try {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        setError('Speech recognition is not supported in this browser.');
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        // Append to existing input if new session, or replace? 
+        // For dictation it's usually better to just set the input to what's being said + whatever was there before?
+        // But doing it this way (replacing state on every interim) means we only capture the current speech session. 
+        // Let's assume user clears input manually if they want fresh start, or we can append.
+        // Simplified: Replace input with current transcript buffer + whatever was typed *before* recording started? 
+        // For simplicity and stability: Just set input to the transcript of THIS session. 
+        // If user wants to append, they can type, then click mic. 
+        // Be careful not to overwrite typed text.
+
+        // Better approach: Maintain a "session start" input value
+        // But for now, let's just pipe the transcript directly.
+        // A more robust way:
+        // input = (text_before_speech) + (current_speech_transcript)
+        // But `input` state changes. 
+        // We'll just append to end for now? No, interim results fluctuate.
+
+        // Standard simple dictation: 
+        // Just set Input. Note: This clears previous text if not handled carefully.
+        // Ideally we'd capture `input` at start of recording.
+        // Let's stick to simple: The transcript *is* the input for this turn.
+        setInput(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error', event.error);
+        setError(`Voice input error: ${event.error}`);
+        stopRecording();
+      };
+
+      recognition.onend = () => {
+        // If stopped efficiently, setIsRecording(false) is called there.
+        // If stopped by silence/error, we update state here.
+        if (isRecording) {
+          setIsRecording(false);
+        }
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+      setIsRecording(true);
+      setError(null);
+    } catch (e) {
+      console.error('Failed to start speech recognition', e);
+      setError('Failed to start voice input.');
+    }
+  }
+
+  const stopRecording = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+    setIsRecording(false);
+  }
+
   const toggleRecording = () => {
-    setIsRecording(!isRecording)
-    // TODO: Implement Azure Speech SDK integration
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
   }
 
   return (

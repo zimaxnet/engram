@@ -119,8 +119,8 @@ Engram persists **VoiceLive** interactions into **Zep** so voice becomes part of
 
 Implementation notes:
 
-- **Backend**: `backend/api/routers/voice.py` appends `Turn`s to an `EnterpriseContext` and calls `persist_conversation(...)` after each assistant response.
-- **Enrichment**: At session start, the backend fetches up to 20 facts from Zep and injects them into the system instructions.
+- **Backend**: `backend/api/routers/voice.py` initializes an `EnterpriseContext`, populates its semantic layer with facts from Zep, and uses this context to enrich the system instructions. It appends `Turn`s to this context and calls `persist_conversation(...)` after each assistant response.
+- **Enrichment**: At session start, the backend fetches up to 20 facts from Zep, adds them to the `EnterpriseContext`, and generates a context summary for the instructions.
 - **Event sources**:
   - user: `CONVERSATION_ITEM_INPUT_AUDIO_TRANSCRIPTION_COMPLETED`
   - assistant: `RESPONSE_TEXT_DONE` (fallback: `RESPONSE_AUDIO_TRANSCRIPT_DONE`/`RESPONSE_DONE`)
@@ -132,12 +132,13 @@ Implementation notes:
 - **Frontend**: generates one `sessionId` per browser tab (stored in `sessionStorage` key `engram_session_id`)
 - **Chat**: sends it in `POST /api/v1/chat` as `session_id`
 - **Voice**: uses it as the websocket path param: `wss://<API>/api/v1/voice/voicelive/<session_id>`
+- **Dictation**: ChatPanel microphone uses standard Web Speech API to dictate into the chat input, maintaining the same chat session context.
 
 If you want per-interaction sessions instead, pass a different `session_id` for chat and voice (they will become separate Zep sessions/episodes).
 
 #### Validate voice→memory end-to-end (manual)
 
-1) Open Engram UI and run a short voice exchange (2–3 turns).
+1) Open Engram UI and run a short voice exchange (2–3 turns), or use the ChatPanel microphone to dictate a message.
 
 2) In browser DevTools, read the shared session id:
 

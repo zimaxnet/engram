@@ -42,6 +42,7 @@ export function ChatView() {
                     metrics={sessionMetrics}
                     model={selectedModel}
                     onModelChange={onModelChange}
+                    sessionId={sessionId}
                 />
             </aside>
         </>

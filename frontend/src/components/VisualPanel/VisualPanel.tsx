@@ -22,9 +22,10 @@ interface VisualPanelProps {
   model: string
   onModelChange: (model: string) => void
   onVoiceMessage?: (message: { text: string; type: 'user' | 'agent' }) => void
+  sessionId?: string
 }
 
-export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessage }: VisualPanelProps) {
+export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessage, sessionId }: VisualPanelProps) {
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [currentVisemes, setCurrentVisemes] = useState<Viseme[]>([])
   const [expression, setExpression] = useState<'neutral' | 'smile' | 'thinking' | 'listening'>('neutral')
@@ -102,7 +103,7 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
         {voiceEnabled && (
           <div className="voice-section">
             {!voiceReady ? (
-              <button 
+              <button
                 className="voice-activate-btn"
                 onClick={() => setVoiceReady(true)}
               >
@@ -115,6 +116,7 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
                 onVisemes={handleVisemes}
                 onStatusChange={setVoiceStatus}
                 disabled={!voiceEnabled}
+                sessionId={sessionId}
               />
             )}
           </div>

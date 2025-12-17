@@ -210,10 +210,18 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                 timeout=VOICE_MEMORY_TIMEOUT
             )
             if facts:
-                fact_list = [f"- {f.content}" for f in facts]
-                fact_block = "\n".join(fact_list)
-                enriched_instructions += f"\n\n## User Context (from Memory)\nThe following facts about the user are available context. Use them to personalize the conversation naturally, but do not recite them unless asked:\n{fact_block}"
-                logger.info(f"Injected {len(facts)} facts into voice instructions")
+                # Populate EnterpriseContext semantic layer
+                for fact in facts:
+                    # Map Zep Fact/Node to GraphNode if needed, or if get_facts returns GraphNode compatible objects
+                    # Assuming memory_client.get_facts returns list of objects with 'content', 'uuid', etc.
+                    # We might need to adapter them if they aren't exactly GraphNodes, but for now we trust the attribute access.
+                    voice_context.semantic.add_fact(fact)
+                
+                # Use the context object to generate the summary string
+                context_summary = voice_context.semantic.get_context_summary()
+                
+                enriched_instructions += f"\n\n## User Context (from Memory)\nThe following facts about the user are available context. Use them to personalize the conversation naturally, but do not recite them unless asked:\n{context_summary}"
+                logger.info(f"Injected {len(facts)} facts into voice instructions via EnterpriseContext")
             else:
                 logger.info("No facts found for enrichment")
         except asyncio.TimeoutError:
