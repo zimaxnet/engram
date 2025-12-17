@@ -18,6 +18,7 @@ from pydantic import BaseModel
 
 from backend.api.middleware.auth import get_current_user
 from backend.core import SecurityContext
+from backend.orchestration.workflow_service import workflow_service
 
 logger = logging.getLogger(__name__)
 
@@ -63,17 +64,9 @@ async def list_workflows(
     managed by Temporal.
     """
     try:
-        from backend.workflows import get_temporal_client
-
-        # Verify Temporal connection
-        await get_temporal_client()
-
-        # Query workflows (simplified - in production, use proper listing)
-        # This is a placeholder - Temporal's list API is more complex
+        # TODO: Implement real listing via workflow_service
         workflows = []
-
         return WorkflowListResponse(workflows=workflows, total_count=len(workflows))
-
     except Exception as e:
         logger.warning(f"Failed to list workflows: {e}")
         # Return mock data for development
@@ -99,19 +92,8 @@ async def list_workflows(
                     step_count=3,
                     current_step="Waiting for human approval",
                 ),
-                WorkflowSummary(
-                    workflow_id="mock-wf-3",
-                    workflow_type="AgentWorkflow",
-                    status=WorkflowStatus.COMPLETED,
-                    agent_id="elena",
-                    started_at=datetime.utcnow(),
-                    completed_at=datetime.utcnow(),
-                    task_summary="Competitor analysis",
-                    step_count=8,
-                    current_step="Finished",
-                ),
             ],
-            total_count=3,
+            total_count=2,
         )
 
 
@@ -132,18 +114,14 @@ class WorkflowDetail(BaseModel):
 async def get_workflow(workflow_id: str, user: SecurityContext = Depends(get_current_user)):
     """
     Get details for a specific workflow.
-
-    Includes step history and current context state.
     """
     try:
-        from backend.workflows import get_workflow_status
-
-        status = await get_workflow_status(workflow_id)
+        status = await workflow_service.get_status(workflow_id)
 
         return WorkflowDetail(
             workflow_id=workflow_id,
             workflow_type="AgentWorkflow",
-            status=(WorkflowStatus.RUNNING if status["status"] == "RUNNING" else WorkflowStatus.COMPLETED),
+            status=(WorkflowStatus.RUNNING if status.get("status") == "RUNNING" else WorkflowStatus.COMPLETED),
             started_at=(datetime.fromisoformat(status["start_time"]) if status.get("start_time") else None),
             completed_at=(datetime.fromisoformat(status["close_time"]) if status.get("close_time") else None),
             task_summary="Agent execution workflow",
@@ -160,18 +138,6 @@ async def get_workflow(workflow_id: str, user: SecurityContext = Depends(get_cur
             agent_id="elena",
             started_at=datetime.utcnow(),
             task_summary="Mock workflow detail",
-            steps=[
-                {
-                    "name": "Start",
-                    "status": "COMPLETED",
-                    "timestamp": datetime.utcnow().isoformat(),
-                },
-                {
-                    "name": "Analysis",
-                    "status": "RUNNING",
-                    "timestamp": datetime.utcnow().isoformat(),
-                },
-            ],
             context_snapshot={"recent_message": "Processing data..."},
         )
 
@@ -193,17 +159,12 @@ async def start_conversation_endpoint(
 ):
     """
     Start a long-running conversation workflow.
-
-    The conversation can span multiple turns and persist for days.
-    Use signals to send messages and switch agents.
     """
     try:
         import uuid
-        from backend.workflows import start_conversation
-
         session_id = request.session_id or str(uuid.uuid4())
 
-        workflow_id = await start_conversation(
+        workflow_id = await workflow_service.start_conversation(
             user_id=user.user_id,
             tenant_id=user.tenant_id,
             session_id=session_id,
@@ -235,12 +196,8 @@ async def send_message_to_conversation(
     Send a message to an ongoing conversation.
     """
     try:
-        from backend.workflows import send_conversation_message
-
-        await send_conversation_message(workflow_id, request.message)
-
+        await workflow_service.send_message(workflow_id, request.message)
         return {"success": True, "message": "Message sent"}
-
     except Exception as e:
         logger.error(f"Failed to send message: {e}")
         raise HTTPException(status_code=500, detail="Failed to send message")
@@ -260,12 +217,8 @@ async def switch_agent_in_conversation(
     Switch the agent in an ongoing conversation.
     """
     try:
-        from backend.workflows import switch_conversation_agent
-
-        await switch_conversation_agent(workflow_id, request.agent_id)
-
+        await workflow_service.switch_agent(workflow_id, request.agent_id)
         return {"success": True, "message": f"Switched to {request.agent_id}"}
-
     except Exception as e:
         logger.error(f"Failed to switch agent: {e}")
         raise HTTPException(status_code=500, detail="Failed to switch agent")
@@ -277,12 +230,8 @@ async def get_conversation_history_endpoint(workflow_id: str, user: SecurityCont
     Get the conversation history from a running workflow.
     """
     try:
-        from backend.workflows import get_conversation_history
-
-        history = await get_conversation_history(workflow_id)
-
+        history = await workflow_service.get_history(workflow_id)
         return {"workflow_id": workflow_id, "history": history}
-
     except Exception as e:
         logger.error(f"Failed to get history: {e}")
         raise HTTPException(status_code=500, detail="Failed to get conversation history")
@@ -294,12 +243,8 @@ async def end_conversation_endpoint(workflow_id: str, user: SecurityContext = De
     End an ongoing conversation and get the summary.
     """
     try:
-        from backend.workflows import end_conversation
-
-        result = await end_conversation(workflow_id)
-
+        result = await workflow_service.end_conversation(workflow_id)
         return {"success": True, "summary": result}
-
     except Exception as e:
         logger.error(f"Failed to end conversation: {e}")
         raise HTTPException(status_code=500, detail="Failed to end conversation")
@@ -323,17 +268,10 @@ async def send_signal(
 ):
     """
     Send a signal to a running workflow.
-
-    Used for human-in-the-loop scenarios:
-    - Approval signals
-    - Rejection signals
-    - Additional input
     """
     try:
-        from backend.workflows import get_temporal_client, send_approval_decision
-
         if request.signal_name == "approve":
-            await send_approval_decision(
+            await workflow_service.send_approval(
                 workflow_id=workflow_id,
                 approved=request.payload.get("approved", False),
                 feedback=request.payload.get("feedback"),
@@ -342,9 +280,6 @@ async def send_signal(
             return SignalResponse(success=True, message=f"Approval signal sent to workflow {workflow_id}")
 
         # Generic signal handling - would need workflow-specific implementation
-        await get_temporal_client()
-
-        # Note: Generic signals would need workflow-specific handling
         return SignalResponse(
             success=True,
             message=f"Signal '{request.signal_name}' sent to workflow {workflow_id}",
@@ -359,19 +294,10 @@ async def send_signal(
 async def cancel_workflow(workflow_id: str, user: SecurityContext = Depends(get_current_user)):
     """
     Cancel a running workflow.
-
-    The workflow will be terminated and marked as cancelled.
     """
     try:
-        from backend.workflows import get_temporal_client
-
-        client = await get_temporal_client()
-        handle = client.get_workflow_handle(workflow_id)
-
-        await handle.cancel()
-
+        await workflow_service.cancel_workflow(workflow_id)
         return SignalResponse(success=True, message=f"Workflow {workflow_id} cancellation requested")
-
     except Exception as e:
         logger.error(f"Failed to cancel workflow: {e}")
         raise HTTPException(status_code=500, detail="Failed to cancel workflow")
@@ -392,21 +318,15 @@ class ApprovalResponse(BaseModel):
 async def request_approval_endpoint(request: ApprovalRequest, user: SecurityContext = Depends(get_current_user)):
     """
     Start an approval workflow.
-
-    Use for actions requiring human approval before execution.
     """
     try:
-        from backend.workflows import request_approval
-
-        workflow_id = await request_approval(
+        workflow_id = await workflow_service.request_approval(
             action_description=request.action_description,
             requester_id=user.user_id,
             approver_ids=request.approver_ids,
             timeout_hours=request.timeout_hours,
         )
-
         return ApprovalResponse(workflow_id=workflow_id, message="Approval request sent")
-
     except Exception as e:
         logger.error(f"Failed to request approval: {e}")
         raise HTTPException(status_code=500, detail="Failed to request approval")
