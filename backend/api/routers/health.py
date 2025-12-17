@@ -34,6 +34,13 @@ async def health_check():
     )
 
 
+# Backwards-compatible alias for older frontends that call /api/v1/health.
+# We keep it out of the OpenAPI schema to avoid duplication.
+@router.get("/api/v1/health", response_model=HealthResponse, include_in_schema=False)
+async def health_check_v1():
+    return await health_check()
+
+
 @router.get("/ready", response_model=ReadinessResponse)
 async def readiness_check():
     """
@@ -53,3 +60,8 @@ async def readiness_check():
         status="ready" if all_ready else "degraded",
         checks=checks,
     )
+
+
+@router.get("/api/v1/ready", response_model=ReadinessResponse, include_in_schema=False)
+async def readiness_check_v1():
+    return await readiness_check()
