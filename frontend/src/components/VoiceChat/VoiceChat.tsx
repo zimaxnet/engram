@@ -75,6 +75,51 @@ export default function VoiceChat({
     onStatusChangeRef.current = onStatusChange;
   }, [onMessage, onVisemes, onStatusChange]);
 
+  // Audio Queue
+  const audioQueueRef = useRef<Float32Array[]>([]);
+  const isPlayingRef = useRef(false);
+  const nextStartTimeRef = useRef(0);
+
+  // Initialize playback audio context
+  useEffect(() => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContext({ sampleRate: 24000 });
+    }
+  }, []);
+
+  const processAudioQueue = useCallback(() => {
+    if (!audioContextRef.current || audioQueueRef.current.length === 0) {
+      isPlayingRef.current = false;
+      return;
+    }
+
+    isPlayingRef.current = true;
+    const audioData = audioQueueRef.current.shift();
+    if (!audioData) return;
+
+    const buffer = audioContextRef.current.createBuffer(1, audioData.length, 24000);
+    buffer.getChannelData(0).set(audioData);
+
+    const source = audioContextRef.current.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioContextRef.current.destination);
+
+    // Schedule seamlessly
+    const currentTime = audioContextRef.current.currentTime;
+    // If nextStartTime is in the past (underrun), reset to now
+    const startTime = Math.max(currentTime, nextStartTimeRef.current);
+
+    source.start(startTime);
+    nextStartTimeRef.current = startTime + buffer.duration;
+
+    source.onended = () => {
+      processAudioQueue();
+      if (audioQueueRef.current.length === 0) {
+        setIsSpeaking(false);
+      }
+    };
+  }, []);
+
   // Play audio and trigger visemes
   const playAudio = useCallback(async (
     audioBase64: string,
@@ -82,30 +127,45 @@ export default function VoiceChat({
     visemes: Viseme[]
   ) => {
     try {
-      // Decode audio
-      const audioData = atob(audioBase64);
-      const audioArray = new Uint8Array(audioData.length);
-      for (let i = 0; i < audioData.length; i++) {
-        audioArray[i] = audioData.charCodeAt(i);
+      // Decode base64 to raw PCM16 bytes
+      const binaryString = atob(audioBase64);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
       }
 
-      const blob = new Blob([audioArray], { type: format });
-      const url = URL.createObjectURL(blob);
+      // Convert PCM16 (Int16) to Float32 (-1.0 to 1.0)
+      // PCM16 is 2 bytes per sample, Little Endian
+      const int16 = new Int16Array(bytes.buffer);
+      const float32 = new Float32Array(int16.length);
 
-      // Play audio
-      if (audioRef.current) {
-        audioRef.current.src = url;
-        audioRef.current.play();
+      for (let i = 0; i < int16.length; i++) {
+        float32[i] = int16[i] / 32768.0;
+      }
 
-        // Trigger visemes callback
-        if (onVisemesRef.current && visemes.length > 0) {
-          onVisemesRef.current(visemes);
+      // Enqueue
+      audioQueueRef.current.push(float32);
+
+      // Start queue if stopped
+      if (!isPlayingRef.current) {
+        // Reset time if we've been idle
+        if (audioContextRef.current) {
+          nextStartTimeRef.current = audioContextRef.current.currentTime;
         }
+        setIsSpeaking(true);
+        processAudioQueue();
       }
+
+      // Handle visemes (fire immediately for responsiveness, though strictly should sync with audio)
+      if (onVisemesRef.current && visemes.length > 0) {
+        onVisemesRef.current(visemes);
+      }
+
     } catch (e) {
       console.error('Failed to play audio:', e);
     }
-  }, []);
+  }, [processAudioQueue]);
 
   // Handle incoming WebSocket messages
   const handleWebSocketMessage = useCallback(

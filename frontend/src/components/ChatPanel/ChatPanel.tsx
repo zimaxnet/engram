@@ -195,48 +195,52 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
         return;
       }
 
+      // Store initial input to append to
+      const initialInput = input;
+
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
 
       recognition.onresult = (event) => {
-        let transcript = '';
+        let interimTranscript = '';
+        let finalTranscript = '';
+
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript;
+          const result = event.results[i];
+          if (result.isFinal) {
+            finalTranscript += result[0].transcript;
+          } else {
+            interimTranscript += result[0].transcript;
+          }
         }
-        // Append to existing input if new session, or replace? 
-        // For dictation it's usually better to just set the input to what's being said + whatever was there before?
-        // But doing it this way (replacing state on every interim) means we only capture the current speech session. 
-        // Let's assume user clears input manually if they want fresh start, or we can append.
-        // Simplified: Replace input with current transcript buffer + whatever was typed *before* recording started? 
-        // For simplicity and stability: Just set input to the transcript of THIS session. 
-        // If user wants to append, they can type, then click mic. 
-        // Be careful not to overwrite typed text.
 
-        // Better approach: Maintain a "session start" input value
-        // But for now, let's just pipe the transcript directly.
-        // A more robust way:
-        // input = (text_before_speech) + (current_speech_transcript)
-        // But `input` state changes. 
-        // We'll just append to end for now? No, interim results fluctuate.
+        // Construct new input value: Initial + (Final so far) + Interim
+        // Note: This simple logic might duplicate final text if we aren't careful with `continuous` results.
+        // Actually, for continuous: event.results contains *all* results if we iterate from 0.
+        // Let's iterate from 0 to get the FULL transcript of this session, then append to initial.
 
-        // Standard simple dictation: 
-        // Just set Input. Note: This clears previous text if not handled carefully.
-        // Ideally we'd capture `input` at start of recording.
-        // Let's stick to simple: The transcript *is* the input for this turn.
-        setInput(transcript);
+        let sessionTranscript = '';
+        for (let i = 0; i < event.results.length; i++) {
+          sessionTranscript += event.results[i][0].transcript;
+        }
+
+        const separator = initialInput && !initialInput.endsWith(' ') ? ' ' : '';
+        setInput(initialInput + separator + sessionTranscript);
       };
 
       recognition.onerror = (event) => {
         console.error('Speech recognition error', event.error);
-        setError(`Voice input error: ${event.error}`);
+        if (event.error === 'not-allowed') {
+          setError('Microphone access denied. Please allow microphone permissions.');
+        } else {
+          setError(`Voice input error: ${event.error}`);
+        }
         stopRecording();
       };
 
       recognition.onend = () => {
-        // If stopped efficiently, setIsRecording(false) is called there.
-        // If stopped by silence/error, we update state here.
         if (isRecording) {
           setIsRecording(false);
         }

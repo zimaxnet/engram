@@ -247,9 +247,9 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                 output_audio_format=OutputAudioFormat.PCM16,
                 voice=AzureStandardVoice(name=agent_config.voice_name),
                 turn_detection=ServerVad(
-                    threshold=0.5,
+                    threshold=0.6,
                     prefix_padding_ms=300,
-                    silence_duration_ms=500,
+                    silence_duration_ms=800,
                 ),
             )
             await voicelive_connection.session.update(session=session_config)
