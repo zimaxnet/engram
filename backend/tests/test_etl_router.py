@@ -73,7 +73,9 @@ def test_ingest_document_indexes_chunks_with_provenance(client, monkeypatch):
         return "mock-fact-id"
     
     # We must patch the memory_client instance ON the ingestion_service
-    monkeypatch.setattr(ingestion_service.memory_client, "add_fact", fake_add_fact)
+    # We must patch the memory_client imported in the ingestion_service module
+    import backend.etl.ingestion_service as ingestion_module
+    monkeypatch.setattr(ingestion_module.memory_client, "add_fact", fake_add_fact)
 
     resp = client.post(
         "/api/v1/etl/ingest",

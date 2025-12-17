@@ -12,12 +12,12 @@ Layers:
 4. OperationalState - Workflow and execution state
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_validator, ConfigDict
 
 
 # =============================================================================
@@ -92,7 +92,7 @@ class Turn(BaseModel):
 
     role: MessageRole
     content: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     agent_id: Optional[str] = Field(None, description="Which agent responded (elena/marcus)")
     tool_calls: Optional[list[dict]] = Field(None, description="Tool calls made in this turn")
     token_count: Optional[int] = Field(None, description="Token count for this turn")
@@ -117,14 +117,14 @@ class EpisodicState(BaseModel):
 
     # Metrics
     total_turns: int = Field(0, description="Total turns in conversation")
-    started_at: datetime = Field(default_factory=datetime.utcnow)
-    last_activity: datetime = Field(default_factory=datetime.utcnow)
+    started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_activity: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     def add_turn(self, turn: Turn) -> None:
         """Add a turn, maintaining the rolling window"""
         self.recent_turns.append(turn)
         self.total_turns += 1
-        self.last_activity = datetime.utcnow()
+        self.last_activity = datetime.now(timezone.utc)
 
         # Compact if exceeding max turns
         if len(self.recent_turns) > self.max_turns:
@@ -330,11 +330,13 @@ class EnterpriseContext(BaseModel):
 
     # Context metadata
     context_version: str = Field("1.0.0", description="Schema version for compatibility")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat(), UUID: lambda v: str(v)}
+    model_config = ConfigDict(
+        # json_encoders is deprecated but kept for compatibility until v3 migration is complete
+        json_encoders={datetime: lambda v: v.isoformat(), UUID: lambda v: str(v)}
+    )
 
     @model_validator(mode="after")
     def sync_session_ids(self) -> "EnterpriseContext":
@@ -369,7 +371,7 @@ class EnterpriseContext(BaseModel):
 
     def update_timestamp(self) -> None:
         """Update the modified timestamp"""
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
 
 
 # =============================================================================
