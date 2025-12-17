@@ -255,17 +255,37 @@ class ZepMemoryClient:
         List conversation sessions (episodes).
         """
         try:
-            # Note: Zep 2.0 list_sessions might differ. Adapting to standard pattern.
-            sessions = await self.client.memory.list_sessions(limit=limit, offset=offset, user_id=user_id)
+            # zep-python list_sessions uses page_number/page_size (not limit/offset) and does not
+            # reliably support server-side filtering by user_id. We page, then filter client-side.
+            page_size = max(1, int(limit))
+            page_number = int(offset // page_size) + 1
+            within_page_offset = int(offset % page_size)
+
+            resp = await self.client.memory.list_sessions(
+                page_number=page_number,
+                page_size=page_size,
+                order_by="created_at",
+                asc=False,
+            )
+
+            sessions = list(getattr(resp, "sessions", None) or [])
+
+            if user_id:
+                sessions = [s for s in sessions if getattr(s, "user_id", None) == user_id]
+
+            # Apply offset within the fetched page after filtering.
+            sessions = sessions[within_page_offset : within_page_offset + page_size]
 
             return [
                 {
-                    "session_id": s.session_id,
-                    "created_at": s.created_at,
-                    "updated_at": s.updated_at,
-                    "metadata": s.metadata,
+                    "session_id": getattr(s, "session_id", None),
+                    "created_at": getattr(s, "created_at", None),
+                    "updated_at": getattr(s, "updated_at", None),
+                    "metadata": getattr(s, "metadata", None) or {},
+                    "user_id": getattr(s, "user_id", None),
                 }
                 for s in sessions
+                if getattr(s, "session_id", None)
             ]
         except Exception as e:
             logger.error(f"Failed to list sessions: {e}")

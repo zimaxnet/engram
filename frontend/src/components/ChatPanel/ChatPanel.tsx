@@ -5,6 +5,7 @@ import './ChatPanel.css'
 
 interface ChatPanelProps {
   agent: Agent
+  sessionId?: string
   onMetricsUpdate: (metrics: SessionMetrics) => void
 }
 
@@ -39,7 +40,7 @@ function createWelcomeMessage(agent: Agent): Message {
   }
 }
 
-export function ChatPanel({ agent, onMetricsUpdate }: ChatPanelProps) {
+export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: ChatPanelProps) {
   // Component remounts when agent changes (via key prop in App.tsx)
   // So we can initialize state directly
   const initialMessage = useMemo(() => createWelcomeMessage(agent), [agent])
@@ -50,10 +51,11 @@ export function ChatPanel({ agent, onMetricsUpdate }: ChatPanelProps) {
   const [isRecording, setIsRecording] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Initialize sessionId once
-  const [sessionId] = useState<string>(() =>
+  // Initialize local sessionId once (used when caller doesn't supply a shared sessionId)
+  const [localSessionId] = useState<string>(() =>
     `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
   )
+  const sessionId = sessionIdProp || localSessionId
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 

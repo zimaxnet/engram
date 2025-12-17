@@ -31,6 +31,7 @@ type IncomingMessage =
 
 interface VoiceChatProps {
   agentId: string;
+  sessionId?: string;
   onMessage?: (message: VoiceMessage) => void;
   onVisemes?: (visemes: Viseme[]) => void;
   onStatusChange?: (status: 'connecting' | 'connected' | 'error') => void;
@@ -39,6 +40,7 @@ interface VoiceChatProps {
 
 export default function VoiceChat({
   agentId,
+  sessionId: sessionIdProp,
   onMessage,
   onVisemes,
   onStatusChange,
@@ -60,6 +62,7 @@ export default function VoiceChat({
   const animationFrameRef = useRef<number>(0);
   const streamRef = useRef<MediaStream | null>(null);
   const onStatusChangeRef = useRef(onStatusChange);
+  const defaultSessionIdRef = useRef<string>(`voicelive-${Date.now()}`);
 
   // Store callbacks in refs to avoid stale closures
   const onMessageRef = useRef(onMessage);
@@ -155,7 +158,7 @@ export default function VoiceChat({
 
   // Initialize WebSocket connection
   useEffect(() => {
-    const sessionId = `voicelive-${Date.now()}`;
+    const sessionId = sessionIdProp || defaultSessionIdRef.current;
     const baseRaw =
       import.meta.env.VITE_WS_URL ||
       import.meta.env.VITE_API_URL ||
@@ -213,7 +216,7 @@ export default function VoiceChat({
     return () => {
       ws.close();
     };
-  }, [agentId, handleWebSocketMessage]);
+  }, [agentId, handleWebSocketMessage, sessionIdProp]);
 
   // Notify parent of connection status changes
   useEffect(() => {

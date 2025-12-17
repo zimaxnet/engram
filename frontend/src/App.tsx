@@ -28,6 +28,19 @@ function App() {
 
   const [activeAgent, setActiveAgent] = useState<AgentId>('elena');
   const [selectedModel, setSelectedModel] = useState('gpt-5-chat');
+  // Single conversation/session ID shared across Chat + Voice so both persist into the same Zep session.
+  const [sessionId] = useState<string>(() => {
+    const key = 'engram_session_id'
+    const fallback = `session-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+    try {
+      const existing = sessionStorage.getItem(key)
+      if (existing) return existing
+      sessionStorage.setItem(key, fallback)
+      return fallback
+    } catch {
+      return fallback
+    }
+  });
 
   return (
     <BrowserRouter>
@@ -40,6 +53,7 @@ function App() {
               onAgentChange={setActiveAgent}
               selectedModel={selectedModel}
               onModelChange={setSelectedModel}
+              sessionId={sessionId}
             />
           }
         >
@@ -47,7 +61,7 @@ function App() {
           <Route index element={<ChatView />} />
 
           {/* Voice Interaction */}
-          <Route path="voice" element={<VoiceInteractionPage activeAgent={activeAgent} />} />
+          <Route path="voice" element={<VoiceInteractionPage activeAgent={activeAgent} sessionId={sessionId} />} />
 
           {/* Agents Information */}
           <Route path="agents" element={<AgentsPage />} />

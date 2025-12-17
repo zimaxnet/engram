@@ -8,10 +8,11 @@ interface ChatViewContext {
     agent: Agent;
     selectedModel: string;
     onModelChange: (model: string) => void;
+    sessionId: string;
 }
 
 export function ChatView() {
-    const { agent, selectedModel, onModelChange } = useOutletContext<ChatViewContext>();
+    const { agent, selectedModel, onModelChange, sessionId } = useOutletContext<ChatViewContext>();
 
     const [sessionMetrics, setSessionMetrics] = useState({
         tokensUsed: 0,
@@ -29,6 +30,7 @@ export function ChatView() {
                 <ChatPanel
                     key={agent.id}
                     agent={agent}
+                    sessionId={sessionId}
                     onMetricsUpdate={setSessionMetrics}
                 />
             </section>

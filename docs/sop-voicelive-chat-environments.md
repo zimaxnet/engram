@@ -106,6 +106,30 @@ curl -sS -H "Content-Type: application/json" \
 curl -sS "$API_BASE/api/v1/voice/status"
 ```
 
+### Voice transcripts → Zep (episodic memory)
+
+Engram persists **VoiceLive** interactions into **Zep** so voice becomes part of the Context Engine:
+
+- **User speech**: captured from VoiceLive STT events (input audio transcription) and stored as a `user` turn
+- **Assistant response**: captured from VoiceLive text events (preferred) and stored as an `assistant` turn
+- **Write path**: best-effort (timeouts + errors swallowed) so real-time voice does not stall if Zep is slow/unavailable
+
+Implementation notes:
+- **Backend**: `backend/api/routers/voice.py` appends `Turn`s to an `EnterpriseContext` and calls `persist_conversation(...)` after each assistant response.
+- **Event sources**:
+  - user: `CONVERSATION_ITEM_INPUT_AUDIO_TRANSCRIPTION_COMPLETED`
+  - assistant: `RESPONSE_TEXT_DONE` (fallback: `RESPONSE_AUDIO_TRANSCRIPT_DONE`/`RESPONSE_DONE`)
+
+### Unified “one episode” across Chat + Voice (recommended)
+
+`enrich_context(...)` searches memory **within the current session id**. To let Chat benefit from Voice memory (and vice-versa), Engram uses a **single shared session id** across the UI:
+
+- **Frontend**: generates one `sessionId` per browser tab (stored in `sessionStorage` key `engram_session_id`)
+- **Chat**: sends it in `POST /api/v1/chat` as `session_id`
+- **Voice**: uses it as the websocket path param: `wss://<API>/api/v1/voice/voicelive/<session_id>`
+
+If you want per-interaction sessions instead, pass a different `session_id` for chat and voice (they will become separate Zep sessions/episodes).
+
 ### Reference: Azure AI Foundry VoiceLive Playground (env vars + SDK behavior)
 
 The Azure AI Foundry “**Azure Speech Voice Live**” playground uses the same `azure-ai-voicelive` SDK patterns that Engram uses.

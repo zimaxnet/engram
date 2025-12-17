@@ -4,9 +4,10 @@ import type { AgentId } from '../../types';
 
 interface VoiceInteractionPageProps {
   activeAgent: AgentId;
+  sessionId: string;
 }
 
-export function VoiceInteractionPage({ activeAgent }: VoiceInteractionPageProps) {
+export function VoiceInteractionPage({ activeAgent, sessionId }: VoiceInteractionPageProps) {
   const [status, setStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
   const [error, setError] = useState<string | null>(null);
 
@@ -71,6 +72,7 @@ export function VoiceInteractionPage({ activeAgent }: VoiceInteractionPageProps)
         {status !== 'error' && (
           <VoiceChat
             agentId={activeAgent}
+            sessionId={sessionId}
             disabled={status !== 'connected'}
             onStatusChange={setStatus}
           />

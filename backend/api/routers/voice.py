@@ -19,12 +19,17 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 from pydantic import BaseModel
 
 from backend.voice.voicelive_service import voicelive_service
-from backend.core import get_settings, EnterpriseContext, SecurityContext, Role
+from backend.core import get_settings, EnterpriseContext, SecurityContext, Role, MessageRole, Turn
 from backend.agents import chat as agent_chat, get_agent
+from backend.memory import memory_client, persist_conversation
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+# Timeouts for memory operations (seconds) - keep VoiceLive real-time loop responsive
+VOICE_MEMORY_TIMEOUT = 2.0
+VOICE_PERSIST_TIMEOUT = 10.0
 
 
 class VoiceConfigResponse(BaseModel):
@@ -111,6 +116,59 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
     
     # Create session with default agent
     session = session_manager.create_session(session_id, "elena")
+
+    # ---------------------------------------------------------------------
+    # Memory: create an EnterpriseContext for this VoiceLive session so that
+    # user/assistant transcripts can be persisted into Zep as episodic memory.
+    #
+    # Note: WebSockets from browsers cannot set custom Authorization headers.
+    # For now we use a POC identity when AUTH_REQUIRED=false. When AUTH_REQUIRED=true,
+    # you should enforce Entra auth for WebSockets (e.g., token in query param or cookie).
+    # ---------------------------------------------------------------------
+    settings = get_settings()
+    if not settings.auth_required:
+        security = SecurityContext(
+            user_id="poc-user",
+            tenant_id=settings.azure_tenant_id or "poc-tenant",
+            roles=[Role.ADMIN],
+            scopes=["*"],
+            session_id=session_id,
+        )
+    else:
+        # Future: validate Entra token for WS and map to SecurityContext.
+        # Keeping a safe default here avoids silently writing cross-tenant memory.
+        security = SecurityContext(
+            user_id="voice-user",
+            tenant_id=settings.azure_tenant_id or "unknown-tenant",
+            roles=[Role.ANALYST],
+            scopes=["*"],
+            session_id=session_id,
+        )
+
+    voice_context = EnterpriseContext(security=security)
+    voice_context.episodic.conversation_id = session_id
+    session["context"] = voice_context
+
+    async def _ensure_memory_session():
+        try:
+            await asyncio.wait_for(
+                memory_client.get_or_create_session(
+                    session_id=session_id,
+                    user_id=security.user_id,
+                    metadata={
+                        "tenant_id": security.tenant_id,
+                        "channel": "voice",
+                        "agent_id": session.get("agent_id", "elena"),
+                    },
+                ),
+                timeout=VOICE_MEMORY_TIMEOUT,
+            )
+        except asyncio.TimeoutError:
+            logger.warning("Voice memory session init timed out")
+        except Exception as e:
+            logger.warning(f"Voice memory session init failed: {e}")
+
+    asyncio.create_task(_ensure_memory_session())
     
     # Check if VoiceLive is configured
     if not voicelive_service.is_configured:
@@ -167,6 +225,23 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
             
             # Create task to process VoiceLive events
             async def process_voicelive_events():
+                # Buffers for accumulating transcript deltas into complete turns
+                user_transcript_buf = ""
+                assistant_text_buf = ""
+                assistant_audio_transcript_buf = ""
+
+                async def _persist_latest_turns():
+                    """Best-effort persistence of the latest user+assistant turns into Zep."""
+                    try:
+                        await asyncio.wait_for(
+                            persist_conversation(voice_context),
+                            timeout=VOICE_PERSIST_TIMEOUT,
+                        )
+                    except asyncio.TimeoutError:
+                        logger.warning("Voice memory persistence timed out (background)")
+                    except Exception as e:
+                        logger.warning(f"Voice memory persistence failed (background): {e}")
+
                 try:
                     async for event in voicelive_connection:
                         if event.type == ServerEventType.INPUT_AUDIO_BUFFER_SPEECH_STARTED:
@@ -181,6 +256,41 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                                 "status": "processing",
                             })
                         
+                        elif event.type == ServerEventType.CONVERSATION_ITEM_INPUT_AUDIO_TRANSCRIPTION_DELTA:
+                            # User speech-to-text (partial)
+                            delta = getattr(event, "delta", "") or ""
+                            user_transcript_buf += str(delta)
+                            await websocket.send_json({
+                                "type": "transcription",
+                                "status": "processing",
+                                "text": user_transcript_buf,
+                            })
+
+                        elif event.type == ServerEventType.CONVERSATION_ITEM_INPUT_AUDIO_TRANSCRIPTION_COMPLETED:
+                            # User speech-to-text (final)
+                            final_text = (
+                                getattr(event, "transcript", None)
+                                or getattr(event, "text", None)
+                                or getattr(event, "delta", None)
+                                or user_transcript_buf
+                                or ""
+                            )
+                            final_text = str(final_text).strip()
+                            user_transcript_buf = ""
+
+                            if final_text:
+                                # Send to UI as "You said"
+                                await websocket.send_json({
+                                    "type": "transcription",
+                                    "status": "complete",
+                                    "text": final_text,
+                                })
+
+                                # Store as episodic memory (user turn)
+                                voice_context.episodic.add_turn(
+                                    Turn(role=MessageRole.USER, content=final_text)
+                                )
+
                         elif event.type == ServerEventType.RESPONSE_AUDIO_DELTA:
                             # Send audio chunk to client
                             audio_base64 = base64.b64encode(event.delta).decode("utf-8")
@@ -191,12 +301,62 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                             })
                         
                         elif event.type == ServerEventType.RESPONSE_AUDIO_TRANSCRIPT_DELTA:
-                            # Send transcript
-                            await websocket.send_json({
-                                "type": "transcription",
-                                "status": "complete",
-                                "text": event.delta if hasattr(event, 'delta') else "",
-                            })
+                            # Assistant audio transcript (partial) - useful for memory fallback
+                            delta = getattr(event, "delta", "") or ""
+                            assistant_audio_transcript_buf += str(delta)
+
+                        elif event.type == ServerEventType.RESPONSE_AUDIO_TRANSCRIPT_DONE:
+                            # Assistant audio transcript (final) - fallback if RESPONSE_TEXT_* isn't emitted
+                            # Some SDK event shapes expose transcript/text; otherwise use accumulated buffer.
+                            final_text = (
+                                getattr(event, "transcript", None)
+                                or getattr(event, "text", None)
+                                or assistant_audio_transcript_buf
+                                or ""
+                            )
+                            # Don't immediately persist here; prefer RESPONSE_TEXT_DONE, but keep buffer.
+                            assistant_audio_transcript_buf = str(final_text)
+
+                        elif event.type == ServerEventType.RESPONSE_TEXT_DELTA:
+                            # Assistant text output (partial)
+                            delta = getattr(event, "delta", "") or ""
+                            assistant_text_buf += str(delta)
+
+                        elif event.type == ServerEventType.RESPONSE_TEXT_DONE:
+                            # Assistant text output (final)
+                            final_text = (
+                                getattr(event, "text", None)
+                                or getattr(event, "delta", None)
+                                or assistant_text_buf
+                                or ""
+                            )
+                            final_text = str(final_text).strip()
+                            assistant_text_buf = ""
+
+                            if final_text:
+                                voice_context.episodic.add_turn(
+                                    Turn(
+                                        role=MessageRole.ASSISTANT,
+                                        content=final_text,
+                                        agent_id=session.get("agent_id", "elena"),
+                                    )
+                                )
+                                asyncio.create_task(_persist_latest_turns())
+
+                        elif event.type == ServerEventType.RESPONSE_DONE:
+                            # Fallback: persist assistant transcript if we didn't get RESPONSE_TEXT_DONE
+                            if not assistant_text_buf and assistant_audio_transcript_buf:
+                                final_text = str(assistant_audio_transcript_buf).strip()
+                                assistant_audio_transcript_buf = ""
+                                if final_text:
+                                    voice_context.episodic.add_turn(
+                                        Turn(
+                                            role=MessageRole.ASSISTANT,
+                                            content=final_text,
+                                            agent_id=session.get("agent_id", "elena"),
+                                        )
+                                    )
+                                    asyncio.create_task(_persist_latest_turns())
                         
                         elif event.type == ServerEventType.ERROR:
                             error_msg = event.error.message if hasattr(event, 'error') else "Unknown error"

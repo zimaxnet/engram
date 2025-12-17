@@ -9,13 +9,15 @@ interface MainLayoutProps {
     onAgentChange: (agent: AgentId) => void;
     selectedModel: string;
     onModelChange: (model: string) => void;
+    sessionId: string;
 }
 
 export function MainLayout({
     activeAgent,
     onAgentChange,
     selectedModel,
-    onModelChange
+    onModelChange,
+    sessionId
 }: MainLayoutProps) {
     const agent = AGENTS[activeAgent];
 
@@ -48,7 +50,7 @@ export function MainLayout({
                 </aside>
 
                 {/* Render child routes (ChatView, etc.) with context */}
-                <Outlet context={{ agent, selectedModel, onModelChange }} />
+                <Outlet context={{ agent, selectedModel, onModelChange, sessionId }} />
 
                 <ConceptExplainer />
             </main>
