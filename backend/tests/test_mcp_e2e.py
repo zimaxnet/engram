@@ -4,7 +4,7 @@ import uuid
 from unittest.mock import AsyncMock, patch
 
 from backend.core import EnterpriseContext, SecurityContext, Role
-from backend.api.routers.mcp import mcp_server, _sessions
+from backend.api.routers.mcp_server import mcp_server, _sessions
 
 
 

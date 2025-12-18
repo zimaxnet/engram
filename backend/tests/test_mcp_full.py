@@ -1,6 +1,6 @@
 
 import pytest
-from backend.api.routers.mcp import mcp_server
+from backend.api.routers.mcp_server import mcp_server
 
 @pytest.mark.asyncio
 async def test_mcp_enrich_memory(mock_agent_services):
