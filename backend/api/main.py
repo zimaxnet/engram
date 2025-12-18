@@ -43,11 +43,11 @@ async def lifespan(app: FastAPI):
     # Startup
     try:
         from backend.context.bootstrap import bootstrap_knowledge
-        # We run this in the background or await it? 
-        # Awaiting it is safer for "Singularity" to ensure context is ready before serving requests.
-        await bootstrap_knowledge()
+        # Run bootstrap in background to prevent blocking container startup checks
+        import asyncio
+        asyncio.create_task(bootstrap_knowledge())
     except Exception as e:
-        logger.error(f"Failed to bootstrap knowledge graph: {e}")
+        logger.error(f"Failed to initiate bootstrap: {e}")
 
     yield
 
