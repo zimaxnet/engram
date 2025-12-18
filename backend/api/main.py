@@ -41,6 +41,14 @@ async def lifespan(app: FastAPI):
     configure_telemetry(app)
 
     # Startup
+    try:
+        from backend.context.bootstrap import bootstrap_knowledge
+        # We run this in the background or await it? 
+        # Awaiting it is safer for "Singularity" to ensure context is ready before serving requests.
+        await bootstrap_knowledge()
+    except Exception as e:
+        logger.error(f"Failed to bootstrap knowledge graph: {e}")
+
     yield
 
     # Shutdown
