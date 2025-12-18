@@ -211,7 +211,7 @@ resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2022-12-01' = {
   }
 }
 
-resource postgresAadAdmin 'Microsoft.DBforPostgreSQL/flexibleServers/administrators@2023-03-01-preview' = if (enableAadForEnv && !empty(postgresAadAdminObjectId)) {
+resource postgresAadAdmin 'Microsoft.DBforPostgreSQL/flexibleServers/administrators@2022-12-01' = if (enableAadForEnv && !empty(postgresAadAdminObjectId)) {
   parent: postgres
   name: 'ActiveDirectory'
   properties: {
