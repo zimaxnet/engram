@@ -12,6 +12,8 @@ from typing import Optional
 
 from mcp.server.fastmcp import FastMCP, Context
 
+from backend.context.store import store as context_store
+from backend.context.registry import ContextRegistry
 from backend.agents import chat as agent_chat, get_agent
 from backend.core import EnterpriseContext, SecurityContext, Role
 from backend.memory import enrich_context, persist_conversation, search_memory as mem_search
@@ -48,6 +50,57 @@ def _get_or_create_session(session_id: str, security: SecurityContext) -> Enterp
         _sessions[session_id] = EnterpriseContext(security=security)
         _sessions[session_id].episodic.conversation_id = session_id
     return _sessions[session_id]
+
+@mcp_server.tool()
+async def list_contexts() -> str:
+    """
+    List all available Virtual Context Definitions.
+    """
+    definitions = ContextRegistry.list()
+    if not definitions:
+        return "No contexts registered."
+    
+    formatted = "\n".join([f"- **{d.name}**: {d.description} (Params: {list(d.parameters.keys())})" for d in definitions])
+    return f"Available Contexts:\n{formatted}"
+
+
+@mcp_server.tool()
+async def get_context(name: str, params: Optional[str] = None) -> str:
+    """
+    Fetch a specific Virtual Context by name.
+    
+    Args:
+        name: The name of the context (e.g. 'project_status').
+        params: JSON string of parameters to pass to the context.
+    """
+    import json
+    try:
+        parsed_params = {}
+        if params:
+            parsed_params = json.loads(params)
+        
+        result = await context_store.get_context(name, parsed_params)
+        return f"Context '{name}':\n{result}"
+    except Exception as e:
+        return f"Error fetching context '{name}': {str(e)}"
+
+
+# Dynamic Resource for reading contexts directly via URI
+# Format: context://{name}?param1=val1... (Simplified to just name for now for basic resource read)
+@mcp_server.resource("context://{name}")
+async def read_context_resource(name: str) -> str:
+    """
+    Read a context definition as a resource.
+    Note: Resources are typically static or parameter-less reads. 
+    For parameterized reads, use the 'get_context' tool.
+    This resource read will invoke the context with default/empty parameters.
+    """
+    try:
+        result = await context_store.get_context(name, {})
+        return str(result)
+    except Exception as e:
+        return f"Error reading context resource '{name}': {str(e)}"
+
 
 @mcp_server.resource("context://current")
 async def get_current_context() -> str:

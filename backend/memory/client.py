@@ -52,10 +52,10 @@ class ZepMemoryClient:
                 self._initialized = True
                 logger.info(f"Zep client initialized: {self.settings.zep_api_url}")
             except ImportError:
-                logger.warning("zep-python not installed, using mock client")
+                logger.warning("zep-python not installed, using Local Ephemeral Store")
                 self._client = MockZepClient()
             except Exception as e:
-                logger.error(f"Failed to initialize Zep client: {e}")
+                logger.error(f"Failed to connect to Zep: {e}. Falling back to Local Ephemeral Store.")
                 self._client = MockZepClient()
 
         return self._client
@@ -380,8 +380,10 @@ class ZepMemoryClient:
 
 class MockZepClient:
     """
-    Mock Zep client for development without a Zep server.
-    Returns empty results instead of failing.
+    Local Ephemeral Store (Development Store).
+    
+    This acts as the canonical memory store for local development when a full Zep instance is not present.
+    It is NOT just a mock; it holds the 'Local Knowledge Graph' for the development session.
     """
 
     class MockUser:
