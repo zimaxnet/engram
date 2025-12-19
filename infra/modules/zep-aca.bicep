@@ -115,7 +115,7 @@ resource acaEnv 'Microsoft.App/managedEnvironments@2022-03-01' existing = {
 // Managed certificate for custom domain
 resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = if (enableCustomDomain) {
   parent: acaEnv
-  name: 'zep.engram.work-staging--${uniqueString(resourceGroup().id)}'
+  name: 'zep.engram.work-staging--251219175508'  // Fixed name to match existing certificate
   location: location
   tags: tags
   properties: {
