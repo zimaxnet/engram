@@ -380,10 +380,18 @@ class ZepMemoryClient:
 
 class MockZepClient:
     """
-    Local Ephemeral Store (Development Store).
+    Local Ephemeral Store (Development Fallback).
     
-    This acts as the canonical memory store for local development when a full Zep instance is not present.
-    It is NOT just a mock; it holds the 'Local Knowledge Graph' for the development session.
+    This acts as a fallback memory store for local development when a full Zep 
+    instance is not available. In production, the real Zep instance stores all
+    episodic and semantic memories.
+    
+    The 'sessions_data' below represents seed data - the same data should be
+    ingested into the live Zep instance using `backend/scripts/seed_memory.py`.
+    
+    Purpose:
+        - Development: Provides realistic memory for testing without Zep
+        - Production: Real memories live in Zep (use seed_memory.py to bootstrap)
     """
 
     class MockUser:
