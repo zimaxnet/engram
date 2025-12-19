@@ -357,7 +357,7 @@ module temporalModule 'modules/temporal-aca.bicep' = {
     postgresFqdn: postgres.properties.fullyQualifiedDomainName
     postgresUser: 'cogadmin'
     postgresPassword: postgresPassword
-    postgresDb: 'engram'
+    postgresDb: 'temporal'
     tags: union(mergedTags, { Component: 'Temporal' })
   }
 }
@@ -369,6 +369,26 @@ module temporalModule 'modules/temporal-aca.bicep' = {
 resource zepDb 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2021-06-01' = {
   parent: postgres
   name: 'zep'
+  properties: {
+    charset: 'UTF8'
+    collation: 'en_US.utf8'
+  }
+}
+
+// Create Temporal database on Postgres
+resource temporalDb 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2021-06-01' = {
+  parent: postgres
+  name: 'temporal'
+  properties: {
+    charset: 'UTF8'
+    collation: 'en_US.utf8'
+  }
+}
+
+// Create Temporal visibility database on Postgres
+resource temporalVisibilityDb 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2021-06-01' = {
+  parent: postgres
+  name: 'temporal_visibility'
   properties: {
     charset: 'UTF8'
     collation: 'en_US.utf8'

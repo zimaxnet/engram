@@ -139,6 +139,10 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
               value: 'postgresql://${zepPostgresUser}:${zepPostgresPassword}@${zepPostgresFqdn}:5432/${zepPostgresDb}?sslmode=require'
             }
             {
+              name: 'ZEP_POSTGRES_DSN'
+              value: 'postgresql://${zepPostgresUser}:${zepPostgresPassword}@${zepPostgresFqdn}:5432/${zepPostgresDb}?sslmode=require'
+            }
+            {
               name: 'ZEP_OPENAI_API_KEY'
               secretRef: 'azure-ai-key'
             }
