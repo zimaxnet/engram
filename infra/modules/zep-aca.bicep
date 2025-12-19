@@ -45,7 +45,7 @@ param azureAiKey string
 param azureAiEndpoint string
 
 @description('Azure OpenAI LLM deployment name.')
-param azureOpenAiLlmDeployment string = 'gpt-4o-mini'
+param azureOpenAiLlmDeployment string = 'gpt-5-chat'
 
 @description('Azure OpenAI Embedding deployment name.')
 param azureOpenAiEmbeddingDeployment string = 'text-embedding-ada-002'
