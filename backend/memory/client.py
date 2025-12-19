@@ -450,6 +450,32 @@ class MockZepClient:
                         {"role": "user", "content": "Also `test_etl_router.py` failed.", "metadata": {}},
                         {"role": "assistant", "content": "That was an incorrect `monkeypatch` target. I fixed it by patching the module import instead of the instance attribute. Tests are passing now.", "metadata": {"agent_id": "elena"}},
                     ]
+                },
+                {
+                    "session_id": "sess-infra-002",
+                    "created_at": "2024-12-19T02:00:00Z",
+                    "updated_at": "2024-12-19T03:28:00Z",
+                    "user_id": "user-derek",
+                    "metadata": {
+                        "summary": "Critical infrastructure debugging for Zep and Temporal services on Azure Container Apps. Resolved multiple configuration issues including Bicep syntax, Postgres extensions, and Zep config file mounting.",
+                        "turn_count": 18,
+                        "agent_id": "marcus",
+                        "topics": ["Infrastructure", "Azure", "Zep", "Temporal", "Bicep", "PostgreSQL"],
+                    },
+                    "messages": [
+                        {"role": "assistant", "content": "Derek, I've been looking at the deployment failures. Temporal is failing with 'database temporal does not exist'. We need to create the temporal and temporal_visibility databases in Azure Postgres via Bicep.", "metadata": {"agent_id": "marcus"}},
+                        {"role": "user", "content": "Elena, can you analyze the root cause?", "metadata": {}},
+                        {"role": "assistant", "content": "The Temporal auto-setup container expects a database named 'temporal' but our Bicep only created 'engram' and 'zep'. I've added two new database resources: `temporalDb` and `temporalVisibilityDb` with UTF8 charset.", "metadata": {"agent_id": "elena"}},
+                        {"role": "assistant", "content": "Also, Temporal's schema migration fails on 'btree_gin extension is not allow-listed'. Azure Postgres requires extensions to be explicitly allowlisted in the `azure.extensions` server parameter.", "metadata": {"agent_id": "elena"}},
+                        {"role": "user", "content": "What about Zep? It keeps crashing with 'store.type must be set'.", "metadata": {}},
+                        {"role": "assistant", "content": "This was tricky. I analyzed Zep's config.go source code. It uses Viper for configuration but has a bug - it exits if no config.yaml file is found, even though env vars should work. The fix was to mount a config.yaml file as a secret volume.", "metadata": {"agent_id": "elena"}},
+                        {"role": "assistant", "content": "Marcus, I've reviewed Elena's analysis. The Bicep implementation is solid. Key changes: (1) Secret with config.yaml content, (2) Volume of type 'Secret', (3) VolumeMount at /config, (4) Command args '--config /config/config.yaml'.", "metadata": {"agent_id": "marcus"}},
+                        {"role": "user", "content": "We hit another issue - mounting at /app overwrote the Zep binary!", "metadata": {}},
+                        {"role": "assistant", "content": "Classic container volume mistake. When you mount a secret volume at /app, it replaces everything in that directory, including the application binary. The fix was mounting at /config instead and passing the config path via command args.", "metadata": {"agent_id": "marcus"}},
+                        {"role": "assistant", "content": "Final issue: 'invalid llm deployment for openai, deployment name is required'. Zep's Azure OpenAI integration requires explicit `llm_deployment` and `embedding_deployment` names. I added these to the config: gpt-5-chat and text-embedding-ada-002.", "metadata": {"agent_id": "elena"}},
+                        {"role": "user", "content": "Status update?", "metadata": {}},
+                        {"role": "assistant", "content": "All services are now running! Zep: Listening on port 8000, using Postgres memory store, health checks passing. Temporal: Schema migrations complete, task queues processing. Total fixes: (1) Temporal/visibility databases, (2) azure.extensions for btree_gin, (3) Zep config.yaml volume mount, (4) Azure OpenAI deployment names.", "metadata": {"agent_id": "marcus"}},
+                    ]
                 }
             ]
 
