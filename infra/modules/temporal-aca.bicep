@@ -158,6 +158,18 @@ resource temporalServer 'Microsoft.App/containerApps@2023-05-01' = {
               name: 'SQL_TLS_ENABLED'
               value: 'true'
             }
+            {
+              name: 'POSTGRES_TLS_ENABLED'
+              value: 'true'
+            }
+            {
+              name: 'POSTGRES_TLS_DISABLE_HOST_VERIFICATION'
+              value: 'true'
+            }
+            {
+              name: 'SQL_TLS_DISABLE_HOST_VERIFICATION'
+              value: 'true'
+            }
           ]
           resources: {
             cpu: json('0.5')
