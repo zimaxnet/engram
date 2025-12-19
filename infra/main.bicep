@@ -450,6 +450,8 @@ module backendModule 'modules/backend-aca.bicep' = {
     location: location
     acaEnvName: acaEnv.name
     appName: '${envName}-api'
+    enableCustomDomain: true  // Output https://api.engram.work for frontend
+    customDomainName: 'api.engram.work'
     containerImage: backendImage
     postgresFqdn: postgres.properties.fullyQualifiedDomainName
     temporalHost: temporalModule.outputs.temporalHost

@@ -292,7 +292,8 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
 
 // Output default ACA FQDN as URL
 output backendFqdn string = backendApp.properties.configuration.ingress.fqdn
-output backendUrl string = 'https://${backendApp.properties.configuration.ingress.fqdn}'
+// Use custom domain when enabled, otherwise use default FQDN
+output backendUrl string = enableCustomDomain ? 'https://${customDomainName}' : 'https://${backendApp.properties.configuration.ingress.fqdn}'
 output backendDefaultFqdn string = backendApp.properties.configuration.ingress.fqdn
 output backendId string = backendApp.id
 
