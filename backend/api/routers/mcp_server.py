@@ -357,3 +357,209 @@ async def get_voice_config(agent_id: str) -> str:
         return f"Error fetching voice config: {str(e)}"
 
 
+# =============================================================================
+# Memory Ingestion Tools - Live document and episode ingestion via MCP
+# =============================================================================
+
+@mcp_server.tool()
+async def ingest_document(
+    content: str,
+    title: str,
+    doc_type: str = "markdown",
+    topics: Optional[str] = None,
+    agent_id: str = "elena",
+    metadata: Optional[str] = None,
+) -> str:
+    """
+    Ingest a document into the knowledge graph.
+    
+    This creates searchable semantic memory that agents can reference.
+    Documents become part of the shared knowledge base.
+    
+    Args:
+        content: The full document content (markdown, text, or HTML).
+        title: Document title for identification.
+        doc_type: Type of document ('markdown', 'html', 'text').
+        topics: Comma-separated topics (e.g., 'Architecture,Deployment').
+        agent_id: Agent that primarily owns this knowledge ('elena', 'marcus').
+        metadata: Optional JSON string with additional metadata.
+    """
+    import json
+    from backend.memory.client import ZepMemoryClient
+    
+    try:
+        # Parse metadata if provided
+        doc_metadata = json.loads(metadata) if metadata else {}
+        topic_list = [t.strip() for t in topics.split(",")] if topics else []
+        
+        # Create a unique session ID for this document
+        doc_session_id = f"doc-{title.lower().replace(' ', '-')}-{uuid.uuid4().hex[:8]}"
+        
+        # Build messages representing the document content
+        # Chunk content if very large (Zep has message limits)
+        chunk_size = 4000  # Characters per chunk
+        chunks = [content[i:i+chunk_size] for i in range(0, len(content), chunk_size)]
+        
+        messages = []
+        for i, chunk in enumerate(chunks):
+            messages.append({
+                "role": "user",
+                "content": f"[Document: {title} - Part {i+1}/{len(chunks)}]\n\n{chunk}",
+                "metadata": {"doc_type": doc_type, "chunk": i+1, "total_chunks": len(chunks)}
+            })
+            messages.append({
+                "role": "assistant", 
+                "content": f"Acknowledged. I've indexed part {i+1} of '{title}' into my knowledge base.",
+                "metadata": {"agent_id": agent_id}
+            })
+        
+        # Create session and add to Zep
+        client = ZepMemoryClient()
+        await client.get_or_create_session(
+            session_id=doc_session_id,
+            user_id="system-ingestion",
+            metadata={
+                "summary": f"Document ingestion: {title}",
+                "topics": topic_list,
+                "agent_id": agent_id,
+                "doc_type": doc_type,
+                "source": "mcp_ingest_document",
+                **doc_metadata
+            }
+        )
+        
+        await client.add_memory(
+            session_id=doc_session_id,
+            messages=messages,
+            metadata={"ingested_at": str(uuid.uuid4())}  # Unique marker
+        )
+        
+        logger.info(f"Ingested document '{title}' ({len(chunks)} chunks) → session {doc_session_id}")
+        return f"✅ Ingested '{title}' ({len(content)} chars, {len(chunks)} chunks) into knowledge graph. Session: {doc_session_id}"
+        
+    except Exception as e:
+        logger.error(f"Document ingestion failed: {e}")
+        return f"❌ Error ingesting document: {str(e)}"
+
+
+@mcp_server.tool()
+async def ingest_episode(
+    session_id: str,
+    summary: str,
+    messages: str,
+    topics: Optional[str] = None,
+    agent_id: str = "elena",
+) -> str:
+    """
+    Ingest a historical episode (conversation) into episodic memory.
+    
+    Episodes are conversation sessions that become part of the agents'
+    long-term memory. They're used to maintain context across sessions.
+    
+    Args:
+        session_id: Unique identifier for this episode (e.g., 'sess-arch-001').
+        summary: Brief summary of the episode.
+        messages: JSON array of messages: [{"role": "user/assistant", "content": "...", "agent_id": "elena"}]
+        topics: Comma-separated topics (e.g., 'Architecture,Zep').
+        agent_id: Primary agent for this episode ('elena', 'marcus').
+    """
+    import json
+    from backend.memory.client import ZepMemoryClient
+    
+    try:
+        # Parse messages JSON
+        message_list = json.loads(messages)
+        topic_list = [t.strip() for t in topics.split(",")] if topics else []
+        
+        # Validate message format
+        for msg in message_list:
+            if "role" not in msg or "content" not in msg:
+                return "❌ Invalid message format. Each message needs 'role' and 'content'."
+        
+        # Format messages for Zep
+        formatted_messages = [
+            {
+                "role": msg["role"],
+                "content": msg["content"],
+                "metadata": {"agent_id": msg.get("agent_id", agent_id)}
+            }
+            for msg in message_list
+        ]
+        
+        # Create session and add to Zep
+        client = ZepMemoryClient()
+        await client.get_or_create_session(
+            session_id=session_id,
+            user_id="user-derek",  # Default user for project history
+            metadata={
+                "summary": summary,
+                "topics": topic_list,
+                "agent_id": agent_id,
+                "turn_count": len(message_list),
+                "source": "mcp_ingest_episode",
+            }
+        )
+        
+        await client.add_memory(
+            session_id=session_id,
+            messages=formatted_messages,
+        )
+        
+        logger.info(f"Ingested episode '{session_id}' ({len(message_list)} messages)")
+        return f"✅ Ingested episode '{session_id}' ({len(message_list)} messages). Topics: {topic_list}"
+        
+    except json.JSONDecodeError as e:
+        return f"❌ Invalid JSON in messages: {str(e)}"
+    except Exception as e:
+        logger.error(f"Episode ingestion failed: {e}")
+        return f"❌ Error ingesting episode: {str(e)}"
+
+
+# =============================================================================
+# MCP Resource: docs:// - Read documents from docs folder
+# =============================================================================
+
+@mcp_server.resource("docs://{path}")
+async def read_doc_resource(path: str) -> str:
+    """
+    Read a document from the docs folder.
+    
+    This MCP resource exposes project documentation for agents and clients.
+    """
+    import os
+    from pathlib import Path
+    
+    # Determine docs folder path (relative to project root)
+    # In container: /app/docs, locally: {project}/docs
+    docs_paths = [
+        Path("/app/docs"),
+        Path(__file__).parent.parent.parent.parent / "docs",  # backend/../docs
+    ]
+    
+    docs_dir = None
+    for p in docs_paths:
+        if p.exists():
+            docs_dir = p
+            break
+    
+    if not docs_dir:
+        return "Error: docs folder not found"
+    
+    # Security: prevent path traversal
+    safe_path = Path(path).name if "/" not in path else path.replace("..", "")
+    target = docs_dir / safe_path
+    
+    if not target.exists():
+        return f"Error: Document '{path}' not found"
+    
+    if not target.is_file():
+        # If it's a directory, list contents
+        contents = [f.name for f in target.iterdir()]
+        return f"Directory '{path}' contains: {', '.join(contents)}"
+    
+    try:
+        return target.read_text()
+    except Exception as e:
+        return f"Error reading '{path}': {str(e)}"
+
+
