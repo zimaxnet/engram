@@ -137,10 +137,12 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
         {
           name: 'zep'
           image: zepImage
+          command: ['/app/zep']
+          args: ['--config', '/config/config.yaml']
           volumeMounts: [
             {
               volumeName: 'zep-config-volume'
-              mountPath: '/app'
+              mountPath: '/config'
             }
           ]
           env: concat([
