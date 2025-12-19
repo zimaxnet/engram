@@ -127,6 +127,14 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
               value: 'postgres'
             }
             {
+              name: 'ZEP_STORE'
+              value: 'postgres'
+            }
+            {
+              name: 'STORE_TYPE'
+              value: 'postgres'
+            }
+            {
               name: 'ZEP_STORE_POSTGRES_DSN'
               value: 'postgresql://${zepPostgresUser}:${zepPostgresPassword}@${zepPostgresFqdn}:5432/${zepPostgresDb}?sslmode=require'
             }
