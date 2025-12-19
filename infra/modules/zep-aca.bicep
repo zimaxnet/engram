@@ -123,7 +123,7 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
               value: '0.0.0.0:8000'
             }
             {
-              name: 'ZEP_STORE'
+              name: 'ZEP_STORE_TYPE'
               value: 'postgres'
             }
             {

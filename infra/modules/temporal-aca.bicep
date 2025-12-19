@@ -150,6 +150,14 @@ resource temporalServer 'Microsoft.App/containerApps@2023-05-01' = {
               name: 'SKIP_DEFAULT_NAMESPACE_CREATION'
               value: 'true'
             }
+            {
+              name: 'SQL_TLS'
+              value: 'true'
+            }
+            {
+              name: 'SQL_TLS_ENABLED'
+              value: 'true'
+            }
           ]
           resources: {
             cpu: json('0.5')
