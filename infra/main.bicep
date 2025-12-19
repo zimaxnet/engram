@@ -218,7 +218,6 @@ resource postgresAadAdmin 'Microsoft.DBforPostgreSQL/flexibleServers/administrat
     principalName: 'aad-admin'
     principalType: 'User'
     tenantId: postgresAadAdminTenantId
-    objectId: postgresAadAdminObjectId
   }
 }
 
