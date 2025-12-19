@@ -289,7 +289,12 @@ output backendId string = backendApp.id
 resource authConfig 'Microsoft.App/containerApps/authConfigs@2023-05-01' = {
   parent: backendApp
   name: 'current'
-  properties: {
+    platform: {
+      enabled: false
+    }
+    globalValidation: {
+      unauthenticatedClientAction: 'AllowAnonymous'
+    }
     identityProviders: {
       azureActiveDirectory: {
         enabled: true
@@ -303,9 +308,6 @@ resource authConfig 'Microsoft.App/containerApps/authConfigs@2023-05-01' = {
           ]
         }
       }
-    }
-    globalValidation: {
-      unauthenticatedClientAction: 'AllowAnonymous'
     }
   }
 }
