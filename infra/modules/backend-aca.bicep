@@ -237,12 +237,22 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
           }
           probes: [
             {
+              type: 'Startup'
+              httpGet: {
+                port: 8080
+                path: '/health'
+              }
+              initialDelaySeconds: 60  // Backend starts THIRD (priority 3) - wait for Temporal+Zep
+              periodSeconds: 10
+              failureThreshold: 12     // 180s total window
+            }
+            {
               type: 'Readiness'
               httpGet: {
                 port: 8080
                 path: '/health'
               }
-              initialDelaySeconds: 60
+              initialDelaySeconds: 5   // Reduced - startup probe handles initial wait
               periodSeconds: 10
               failureThreshold: 3
             }
@@ -252,7 +262,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
                 port: 8080
                 path: '/health'
               }
-              initialDelaySeconds: 60
+              initialDelaySeconds: 90  // After startup probe completes
               periodSeconds: 20
               failureThreshold: 10
             }

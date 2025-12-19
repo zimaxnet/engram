@@ -46,6 +46,8 @@ services:
     depends_on:
       zep-postgres:
         condition: service_healthy
+      temporal:
+        condition: service_healthy
     environment:
       # Zep server
       ZEP_SERVER_ADDRESS: 0.0.0.0:8000
@@ -60,7 +62,7 @@ services:
     volumes:
       - ./backend/zep-config.yaml:/app/config.yaml:ro
     healthcheck:
-      test: ["CMD-SHELL", "command -v wget >/dev/null 2>&1 || (apt-get update >/dev/null 2>&1 && apt-get install -y wget >/dev/null 2>&1); wget --quiet --tries=1 --spider http://localhost:8000/healthz"]
+      test: [ "CMD-SHELL", "command -v wget >/dev/null 2>&1 || (apt-get update >/dev/null 2>&1 && apt-get install -y wget >/dev/null 2>&1); wget --quiet --tries=1 --spider http://localhost:8000/healthz" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -116,7 +118,10 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     depends_on:
-      - temporal
+      temporal:
+        condition: service_healthy
+      zep:
+        condition: service_healthy
     environment:
       ENVIRONMENT: development
       DEBUG: "true"
@@ -190,7 +195,7 @@ services:
     volumes:
       - ./backend:/app/backend
     healthcheck:
-      test: ["CMD", "python", "-c", "import sys"]
+      test: [ "CMD", "python", "-c", "import sys" ]
       interval: 30s
       timeout: 5s
       retries: 3

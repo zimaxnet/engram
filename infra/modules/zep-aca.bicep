@@ -163,12 +163,22 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
           }
           probes: [
             {
+              type: 'Startup'
+              httpGet: {
+                port: 8000
+                path: '/healthz'
+              }
+              initialDelaySeconds: 45  // Zep starts SECOND (priority 2) - wait for Temporal
+              periodSeconds: 10
+              failureThreshold: 12     // 165s total window
+            }
+            {
               type: 'Readiness'
               httpGet: {
                 port: 8000
                 path: '/healthz'
               }
-              initialDelaySeconds: 15
+              initialDelaySeconds: 5   // Reduced - startup probe handles initial wait
               periodSeconds: 10
               failureThreshold: 3
             }
@@ -178,7 +188,7 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
                 port: 8000
                 path: '/healthz'
               }
-              initialDelaySeconds: 60
+              initialDelaySeconds: 90  // After startup probe completes
               periodSeconds: 20
               failureThreshold: 10
             }

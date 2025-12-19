@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.39.26.7824",
-      "templateHash": "17530709394076138313"
+      "templateHash": "3937372200809852828"
     }
   },
   "parameters": {
@@ -35,6 +35,27 @@
       ],
       "metadata": {
         "description": "Environment type: staging, dev, test, uat, or prod."
+      }
+    },
+    "enablePostgresAad": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable Azure AD authentication for Postgres (recommended for uat/prod)."
+      }
+    },
+    "postgresAadAdminObjectId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Object ID of the AAD admin for Postgres (user or group)."
+      }
+    },
+    "postgresAadAdminTenantId": {
+      "type": "string",
+      "defaultValue": "[tenant().tenantId]",
+      "metadata": {
+        "description": "Tenant ID for AAD admin (defaults to current tenant)."
       }
     },
     "enablePrivateLink": {
@@ -69,6 +90,41 @@
       "defaultValue": "ghcr.io/getzep/zep:latest",
       "metadata": {
         "description": "Container image for Zep (memory)."
+      }
+    },
+    "aksNodeSize": {
+      "type": "string",
+      "defaultValue": "Standard_D4s_v3",
+      "metadata": {
+        "description": "AKS node size (prod)."
+      }
+    },
+    "aksNodeCount": {
+      "type": "int",
+      "defaultValue": 3,
+      "metadata": {
+        "description": "AKS node count (prod)."
+      }
+    },
+    "aksNodeMinCount": {
+      "type": "int",
+      "defaultValue": 3,
+      "metadata": {
+        "description": "AKS min node count (prod)."
+      }
+    },
+    "aksNodeMaxCount": {
+      "type": "int",
+      "defaultValue": 10,
+      "metadata": {
+        "description": "AKS max node count (prod)."
+      }
+    },
+    "enableAksPrivateCluster": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Enable private cluster for AKS (prod)."
       }
     },
     "azureAiEndpoint": {
@@ -120,6 +176,8 @@
     }
   },
   "variables": {
+    "isProd": "[equals(parameters('environment'), 'prod')]",
+    "authRequired": "[or(equals(parameters('environment'), 'uat'), equals(parameters('environment'), 'prod'))]",
     "baseTags": {
       "Project": "Engram",
       "Environment": "[parameters('environment')]",
@@ -134,6 +192,7 @@
     "acaEnvTags": "[union(variables('mergedTags'), createObject('Component', 'ContainerAppsEnvironment', 'DataClass', 'internal'))]",
     "postgresTags": "[union(variables('mergedTags'), createObject('Component', 'PostgreSQL', 'Plane', 'recall', 'DataClass', 'internal'))]",
     "postgresSku": "[if(or(equals(parameters('environment'), 'prod'), equals(parameters('environment'), 'uat')), createObject('name', 'Standard_D2s_v3', 'tier', 'GeneralPurpose'), createObject('name', 'Standard_B1ms', 'tier', 'Burstable'))]",
+    "enableAadForEnv": "[or(or(parameters('enablePostgresAad'), equals(parameters('environment'), 'prod')), equals(parameters('environment'), 'uat'))]",
     "postgresBackupDays": "[if(equals(parameters('environment'), 'prod'), 35, if(equals(parameters('environment'), 'uat'), 14, 7))]",
     "postgresGeoRedundant": "[if(equals(parameters('environment'), 'prod'), 'Enabled', 'Disabled')]",
     "storageTags": "[union(variables('mergedTags'), createObject('Component', 'BlobStorage', 'Plane', 'record', 'DataClass', 'internal'))]",
@@ -144,11 +203,23 @@
   "resources": [
     {
       "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
-      "apiVersion": "2021-06-01",
+      "apiVersion": "2022-12-01",
       "name": "[format('{0}/{1}', format('{0}-db', parameters('envName')), 'AllowAzureServices')]",
       "properties": {
         "startIpAddress": "0.0.0.0",
         "endIpAddress": "0.0.0.0"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers/configurations",
+      "apiVersion": "2022-12-01",
+      "name": "[format('{0}/{1}', format('{0}-db', parameters('envName')), 'azure.extensions')]",
+      "properties": {
+        "value": "btree_gin,vector,pg_trgm,uuid-ossp",
+        "source": "user-override"
       },
       "dependsOn": [
         "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName')))]"
@@ -188,7 +259,7 @@
     },
     {
       "type": "Microsoft.DBforPostgreSQL/flexibleServers",
-      "apiVersion": "2021-06-01",
+      "apiVersion": "2022-12-01",
       "name": "[format('{0}-db', parameters('envName'))]",
       "location": "[parameters('location')]",
       "tags": "[variables('postgresTags')]",
@@ -200,6 +271,11 @@
         "storage": {
           "storageSizeGB": "[if(equals(parameters('environment'), 'prod'), 128, if(equals(parameters('environment'), 'uat'), 64, 32))]"
         },
+        "authConfig": {
+          "activeDirectoryAuth": "[if(variables('enableAadForEnv'), 'Enabled', 'Disabled')]",
+          "passwordAuth": "Enabled",
+          "tenantId": "[parameters('postgresAadAdminTenantId')]"
+        },
         "backup": {
           "backupRetentionDays": "[variables('postgresBackupDays')]",
           "geoRedundantBackup": "[variables('postgresGeoRedundant')]"
@@ -208,6 +284,20 @@
           "mode": "[if(or(equals(parameters('environment'), 'prod'), equals(parameters('environment'), 'uat')), 'ZoneRedundant', 'Disabled')]"
         }
       }
+    },
+    {
+      "condition": "[and(variables('enableAadForEnv'), not(empty(parameters('postgresAadAdminObjectId'))))]",
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers/administrators",
+      "apiVersion": "2022-12-01",
+      "name": "[format('{0}/{1}', format('{0}-db', parameters('envName')), 'ActiveDirectory')]",
+      "properties": {
+        "principalName": "aad-admin",
+        "principalType": "User",
+        "tenantId": "[parameters('postgresAadAdminTenantId')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName')))]"
+      ]
     },
     {
       "type": "Microsoft.Storage/storageAccounts",
@@ -228,6 +318,36 @@
           "bypass": "AzureServices"
         }
       }
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', replace(format('{0}store', parameters('envName')), '-', ''))]",
+      "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', replace(format('{0}store', parameters('envName')), '-', '')), format('{0}-backend-identity', parameters('envName')), 'blob-contrib-backend')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-backend-identity', parameters('envName'))), '2018-11-30').principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-backend-identity', parameters('envName')))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', replace(format('{0}store', parameters('envName')), '-', ''))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', replace(format('{0}store', parameters('envName')), '-', ''))]",
+      "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', replace(format('{0}store', parameters('envName')), '-', '')), format('{0}-worker-identity', parameters('envName')), 'blob-contrib-worker')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-worker-identity', parameters('envName'))), '2018-11-30').principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', replace(format('{0}store', parameters('envName')), '-', ''))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-worker-identity', parameters('envName')))]"
+      ]
     },
     {
       "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
@@ -256,6 +376,228 @@
       ]
     },
     {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers/databases",
+      "apiVersion": "2021-06-01",
+      "name": "[format('{0}/{1}', format('{0}-db', parameters('envName')), 'temporal')]",
+      "properties": {
+        "charset": "UTF8",
+        "collation": "en_US.utf8"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers/databases",
+      "apiVersion": "2021-06-01",
+      "name": "[format('{0}/{1}', format('{0}-db', parameters('envName')), 'temporal_visibility')]",
+      "properties": {
+        "charset": "UTF8",
+        "collation": "en_US.utf8"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName')))]"
+      ]
+    },
+    {
+      "condition": "[variables('isProd')]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
+      "name": "aksCluster",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "aksName": {
+            "value": "[format('{0}-aks', parameters('envName'))]"
+          },
+          "dnsPrefix": {
+            "value": "[format('{0}-aks', parameters('envName'))]"
+          },
+          "nodeSize": {
+            "value": "[parameters('aksNodeSize')]"
+          },
+          "nodeCount": {
+            "value": "[parameters('aksNodeCount')]"
+          },
+          "nodeMinCount": {
+            "value": "[parameters('aksNodeMinCount')]"
+          },
+          "nodeMaxCount": {
+            "value": "[parameters('aksNodeMaxCount')]"
+          },
+          "enablePrivateCluster": {
+            "value": "[parameters('enableAksPrivateCluster')]"
+          },
+          "enableAzurePolicy": {
+            "value": true
+          },
+          "tags": {
+            "value": "[union(variables('mergedTags'), createObject('Component', 'AKS'))]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.39.26.7824",
+              "templateHash": "17088434556928500918"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]",
+              "metadata": {
+                "description": "Location for the AKS cluster."
+              }
+            },
+            "aksName": {
+              "type": "string",
+              "metadata": {
+                "description": "Cluster name."
+              }
+            },
+            "dnsPrefix": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "DNS prefix."
+              }
+            },
+            "nodeSize": {
+              "type": "string",
+              "defaultValue": "Standard_D4s_v3",
+              "metadata": {
+                "description": "Node size."
+              }
+            },
+            "nodeCount": {
+              "type": "int",
+              "defaultValue": 3,
+              "metadata": {
+                "description": "Node count."
+              }
+            },
+            "nodeMinCount": {
+              "type": "int",
+              "defaultValue": 3,
+              "metadata": {
+                "description": "Node min count (autoscale)."
+              }
+            },
+            "nodeMaxCount": {
+              "type": "int",
+              "defaultValue": 10,
+              "metadata": {
+                "description": "Node max count (autoscale)."
+              }
+            },
+            "enablePrivateCluster": {
+              "type": "bool",
+              "defaultValue": true,
+              "metadata": {
+                "description": "Enable private cluster."
+              }
+            },
+            "enableAzurePolicy": {
+              "type": "bool",
+              "defaultValue": true,
+              "metadata": {
+                "description": "Enable Azure Policy addon."
+              }
+            },
+            "tags": {
+              "type": "object",
+              "defaultValue": {},
+              "metadata": {
+                "description": "Tags to apply."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.ContainerService/managedClusters",
+              "apiVersion": "2024-02-01",
+              "name": "[parameters('aksName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "sku": {
+                "name": "Base",
+                "tier": "Standard"
+              },
+              "properties": {
+                "dnsPrefix": "[if(empty(parameters('dnsPrefix')), parameters('aksName'), parameters('dnsPrefix'))]",
+                "enableRBAC": true,
+                "securityProfile": {
+                  "workloadIdentity": {
+                    "enabled": true
+                  },
+                  "azureKeyVaultKms": {
+                    "enabled": false
+                  }
+                },
+                "networkProfile": {
+                  "networkPlugin": "azure",
+                  "loadBalancerSku": "standard",
+                  "outboundType": "loadBalancer"
+                },
+                "addonProfiles": "[union(if(parameters('enableAzurePolicy'), createObject('azurepolicy', createObject('enabled', true())), createObject()), createObject())]",
+                "autoUpgradeProfile": {
+                  "upgradeChannel": "node-image"
+                },
+                "apiServerAccessProfile": {
+                  "enablePrivateCluster": "[parameters('enablePrivateCluster')]"
+                },
+                "agentPoolProfiles": [
+                  {
+                    "name": "system",
+                    "vmSize": "[parameters('nodeSize')]",
+                    "count": "[parameters('nodeCount')]",
+                    "minCount": "[parameters('nodeMinCount')]",
+                    "maxCount": "[parameters('nodeMaxCount')]",
+                    "type": "VirtualMachineScaleSets",
+                    "mode": "System",
+                    "osType": "Linux",
+                    "enableAutoScaling": true,
+                    "availabilityZones": [
+                      "1",
+                      "2",
+                      "3"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "outputs": {
+            "kubeletIdentityClientId": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', parameters('aksName')), '2024-02-01').identityProfile.kubeletidentity.clientId]"
+            },
+            "kubeletIdentityObjectId": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.ContainerService/managedClusters', parameters('aksName')), '2024-02-01').identityProfile.kubeletidentity.objectId]"
+            },
+            "clusterId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.ContainerService/managedClusters', parameters('aksName'))]"
+            }
+          }
+        }
+      }
+    },
+    {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
       "name": "keyVault",
@@ -271,6 +613,15 @@
           "keyVaultName": {
             "value": "[format('{0}kvy{1}', toLower(replace(parameters('envName'), '-', '')), take(uniqueString(resourceGroup().id), 5))]"
           },
+          "enableSoftDelete": {
+            "value": true
+          },
+          "enablePurgeProtection": {
+            "value": "[or(variables('isProd'), equals(parameters('environment'), 'uat'))]"
+          },
+          "enablePrivateLink": {
+            "value": "[parameters('enablePrivateLink')]"
+          },
           "tags": {
             "value": "[union(variables('mergedTags'), createObject('Component', 'KeyVault', 'DataClass', 'confidential'))]"
           }
@@ -282,7 +633,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.39.26.7824",
-              "templateHash": "16018997457685549023"
+              "templateHash": "2503201596912429600"
             }
           },
           "parameters": {
@@ -308,7 +659,7 @@
             },
             "enableSoftDelete": {
               "type": "bool",
-              "defaultValue": false,
+              "defaultValue": true,
               "metadata": {
                 "description": "Enable soft delete for the Key Vault."
               }
@@ -318,6 +669,13 @@
               "defaultValue": false,
               "metadata": {
                 "description": "Enable purge protection for the Key Vault."
+              }
+            },
+            "enablePrivateLink": {
+              "type": "bool",
+              "defaultValue": false,
+              "metadata": {
+                "description": "Disable public access when using Private Link."
               }
             },
             "tags": {
@@ -350,9 +708,9 @@
                 "enabledForDeployment": false,
                 "enabledForDiskEncryption": false,
                 "enabledForTemplateDeployment": true,
-                "publicNetworkAccess": "Enabled",
+                "publicNetworkAccess": "[if(parameters('enablePrivateLink'), 'Disabled', 'Enabled')]",
                 "networkAcls": {
-                  "defaultAction": "Allow",
+                  "defaultAction": "[if(parameters('enablePrivateLink'), 'Deny', 'Allow')]",
                   "bypass": "AzureServices"
                 }
               }
@@ -737,7 +1095,7 @@
             "value": false
           },
           "postgresFqdn": {
-            "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName'))), '2021-06-01').fullyQualifiedDomainName]"
+            "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName'))), '2022-12-01').fullyQualifiedDomainName]"
           },
           "postgresUser": {
             "value": "cogadmin"
@@ -746,7 +1104,7 @@
             "value": "[parameters('postgresPassword')]"
           },
           "postgresDb": {
-            "value": "engram"
+            "value": "temporal"
           },
           "tags": {
             "value": "[union(variables('mergedTags'), createObject('Component', 'Temporal'))]"
@@ -759,7 +1117,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.39.26.7824",
-              "templateHash": "13137844076844542716"
+              "templateHash": "16432373887998924421"
             }
           },
           "parameters": {
@@ -803,6 +1161,20 @@
                 "description": "Whether to provision a managed certificate and bind the custom domain to Temporal UI."
               }
             },
+            "uiBasicAuthUser": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional basic auth username for Temporal UI (ACA)."
+              }
+            },
+            "uiBasicAuthPassword": {
+              "type": "securestring",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional basic auth password for Temporal UI (ACA)."
+              }
+            },
             "postgresFqdn": {
               "type": "string",
               "metadata": {
@@ -840,6 +1212,10 @@
               }
             }
           },
+          "variables": {
+            "uiAuthSecrets": "[if(empty(parameters('uiBasicAuthPassword')), createArray(), createArray(createObject('name', 'temporal-ui-password', 'value', parameters('uiBasicAuthPassword'))))]",
+            "uiAuthEnv": "[if(or(empty(parameters('uiBasicAuthUser')), empty(parameters('uiBasicAuthPassword'))), createArray(), createArray(createObject('name', 'TEMPORAL_AUTH_ENABLED', 'value', 'true'), createObject('name', 'TEMPORAL_AUTH_TYPE', 'value', 'basic'), createObject('name', 'TEMPORAL_AUTH_BASIC_USERNAME', 'value', parameters('uiBasicAuthUser')), createObject('name', 'TEMPORAL_AUTH_BASIC_PASSWORD', 'secretRef', 'temporal-ui-password')))]"
+          },
           "resources": [
             {
               "condition": "[parameters('enableCustomDomain')]",
@@ -870,12 +1246,7 @@
                   "dapr": {
                     "enabled": false
                   },
-                  "secrets": [
-                    {
-                      "name": "postgres-password",
-                      "value": "[parameters('postgresPassword')]"
-                    }
-                  ]
+                  "secrets": "[concat(createArray(createObject('name', 'postgres-password', 'value', parameters('postgresPassword'))), variables('uiAuthSecrets'))]"
                 },
                 "template": {
                   "containers": [
@@ -885,7 +1256,7 @@
                       "env": [
                         {
                           "name": "DB",
-                          "value": "postgresql"
+                          "value": "postgres12"
                         },
                         {
                           "name": "DB_PORT",
@@ -918,6 +1289,26 @@
                         {
                           "name": "SKIP_DEFAULT_NAMESPACE_CREATION",
                           "value": "true"
+                        },
+                        {
+                          "name": "SQL_TLS",
+                          "value": "true"
+                        },
+                        {
+                          "name": "SQL_TLS_ENABLED",
+                          "value": "true"
+                        },
+                        {
+                          "name": "POSTGRES_TLS_ENABLED",
+                          "value": "true"
+                        },
+                        {
+                          "name": "POSTGRES_TLS_DISABLE_HOST_VERIFICATION",
+                          "value": "true"
+                        },
+                        {
+                          "name": "SQL_TLS_DISABLE_HOST_VERIFICATION",
+                          "value": "true"
                         }
                       ],
                       "resources": {
@@ -927,7 +1318,7 @@
                     }
                   ],
                   "scale": {
-                    "minReplicas": 0,
+                    "minReplicas": 1,
                     "maxReplicas": 3
                   }
                 }
@@ -951,23 +1342,15 @@
                   },
                   "dapr": {
                     "enabled": false
-                  }
+                  },
+                  "secrets": "[variables('uiAuthSecrets')]"
                 },
                 "template": {
                   "containers": [
                     {
                       "name": "temporal-ui",
                       "image": "temporalio/ui:latest",
-                      "env": [
-                        {
-                          "name": "TEMPORAL_ADDRESS",
-                          "value": "[format('{0}.{1}:7233', format('{0}-server', parameters('appName')), parameters('acaEnvName'))]"
-                        },
-                        {
-                          "name": "TEMPORAL_CORS_ORIGINS",
-                          "value": "*"
-                        }
-                      ],
+                      "env": "[concat(createArray(createObject('name', 'TEMPORAL_ADDRESS', 'value', format('{0}.{1}:7233', format('{0}-server', parameters('appName')), parameters('acaEnvName'))), createObject('name', 'TEMPORAL_CORS_ORIGINS', 'value', '*')), variables('uiAuthEnv'))]",
                       "resources": {
                         "cpu": "[json('0.25')]",
                         "memory": "0.5Gi"
@@ -975,7 +1358,7 @@
                     }
                   ],
                   "scale": {
-                    "minReplicas": 0,
+                    "minReplicas": 1,
                     "maxReplicas": 2
                   }
                 }
@@ -1031,7 +1414,7 @@
             "value": "[format('{0}-zep', parameters('envName'))]"
           },
           "zepPostgresFqdn": {
-            "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName'))), '2021-06-01').fullyQualifiedDomainName]"
+            "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName'))), '2022-12-01').fullyQualifiedDomainName]"
           },
           "zepPostgresUser": {
             "value": "cogadmin"
@@ -1057,6 +1440,12 @@
           "registryPassword": {
             "value": "[parameters('registryPassword')]"
           },
+          "azureAiKey": {
+            "value": "[parameters('azureAiKey')]"
+          },
+          "azureAiEndpoint": {
+            "value": "[parameters('azureAiEndpoint')]"
+          },
           "tags": {
             "value": "[variables('zepTags')]"
           }
@@ -1068,7 +1457,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.39.26.7824",
-              "templateHash": "1142860120388878453"
+              "templateHash": "2927514126058345995"
             }
           },
           "parameters": {
@@ -1153,6 +1542,32 @@
                 "description": "Registry password (optional, if image is private)."
               }
             },
+            "azureAiKey": {
+              "type": "securestring",
+              "metadata": {
+                "description": "Azure AI Services API key."
+              }
+            },
+            "azureAiEndpoint": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure AI Services Endpoint."
+              }
+            },
+            "azureOpenAiLlmDeployment": {
+              "type": "string",
+              "defaultValue": "gpt-4o-mini",
+              "metadata": {
+                "description": "Azure OpenAI LLM deployment name."
+              }
+            },
+            "azureOpenAiEmbeddingDeployment": {
+              "type": "string",
+              "defaultValue": "text-embedding-ada-002",
+              "metadata": {
+                "description": "Azure OpenAI Embedding deployment name."
+              }
+            },
             "tags": {
               "type": "object",
               "defaultValue": {
@@ -1165,10 +1580,13 @@
             }
           },
           "variables": {
-            "zepApiSecret": "[if(empty(parameters('zepApiKey')), createArray(), createArray(createObject('name', 'zep-api-key', 'value', parameters('zepApiKey'))))]",
+            "zepSecret": "[if(empty(parameters('zepApiKey')), createArray(), createArray(createObject('name', 'zep-api-key', 'value', parameters('zepApiKey'))))]",
+            "azureAiSecret": "[if(empty(parameters('azureAiKey')), createArray(), createArray(createObject('name', 'azure-ai-key', 'value', parameters('azureAiKey'))))]",
             "zepApiEnv": "[if(empty(parameters('zepApiKey')), createArray(), createArray(createObject('name', 'ZEP_API_KEY', 'secretRef', 'zep-api-key')))]",
             "zepRegistrySecret": "[if(empty(parameters('registryUsername')), createArray(), createArray(createObject('name', 'zep-registry-password', 'value', parameters('registryPassword'))))]",
-            "zepRegistries": "[if(empty(parameters('registryUsername')), createArray(), createArray(createObject('server', parameters('registryServer'), 'username', parameters('registryUsername'), 'passwordSecretRef', 'zep-registry-password')))]"
+            "zepRegistries": "[if(empty(parameters('registryUsername')), createArray(), createArray(createObject('server', parameters('registryServer'), 'username', parameters('registryUsername'), 'passwordSecretRef', 'zep-registry-password')))]",
+            "zepDsn": "[format('postgresql://{0}:{1}@{2}:5432/{3}?sslmode=require', parameters('zepPostgresUser'), parameters('zepPostgresPassword'), parameters('zepPostgresFqdn'), parameters('zepPostgresDb'))]",
+            "zepConfigContent": "[format('store:\n  type: postgres\n  postgres:\n    dsn: \"{0}\"\nllm:\n  service: openai\n  azure_openai_endpoint: {1}\n  azure_openai:\n    llm_deployment: {2}\n    embedding_deployment: {3}\nserver:\n  host: 0.0.0.0\n  port: 8000\n  web_enabled: false\nlog:\n  level: debug\nauth:\n  required: false\n', variables('zepDsn'), parameters('azureAiEndpoint'), parameters('azureOpenAiLlmDeployment'), parameters('azureOpenAiEmbeddingDeployment'))]"
           },
           "resources": [
             {
@@ -1188,23 +1606,70 @@
                   "dapr": {
                     "enabled": false
                   },
-                  "secrets": "[concat(createArray(createObject('name', 'zep-postgres-password', 'value', parameters('zepPostgresPassword'))), variables('zepApiSecret'), variables('zepRegistrySecret'))]",
+                  "secrets": "[concat(createArray(createObject('name', 'zep-postgres-password', 'value', parameters('zepPostgresPassword')), createObject('name', 'zep-config-yaml', 'value', variables('zepConfigContent'))), variables('zepSecret'), variables('azureAiSecret'), variables('zepRegistrySecret'))]",
                   "registries": "[variables('zepRegistries')]"
                 },
                 "template": {
+                  "volumes": [
+                    {
+                      "name": "zep-config-volume",
+                      "storageType": "Secret",
+                      "secrets": [
+                        {
+                          "secretRef": "zep-config-yaml",
+                          "path": "config.yaml"
+                        }
+                      ]
+                    }
+                  ],
                   "containers": [
                     {
                       "name": "zep",
                       "image": "[parameters('zepImage')]",
-                      "env": "[concat(createArray(createObject('name', 'ZEP_SERVER_ADDRESS', 'value', '0.0.0.0:8000'), createObject('name', 'ZEP_STORE', 'value', 'postgres'), createObject('name', 'ZEP_STORE_POSTGRES_DSN', 'value', format('postgresql://{0}:{1}@{2}:5432/{3}?sslmode=require', parameters('zepPostgresUser'), parameters('zepPostgresPassword'), parameters('zepPostgresFqdn'), parameters('zepPostgresDb')))), variables('zepApiEnv'))]",
+                      "command": [
+                        "/app/zep"
+                      ],
+                      "args": [
+                        "--config",
+                        "/config/config.yaml"
+                      ],
+                      "volumeMounts": [
+                        {
+                          "volumeName": "zep-config-volume",
+                          "mountPath": "/config"
+                        }
+                      ],
+                      "env": "[concat(createArray(createObject('name', 'ZEP_OPENAI_API_KEY', 'secretRef', 'azure-ai-key')), variables('zepApiEnv'))]",
                       "resources": {
                         "cpu": "[json('0.5')]",
                         "memory": "1Gi"
-                      }
+                      },
+                      "probes": [
+                        {
+                          "type": "Readiness",
+                          "httpGet": {
+                            "port": 8000,
+                            "path": "/healthz"
+                          },
+                          "initialDelaySeconds": 15,
+                          "periodSeconds": 10,
+                          "failureThreshold": 3
+                        },
+                        {
+                          "type": "Liveness",
+                          "httpGet": {
+                            "port": 8000,
+                            "path": "/healthz"
+                          },
+                          "initialDelaySeconds": 60,
+                          "periodSeconds": 20,
+                          "failureThreshold": 10
+                        }
+                      ]
                     }
                   ],
                   "scale": {
-                    "minReplicas": 0,
+                    "minReplicas": 1,
                     "maxReplicas": 2,
                     "rules": [
                       {
@@ -1262,7 +1727,7 @@
             "value": "[parameters('backendImage')]"
           },
           "postgresFqdn": {
-            "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName'))), '2021-06-01').fullyQualifiedDomainName]"
+            "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName'))), '2022-12-01').fullyQualifiedDomainName]"
           },
           "temporalHost": {
             "value": "[reference(resourceId('Microsoft.Resources/deployments', 'temporal'), '2025-04-01').outputs.temporalHost.value]"
@@ -1291,6 +1756,12 @@
           "identityResourceId": {
             "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-backend-identity', parameters('envName')))]"
           },
+          "identityClientId": {
+            "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-backend-identity', parameters('envName'))), '2018-11-30').clientId]"
+          },
+          "authRequired": {
+            "value": "[variables('authRequired')]"
+          },
           "tags": {
             "value": "[union(variables('mergedTags'), createObject('Component', 'BackendAPI'))]"
           }
@@ -1302,7 +1773,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.39.26.7824",
-              "templateHash": "16973636102641734772"
+              "templateHash": "11299717902397446330"
             }
           },
           "parameters": {
@@ -1395,6 +1866,19 @@
               "type": "string",
               "metadata": {
                 "description": "User-assigned identity resource ID used for Key Vault access."
+              }
+            },
+            "identityClientId": {
+              "type": "string",
+              "metadata": {
+                "description": "User-assigned identity client ID (for DefaultAzureCredential)."
+              }
+            },
+            "authRequired": {
+              "type": "bool",
+              "defaultValue": true,
+              "metadata": {
+                "description": "Whether API requests require user auth (Entra JWT). Set false for POC/staging to reduce friction."
               }
             },
             "registryUsername": {
@@ -1502,6 +1986,10 @@
                           "value": "[parameters('keyVaultUri')]"
                         },
                         {
+                          "name": "AZURE_CLIENT_ID",
+                          "value": "[parameters('identityClientId')]"
+                        },
+                        {
                           "name": "POSTGRES_HOST",
                           "value": "[parameters('postgresFqdn')]"
                         },
@@ -1542,16 +2030,24 @@
                           "secretRef": "zep-api-key"
                         },
                         {
-                          "name": "AZURE_AI_KEY",
-                          "secretRef": "azure-ai-key"
-                        },
-                        {
                           "name": "AZURE_AI_ENDPOINT",
                           "value": "[parameters('azureAiEndpoint')]"
                         },
                         {
                           "name": "AZURE_AI_PROJECT_NAME",
                           "value": "[parameters('azureAiProjectName')]"
+                        },
+                        {
+                          "name": "AZURE_AI_DEPLOYMENT",
+                          "value": "gpt-5-chat"
+                        },
+                        {
+                          "name": "AZURE_AI_API_VERSION",
+                          "value": "2024-10-01-preview"
+                        },
+                        {
+                          "name": "AZURE_AI_KEY",
+                          "secretRef": "azure-ai-key"
                         },
                         {
                           "name": "AZURE_VOICELIVE_ENDPOINT",
@@ -1564,16 +2060,42 @@
                         {
                           "name": "CORS_ORIGINS",
                           "value": "[[\"https://engram.work\", \"https://*.azurestaticapps.net\", \"http://localhost:5173\", \"*\"]"
+                        },
+                        {
+                          "name": "AUTH_REQUIRED",
+                          "value": "[if(parameters('authRequired'), 'true', 'false')]"
                         }
                       ],
                       "resources": {
                         "cpu": "[json('0.5')]",
                         "memory": "1Gi"
-                      }
+                      },
+                      "probes": [
+                        {
+                          "type": "Readiness",
+                          "httpGet": {
+                            "port": 8080,
+                            "path": "/health"
+                          },
+                          "initialDelaySeconds": 60,
+                          "periodSeconds": 10,
+                          "failureThreshold": 3
+                        },
+                        {
+                          "type": "Liveness",
+                          "httpGet": {
+                            "port": 8080,
+                            "path": "/health"
+                          },
+                          "initialDelaySeconds": 60,
+                          "periodSeconds": 20,
+                          "failureThreshold": 10
+                        }
+                      ]
                     }
                   ],
                   "scale": {
-                    "minReplicas": 0,
+                    "minReplicas": 1,
                     "maxReplicas": 1,
                     "rules": [
                       {
@@ -1592,6 +2114,36 @@
               "dependsOn": [
                 "[resourceId('Microsoft.App/managedEnvironments/managedCertificates', parameters('acaEnvName'), 'api.engram.work-staging--251211140607')]"
               ]
+            },
+            {
+              "type": "Microsoft.App/containerApps/authConfigs",
+              "apiVersion": "2023-05-01",
+              "name": "[format('{0}/{1}', parameters('appName'), 'current')]",
+              "properties": {
+                "platform": {
+                  "enabled": false
+                },
+                "globalValidation": {
+                  "unauthenticatedClientAction": "AllowAnonymous"
+                },
+                "identityProviders": {
+                  "azureActiveDirectory": {
+                    "enabled": true,
+                    "registration": {
+                      "clientId": "[parameters('identityClientId')]",
+                      "openIdIssuer": "[format('https://sts.windows.net/{0}/v2.0', subscription().tenantId)]"
+                    },
+                    "validation": {
+                      "allowedAudiences": [
+                        "[format('api://{0}', parameters('appName'))]"
+                      ]
+                    }
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.App/containerApps', parameters('appName'))]"
+              ]
             }
           ],
           "outputs": {
@@ -1606,6 +2158,10 @@
             "backendDefaultFqdn": {
               "type": "string",
               "value": "[reference(resourceId('Microsoft.App/containerApps', parameters('appName')), '2023-05-01').configuration.ingress.fqdn]"
+            },
+            "backendId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.App/containerApps', parameters('appName'))]"
             }
           }
         }
@@ -1642,7 +2198,7 @@
             "value": "[parameters('workerImage')]"
           },
           "postgresFqdn": {
-            "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName'))), '2021-06-01').fullyQualifiedDomainName]"
+            "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName'))), '2022-12-01').fullyQualifiedDomainName]"
           },
           "temporalHost": {
             "value": "[reference(resourceId('Microsoft.Resources/deployments', 'temporal'), '2025-04-01').outputs.temporalHost.value]"
@@ -1668,6 +2224,9 @@
           "identityResourceId": {
             "value": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-worker-identity', parameters('envName')))]"
           },
+          "identityClientId": {
+            "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-worker-identity', parameters('envName'))), '2018-11-30').clientId]"
+          },
           "tags": {
             "value": "[union(variables('mergedTags'), createObject('Component', 'Worker'))]"
           }
@@ -1679,7 +2238,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.39.26.7824",
-              "templateHash": "4759362773008133106"
+              "templateHash": "2314109537485052872"
             }
           },
           "parameters": {
@@ -1753,6 +2312,12 @@
                 "description": "User-assigned identity resource ID used for Key Vault access."
               }
             },
+            "identityClientId": {
+              "type": "string",
+              "metadata": {
+                "description": "User-assigned identity client ID (for DefaultAzureCredential)."
+              }
+            },
             "registryUsername": {
               "type": "string",
               "metadata": {
@@ -1810,11 +2375,6 @@
                       "identity": "[parameters('identityResourceId')]"
                     },
                     {
-                      "name": "azure-ai-key",
-                      "keyVaultUrl": "[format('{0}secrets/azure-ai-key', parameters('keyVaultUri'))]",
-                      "identity": "[parameters('identityResourceId')]"
-                    },
-                    {
                       "name": "registry-password",
                       "value": "[parameters('registryPassword')]"
                     }
@@ -1840,6 +2400,10 @@
                         {
                           "name": "AZURE_KEYVAULT_URL",
                           "value": "[parameters('keyVaultUri')]"
+                        },
+                        {
+                          "name": "AZURE_CLIENT_ID",
+                          "value": "[parameters('identityClientId')]"
                         },
                         {
                           "name": "POSTGRES_HOST",
@@ -1882,10 +2446,6 @@
                           "secretRef": "zep-api-key"
                         },
                         {
-                          "name": "AZURE_AI_KEY",
-                          "secretRef": "azure-ai-key"
-                        },
-                        {
                           "name": "AZURE_AI_ENDPOINT",
                           "value": "[parameters('azureAiEndpoint')]"
                         },
@@ -1901,19 +2461,8 @@
                     }
                   ],
                   "scale": {
-                    "minReplicas": 0,
-                    "maxReplicas": 1,
-                    "rules": [
-                      {
-                        "name": "http-scale",
-                        "http": {
-                          "metadata": {
-                            "concurrentRequests": "5",
-                            "cooldownPeriod": "1800"
-                          }
-                        }
-                      }
-                    ]
+                    "minReplicas": 1,
+                    "maxReplicas": 1
                   }
                 }
               }
@@ -1954,6 +2503,9 @@
           },
           "enableCustomDomain": {
             "value": false
+          },
+          "backendResourceId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'backend'), '2025-04-01').outputs.backendId.value]"
           }
         },
         "template": {
@@ -1963,7 +2515,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.39.26.7824",
-              "templateHash": "3132915132327239763"
+              "templateHash": "3342024545529576544"
             }
           },
           "parameters": {
@@ -1991,6 +2543,13 @@
             "customDomainName": {
               "type": "string",
               "defaultValue": "engram.work"
+            },
+            "backendResourceId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Resource ID of the backend container app to link."
+              }
             }
           },
           "resources": [
@@ -2022,6 +2581,19 @@
               "dependsOn": [
                 "[resourceId('Microsoft.Web/staticSites', parameters('swaName'))]"
               ]
+            },
+            {
+              "condition": "[not(empty(parameters('backendResourceId')))]",
+              "type": "Microsoft.Web/staticSites/linkedBackends",
+              "apiVersion": "2022-03-01",
+              "name": "[format('{0}/{1}', parameters('swaName'), 'backend')]",
+              "properties": {
+                "backendResourceId": "[parameters('backendResourceId')]",
+                "region": "[parameters('location')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Web/staticSites', parameters('swaName'))]"
+              ]
             }
           ],
           "outputs": {
@@ -2031,7 +2603,10 @@
             }
           }
         }
-      }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'backend')]"
+      ]
     }
   ],
   "outputs": {
@@ -2041,7 +2616,7 @@
     },
     "postgresFqdn": {
       "type": "string",
-      "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName'))), '2021-06-01').fullyQualifiedDomainName]"
+      "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', format('{0}-db', parameters('envName'))), '2022-12-01').fullyQualifiedDomainName]"
     },
     "keyVaultUri": {
       "type": "string",
@@ -2062,10 +2637,6 @@
     "zepApiUrl": {
       "type": "string",
       "value": "[reference(resourceId('Microsoft.Resources/deployments', 'zep'), '2025-04-01').outputs.zepApiUrl.value]"
-    },
-    "openAiEndpoint": {
-      "type": "string",
-      "value": "[parameters('azureAiEndpoint')]"
     },
     "storageAccountName": {
       "type": "string",

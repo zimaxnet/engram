@@ -175,6 +175,18 @@ resource temporalServer 'Microsoft.App/containerApps@2023-05-01' = {
             cpu: json('0.5')
             memory: '1Gi'
           }
+          // Startup probe: Temporal starts FIRST (priority 1) - minimal delay
+          probes: [
+            {
+              type: 'Startup'
+              tcpSocket: {
+                port: 7233
+              }
+              initialDelaySeconds: 10
+              periodSeconds: 5
+              failureThreshold: 30  // 160s total window for DB setup
+            }
+          ]
         }
       ]
       scale: {
