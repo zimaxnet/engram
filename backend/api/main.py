@@ -42,10 +42,11 @@ async def lifespan(app: FastAPI):
 
     # Startup
     try:
-        from backend.context.bootstrap import bootstrap_knowledge
+        # from backend.context.bootstrap import bootstrap_knowledge
         # Run bootstrap in background to prevent blocking container startup checks
-        import asyncio
-        asyncio.create_task(bootstrap_knowledge())
+        # import asyncio
+        # asyncio.create_task(bootstrap_knowledge())
+        logger.info("Auto-bootstrap disabled for debugging.")
     except Exception as e:
         logger.error(f"Failed to initiate bootstrap: {e}")
 
