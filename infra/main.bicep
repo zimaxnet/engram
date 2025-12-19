@@ -401,6 +401,8 @@ module zepModule 'modules/zep-aca.bicep' = {
     registryServer: 'ghcr.io'
     registryUsername: registryUsername
     registryPassword: registryPassword
+    azureAiKey: azureAiKey
+    azureAiEndpoint: azureAiEndpoint
     tags: zepTags
   }
 }

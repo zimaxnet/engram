@@ -116,7 +116,7 @@ resource temporalServer 'Microsoft.App/containerApps@2023-05-01' = {
           env: [
             {
               name: 'DB'
-              value: 'postgresql'
+              value: 'postgres12'
             }
             {
               name: 'DB_PORT'

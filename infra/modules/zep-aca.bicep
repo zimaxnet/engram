@@ -37,11 +37,22 @@ param registryUsername string = ''
 @secure()
 param registryPassword string = ''
 
+@description('Azure AI Services API key.')
+@secure()
+param azureAiKey string
+
+@description('Azure AI Services Endpoint.')
+param azureAiEndpoint string
+
 // Optionally include API key secret/env only when provided to avoid invalid empty secret
 var zepApiSecret = empty(zepApiKey) ? [] : [
   {
     name: 'zep-api-key'
     value: zepApiKey
+  }
+  {
+    name: 'azure-ai-key'
+    value: azureAiKey
   }
 ]
 
@@ -114,6 +125,18 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'ZEP_STORE_POSTGRES_DSN'
               value: 'postgresql://${zepPostgresUser}:${zepPostgresPassword}@${zepPostgresFqdn}:5432/${zepPostgresDb}?sslmode=require'
+            }
+            {
+              name: 'ZEP_OPENAI_API_KEY'
+              secretRef: 'azure-ai-key'
+            }
+            {
+              name: 'ZEP_OPENAI_ENDPOINT'
+              value: azureAiEndpoint
+            }
+            {
+               name: 'ZEP_LLM_PROVIDER'
+               value: 'azure_openai'
             }
           ], zepApiEnv)
           resources: {
