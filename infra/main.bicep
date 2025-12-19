@@ -419,6 +419,9 @@ module zepModule 'modules/zep-aca.bicep' = {
   params: {
     location: location
     acaEnvId: acaEnv.id
+    acaEnvName: acaEnv.name
+    enableCustomDomain: true  // Enable public access via zep.engram.work
+    customDomainName: 'zep.engram.work'
     appName: '${envName}-zep'
     zepPostgresFqdn: postgres.properties.fullyQualifiedDomainName
     zepPostgresUser: 'cogadmin'

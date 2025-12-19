@@ -4,6 +4,15 @@ param location string = resourceGroup().location
 @description('ID of the Container Apps Environment.')
 param acaEnvId string
 
+@description('Name of the Container Apps Environment (for certificate parenting).')
+param acaEnvName string
+
+@description('Whether to enable custom domain with managed certificate.')
+param enableCustomDomain bool = false
+
+@description('Custom domain name for Zep.')
+param customDomainName string = 'zep.engram.work'
+
 @description('Name of the Zep container app.')
 param appName string = 'zep'
 
@@ -98,6 +107,23 @@ param tags object = {
 var zepDsn = 'postgresql://${zepPostgresUser}:${zepPostgresPassword}@${zepPostgresFqdn}:5432/${zepPostgresDb}?sslmode=require'
 var zepConfigContent = 'store:\n  type: postgres\n  postgres:\n    dsn: "${zepDsn}"\nllm:\n  service: openai\n  azure_openai_endpoint: ${azureAiEndpoint}\n  azure_openai:\n    llm_deployment: ${azureOpenAiLlmDeployment}\n    embedding_deployment: ${azureOpenAiEmbeddingDeployment}\nserver:\n  host: 0.0.0.0\n  port: 8000\n  web_enabled: false\nlog:\n  level: debug\nauth:\n  required: false\n'
 
+// Get reference to existing ACA environment for parenting the cert
+resource acaEnv 'Microsoft.App/managedEnvironments@2022-03-01' existing = {
+  name: acaEnvName
+}
+
+// Managed certificate for custom domain
+resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = if (enableCustomDomain) {
+  parent: acaEnv
+  name: 'zep.engram.work-staging--${uniqueString(resourceGroup().id)}'
+  location: location
+  tags: tags
+  properties: {
+    subjectName: customDomainName
+    domainControlValidation: 'CNAME'
+  }
+}
+
 // Zep Container App
 resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
   name: appName
@@ -107,9 +133,17 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
     managedEnvironmentId: acaEnvId
     configuration: {
       ingress: {
-        external: false  // Internal only (accessed by backend/worker within ACA env)
+        external: true  // Now public for MCP client access via zep.engram.work
         targetPort: 8000
+        transport: 'http'
         allowInsecure: false
+        customDomains: enableCustomDomain ? [
+          {
+            name: customDomainName
+            certificateId: certificate.id
+            bindingType: 'SniEnabled'
+          }
+        ] : []
       }
       dapr: {
         enabled: false
