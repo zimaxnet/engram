@@ -168,9 +168,9 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
                 port: 8000
                 path: '/healthz'
               }
-              initialDelaySeconds: 45  // Zep starts SECOND (priority 2) - wait for Temporal
+              initialDelaySeconds: 30  // Max 60s allowed, use failureThreshold for longer wait
               periodSeconds: 10
-              failureThreshold: 12     // 165s total window
+              failureThreshold: 18     // 30 + (18 * 10) = 210s total startup window
             }
             {
               type: 'Readiness'
@@ -178,7 +178,7 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
                 port: 8000
                 path: '/healthz'
               }
-              initialDelaySeconds: 5   // Reduced - startup probe handles initial wait
+              initialDelaySeconds: 5
               periodSeconds: 10
               failureThreshold: 3
             }
@@ -188,9 +188,9 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
                 port: 8000
                 path: '/healthz'
               }
-              initialDelaySeconds: 90  // After startup probe completes
-              periodSeconds: 20
-              failureThreshold: 10
+              initialDelaySeconds: 60  // Max allowed (after startup probe completes)
+              periodSeconds: 30
+              failureThreshold: 5
             }
           ]
         }
