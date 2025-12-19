@@ -209,6 +209,15 @@ resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2022-12-01' = {
       endIpAddress: '0.0.0.0'
     }
   }
+
+  // Enable required PostgreSQL extensions for Temporal and Zep
+  resource azureExtensions 'configurations' = {
+    name: 'azure.extensions'
+    properties: {
+      value: 'btree_gin,vector,pg_trgm,uuid-ossp'
+      source: 'user-override'
+    }
+  }
 }
 
 resource postgresAadAdmin 'Microsoft.DBforPostgreSQL/flexibleServers/administrators@2022-12-01' = if (enableAadForEnv && !empty(postgresAadAdminObjectId)) {

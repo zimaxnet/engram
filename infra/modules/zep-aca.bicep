@@ -119,40 +119,36 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
           image: zepImage
           env: concat([
             {
-              name: 'ZEP_SERVER_ADDRESS'
-              value: '0.0.0.0:8000'
+              name: 'ZEP_SERVER__HOST'
+              value: '0.0.0.0'
             }
             {
-              name: 'ZEP_STORE_TYPE'
+              name: 'ZEP_SERVER__PORT'
+              value: '8000'
+            }
+            {
+              name: 'ZEP_STORE__TYPE'
               value: 'postgres'
             }
             {
-              name: 'ZEP_STORE'
-              value: 'postgres'
-            }
-            {
-              name: 'STORE_TYPE'
-              value: 'postgres'
-            }
-            {
-              name: 'ZEP_STORE_POSTGRES_DSN'
+              name: 'ZEP_STORE__POSTGRES__DSN'
               value: 'postgresql://${zepPostgresUser}:${zepPostgresPassword}@${zepPostgresFqdn}:5432/${zepPostgresDb}?sslmode=require'
             }
             {
-              name: 'ZEP_POSTGRES_DSN'
-              value: 'postgresql://${zepPostgresUser}:${zepPostgresPassword}@${zepPostgresFqdn}:5432/${zepPostgresDb}?sslmode=require'
+              name: 'ZEP_LLM__SERVICE'
+              value: 'openai'
+            }
+            {
+              name: 'ZEP_LLM__AZURE_OPENAI_ENDPOINT'
+              value: azureAiEndpoint
             }
             {
               name: 'ZEP_OPENAI_API_KEY'
               secretRef: 'azure-ai-key'
             }
             {
-              name: 'ZEP_OPENAI_ENDPOINT'
-              value: azureAiEndpoint
-            }
-            {
-               name: 'ZEP_LLM_PROVIDER'
-               value: 'azure_openai'
+              name: 'ZEP_LOG__LEVEL'
+              value: 'debug'
             }
           ], zepApiEnv)
           resources: {
