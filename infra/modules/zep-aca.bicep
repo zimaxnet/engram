@@ -44,12 +44,16 @@ param azureAiKey string
 @description('Azure AI Services Endpoint.')
 param azureAiEndpoint string
 
-// Optionally include API key secret/env only when provided to avoid invalid empty secret
-var zepApiSecret = empty(zepApiKey) ? [] : [
+// Zep API Key Secret (only if provided)
+var zepSecret = empty(zepApiKey) ? [] : [
   {
     name: 'zep-api-key'
     value: zepApiKey
   }
+]
+
+// Azure AI Key Secret (only if provided)
+var azureAiSecret = empty(azureAiKey) ? [] : [
   {
     name: 'azure-ai-key'
     value: azureAiKey
@@ -105,7 +109,7 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
           name: 'zep-postgres-password'
           value: zepPostgresPassword
         }
-      ], zepApiSecret, zepRegistrySecret)
+      ], zepSecret, azureAiSecret, zepRegistrySecret)
       registries: zepRegistries
     }
     template: {
