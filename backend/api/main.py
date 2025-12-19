@@ -102,21 +102,25 @@ def create_app() -> FastAPI:
     # Get the underlying Starlette app
     mcp_app = mcp_server.sse_app()
     
-    # Fix: FastMCP defaults to strict "localhost" TrustedHostMiddleware.
-    # We must REMOVE the existing middleware to allow custom domains or permissive access.
-    from starlette.middleware.trustedhost import TrustedHostMiddleware
-    
-    # Filter out existing TrustedHostMiddleware from FastMCP's default stack
-    if hasattr(mcp_app, "user_middleware"):
-        mcp_app.user_middleware = [
-             mw for mw in mcp_app.user_middleware 
-             if mw.cls != TrustedHostMiddleware
-        ]
+    # Fix: FastMCP has strict TrustedHostMiddleware that only allows "localhost".
+    # We wrap the app with an ASGI middleware that rewrites the Host header
+    # to "localhost" before FastMCP sees it, effectively bypassing the check.
+    class HostRewriteMiddleware:
+        def __init__(self, app):
+            self.app = app
         
-    # Re-add our permissive TrustedHostMiddleware
-    mcp_app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
+        async def __call__(self, scope, receive, send):
+            if scope["type"] == "http":
+                # Rewrite host to bypass FastMCP's TrustedHostMiddleware
+                headers = dict(scope.get("headers", []))
+                headers[b"host"] = b"localhost"
+                scope["headers"] = list(headers.items())
+            await self.app(scope, receive, send)
+    
+    # Wrap the MCP app
+    wrapped_mcp_app = HostRewriteMiddleware(mcp_app)
 
-    app.mount("/api/v1/mcp", mcp_app)
+    app.mount("/api/v1/mcp", wrapped_mcp_app)
     logger.info("Mounted MCP server at /api/v1/mcp")
 
 
