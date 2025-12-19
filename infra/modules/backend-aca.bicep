@@ -262,9 +262,9 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
                 port: 8080
                 path: '/health'
               }
-              initialDelaySeconds: 90  // After startup probe completes
-              periodSeconds: 20
-              failureThreshold: 10
+              initialDelaySeconds: 60  // Max allowed (after startup probe completes)
+              periodSeconds: 30
+              failureThreshold: 5
             }
           ]
         }
