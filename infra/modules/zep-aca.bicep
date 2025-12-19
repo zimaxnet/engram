@@ -44,6 +44,12 @@ param azureAiKey string
 @description('Azure AI Services Endpoint.')
 param azureAiEndpoint string
 
+@description('Azure OpenAI LLM deployment name.')
+param azureOpenAiLlmDeployment string = 'gpt-4o-mini'
+
+@description('Azure OpenAI Embedding deployment name.')
+param azureOpenAiEmbeddingDeployment string = 'text-embedding-ada-002'
+
 // Zep API Key Secret (only if provided)
 var zepSecret = empty(zepApiKey) ? [] : [
   {
@@ -90,7 +96,7 @@ param tags object = {
 
 // Build the Zep config.yaml content using string concatenation
 var zepDsn = 'postgresql://${zepPostgresUser}:${zepPostgresPassword}@${zepPostgresFqdn}:5432/${zepPostgresDb}?sslmode=require'
-var zepConfigContent = 'store:\n  type: postgres\n  postgres:\n    dsn: "${zepDsn}"\nllm:\n  service: openai\n  azure_openai_endpoint: ${azureAiEndpoint}\nserver:\n  host: 0.0.0.0\n  port: 8000\n  web_enabled: false\nlog:\n  level: debug\nauth:\n  required: false\n'
+var zepConfigContent = 'store:\n  type: postgres\n  postgres:\n    dsn: "${zepDsn}"\nllm:\n  service: openai\n  azure_openai_endpoint: ${azureAiEndpoint}\n  azure_openai:\n    llm_deployment: ${azureOpenAiLlmDeployment}\n    embedding_deployment: ${azureOpenAiEmbeddingDeployment}\nserver:\n  host: 0.0.0.0\n  port: 8000\n  web_enabled: false\nlog:\n  level: debug\nauth:\n  required: false\n'
 
 // Zep Container App
 resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
