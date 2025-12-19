@@ -88,6 +88,10 @@ param tags object = {
   Component: 'Zep'
 }
 
+// Build the Zep config.yaml content using string concatenation
+var zepDsn = 'postgresql://${zepPostgresUser}:${zepPostgresPassword}@${zepPostgresFqdn}:5432/${zepPostgresDb}?sslmode=require'
+var zepConfigContent = 'store:\n  type: postgres\n  postgres:\n    dsn: "${zepDsn}"\nllm:\n  service: openai\n  azure_openai_endpoint: ${azureAiEndpoint}\nserver:\n  host: 0.0.0.0\n  port: 8000\n  web_enabled: false\nlog:\n  level: debug\nauth:\n  required: false\n'
+
 // Zep Container App
 resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
   name: appName
@@ -109,46 +113,40 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
           name: 'zep-postgres-password'
           value: zepPostgresPassword
         }
+        {
+          name: 'zep-config-yaml'
+          value: zepConfigContent
+        }
       ], zepSecret, azureAiSecret, zepRegistrySecret)
       registries: zepRegistries
     }
     template: {
+      volumes: [
+        {
+          name: 'zep-config-volume'
+          storageType: 'Secret'
+          secrets: [
+            {
+              secretRef: 'zep-config-yaml'
+              path: 'config.yaml'
+            }
+          ]
+        }
+      ]
       containers: [
         {
           name: 'zep'
           image: zepImage
+          volumeMounts: [
+            {
+              volumeName: 'zep-config-volume'
+              mountPath: '/app'
+            }
+          ]
           env: concat([
-            {
-              name: 'ZEP_SERVER__HOST'
-              value: '0.0.0.0'
-            }
-            {
-              name: 'ZEP_SERVER__PORT'
-              value: '8000'
-            }
-            {
-              name: 'ZEP_STORE__TYPE'
-              value: 'postgres'
-            }
-            {
-              name: 'ZEP_STORE__POSTGRES__DSN'
-              value: 'postgresql://${zepPostgresUser}:${zepPostgresPassword}@${zepPostgresFqdn}:5432/${zepPostgresDb}?sslmode=require'
-            }
-            {
-              name: 'ZEP_LLM__SERVICE'
-              value: 'openai'
-            }
-            {
-              name: 'ZEP_LLM__AZURE_OPENAI_ENDPOINT'
-              value: azureAiEndpoint
-            }
             {
               name: 'ZEP_OPENAI_API_KEY'
               secretRef: 'azure-ai-key'
-            }
-            {
-              name: 'ZEP_LOG__LEVEL'
-              value: 'debug'
             }
           ], zepApiEnv)
           resources: {
