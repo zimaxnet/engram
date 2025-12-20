@@ -152,11 +152,15 @@ export function Search() {
                                         </span>
                                     </div>
                                     <div style={{ marginBottom: '0.75rem', color: 'var(--color-text)', lineHeight: '1.5' }}>
-                                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
-                                            img: ({ node, ...props }) => <img {...props} style={{ maxWidth: '100%', borderRadius: '8px', border: '1px solid var(--glass-border)', marginTop: '0.5rem' }} />,
-                                            a: ({ node, ...props }) => <a {...props} style={{ color: 'var(--color-primary)', textDecoration: 'none' }} target="_blank" rel="noopener noreferrer" />,
-                                            p: ({ node, ...props }) => <p {...props} style={{ margin: '0.5rem 0' }} />
-                                        }}>
+                                        <ReactMarkdown
+                                            remarkPlugins={[remarkGfm]}
+                                            rehypePlugins={[rehypeRaw]}
+                                            components={{
+                                                img: ({ node, ...props }) => <img {...props} style={{ maxWidth: '100%', borderRadius: '8px', border: '1px solid var(--glass-border)', marginTop: '0.5rem' }} />,
+                                                a: ({ node, ...props }) => <a {...props} style={{ color: 'var(--color-primary)', textDecoration: 'none' }} target="_blank" rel="noopener noreferrer" />,
+                                                p: ({ node, ...props }) => <p {...props} style={{ margin: '0.5rem 0' }} />
+                                            }}
+                                        >
                                             {result.content}
                                         </ReactMarkdown>
                                     </div>
