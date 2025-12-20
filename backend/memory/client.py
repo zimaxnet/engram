@@ -129,10 +129,13 @@ class ZepMemoryClient:
         search_type: str = "similarity",
     ) -> list[dict]:
         """
-        Search session memory for relevant content.
+        Search memory for relevant content GLOBALLY across all sessions.
+
+        This enables agents to access canonical episodic memories (like the vision
+        statement in sess-vision-001) regardless of the current conversation session.
 
         Args:
-            session_id: Session to search
+            session_id: Current session (also searched)
             query: Search query
             limit: Maximum results
             search_type: 'similarity' or 'mmr'
@@ -140,6 +143,52 @@ class ZepMemoryClient:
         Returns:
             List of relevant memory results
         """
+        import httpx
+        
+        results = []
+        zep_url = self.settings.zep_api_url
+        
+        # Try REST API search first (bypasses SDK compatibility issues)
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                # First, get all sessions to search globally
+                sessions_resp = await client.get(f"{zep_url}/api/v1/sessions")
+                if sessions_resp.status_code == 200:
+                    sessions_data = sessions_resp.json()
+                    all_session_ids = [s.get("session_id") for s in sessions_data if s.get("session_id")]
+                    
+                    # Include current session if not in list
+                    if session_id not in all_session_ids:
+                        all_session_ids.append(session_id)
+                    
+                    # Search across all sessions
+                    search_payload = {
+                        "text": query,
+                        "limit": limit,
+                        "search_type": search_type,
+                    }
+                    
+                    search_resp = await client.post(
+                        f"{zep_url}/api/v1/sessions/search",
+                        json=search_payload
+                    )
+                    
+                    if search_resp.status_code == 200:
+                        search_data = search_resp.json()
+                        for result in search_data.get("results", []):
+                            results.append({
+                                "content": result.get("message", {}).get("content", ""),
+                                "score": result.get("score", 0.5),
+                                "metadata": result.get("message", {}).get("metadata", {}),
+                                "session_id": result.get("session_id", ""),
+                            })
+                        logger.info(f"REST search found {len(results)} results for query: {query[:50]}...")
+                        return results
+                    
+        except Exception as e:
+            logger.warning(f"REST memory search failed: {e}, trying SDK")
+        
+        # Fallback to SDK-based search
         try:
             resp = await self.client.memory.search_sessions(
                 session_ids=[session_id],
@@ -148,7 +197,6 @@ class ZepMemoryClient:
                 search_scope="messages",
                 search_type=search_type,
             )
-            results = []
             for session in resp.sessions or []:
                 for msg in session.messages or []:
                     score_val = msg.score if hasattr(msg, "score") and msg.score is not None else 0.5
