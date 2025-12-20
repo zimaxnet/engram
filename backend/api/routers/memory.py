@@ -138,20 +138,46 @@ async def search_memory(request: MemorySearchRequest, user: SecurityContext = De
         start_time = datetime.now()
 
         # Search facts (Semantic Memory) for the authenticated user
-        facts = await memory_client.get_facts(user_id=user.user_id, query=request.query, limit=request.limit)
-
         results = []
-        for fact in facts:
-            results.append(
-                MemoryNode(
-                    id=fact.id,
-                    content=fact.content,
-                    node_type=fact.node_type,
-                    confidence=fact.confidence,
-                    created_at=fact.created_at,
-                    metadata=fact.metadata,
+
+        # 1. Search Facts (Semantic Memory)
+        if request.include_facts:
+            facts = await memory_client.get_facts(user_id=user.user_id, query=request.query, limit=request.limit)
+            for fact in facts:
+                results.append(
+                    MemoryNode(
+                        id=fact.id,
+                        content=fact.content,
+                        node_type=fact.node_type,
+                        confidence=fact.confidence,
+                        created_at=fact.created_at,
+                        metadata=fact.metadata,
+                    )
                 )
+
+        # 2. Search Episodes (Episodic Memory)
+        if request.include_episodes:
+            # use a dummy session_id to trigger the global search logic we added to client.py
+            episodes = await memory_client.search_memory(
+                session_id="global-search", 
+                query=request.query, 
+                limit=request.limit
             )
+            for ep in episodes:
+                # Generate a stable ID for the memory node
+                import hashlib
+                content_hash = hashlib.md5(ep["content"].encode()).hexdigest()
+                
+                results.append(
+                    MemoryNode(
+                        id=f"mem-{content_hash}",
+                        content=ep["content"],
+                        node_type="episode",
+                        confidence=ep.get("score", 0.7),
+                        created_at=datetime.utcnow(), # Placeholder as search result might not have timestamp
+                        metadata=ep.get("metadata", {}),
+                    )
+                )
 
         return MemorySearchResponse(
             results=results,
