@@ -26,6 +26,9 @@ resource swa 'Microsoft.Web/staticSites@2022-03-01' = {
     stagingEnvironmentPolicy: 'Enabled'
     allowConfigFileUpdates: true
   }
+  identity: {
+    type: 'SystemAssigned'
+  }
 }
 
 resource customDomain 'Microsoft.Web/staticSites/customDomains@2022-03-01' = if (enableCustomDomain) {
@@ -46,3 +49,4 @@ resource linkedBackend 'Microsoft.Web/staticSites/linkedBackends@2022-03-01' = i
 }
 
 output swaDefaultHostname string = swa.properties.defaultHostname
+output swaIdentityPrincipalId string = swa.identity.principalId

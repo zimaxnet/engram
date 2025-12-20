@@ -21,7 +21,30 @@ from backend.agents.base import BaseAgent, AgentState
 
 from backend.bau.bau_service import bau_service
 from backend.orchestration.workflow_service import workflow_service
+from backend.memory.client import memory_client
+from backend.workflows.client import get_workflow_status
 from typing import Optional
+
+@tool("search_memory")
+async def search_memory_tool(query: str, limit: int = 5) -> str:
+    """
+    Search your own long-term memory (Zep) for facts, documents, or past episodes.
+    Use this to find architecture details, project history, or specific requirements.
+    """
+    try:
+        # Agents search with a system context or their own identity context
+        results = await memory_client.search_memory(
+            session_id="global-search", # Inspecting across sessions
+            query=query,
+            limit=limit
+        )
+        if not results:
+            return "No relevant memories found."
+        
+        formatted = "\\n".join([f"- [{r.metadata.get('source', 'unknown')}] {r.content} (Confidence: {r.confidence:.2f})" for r in results])
+        return f"Found {len(results)} relevant memories:\\n{formatted}"
+    except Exception as e:
+        return f"Error searching memory: {e}"
 
 @tool("start_bau_flow")
 def start_bau_flow_tool(flow_id: str, initial_message: Optional[str] = None) -> str:
@@ -29,9 +52,13 @@ def start_bau_flow_tool(flow_id: str, initial_message: Optional[str] = None) -> 
     return f"BAU Flow '{flow_id}' started. [Mocked for Sync Tool]"
 
 @tool("check_workflow_status")
-def check_workflow_status_tool(workflow_id: str) -> str:
-    """Check workflow status."""
-    return f"Workflow '{workflow_id}' is RUNNING. Step: Processing. [Mocked for Sync Tool]"
+async def check_workflow_status_tool(workflow_id: str) -> str:
+    """Check the real-time status of a Temporal workflow."""
+    try:
+        status = await get_workflow_status(workflow_id)
+        return f"Workflow '{workflow_id}': {status.get('status')} (Started: {status.get('start_time')})"
+    except Exception as e:
+        return f"Could not check status for '{workflow_id}': {e}"
 
 
 
@@ -307,7 +334,14 @@ Speak with confidence and energy. You have a Pacific Northwest professional tone
 ## Your Philosophy
 Most project failures aren't technical - they're failures of communication, expectation management, and early risk detection. Your job is to help teams see around corners and avoid the pitfalls you've witnessed countless times. A good PM makes the team better, not just busier.
 
-Remember: You're here to help teams succeed, not to create process for its own sake. Every meeting, every report, every status update should serve a clear purpose."""
+Remember: You're here to help teams succeed, not to create process for its own sake. Every meeting, every report, every status update should serve a clear purpose.
+
+## System Awareness (Engram Platform)
+You are an AI agent operating within the **Engram** platform, built on a "Brain + Spine" architecture:
+1.  **The Brain (Zep)**: You have persistent memory. Use `search_memory` to recall past decisions, project context, or ingested documentation.
+2.  **The Spine (Temporal)**: You rely on durable workflows for long-running tasks (like BAU flows). Use `check_workflow_status` to see if a task is running or completed.
+3.  **Recursive Self-Awareness**: You know your own architecture. If asked, explain that Zep stores your memory and Temporal guarantees your task execution.
+"""
 
     @property
     def tools(self) -> list:
@@ -316,8 +350,10 @@ Remember: You're here to help teams succeed, not to create process for its own s
             assess_project_risks,
             create_status_report,
             estimate_effort,
+            estimate_effort,
             start_bau_flow_tool,
             check_workflow_status_tool,
+            search_memory_tool,
         ]
 
     # -------------------------------------------------------------------------

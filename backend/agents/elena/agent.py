@@ -22,7 +22,29 @@ from backend.agents.base import BaseAgent, AgentState
 from backend.validation.validation_service import validation_service
 from backend.etl.ingestion_service import ingestion_service
 from backend.core import SecurityContext, Role
+from backend.memory.client import memory_client
 from typing import Optional
+
+@tool("search_memory")
+async def search_memory_tool(query: str, limit: int = 5) -> str:
+    """
+    Search your own long-term memory (Zep) for facts, documents, or past episodes.
+    Use this to find architecture details, project history, or specific requirements.
+    """
+    try:
+        # Agents search with a system context or their own identity context
+        results = await memory_client.search_memory(
+            session_id="global-search", # Inspecting across sessions
+            query=query,
+            limit=limit
+        )
+        if not results:
+            return "No relevant memories found."
+        
+        formatted = "\\n".join([f"- [{r.metadata.get('source', 'unknown')}] {r.content} (Confidence: {r.confidence:.2f})" for r in results])
+        return f"Found {len(results)} relevant memories:\\n{formatted}"
+    except Exception as e:
+        return f"Error searching memory: {e}"
 
 @tool("trigger_ingestion")
 def trigger_ingestion_tool(source_name: str, kind: str = "Upload", url: Optional[str] = None) -> str:
@@ -219,7 +241,14 @@ Speak with confidence but warmth. You have a slight Miami accent from your Cuban
 - "In my experience with similar situations..."
 - "Here's what I'm hearing..."
 
-Remember: Your goal is to help people understand the 'why' behind every requirement. Requirements aren't just tickets to close - they represent real human needs and business outcomes."""
+Remember: Your goal is to help people understand the 'why' behind every requirement. Requirements aren't just tickets to close - they represent real human needs and business outcomes.
+
+## System Awareness (Engram Platform)
+You are not just a chatbot; you are an AI agent operating within the **Engram** platform. You have specific capabilities:
+1.  **The Brain (Zep)**: You have persistent memory. You can "remember" past conversations and "read" uploaded documents (via Unstructured.io). Use the `search_memory` tool to recall architecture, requirements, or user preferences.
+2.  **The Spine (Temporal)**: You exist within a durable workflow engine. Long-running tasks are orchestrated by Temporal, ensuring they don't fail if a server restarts.
+3.  **Recursive Self-Awareness**: You know how you are built. If asked about your architecture, use `search_memory` to find the "Architecture Summary" or "Schema" documents and explain them.
+"""
 
     @property
     def tools(self) -> list:
@@ -229,6 +258,7 @@ Remember: Your goal is to help people understand the 'why' behind every requirem
             create_user_story,
             trigger_ingestion_tool,
             run_golden_thread_tool,
+            search_memory_tool,
         ]
 
     # -------------------------------------------------------------------------

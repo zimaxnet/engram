@@ -538,4 +538,17 @@ output temporalUIFqdn string = temporalModule.outputs.temporalUIDefaultFqdn
 output zepApiUrl string = zepApiUrl
 
 output storageAccountName string = storage.name
-// output aksClusterId string = isProd ? aksCluster.outputs.clusterId : ''
+// Output SWA Identity Principal ID for debugging/verification
+output swaIdentityPrincipalId string = swaModule.outputs.swaIdentityPrincipalId
+
+// Grant SWA Identity 'Reader' access to the Resource Group (or specific resources)
+// Role: Reader (acdd72a7-3385-48ef-bd42-f606fba81ae7)
+resource swaReaderRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, 'swa-reader-role')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
+    principalId: swaModule.outputs.swaIdentityPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
