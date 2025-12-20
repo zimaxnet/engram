@@ -27,11 +27,13 @@
   "routes": [
     {
       "route": "/api/*",
-      "allowedRoles": [
-        "authenticated"
-      ]
+      {
+        "route": "/api/*",
+        "allowedRoles": [
+          "anonymous",
+          "authenticated"
+        ]
+      }
     }
   ]
 }
-
-
