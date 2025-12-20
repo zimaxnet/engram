@@ -12,7 +12,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-ZEP_URL = 'http://localhost:8000'
+ZEP_URL = 'https://zep.engram.work'
 
 # Complete Engram Project History
 PROJECT_HISTORY = [

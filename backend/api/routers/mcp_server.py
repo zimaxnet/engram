@@ -215,24 +215,28 @@ async def search_memory(query: str, session_id: Optional[str] = None) -> str:
         query: The search query.
         session_id: Optional session ID context.
     """
+    from backend.memory.client import memory_client
+    
     try:
-        # 1. Security Context (Simulated for MCP)
-        security = SecurityContext(
-            user_id="mcp-user", 
-            tenant_id="mcp-tenant", 
-            roles=[Role.ANALYST], 
-            scopes=["*"]
-        )
+        # Use session_id or default to a search session
+        search_session = session_id or "global-search"
         
-        # 2. Perform Search
-        results = await mem_search(query, security)
+        # Direct search via production Zep REST API
+        results = await memory_client.search_memory(search_session, query, limit=10)
         
-        # 3. Format Results
+        # Format Results
         if not results:
             return "No relevant memories found."
-            
-        formatted = "\n".join([f"- [{r.node_type}] {r.content} (Confidence: {r.confidence:.2f})" for r in results[:5]])
-        return f"Found relevant memories:\n{formatted}"
+        
+        # Convert results to formatted output
+        formatted_parts = []
+        for r in results[:5]:
+            content = r.get("content", "")[:200]
+            score = r.get("score", 0.5)
+            sess = r.get("session_id", "unknown")
+            formatted_parts.append(f"- [{sess}] {content}... (Score: {score:.2f})")
+        
+        return f"Found {len(results)} relevant memories:\n" + "\n".join(formatted_parts)
         
     except Exception as e:
         logger.error(f"Memory search failed: {e}")
