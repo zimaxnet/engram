@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { searchMemory } from '../../services/api';
 
 interface SearchResult {
@@ -148,7 +150,15 @@ export function Search() {
                                             Confidence: {(result.confidence * 100).toFixed(0)}%
                                         </span>
                                     </div>
-                                    <p style={{ marginBottom: '0.75rem', color: 'var(--color-text)' }}>{result.content}</p>
+                                    <div style={{ marginBottom: '0.75rem', color: 'var(--color-text)', lineHeight: '1.5' }}>
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
+                                            img: ({ node, ...props }) => <img {...props} style={{ maxWidth: '100%', borderRadius: '8px', border: '1px solid var(--glass-border)', marginTop: '0.5rem' }} />,
+                                            a: ({ node, ...props }) => <a {...props} style={{ color: 'var(--color-primary)', textDecoration: 'none' }} target="_blank" rel="noopener noreferrer" />,
+                                            p: ({ node, ...props }) => <p {...props} style={{ margin: '0.5rem 0' }} />
+                                        }}>
+                                            {result.content}
+                                        </ReactMarkdown>
+                                    </div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                                         {chips.slice(0, 6).map((c) => (
                                             <span key={c} style={{
