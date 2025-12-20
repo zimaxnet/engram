@@ -9,7 +9,7 @@ param envName string = 'engram-env'
 param environment string = 'staging'
 
 var isProd = environment == 'prod'
-var authRequired = environment == 'uat' || environment == 'prod'
+var authRequired = false  // Disabled for POC testing - enable for UAT/prod later
 
 @description('Enable Azure AD authentication for Postgres (recommended for uat/prod).')
 param enablePostgresAad bool = false
