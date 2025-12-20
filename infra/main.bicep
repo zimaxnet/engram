@@ -420,7 +420,7 @@ module zepModule 'modules/zep-aca.bicep' = {
     location: location
     acaEnvId: acaEnv.id
     acaEnvName: acaEnv.name
-    enableCustomDomain: false  // Disabled until DNS CNAME is configured for zep.engram.work
+    enableCustomDomain: true  // zep.engram.work SSL cert is working
     customDomainName: 'zep.engram.work'
     appName: '${envName}-zep'
     zepPostgresFqdn: postgres.properties.fullyQualifiedDomainName
