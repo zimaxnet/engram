@@ -493,6 +493,28 @@ export class ApiClient {
       details?: string | null
     }>>('/admin/audit')
   }
+
+  // Stories
+  async listStories() {
+    return this.request<Array<{
+      story_id: string
+      topic: string
+      created_at: string
+      story_path: string
+    }>>('/story/')
+  }
+
+  async getStory(storyId: string) {
+    return this.request<{
+      story_id: string
+      topic: string
+      story_content: string
+      story_path: string
+      diagram_spec?: Record<string, unknown> | null
+      diagram_path?: string | null
+      created_at: string
+    }>(`/story/${storyId}`)
+  }
 }
 
 
@@ -539,6 +561,10 @@ export const listGoldenDatasets = () => apiClient.listGoldenDatasets();
 export const getLatestGoldenRun = () => apiClient.getLatestGoldenRun();
 export const runGoldenThread = (datasetId: string, mode?: 'deterministic' | 'acceptance') => apiClient.runGoldenThread(datasetId, mode);
 export const getGoldenRun = (runId: string) => apiClient.getGoldenRun(runId);
+
+// Stories
+export const listStories = () => apiClient.listStories();
+export const getStory = (storyId: string) => apiClient.getStory(storyId);
 
 export const getSystemSettings = () => apiClient.getSystemSettings();
 export const updateSystemSettings = (settings: unknown) => apiClient.updateSystemSettings(settings);

@@ -78,6 +78,12 @@ export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
             onAgentChange('sage');
             navigate('/');
           }
+        },
+        {
+          id: 'stories',
+          label: 'Stories (Artifacts)',
+          icon: '📜',
+          path: '/stories'
         }
       ]
     },

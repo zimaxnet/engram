@@ -1,0 +1,107 @@
+.story-detail {
+    padding: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-header {
+    margin-bottom: 2rem;
+}
+
+.back-button {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.back-button:hover {
+    color: var(--color-primary);
+}
+
+.title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 1rem;
+}
+
+.title-row h1 {
+    margin: 0;
+    color: var(--color-primary);
+    font-size: 1.8rem;
+}
+
+.detail-date {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+/* Tabs */
+.detail-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.tab-button {
+    padding: 0.75rem 1.5rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-button:hover {
+    border-color: var(--color-primary);
+    color: var(--color-text);
+}
+
+.tab-button.active {
+    background: var(--color-primary-dim);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* Content */
+.detail-content {
+    flex: 1;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.markdown-content {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--color-text);
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+    color: var(--color-text-bright);
+    margin-top: 1.5em;
+}
+
+.diagram-view pre {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: #a5d6ff;
+}

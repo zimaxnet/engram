@@ -21,6 +21,8 @@ import { GoldenThreadRunner } from './pages/Validation/GoldenThreadRunner';
 import { EvidenceTelemetry } from './pages/Evidence/EvidenceTelemetry';
 import { BAUHub } from './pages/BAU/BAUHub';
 import { VoiceInteractionPage } from './pages/Voice/VoiceInteractionPage';
+import { StoriesPage } from './pages/Stories/StoriesPage';
+import { StoryDetail } from './pages/Stories/StoryDetail';
 
 function App() {
   // Keep backend containers warm while user is active
@@ -75,6 +77,12 @@ function App() {
             <Route index element={<Navigate to="golden-thread" replace />} />
           </Route>
           <Route path="evidence" element={<EvidenceTelemetry />} />
+
+          {/* Stories Artifacts */}
+          <Route path="stories">
+            <Route index element={<StoriesPage />} />
+            <Route path=":storyId" element={<StoryDetail />} />
+          </Route>
 
           {/* BAU Adoption */}
           <Route path="bau" element={<BAUHub />} />
