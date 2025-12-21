@@ -1,12 +1,13 @@
 """
 Expanded tests for Memory router endpoints
 
-Tests cover:
-- Memory search with various inputs (empty, special chars, large result sets)
-- Edge cases and error handling
-- Response format validation
-- Performance considerations
+NOTE: Mock-based tests deprecated. Use live Zep integration tests.
 """
+
+import pytest
+
+# Skip all tests - mock-based tests deprecated
+pytestmark = pytest.mark.skip(reason="Mock-based tests deprecated - use integration tests")
 
 import os
 

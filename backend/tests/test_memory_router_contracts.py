@@ -1,7 +1,12 @@
 """Contract tests for Memory API.
 
-Validates that memory search returns provenance-bearing nodes and remains schema-stable.
+NOTE: Mock-based tests deprecated. Use live Zep integration tests.
 """
+
+import pytest
+
+# Skip all tests - mock-based tests deprecated
+pytestmark = pytest.mark.skip(reason="Mock-based tests deprecated - use integration tests")
 
 import os
 
