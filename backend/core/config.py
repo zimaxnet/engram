@@ -86,6 +86,16 @@ class Settings(BaseSettings):
     marcus_voicelive_voice: str = Field("en-US-GuyNeural", alias="MARCUS_VOICELIVE_VOICE")
 
     # ==========================================================================
+    # Multi-Model LLM Integration (Sage Agent)
+    # ==========================================================================
+    # Anthropic Claude for story generation
+    anthropic_api_key: Optional[str] = Field(None, alias="ANTHROPIC_API_KEY")
+    # Google Gemini for diagram generation via Nano Banana Pro
+    gemini_api_key: Optional[str] = Field(None, alias="GEMINI_API_KEY")
+    # OneDrive docs path (local folder that syncs)
+    onedrive_docs_path: str = Field("docs", alias="ONEDRIVE_DOCS_PATH")
+
+    # ==========================================================================
     # Microsoft Entra ID (Authentication)
     # ==========================================================================
     azure_tenant_id: Optional[str] = Field(None, alias="AZURE_TENANT_ID")

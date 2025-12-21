@@ -17,9 +17,10 @@ from backend.core import EnterpriseContext
 from .base import BaseAgent
 from .elena import elena
 from .marcus import marcus
+from .sage import sage
 
 
-AgentId = Literal["elena", "marcus"]
+AgentId = Literal["elena", "marcus", "sage"]
 
 
 class AgentRouter:
@@ -31,6 +32,7 @@ class AgentRouter:
         self.agents: dict[AgentId, BaseAgent] = {
             "elena": elena,
             "marcus": marcus,
+            "sage": sage,
         }
 
         # Keywords that suggest routing to specific agents
@@ -77,6 +79,20 @@ class AgentRouter:
             "release",
         }
 
+        self._sage_keywords = {
+            "story",
+            "storytelling",
+            "narrative",
+            "diagram",
+            "visualization",
+            "visualize",
+            "document",
+            "documentation",
+            "explain",
+            "presentation",
+            "write",
+        }
+
     def get_agent(self, agent_id: AgentId) -> BaseAgent:
         """Get a specific agent by ID"""
         if agent_id not in self.agents:
@@ -99,17 +115,22 @@ class AgentRouter:
         # Count keyword matches
         elena_score = sum(1 for kw in self._elena_keywords if kw in query_lower)
         marcus_score = sum(1 for kw in self._marcus_keywords if kw in query_lower)
+        sage_score = sum(1 for kw in self._sage_keywords if kw in query_lower)
 
         # Add continuity bonus if there's a current agent
         if current_agent:
             if current_agent == "elena":
                 elena_score += 0.5
-            else:
+            elif current_agent == "marcus":
                 marcus_score += 0.5
+            else:
+                sage_score += 0.5
 
         # Return agent with higher score, default to elena
-        if marcus_score > elena_score:
-            return "marcus"
+        scores = {"elena": elena_score, "marcus": marcus_score, "sage": sage_score}
+        best_agent = max(scores, key=scores.get)
+        if scores[best_agent] > 0:
+            return best_agent
         return "elena"
 
     def detect_handoff(self, response: str) -> Optional[AgentId]:

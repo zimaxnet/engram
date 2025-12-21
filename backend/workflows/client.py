@@ -21,6 +21,11 @@ from backend.workflows.agent_workflow import (
     ApprovalWorkflow,
     ConversationWorkflow,
 )
+from backend.workflows.story_workflow import (
+    StoryWorkflow,
+    StoryWorkflowInput,
+    StoryWorkflowOutput,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -240,3 +245,100 @@ async def get_workflow_status(workflow_id: str) -> dict:
         "start_time": (description.start_time.isoformat() if description.start_time else None),
         "close_time": (description.close_time.isoformat() if description.close_time else None),
     }
+
+
+# =============================================================================
+# Story Workflow Functions
+# =============================================================================
+
+
+async def execute_story(
+    user_id: str,
+    tenant_id: str,
+    topic: str,
+    context: Optional[str] = None,
+    include_diagram: bool = True,
+    diagram_type: str = "architecture",
+    timeout_seconds: int = 300,
+) -> StoryWorkflowOutput:
+    """
+    Execute a story generation workflow via Temporal.
+    
+    This provides durable execution for the multi-step story creation process:
+    1. Generate story with Claude
+    2. Generate diagram spec with Gemini
+    3. Save artifacts to OneDrive
+    4. Enrich Zep memory
+    
+    Args:
+        user_id: User identifier
+        tenant_id: Tenant identifier
+        topic: Story topic
+        context: Optional background context
+        include_diagram: Whether to generate diagram
+        diagram_type: Type of diagram
+        timeout_seconds: Maximum execution time (default 5 minutes)
+        
+    Returns:
+        StoryWorkflowOutput with story, diagram, and paths
+    """
+    settings = get_settings()
+    client = await get_temporal_client()
+    
+    # Generate workflow ID
+    workflow_id = f"story-{uuid.uuid4().hex[:12]}"
+    
+    logger.info(f"Starting story workflow: {workflow_id}")
+    
+    # Start workflow
+    handle = await client.start_workflow(
+        StoryWorkflow.run,
+        StoryWorkflowInput(
+            user_id=user_id,
+            tenant_id=tenant_id,
+            topic=topic,
+            context=context,
+            include_diagram=include_diagram,
+            diagram_type=diagram_type,
+        ),
+        id=workflow_id,
+        task_queue=settings.temporal_task_queue,
+        execution_timeout=timedelta(seconds=timeout_seconds),
+    )
+    
+    # Wait for result
+    result = await handle.result()
+    
+    logger.info(f"Story workflow completed: {workflow_id}, success={result.success}")
+    
+    return result
+
+
+async def get_story_progress(workflow_id: str) -> dict:
+    """
+    Get the progress of a story workflow.
+    
+    Returns status and progress percentage.
+    """
+    client = await get_temporal_client()
+    handle = client.get_workflow_handle(workflow_id)
+    
+    try:
+        status = await handle.query(StoryWorkflow.get_status)
+        progress = await handle.query(StoryWorkflow.get_progress)
+        preview = await handle.query(StoryWorkflow.get_story_preview)
+        
+        return {
+            "workflow_id": workflow_id,
+            "status": status,
+            "progress": progress,
+            "preview": preview,
+        }
+    except Exception as e:
+        logger.error(f"Failed to query story progress: {e}")
+        return {
+            "workflow_id": workflow_id,
+            "status": "unknown",
+            "progress": 0,
+            "error": str(e),
+        }

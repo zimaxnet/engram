@@ -22,7 +22,7 @@ from backend.observability import (
     TelemetryMiddleware,
 )
 
-from .routers import admin, agents, bau, chat, health, memory, metrics, validation, voice, workflows, etl
+from .routers import admin, agents, bau, chat, health, memory, metrics, story, validation, voice, workflows, etl
 from .middleware.logging import RequestLoggingMiddleware
 
 # Configure structured logging
@@ -94,6 +94,7 @@ def create_app() -> FastAPI:
     app.include_router(bau.router, prefix="/api/v1/bau", tags=["BAU"])
     app.include_router(metrics.router, prefix="/api/v1/metrics", tags=["Metrics"])
     app.include_router(validation.router, prefix="/api/v1/validation", tags=["Validation"])
+    app.include_router(story.router, prefix="/api/v1/story", tags=["Story"])
     
     # MCP (Model Context Protocol)
     # FastMCP provides a Starlette/ASGI compatible app for SSE

@@ -23,11 +23,18 @@ from backend.workflows.activities import (
     send_notification_activity,
     validate_response_activity,
 )
+from backend.workflows.story_activities import (
+    generate_story_activity,
+    generate_diagram_activity,
+    save_artifacts_activity,
+    enrich_story_memory_activity,
+)
 from backend.workflows.agent_workflow import (
     AgentWorkflow,
     ApprovalWorkflow,
     ConversationWorkflow,
 )
+from backend.workflows.story_workflow import StoryWorkflow
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -68,6 +75,7 @@ async def run_worker():
             AgentWorkflow,
             ConversationWorkflow,
             ApprovalWorkflow,
+            StoryWorkflow,
         ],
         activities=[
             initialize_context_activity,
@@ -77,6 +85,11 @@ async def run_worker():
             execute_tool_activity,
             send_notification_activity,
             validate_response_activity,
+            # Story activities
+            generate_story_activity,
+            generate_diagram_activity,
+            save_artifacts_activity,
+            enrich_story_memory_activity,
         ],
     )
 

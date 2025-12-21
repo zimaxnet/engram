@@ -1,0 +1,471 @@
+{
+    "title": "Engram: Brain + Spine Architecture",
+    "subtitle": "Recursive Self-Awareness Through Context Engineering",
+    "version": "1.0",
+    "theme": "dark",
+    "layout": "hierarchical",
+    "nodes": [
+        {
+            "id": "user",
+            "label": "Customer / Prospective User",
+            "type": "actor",
+            "icon": "user",
+            "position": {
+                "x": 400,
+                "y": 50
+            },
+            "style": {
+                "backgroundColor": "#3B82F6",
+                "borderColor": "#60A5FA"
+            }
+        },
+        {
+            "id": "frontend",
+            "label": "Frontend (engram.work)",
+            "type": "service",
+            "icon": "globe",
+            "position": {
+                "x": 400,
+                "y": 150
+            },
+            "description": "Azure Static Web App - React/TypeScript UI with ChatPanel and VoiceLive",
+            "style": {
+                "backgroundColor": "#8B5CF6",
+                "borderColor": "#A78BFA"
+            }
+        },
+        {
+            "id": "api",
+            "label": "Backend API",
+            "type": "service",
+            "icon": "server",
+            "position": {
+                "x": 400,
+                "y": 280
+            },
+            "description": "FastAPI backend - Routes chat, memory, and MCP requests",
+            "style": {
+                "backgroundColor": "#10B981",
+                "borderColor": "#34D399"
+            }
+        },
+        {
+            "id": "brain_section",
+            "label": "THE BRAIN",
+            "type": "section",
+            "icon": "brain",
+            "position": {
+                "x": 200,
+                "y": 400
+            },
+            "style": {
+                "backgroundColor": "#0EA5E9",
+                "borderColor": "#38BDF8",
+                "borderWidth": 3
+            }
+        },
+        {
+            "id": "zep",
+            "label": "Zep Memory Service",
+            "type": "core-service",
+            "icon": "database",
+            "position": {
+                "x": 200,
+                "y": 480
+            },
+            "description": "Long-term episodic + semantic memory with vector search",
+            "parent": "brain_section",
+            "style": {
+                "backgroundColor": "#06B6D4",
+                "borderColor": "#22D3EE",
+                "glow": true
+            }
+        },
+        {
+            "id": "episodic",
+            "label": "Episodic Memory",
+            "type": "data-layer",
+            "icon": "history",
+            "position": {
+                "x": 100,
+                "y": 580
+            },
+            "description": "Sessions, messages, conversation history",
+            "parent": "zep",
+            "style": {
+                "backgroundColor": "#0284C7",
+                "borderColor": "#0EA5E9"
+            }
+        },
+        {
+            "id": "semantic",
+            "label": "Semantic Memory",
+            "type": "data-layer",
+            "icon": "network",
+            "position": {
+                "x": 300,
+                "y": 580
+            },
+            "description": "Facts, entities, knowledge graph",
+            "parent": "zep",
+            "style": {
+                "backgroundColor": "#0284C7",
+                "borderColor": "#0EA5E9"
+            }
+        },
+        {
+            "id": "spine_section",
+            "label": "THE SPINE",
+            "type": "section",
+            "icon": "spine",
+            "position": {
+                "x": 600,
+                "y": 400
+            },
+            "style": {
+                "backgroundColor": "#F59E0B",
+                "borderColor": "#FBBF24",
+                "borderWidth": 3
+            }
+        },
+        {
+            "id": "temporal",
+            "label": "Temporal Workflow Engine",
+            "type": "core-service",
+            "icon": "workflow",
+            "position": {
+                "x": 600,
+                "y": 480
+            },
+            "description": "Durable workflow orchestration with retry and recovery",
+            "parent": "spine_section",
+            "style": {
+                "backgroundColor": "#D97706",
+                "borderColor": "#F59E0B",
+                "glow": true
+            }
+        },
+        {
+            "id": "agent_workflow",
+            "label": "Agent Workflow",
+            "type": "workflow",
+            "icon": "play",
+            "position": {
+                "x": 500,
+                "y": 580
+            },
+            "description": "Single turn: user message → agent response",
+            "parent": "temporal",
+            "style": {
+                "backgroundColor": "#B45309",
+                "borderColor": "#D97706"
+            }
+        },
+        {
+            "id": "conversation_workflow",
+            "label": "Conversation Workflow",
+            "type": "workflow",
+            "icon": "chat",
+            "position": {
+                "x": 700,
+                "y": 580
+            },
+            "description": "Long-running multi-turn conversation",
+            "parent": "temporal",
+            "style": {
+                "backgroundColor": "#B45309",
+                "borderColor": "#D97706"
+            }
+        },
+        {
+            "id": "agents_section",
+            "label": "AI AGENTS",
+            "type": "section",
+            "icon": "robot",
+            "position": {
+                "x": 400,
+                "y": 700
+            },
+            "style": {
+                "backgroundColor": "#EC4899",
+                "borderColor": "#F472B6",
+                "borderWidth": 3
+            }
+        },
+        {
+            "id": "elena",
+            "label": "Dr. Elena Vasquez (BA)",
+            "type": "agent",
+            "icon": "user-tie",
+            "position": {
+                "x": 300,
+                "y": 780
+            },
+            "description": "Business Analyst - Explains business value, traces decisions to episodic memory",
+            "parent": "agents_section",
+            "capabilities": [
+                "search_memory",
+                "analyze_requirements",
+                "stakeholder_mapping",
+                "trigger_ingestion"
+            ],
+            "style": {
+                "backgroundColor": "#06B6D4",
+                "borderColor": "#22D3EE"
+            }
+        },
+        {
+            "id": "marcus",
+            "label": "Marcus Chen (PM)",
+            "type": "agent",
+            "icon": "user-cog",
+            "position": {
+                "x": 500,
+                "y": 780
+            },
+            "description": "Project Manager - Reports on development effort, tracks workflows",
+            "parent": "agents_section",
+            "capabilities": [
+                "search_memory",
+                "check_workflow_status",
+                "assess_project_risks",
+                "start_bau_flow"
+            ],
+            "style": {
+                "backgroundColor": "#EC4899",
+                "borderColor": "#F472B6"
+            }
+        },
+        {
+            "id": "postgres",
+            "label": "Azure PostgreSQL",
+            "type": "database",
+            "icon": "database",
+            "position": {
+                "x": 400,
+                "y": 680
+            },
+            "description": "Shared database for Zep and Temporal state",
+            "style": {
+                "backgroundColor": "#4B5563",
+                "borderColor": "#6B7280"
+            }
+        },
+        {
+            "id": "recursion_callout",
+            "label": "RECURSIVE SELF-AWARENESS",
+            "type": "callout",
+            "icon": "lightbulb",
+            "position": {
+                "x": 400,
+                "y": 880
+            },
+            "description": "Agents can query their own development history, explain their architecture, and recall debugging sessions",
+            "style": {
+                "backgroundColor": "#7C3AED",
+                "borderColor": "#A78BFA",
+                "fontSize": "large",
+                "glow": true
+            }
+        }
+    ],
+    "connections": [
+        {
+            "from": "user",
+            "to": "frontend",
+            "label": "Chat / Voice",
+            "style": {
+                "strokeColor": "#60A5FA",
+                "animated": true
+            }
+        },
+        {
+            "from": "frontend",
+            "to": "api",
+            "label": "REST / SSE",
+            "style": {
+                "strokeColor": "#A78BFA"
+            }
+        },
+        {
+            "from": "api",
+            "to": "zep",
+            "label": "Memory Search",
+            "style": {
+                "strokeColor": "#22D3EE",
+                "strokeDash": "5,5"
+            }
+        },
+        {
+            "from": "api",
+            "to": "temporal",
+            "label": "Start Workflow",
+            "style": {
+                "strokeColor": "#FBBF24",
+                "strokeDash": "5,5"
+            }
+        },
+        {
+            "from": "zep",
+            "to": "episodic",
+            "label": "",
+            "style": {
+                "strokeColor": "#0EA5E9"
+            }
+        },
+        {
+            "from": "zep",
+            "to": "semantic",
+            "label": "",
+            "style": {
+                "strokeColor": "#0EA5E9"
+            }
+        },
+        {
+            "from": "temporal",
+            "to": "agent_workflow",
+            "label": "",
+            "style": {
+                "strokeColor": "#F59E0B"
+            }
+        },
+        {
+            "from": "temporal",
+            "to": "conversation_workflow",
+            "label": "",
+            "style": {
+                "strokeColor": "#F59E0B"
+            }
+        },
+        {
+            "from": "zep",
+            "to": "postgres",
+            "label": "State",
+            "style": {
+                "strokeColor": "#6B7280"
+            }
+        },
+        {
+            "from": "temporal",
+            "to": "postgres",
+            "label": "State",
+            "style": {
+                "strokeColor": "#6B7280"
+            }
+        },
+        {
+            "from": "elena",
+            "to": "zep",
+            "label": "search_memory()",
+            "style": {
+                "strokeColor": "#22D3EE",
+                "animated": true
+            }
+        },
+        {
+            "from": "marcus",
+            "to": "zep",
+            "label": "search_memory()",
+            "style": {
+                "strokeColor": "#22D3EE",
+                "animated": true
+            }
+        },
+        {
+            "from": "marcus",
+            "to": "temporal",
+            "label": "check_workflow_status()",
+            "style": {
+                "strokeColor": "#FBBF24",
+                "animated": true
+            }
+        },
+        {
+            "from": "agent_workflow",
+            "to": "elena",
+            "label": "Execute",
+            "style": {
+                "strokeColor": "#F472B6"
+            }
+        },
+        {
+            "from": "agent_workflow",
+            "to": "marcus",
+            "label": "Execute",
+            "style": {
+                "strokeColor": "#F472B6"
+            }
+        },
+        {
+            "from": "elena",
+            "to": "recursion_callout",
+            "label": "Business Value",
+            "style": {
+                "strokeColor": "#A78BFA",
+                "strokeDash": "3,3"
+            }
+        },
+        {
+            "from": "marcus",
+            "to": "recursion_callout",
+            "label": "Dev Effort",
+            "style": {
+                "strokeColor": "#A78BFA",
+                "strokeDash": "3,3"
+            }
+        }
+    ],
+    "annotations": [
+        {
+            "id": "brain_annotation",
+            "target": "brain_section",
+            "text": "WHY ZEP?\n• 4-layer context schema\n• Global session search\n• Vector + knowledge graph\n• Provenance-first memory",
+            "position": "left"
+        },
+        {
+            "id": "spine_annotation",
+            "target": "spine_section",
+            "text": "WHY TEMPORAL?\n• Durable execution\n• Automatic retry/recovery\n• Workflow observability\n• Long-running task support",
+            "position": "right"
+        },
+        {
+            "id": "recursion_annotation",
+            "target": "recursion_callout",
+            "text": "The system remembers its own development:\n• sess-arch-001: Architecture decisions\n• sess-infra-002: Infrastructure debugging\n• sess-vision-001: Self-awareness vision",
+            "position": "bottom"
+        }
+    ],
+    "legend": [
+        {
+            "type": "core-service",
+            "label": "Core Service (Brain/Spine)",
+            "color": "#06B6D4"
+        },
+        {
+            "type": "agent",
+            "label": "AI Agent",
+            "color": "#EC4899"
+        },
+        {
+            "type": "data-layer",
+            "label": "Data Layer",
+            "color": "#0284C7"
+        },
+        {
+            "type": "workflow",
+            "label": "Workflow Type",
+            "color": "#B45309"
+        },
+        {
+            "type": "database",
+            "label": "Database",
+            "color": "#4B5563"
+        }
+    ],
+    "metadata": {
+        "generator": "Nano Banana Pro",
+        "created": "2024-12-21",
+        "author": "Engram Team",
+        "purpose": "Customer storytelling for Brain + Spine architecture"
+    }
+}
