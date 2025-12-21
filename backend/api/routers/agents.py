@@ -19,6 +19,7 @@ router = APIRouter()
 class AgentId(str, Enum):
     ELENA = "elena"
     MARCUS = "marcus"
+    SAGE = "sage"
 
 
 class AgentProfile(BaseModel):
@@ -72,6 +73,27 @@ AGENTS: dict[AgentId, AgentProfile] = {
         voice_name="en-US-GuyNeural",
         accent_color="#a855f7",  # Purple
         avatar_url="/assets/images/marcus-portrait.png",
+    ),
+    AgentId.SAGE: AgentProfile(
+        id=AgentId.SAGE,
+        name="Sage Meridian",
+        title="Storytelling & Visualization Specialist",
+        expertise=[
+            "Technical storytelling",
+            "Architecture visualization",
+            "Customer presentations",
+            "Documentation narratives",
+            "Diagram creation",
+        ],
+        personality_traits=[
+            "Eloquent",
+            "Visual",
+            "Empathetic",
+            "Synthesizing",
+        ],
+        voice_name="en-US-DavisNeural",
+        accent_color="#9333EA",  # Wisdom purple
+        avatar_url="/agents/sage-headshot.png",
     ),
 }
 
