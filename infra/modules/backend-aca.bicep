@@ -320,25 +320,12 @@ resource authConfig 'Microsoft.App/containerApps/authConfigs@2023-05-01' = {
   name: 'current'
   properties: {
     platform: {
-      enabled: false
+      enabled: false  // Auth handled by application code, not platform
     }
     globalValidation: {
       unauthenticatedClientAction: 'AllowAnonymous'
     }
-    identityProviders: {
-      azureActiveDirectory: {
-        enabled: true
-        registration: {
-          clientId: identityClientId
-          openIdIssuer: 'https://sts.windows.net/${subscription().tenantId}/v2.0'
-        }
-        validation: {
-          allowedAudiences: [
-            'api://${appName}'
-          ]
-        }
-      }
-    }
+    // AAD config disabled for staging - enable for production with proper client registration
   }
 }
 
