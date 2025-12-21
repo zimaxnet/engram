@@ -124,6 +124,16 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
           identity: identityResourceId
         }
         {
+          name: 'anthropic-api-key'
+          keyVaultUrl: '${keyVaultUri}secrets/anthropic-api-key'
+          identity: identityResourceId
+        }
+        {
+          name: 'gemini-api-key'
+          keyVaultUrl: '${keyVaultUri}secrets/gemini-api-key'
+          identity: identityResourceId
+        }
+        {
           name: 'registry-password'
           value: registryPassword
         }
@@ -229,6 +239,19 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'AUTH_REQUIRED'
               value: authRequired ? 'true' : 'false'
+            }
+            // Sage Agent LLM keys
+            {
+              name: 'ANTHROPIC_API_KEY'
+              secretRef: 'anthropic-api-key'
+            }
+            {
+              name: 'GEMINI_API_KEY'
+              secretRef: 'gemini-api-key'
+            }
+            {
+              name: 'ONEDRIVE_DOCS_PATH'
+              value: 'docs'
             }
           ]
           resources: {
