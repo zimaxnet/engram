@@ -152,34 +152,16 @@ jobs:
     environment: ${{ github.event.inputs.environment || 'staging' }}
     
     steps:
-      - name: Health Check
+      - name: Deployment Summary
         run: |
-          echo "Waiting for services to be ready..."
-          sleep 30
-          
-          # Check API health with retries (handles scale-to-zero cold start)
-          echo "Checking backend health endpoint..."
-          MAX_RETRIES=10
-          RETRY_DELAY=10
-          for i in $(seq 1 $MAX_RETRIES); do
-            echo "Attempt $i/$MAX_RETRIES..."
-            if curl -f --max-time 10 ${{ needs.deploy-infra.outputs.backend_url }}/health 2>/dev/null; then
-              echo "✅ Backend is healthy!"
-              break
-            fi
-            if [ $i -eq $MAX_RETRIES ]; then
-              echo "⚠️ Backend health check failed after $MAX_RETRIES attempts"
-              echo "This may be due to scale-to-zero cold start. Backend will be ready shortly."
-              exit 0  # Don't fail deployment - backend will start on first request
-            fi
-            sleep $RETRY_DELAY
-          done
-          
-          echo "Backend URL: ${{ needs.deploy-infra.outputs.backend_url }}"
-          echo "Temporal UI: ${{ needs.deploy-infra.outputs.temporal_ui_fqdn }}"
-          echo "Zep API: ${{ needs.deploy-infra.outputs.zep_api_url }}"
-          
-          echo "Deployment successful!"
+          echo "✅ Deployment Complete!"
+          echo ""
+          echo "📍 Service URLs:"
+          echo "  Backend API: ${{ needs.deploy-infra.outputs.backend_url }}"
+          echo "  Temporal UI: ${{ needs.deploy-infra.outputs.temporal_ui_fqdn }}"
+          echo "  Zep API: ${{ needs.deploy-infra.outputs.zep_api_url }}"
+          echo ""
+          echo "Note: Container Apps use scale-to-zero, first request may take ~30s."
       
       - name: Check Slack Webhook
         id: check_slack
