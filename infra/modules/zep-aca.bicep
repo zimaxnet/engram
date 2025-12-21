@@ -112,16 +112,10 @@ resource acaEnv 'Microsoft.App/managedEnvironments@2022-03-01' existing = {
   name: acaEnvName
 }
 
-// Managed certificate for custom domain
-resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = if (enableCustomDomain) {
+// Reference EXISTING managed certificate (already provisioned in Azure)
+resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' existing = if (enableCustomDomain) {
   parent: acaEnv
-  name: 'zep.engram.work-staging--251219175508'  // Fixed name to match existing certificate
-  location: location
-  tags: tags
-  properties: {
-    subjectName: customDomainName
-    domainControlValidation: 'CNAME'
-  }
+  name: 'zep.engram.work-staging--251220142037'  // Existing certificate name from Azure
 }
 
 // Zep Container App

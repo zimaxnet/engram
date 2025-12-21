@@ -64,15 +64,10 @@ param tags object = {
   name: acaEnvName
 }
 
-resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' = if (enableCustomDomain) {
+// Reference EXISTING managed certificate (already provisioned in Azure)
+resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2024-03-01' existing = if (enableCustomDomain) {
   parent: acaEnv
-  name: 'api.engram.work-staging--251211140607'
-  location: location
-  tags: tags
-  properties: {
-    subjectName: customDomainName
-    domainControlValidation: 'CNAME'
-  }
+  name: 'api.engram.work-staging--251217000337'  // Existing certificate name from Azure
 }
 
 // Backend API Container App
