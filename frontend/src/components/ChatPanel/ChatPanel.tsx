@@ -201,49 +201,41 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
     try {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        setError('Speech recognition is not supported in this browser.');
+        setError('Speech recognition is not supported in this browser (try Chrome/Edge/Safari).');
         return;
       }
 
       // Store initial input to append to
-      const initialInput = input;
+      // We use a ref to track the starting point for this specific session
+      const currentInput = inputRef.current?.value || input;
 
       const recognition = new SpeechRecognition();
-      recognition.continuous = true;
+      // Use single-shot for chat input to avoid complex state management
+      // User can tap again to add more.
+      recognition.continuous = false;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
 
       recognition.onresult = (event) => {
-        let interimTranscript = '';
-        let finalTranscript = '';
-
+        let transcript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          const result = event.results[i];
-          if (result.isFinal) {
-            finalTranscript += result[0].transcript;
-          } else {
-            interimTranscript += result[0].transcript;
-          }
+          transcript += event.results[i][0].transcript;
         }
 
-        // Construct new input value: Initial + (Final so far) + Interim
-        // Note: This simple logic might duplicate final text if we aren't careful with `continuous` results.
-        // Actually, for continuous: event.results contains *all* results if we iterate from 0.
-        // Let's iterate from 0 to get the FULL transcript of this session, then append to initial.
-
-        let sessionTranscript = '';
-        for (let i = 0; i < event.results.length; i++) {
-          sessionTranscript += event.results[i][0].transcript;
-        }
-
-        const separator = initialInput && !initialInput.endsWith(' ') ? ' ' : '';
-        setInput(initialInput + separator + sessionTranscript);
+        // Functional update to avoid closure staleness
+        // If we want to support typing while speaking, this acts as an append
+        // But for simplicity, we append the *current session* transcript to the *start* input
+        const separator = currentInput && !currentInput.endsWith(' ') ? ' ' : '';
+        setInput(currentInput + separator + transcript);
       };
 
       recognition.onerror = (event) => {
         console.error('Speech recognition error', event.error);
         if (event.error === 'not-allowed') {
           setError('Microphone access denied. Please allow microphone permissions.');
+        } else if (event.error === 'no-speech') {
+          // Ignore no-speech errors (common if user pauses)
+          return;
         } else {
           setError(`Voice input error: ${event.error}`);
         }
@@ -251,9 +243,7 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
       };
 
       recognition.onend = () => {
-        if (isRecording) {
-          setIsRecording(false);
-        }
+        setIsRecording(false);
       };
 
       recognitionRef.current = recognition;
