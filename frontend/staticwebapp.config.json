@@ -13,17 +13,6 @@
       "/api/*"
     ]
   },
-  "auth": {
-    "identityProviders": {
-      "azureActiveDirectory": {
-        "registration": {
-          "openIdIssuer": "https://login.microsoftonline.com/<TENANT_ID>",
-          "clientIdSettingName": "AAD_CLIENT_ID",
-          "clientSecretSettingName": "AAD_CLIENT_SECRET"
-        }
-      }
-    }
-  },
   "routes": [
     {
       "route": "/api/*",
@@ -31,6 +20,22 @@
         "anonymous",
         "authenticated"
       ]
+    },
+    {
+      "route": "/*",
+      "allowedRoles": [
+        "anonymous",
+        "authenticated"
+      ]
     }
-  ]
+  ],
+  "responseOverrides": {
+    "401": {
+      "redirect": "/.auth/login/aad?post_login_redirect_uri=.referrer",
+      "statusCode": 302
+    }
+  },
+  "platform": {
+    "apiRuntime": "node:18"
+  }
 }
