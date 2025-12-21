@@ -215,6 +215,47 @@ async def search_memory_tool(query: str, limit: int = 5) -> str:
 # =============================================================================
 
 
+class ClaudeLangChainAdapter:
+    """
+    Adapter to make ClaudeClient compatible with LangChain/BaseAgent interface.
+    
+    BaseAgent expects an LLM with .ainvoke(messages: list[BaseMessage]) -> AIMessage
+    ClaudeClient has .ainvoke(messages: list[dict], system: Optional[str]) -> str
+    """
+    
+    def __init__(self):
+        from backend.llm.claude_client import get_claude_client
+        self.client = get_claude_client()
+
+    async def ainvoke(self, messages: list) -> "AIMessage":
+        from langchain_core.messages import AIMessage
+        
+        # Convert LangChain messages to Claude dicts
+        claude_messages = []
+        system_prompt = None
+        
+        for m in messages:
+            if m.type == "system":
+                system_prompt = m.content
+            elif m.type == "human":
+                claude_messages.append({"role": "user", "content": m.content})
+            elif m.type == "ai":
+                claude_messages.append({"role": "assistant", "content": m.content})
+            else:
+                # Default fallback
+                claude_messages.append({"role": "user", "content": m.content})
+        
+        # If no messages effectively mapped (e.g. only system), ensure valid payload
+        if not claude_messages and system_prompt:
+             # Claude requires at least one user message if no message history exists
+             # But ainvoke is usually called with history.
+             pass
+
+        response_text = await self.client.ainvoke(claude_messages, system=system_prompt)
+        return AIMessage(content=response_text)
+
+
+
 class SageAgent(BaseAgent):
     """
     Sage Meridian - Storytelling & Visualization Specialist
@@ -226,6 +267,13 @@ class SageAgent(BaseAgent):
     agent_id = "sage"
     agent_name = "Sage Meridian"
     agent_title = "Storytelling & Visualization Specialist"
+
+    def __init__(self):
+        super().__init__()
+        # Override default LLM (Azure AI) with Claude Adapter
+        # This ensures Sage uses his native model for reasoning and persona
+        self._llm = ClaudeLangChainAdapter()
+
 
     @property
     def system_prompt(self) -> str:
