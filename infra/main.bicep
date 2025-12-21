@@ -420,7 +420,7 @@ module zepModule 'modules/zep-aca.bicep' = {
     location: location
     acaEnvId: acaEnv.id
     acaEnvName: acaEnv.name
-    enableCustomDomain: true  // zep.engram.work SSL cert is working
+    enableCustomDomain: false  // Disabled - certificate conflict with existing cert
     customDomainName: 'zep.engram.work'
     appName: '${envName}-zep'
     zepPostgresFqdn: postgres.properties.fullyQualifiedDomainName
@@ -450,7 +450,7 @@ module backendModule 'modules/backend-aca.bicep' = {
     location: location
     acaEnvName: acaEnv.name
     appName: '${envName}-api'
-    enableCustomDomain: true  // Output https://api.engram.work for frontend
+    enableCustomDomain: false  // Disabled - certificate conflict with existing cert
     customDomainName: 'api.engram.work'
     containerImage: backendImage
     postgresFqdn: postgres.properties.fullyQualifiedDomainName
