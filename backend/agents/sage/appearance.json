@@ -2,6 +2,7 @@
     "name": "Sage Meridian",
     "title": "Storytelling & Visualization Specialist",
     "agent_id": "sage",
+    "headshot_url": "/agents/sage-headshot.png",
     "avatar": {
         "style": "professional",
         "gender": "male",
