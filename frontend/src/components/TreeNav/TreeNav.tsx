@@ -69,6 +69,15 @@ export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
             onAgentChange('marcus');
             navigate('/');
           }
+        },
+        {
+          id: 'sage',
+          label: 'Sage - Storyteller',
+          status: activeAgent === 'sage' ? 'active' : 'idle',
+          onClick: () => {
+            onAgentChange('sage');
+            navigate('/');
+          }
         }
       ]
     },

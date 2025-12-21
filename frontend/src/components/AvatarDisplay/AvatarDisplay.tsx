@@ -46,7 +46,7 @@ interface Viseme {
 }
 
 interface AvatarDisplayProps {
-  agentId: 'elena' | 'marcus';
+  agentId: 'elena' | 'marcus' | 'sage';
   isSpeaking?: boolean;
   expression?: 'neutral' | 'smile' | 'thinking' | 'listening';
   visemes?: Viseme[];
@@ -66,6 +66,12 @@ const AGENT_INFO = {
     role: 'Project Manager',
     accentColor: '#a855f7',
     imagePlaceholder: 'M',
+  },
+  sage: {
+    name: 'Sage Meridian',
+    role: 'Storyteller',
+    accentColor: '#f59e0b',
+    imagePlaceholder: 'S',
   },
 };
 
@@ -95,10 +101,10 @@ export default function AvatarDisplay({
   useEffect(() => {
     if (isSpeaking && visemes.length > 0) {
       animationStartTime.current = performance.now();
-      
+
       const animate = () => {
         const elapsed = performance.now() - animationStartTime.current;
-        
+
         // Find current viseme based on elapsed time
         let currentViseme = visemes[0];
         for (const v of visemes) {
@@ -108,20 +114,20 @@ export default function AvatarDisplay({
             break;
           }
         }
-        
+
         const newMouthShape = VISEME_MOUTH_SHAPES[currentViseme.viseme_id] || VISEME_MOUTH_SHAPES[0];
         mouthShapeRef.current = newMouthShape;
         setMouthShape(newMouthShape);
-        
+
         // Continue animation if still speaking and not past last viseme
         const lastViseme = visemes[visemes.length - 1];
         if (elapsed < lastViseme.time_ms + 200) {
           animationFrameRef.current = requestAnimationFrame(animate);
         }
       };
-      
+
       animationFrameRef.current = requestAnimationFrame(animate);
-      
+
       return () => {
         cancelAnimationFrame(animationFrameRef.current);
       };
@@ -135,7 +141,7 @@ export default function AvatarDisplay({
         const randomViseme = Math.floor(Math.random() * 12) + 1; // Random mouth shape
         setMouthShape(VISEME_MOUTH_SHAPES[randomViseme] || VISEME_MOUTH_SHAPES[0]);
       }, 100);
-      
+
       return () => clearInterval(interval);
     }
   }, [isSpeaking, visemes.length]);
@@ -156,7 +162,7 @@ export default function AvatarDisplay({
   return (
     <div className={`avatar-display avatar-${size}`}>
       {/* Avatar Circle */}
-      <div 
+      <div
         className={`avatar-circle ${isSpeaking ? 'speaking' : ''}`}
         style={{
           '--accent-color': agent.accentColor,
@@ -171,17 +177,17 @@ export default function AvatarDisplay({
             <div className="avatar-glow-ring ring-3" />
           </>
         )}
-        
+
         {/* Avatar Image/Placeholder */}
         <div className="avatar-image">
           <span className="avatar-placeholder">
             {agent.imagePlaceholder}
           </span>
         </div>
-        
+
         {/* Animated Mouth Overlay (CSS-based) */}
         {isSpeaking && (
-          <div 
+          <div
             className="avatar-mouth"
             style={{
               '--jaw-open': mouthShape.jawOpen,
@@ -189,11 +195,11 @@ export default function AvatarDisplay({
             } as React.CSSProperties & Record<string, string | number>}
           />
         )}
-        
+
         {/* Expression Indicator */}
         <div className={`avatar-expression ${expression}`} />
       </div>
-      
+
       {/* Agent Info */}
       {showName && (
         <div className="avatar-info">

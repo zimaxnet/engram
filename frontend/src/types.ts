@@ -1,4 +1,4 @@
-export type AgentId = 'elena' | 'marcus';
+export type AgentId = 'elena' | 'marcus' | 'sage';
 
 export interface Agent {
     id: AgentId;
@@ -23,5 +23,12 @@ export const AGENTS: Record<AgentId, Agent> = {
         title: 'Project Manager',
         accentColor: '#a855f7',
         avatarUrl: '/assets/images/marcus-portrait.png'
+    },
+    sage: {
+        id: 'sage',
+        name: 'Sage Meridian',
+        title: 'Storyteller',
+        accentColor: '#f59e0b', // Amber/Gold for creativity
+        avatarUrl: '/agents/sage-headshot.png'
     }
 };
