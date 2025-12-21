@@ -37,7 +37,7 @@ class ClaudeClient:
         settings = get_settings()
         self.api_key = api_key or settings.anthropic_api_key
         if not self.api_key:
-            raise ValueError("Anthropic API key not configured. Set ANTHROPIC_API_KEY.")
+            logger.warning("Anthropic API key not configured. ANTHROPIC_API_KEY is missing.")
         
         self.model = model or self.DEFAULT_MODEL
         self.max_tokens = max_tokens
@@ -59,14 +59,10 @@ class ClaudeClient:
     ) -> str:
         """
         Send messages to Claude and get a response.
-        
-        Args:
-            messages: List of message dicts with 'role' and 'content'
-            system: Optional system prompt
-            
-        Returns:
-            Response text from Claude
         """
+        if not self.api_key:
+            raise ValueError("Anthropic API key not configured. Cannot invoke Claude.")
+
         payload = {
             "model": self.model,
             "max_tokens": self.max_tokens,
