@@ -236,6 +236,8 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
         } else if (event.error === 'no-speech') {
           // Ignore no-speech errors (common if user pauses)
           return;
+        } else if (event.error === 'network') {
+          setError('Voice input declined by browser/network. Please try Chrome or check connection.');
         } else {
           setError(`Voice input error: ${event.error}`);
         }

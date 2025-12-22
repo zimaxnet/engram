@@ -285,6 +285,7 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
 
                 try:
                     async for event in voicelive_connection:
+                        # logger.debug(f"VoiceLive Event: {event.type}")  # Uncomment for verbose trace
                         if event.type == ServerEventType.INPUT_AUDIO_BUFFER_SPEECH_STARTED:
                             await websocket.send_json({
                                 "type": "transcription",
@@ -495,7 +496,9 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                 except asyncio.CancelledError:
                     pass
                 except Exception as e:
-                    logger.error(f"VoiceLive event processing error: {e}")
+                    logger.error(f"VoiceLive event processing error: {e}", exc_info=True)
+                finally:
+                    logger.info("VoiceLive event loop exited")
             
             voicelive_task = asyncio.create_task(process_voicelive_events())
             

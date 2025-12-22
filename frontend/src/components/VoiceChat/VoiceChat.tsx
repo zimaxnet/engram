@@ -314,6 +314,9 @@ export default function VoiceChat({
 
     ws.onclose = () => {
       setConnectionStatus('error');
+      setIsProcessing(false);
+      setIsListening(false);
+      setIsSpeaking(false);
     };
 
     wsRef.current = ws;
