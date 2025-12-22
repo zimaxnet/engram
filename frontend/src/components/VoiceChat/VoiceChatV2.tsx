@@ -9,7 +9,8 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useAzureRealtime, ConnectionStatus } from '../../hooks/useAzureRealtime';
+import { useAzureRealtime } from '../../hooks/useAzureRealtime';
+import type { ConnectionStatus } from '../../hooks/useAzureRealtime';
 import './VoiceChat.css';
 
 interface VoiceMessage {
