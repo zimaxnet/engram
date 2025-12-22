@@ -325,7 +325,12 @@ resource authConfig 'Microsoft.App/containerApps/authConfigs@2023-05-01' = {
     globalValidation: {
       unauthenticatedClientAction: 'AllowAnonymous'
     }
-    // AAD config disabled for staging - enable for production with proper client registration
+    // AAD config disabled for staging
+    identityProviders: {
+      azureStaticWebApps: {
+        enabled: false
+      }
+    }
   }
 }
 

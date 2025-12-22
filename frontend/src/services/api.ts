@@ -501,7 +501,7 @@ export class ApiClient {
       topic: string
       created_at: string
       story_path: string
-    }>>('/story/')
+    }>>('/story')
   }
 
   async getStory(storyId: string) {
