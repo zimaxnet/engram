@@ -235,11 +235,17 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
         # Connect to VoiceLive
         logger.info(f"Connecting to VoiceLive endpoint: {voicelive_service.endpoint} with model: {voicelive_service.model}")
         try:
-            async with connect(
-                endpoint=voicelive_service.endpoint,
-                credential=credential,
-                model=voicelive_service.model,
-            ) as voicelive_connection:
+            # Wrap connection in timeout to prevent hanging if model is missing/unavailable
+            voicelive_connection = await asyncio.wait_for(
+                connect(
+                    endpoint=voicelive_service.endpoint,
+                    credential=credential,
+                    model=voicelive_service.model,
+                ),
+                timeout=10.0
+            )
+
+            async with voicelive_connection:
                 logger.info("Successfully established VoiceLive connection")
                 
                 # Configure session
