@@ -132,6 +132,11 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
           name: 'registry-password'
           value: registryPassword
         }
+        {
+          name: 'voicelive-api-key'
+          keyVaultUrl: '${keyVaultUri}secrets/voicelive-api-key'
+          identity: identityResourceId
+        }
       ]
       registries: [
         {
@@ -222,6 +227,10 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'AZURE_VOICELIVE_ENDPOINT'
               value: azureVoiceLiveEndpoint
+            }
+            {
+              name: 'AZURE_VOICELIVE_KEY'
+              secretRef: 'voicelive-api-key'
             }
             {
               name: 'AZURE_VOICELIVE_MODEL'
