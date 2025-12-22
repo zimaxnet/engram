@@ -14,6 +14,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from backend.core import get_settings
 from backend.observability import (
@@ -81,6 +82,8 @@ def create_app() -> FastAPI:
     # Custom middleware
     app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(TelemetryMiddleware)
+    # Trust the Azure Container Apps load balancer to handle SSL/Host headers correctly
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 
     # Include routers
     app.include_router(health.router, tags=["Health"])
