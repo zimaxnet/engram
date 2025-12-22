@@ -246,15 +246,42 @@ ws.onmessage = (event) => {
 | Encoding | Base64 |
 | Chunk Size | 1200 samples (50ms) |
 
-### Memory Enrichment (New)
+### Memory Enrichment
 
-The Voice system automatically enriches the session with user context at the start of the call:
+The Voice system integrates with memory in two directions:
 
-1. **Session Start**: Upon connection, the system retrieves up to **20 relevant facts** from the user's Zep memory graph.
-2. **Injection**: These facts are injected into the Agent's system instructions.
-3. **Personalization**: The agent starts the conversation with awareness of the user's valid context (e.g., role, current projects).
+#### 1. Pre-Session Context (Read)
 
-*Note: Enrichment happens only at session start. Context learned during the call is persisted but not immediately chemically available until the next session.*
+Upon connection, the system retrieves up to **20 relevant facts** from the user's Zep memory graph and injects them into the Agent's system instructions. This gives the agent awareness of the user's context (role, current projects, past conversations).
+
+#### 2. Post-Session Persistence (Write) — v2 Architecture
+
+> [!NOTE]
+> VoiceLive v2 decouples audio streaming from memory enrichment. See [VoiceLive Configuration SOP](./sop/voicelive-configuration.md#future-architecture-voicelive-v2-decoupled) for details.
+
+In the evolved architecture:
+
+```javascript
+// Browser: On receiving final transcript
+ws.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  if (data.type === 'transcription' && data.status === 'complete') {
+    // Async fire-and-forget to memory
+    fetch('/api/v1/memory/enrich', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: data.text,
+        session_id: sessionId,
+        speaker: data.speaker,  // 'user' or 'assistant'
+        agent_id: currentAgentId
+      })
+    });
+  }
+};
+```
+
+**Key principle**: Audio playback happens immediately. Memory enrichment flows behind it asynchronously. If memory persistence fails, the voice experience is unaffected.
 
 ### Voice Personalities
 

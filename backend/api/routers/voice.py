@@ -7,14 +7,18 @@ Provides voice endpoints with chat-based fallback:
 
 Note: When VoiceLive realtime endpoint is not available, uses chat completions
 with the agent system for text responses.
+
+VoiceLive v2: Adds /realtime/token endpoint for browser-direct WebRTC connections.
 """
 
 import asyncio
 import base64
 import json
 import logging
+import os
 from typing import Optional
 
+import httpx
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 from pydantic import BaseModel
 
@@ -589,3 +593,110 @@ async def get_voice_status():
             },
         },
     }
+
+
+# -----------------------------------------------------------------------------
+# VoiceLive v2: Ephemeral Token Endpoint for Browser-Direct WebRTC
+# -----------------------------------------------------------------------------
+
+class TokenRequest(BaseModel):
+    """Request body for realtime token endpoint"""
+    agent_id: str = "elena"
+    session_id: Optional[str] = None
+
+
+class TokenResponse(BaseModel):
+    """Ephemeral token response for WebRTC connection"""
+    token: str
+    endpoint: str
+    expires_at: Optional[str] = None
+
+
+@router.post("/realtime/token", response_model=TokenResponse)
+async def get_realtime_token(request: TokenRequest):
+    """
+    Generate an ephemeral token for direct browser-to-Azure WebRTC connection.
+    
+    The browser calls this endpoint to get a short-lived token, then uses it
+    to establish a direct WebRTC connection to Azure's Realtime API.
+    
+    This is VoiceLive v2 architecture — audio flows directly browser↔Azure,
+    bypassing the backend for lower latency.
+    """
+    # Validate VoiceLive is configured
+    if not voicelive_service.is_configured:
+        raise HTTPException(
+            status_code=503,
+            detail="VoiceLive not configured. Set AZURE_VOICELIVE_ENDPOINT and AZURE_VOICELIVE_KEY."
+        )
+    
+    # Get agent configuration
+    agent_config = voicelive_service.get_agent_voice_config(request.agent_id)
+    
+    # Build session configuration for the ephemeral token
+    session_config = {
+        "session": {
+            "type": "realtime",
+            "model": voicelive_service.model,
+            "instructions": agent_config.instructions,
+            "voice": agent_config.voice_name,
+            "input_audio_transcription": {
+                "model": "whisper-1"  # Enable input transcription
+            },
+            "turn_detection": {
+                "type": "server_vad",
+                "threshold": 0.6,
+                "prefix_padding_ms": 300,
+                "silence_duration_ms": 800,
+            },
+        }
+    }
+    
+    # Get the Azure endpoint
+    endpoint = voicelive_service.endpoint.rstrip('/')
+    
+    # Token URL for Azure OpenAI Realtime
+    token_url = f"{endpoint}/openai/v1/realtime/client_secrets"
+    
+    try:
+        # Get API key
+        api_key = os.getenv("AZURE_VOICELIVE_KEY", "")
+        if not api_key:
+            raise HTTPException(status_code=503, detail="AZURE_VOICELIVE_KEY not configured")
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                token_url,
+                headers={
+                    "api-key": api_key,
+                    "Content-Type": "application/json",
+                },
+                json=session_config,
+            )
+            
+            if response.status_code != 200:
+                logger.error(f"Token request failed: {response.status_code} - {response.text}")
+                raise HTTPException(
+                    status_code=502,
+                    detail=f"Failed to get ephemeral token: {response.status_code}"
+                )
+            
+            data = response.json()
+            ephemeral_token = data.get("value", "")
+            
+            if not ephemeral_token:
+                logger.error(f"No token in response: {data}")
+                raise HTTPException(status_code=502, detail="No ephemeral token in response")
+            
+            return TokenResponse(
+                token=ephemeral_token,
+                endpoint=endpoint,
+                expires_at=data.get("expires_at"),
+            )
+            
+    except httpx.TimeoutException:
+        logger.error("Token request timed out")
+        raise HTTPException(status_code=504, detail="Token request timed out")
+    except httpx.RequestError as e:
+        logger.error(f"Token request error: {e}")
+        raise HTTPException(status_code=502, detail=f"Token request failed: {str(e)}")

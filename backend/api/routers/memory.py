@@ -325,3 +325,95 @@ async def add_fact(request: AddFactRequest, user: SecurityContext = Depends(get_
 
     except Exception as e:
         return AddFactResponse(success=False, node_id="", message=f"Error: {str(e)}")
+
+
+# -----------------------------------------------------------------------------
+# VoiceLive v2: Async Memory Enrichment Endpoint
+# -----------------------------------------------------------------------------
+
+class EnrichRequest(BaseModel):
+    """Request body for voice transcript enrichment"""
+    text: str
+    session_id: Optional[str] = None
+    speaker: str = "user"  # 'user' or 'assistant'
+    agent_id: Optional[str] = None
+    channel: str = "voice"
+
+
+class EnrichResponse(BaseModel):
+    """Response for enrichment request"""
+    success: bool
+    session_id: str
+    message: str
+
+
+@router.post("/enrich", response_model=EnrichResponse)
+async def enrich_memory(request: EnrichRequest, user: SecurityContext = Depends(get_current_user)):
+    """
+    Enrich memory with voice transcripts.
+    
+    This endpoint is called by the browser after receiving transcription
+    from the Azure Realtime API. It's fire-and-forget — the voice experience
+    continues regardless of whether memory persistence succeeds.
+    
+    Part of VoiceLive v2 architecture: audio flows directly browser↔Azure,
+    memory enrichment happens asynchronously via this endpoint.
+    """
+    import logging
+    import uuid
+    from backend.memory.client import memory_client
+    from backend.core import EnterpriseContext, MessageRole, Turn, Role
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # Generate session ID if not provided
+        session_id = request.session_id or f"voice-{uuid.uuid4()}"
+        
+        # Ensure memory session exists
+        await memory_client.get_or_create_session(
+            session_id=session_id,
+            user_id=user.user_id,
+            metadata={
+                "tenant_id": user.tenant_id,
+                "channel": request.channel,
+                "agent_id": request.agent_id or "unknown",
+            },
+        )
+        
+        # Create a minimal context for the turn
+        security = user
+        context = EnterpriseContext(security=security, context_version="1.0.0")
+        context.episodic.conversation_id = session_id
+        
+        # Add the turn
+        role = MessageRole.USER if request.speaker == "user" else MessageRole.ASSISTANT
+        context.episodic.add_turn(
+            Turn(
+                role=role,
+                content=request.text,
+                agent_id=request.agent_id,
+                tool_calls=None,
+                token_count=None,
+            )
+        )
+        
+        # Persist to Zep
+        from backend.memory import persist_conversation
+        await persist_conversation(context)
+        
+        logger.info(f"Voice transcript enriched: session={session_id}, speaker={request.speaker}")
+        
+        return EnrichResponse(
+            success=True,
+            session_id=session_id,
+            message="Transcript enriched successfully",
+        )
+        
+    except Exception as e:
+        logger.warning(f"Voice enrichment failed (non-blocking): {e}")
+        return EnrichResponse(
+            success=False,
+            session_id=request.session_id or "",
+            message=f"Enrichment failed: {str(e)}",
+        )

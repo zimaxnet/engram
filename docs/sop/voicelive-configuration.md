@@ -277,10 +277,56 @@ VoiceLive requires **24kHz PCM16** audio:
 | `frontend/src/components/VoiceChat/` | Browser audio capture and playback |
 | `infra/modules/backend-aca.bicep` | Infrastructure configuration |
 
+## Future Architecture: VoiceLive v2 (Decoupled)
+
+> [!NOTE]
+> This section documents the **planned evolution** of VoiceLive. The current v1 implementation remains the production path until v2 is fully implemented.
+
+### The Challenge
+
+The current architecture routes all audio through the backend, creating:
+
+- **Connection complexity**: The `azure-ai-voicelive` SDK's async context manager is difficult to timeout reliably
+- **Latency**: Audio proxying adds round-trip delay
+- **Tight coupling**: Memory enrichment and audio streaming are intertwined
+
+### VoiceLive v2 Design
+
+**Principle**: Separate real-time audio (latency-critical) from memory enrichment (eventually consistent).
+
+```
+┌─────────────────────────────── REALTIME PATH ───────────────────────────────┐
+│  Browser ◀───── WebRTC/WebSocket ─────▶ Azure Cognitive Services (Direct)  │
+│            (Audio + Transcription)           (gpt-realtime model)           │
+└─────────────────────────────────────────────────────────────────────────────┘
+                │
+                │ Transcript text (async, fire-and-forget)
+                ▼
+┌─────────────────────────────── ENRICHMENT PATH ─────────────────────────────┐
+│  Browser ───── POST /memory/enrich ─────▶ Backend ─────▶ Zep (Memory)       │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Benefits
+
+| Aspect | v1 (Current) | v2 (Planned) |
+|--------|--------------|--------------|
+| Audio latency | Backend proxy | Direct browser↔Azure |
+| Connection reliability | SDK hang issues | Browser handles connection |
+| Memory persistence | Blocking | Async fire-and-forget |
+| Failure isolation | All-or-nothing | Audio works even if memory fails |
+
+### Implementation Path
+
+1. **Phase 1** (Documentation): Document approach, get alignment ✅
+2. **Phase 2**: Frontend direct Azure connection + backend token endpoint
+3. **Phase 3**: Deprecate `/api/v1/voice/voicelive/{session_id}` endpoint
+
 ## Changelog
 
 | Date | Change |
 |------|--------|
+| 2025-12-22 | Documented VoiceLive v2 decoupled architecture approach |
 | 2025-12-21 | Fixed connection hang by adding 10s timeout |
 | 2025-12-21 | Switched to API Key auth (bypassing Managed Identity issues) |
 | 2025-12-21 | Stored key in Key Vault as `voicelive-api-key` |

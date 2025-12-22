@@ -23,6 +23,17 @@ az postgres flexible-server start --resource-group engram-rg --name staging-env-
 
 > **Note**: This takes 2-3 minutes. Wait for completion before proceeding.
 
+> [!WARNING]
+> **Manual Container Start May Be Required**
+>
+> After running the `az containerapp update` commands below, containers may show `Running: Stopped` with 0 replicas despite `minReplicas: 1`. If this happens:
+>
+> 1. Go to **Azure Portal** → **Container Apps**
+> 2. Select each container app
+> 3. Click **Start** manually
+>
+> This is a known Azure behavior when containers have been scaled to zero.
+
 ### 2. Verify Database is Running
 
 // turbo
