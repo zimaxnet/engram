@@ -169,7 +169,7 @@ var postgresTags = union(mergedTags, {
 // Postgres SKU selection based on environment
 var postgresSku = environment == 'prod' || environment == 'uat' 
   ? { name: 'Standard_D2s_v3', tier: 'GeneralPurpose' }  // HA for uat/prod
-  : { name: 'Standard_B1ms', tier: 'Burstable' }  // Cost-optimized for staging/dev/test
+  : { name: 'Standard_B2s', tier: 'Burstable' }  // Upgraded for extension performance
 
 var enableAadForEnv = enablePostgresAad || environment == 'prod' || environment == 'uat'
 
