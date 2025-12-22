@@ -555,6 +555,29 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
             except WebSocketDisconnect:
                 logger.info(f"VoiceLive WebSocket disconnected: {session_id}")
             
+            except ImportError as e:
+                logger.error(f"VoiceLive SDK not installed: {e}")
+                await websocket.send_json({
+                    "type": "error",
+                    "message": "VoiceLive SDK not installed. Install with: pip install azure-ai-voicelive[aiohttp]",
+                })
+                # Don't try to close if already disconnected, but safe to call
+                try:
+                    await websocket.close()
+                except:
+                    pass
+
+            except Exception as e:
+                logger.error(f"VoiceLive connection error: {e}")
+                await websocket.send_json({
+                    "type": "error",
+                    "message": f"VoiceLive connection failed: {str(e)}",
+                })
+                try:
+                    await websocket.close()
+                except:
+                    pass
+            
             finally:
                 if voicelive_task:
                     voicelive_task.cancel()
@@ -562,26 +585,9 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                         await voicelive_task
                     except asyncio.CancelledError:
                         pass
-    
-    except ImportError as e:
-        logger.error(f"VoiceLive SDK not installed: {e}")
-        await websocket.send_json({
-            "type": "error",
-            "message": "VoiceLive SDK not installed. Install with: pip install azure-ai-voicelive[aiohttp]",
-        })
-        await websocket.close()
-    
-    except Exception as e:
-        logger.error(f"VoiceLive connection error: {e}")
-        await websocket.send_json({
-            "type": "error",
-            "message": f"VoiceLive connection failed: {str(e)}",
-        })
-        await websocket.close()
-    
-    finally:
-        session_manager.remove_session(session_id)
-        logger.info(f"VoiceLive session cleaned up: {session_id}")
+                
+                session_manager.remove_session(session_id)
+                logger.info(f"VoiceLive session cleaned up: {session_id}")
 
 
 @router.get("/status")

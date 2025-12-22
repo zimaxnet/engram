@@ -6,7 +6,7 @@ Context Definitions are declaratively defined using the `@register_context` deco
 """
 
 from typing import Callable, Any, Dict, Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 import inspect
 
 
@@ -28,8 +28,7 @@ class ContextDefinition(BaseModel):
     provider_type: Optional[str] = Field(None, description="The backing provider type (e.g., 'zep', 'postgres')")
     func: Optional[Callable] = Field(None, exclude=True, description="The actual python function to execute")
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class ContextRegistry:
