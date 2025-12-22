@@ -233,14 +233,17 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
         credential = voicelive_service.get_credential()
         
         # Connect to VoiceLive
-        async with connect(
-            endpoint=voicelive_service.endpoint,
-            credential=credential,
-            model=voicelive_service.model,
-        ) as voicelive_connection:
-            
-            # Configure session
-            session_config = RequestSession(
+        logger.info(f"Connecting to VoiceLive endpoint: {voicelive_service.endpoint} with model: {voicelive_service.model}")
+        try:
+            async with connect(
+                endpoint=voicelive_service.endpoint,
+                credential=credential,
+                model=voicelive_service.model,
+            ) as voicelive_connection:
+                logger.info("Successfully established VoiceLive connection")
+                
+                # Configure session
+                session_config = RequestSession(
                 modalities=[Modality.TEXT, Modality.AUDIO],
                 instructions=enriched_instructions,
                 input_audio_format=InputAudioFormat.PCM16,
