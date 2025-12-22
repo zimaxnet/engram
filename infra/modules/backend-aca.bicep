@@ -326,11 +326,11 @@ resource authConfig 'Microsoft.App/containerApps/authConfigs@2023-05-01' = {
       unauthenticatedClientAction: 'AllowAnonymous'
     }
     // AAD config disabled for staging
-    identityProviders: {
-      azureStaticWebApps: {
-        enabled: false
-      }
-    }
+    // identityProviders: {
+    //   azureStaticWebApps: {
+    //     enabled: false
+    //   }
+    // }
   }
 }
 
