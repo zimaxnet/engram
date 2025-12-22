@@ -232,24 +232,20 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
         # Get VoiceLive credential
         credential = voicelive_service.get_credential()
         
-        # Connect to VoiceLive
+        # Connect to VoiceLive with timeout to prevent hangs
         logger.info(f"Connecting to VoiceLive endpoint: {voicelive_service.endpoint} with model: {voicelive_service.model}")
-        try:
-            # Wrap connection in timeout to prevent hanging if model is missing/unavailable
-            voicelive_connection = await asyncio.wait_for(
-                connect(
-                    endpoint=voicelive_service.endpoint,
-                    credential=credential,
-                    model=voicelive_service.model,
-                ),
-                timeout=10.0
-            )
-
-            async with voicelive_connection:
-                logger.info("Successfully established VoiceLive connection")
-                
-                # Configure session
-                session_config = RequestSession(
+        voicelive_connection = await asyncio.wait_for(
+            connect(
+                endpoint=voicelive_service.endpoint,
+                credential=credential,
+                model=voicelive_service.model,
+            ),
+            timeout=10.0
+        )
+        async with voicelive_connection:
+            
+            # Configure session
+            session_config = RequestSession(
                 modalities=[Modality.TEXT, Modality.AUDIO],
                 instructions=enriched_instructions,
                 input_audio_format=InputAudioFormat.PCM16,
@@ -294,7 +290,6 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
 
                 try:
                     async for event in voicelive_connection:
-                        # logger.debug(f"VoiceLive Event: {event.type}")  # Uncomment for verbose trace
                         if event.type == ServerEventType.INPUT_AUDIO_BUFFER_SPEECH_STARTED:
                             await websocket.send_json({
                                 "type": "transcription",
@@ -505,9 +500,7 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                 except asyncio.CancelledError:
                     pass
                 except Exception as e:
-                    logger.error(f"VoiceLive event processing error: {e}", exc_info=True)
-                finally:
-                    logger.info("VoiceLive event loop exited")
+                    logger.error(f"VoiceLive event processing error: {e}")
             
             voicelive_task = asyncio.create_task(process_voicelive_events())
             
@@ -555,29 +548,6 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
             except WebSocketDisconnect:
                 logger.info(f"VoiceLive WebSocket disconnected: {session_id}")
             
-            except ImportError as e:
-                logger.error(f"VoiceLive SDK not installed: {e}")
-                await websocket.send_json({
-                    "type": "error",
-                    "message": "VoiceLive SDK not installed. Install with: pip install azure-ai-voicelive[aiohttp]",
-                })
-                # Don't try to close if already disconnected, but safe to call
-                try:
-                    await websocket.close()
-                except:
-                    pass
-
-            except Exception as e:
-                logger.error(f"VoiceLive connection error: {e}")
-                await websocket.send_json({
-                    "type": "error",
-                    "message": f"VoiceLive connection failed: {str(e)}",
-                })
-                try:
-                    await websocket.close()
-                except:
-                    pass
-            
             finally:
                 if voicelive_task:
                     voicelive_task.cancel()
@@ -585,9 +555,26 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                         await voicelive_task
                     except asyncio.CancelledError:
                         pass
-                
-                session_manager.remove_session(session_id)
-                logger.info(f"VoiceLive session cleaned up: {session_id}")
+    
+    except ImportError as e:
+        logger.error(f"VoiceLive SDK not installed: {e}")
+        await websocket.send_json({
+            "type": "error",
+            "message": "VoiceLive SDK not installed. Install with: pip install azure-ai-voicelive[aiohttp]",
+        })
+        await websocket.close()
+    
+    except Exception as e:
+        logger.error(f"VoiceLive connection error: {e}")
+        await websocket.send_json({
+            "type": "error",
+            "message": f"VoiceLive connection failed: {str(e)}",
+        })
+        await websocket.close()
+    
+    finally:
+        session_manager.remove_session(session_id)
+        logger.info(f"VoiceLive session cleaned up: {session_id}")
 
 
 @router.get("/status")
