@@ -28,19 +28,35 @@ AZURE_AI_DEPLOYMENT=gpt-5-chat
 
 ### 2. GPT Real-Time (VoiceLive)
 
-For real-time audio interaction, use the APIM Gateway endpoint configured for the Real-Time API.
+For real-time audio interaction, use the **Direct Cognitive Services endpoint** (not APIM).
 
-* **Endpoint**: `https://zimax-gw.azure-api.net/zimax`
-* **Key Source**: Azure Key Vault Secret `azure-ai-key` (or specific `azure-voicelive-key` if separated)
-* **Note**: The client SDK automatically handles the WebSocket upgrade (`wss://`) and path appending (`/openai/realtime`).
+> [!IMPORTANT]
+> After extensive debugging (December 2025), we determined that VoiceLive works reliably with the Direct Endpoint and API Key, NOT the APIM gateway. APIM returns 404 for the realtime model.
+
+* **Endpoint**: `https://zimax.services.ai.azure.com/` (Direct Cognitive Services)
+* **Key Source**: Azure Key Vault Secret `voicelive-api-key` (Cognitive Services key, NOT APIM key)
+* **Model**: `gpt-realtime`
+* **Note**: The `azure-ai-voicelive` SDK handles WebSocket upgrade and path construction.
 
 **Environment Variable Mapping:**
 
 ```bash
-AZURE_VOICELIVE_ENDPOINT=https://zimax-gw.azure-api.net/zimax
-AZURE_VOICELIVE_KEY=cf23c3ed0f9d420dbd02c1e95a5b5bb3  # Use APIM Key
+AZURE_VOICELIVE_ENDPOINT=https://zimax.services.ai.azure.com/
+AZURE_VOICELIVE_KEY=<Cognitive-Services-Key>  # NOT the APIM key
 AZURE_VOICELIVE_MODEL=gpt-realtime
 ```
+
+**Key Retrieval:**
+
+```bash
+# Get the correct key for VoiceLive
+az cognitiveservices account keys list \
+  --name zimax \
+  --resource-group zimax-ai \
+  --query "key1" -o tsv
+```
+
+> See [VoiceLive Configuration SOP](./voicelive-configuration.md) for detailed troubleshooting.
 
 ## Azure AI GPT-5 Implementation Guide (Reference)
 
