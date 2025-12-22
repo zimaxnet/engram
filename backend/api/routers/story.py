@@ -19,7 +19,7 @@ from backend.agents.sage import sage
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/story", tags=["story"])
+router = APIRouter(tags=["story"])
 
 
 # =============================================================================
