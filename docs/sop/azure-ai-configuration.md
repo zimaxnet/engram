@@ -58,7 +58,39 @@ az cognitiveservices account keys list \
 
 > See [VoiceLive Configuration SOP](./voicelive-configuration.md) for detailed troubleshooting.
 
-## Azure AI GPT-5 Implementation Guide (Reference)
+### 3. Anthropic Claude API (Story Generation)
+
+Sage uses Anthropic's Claude for creative story generation.
+
+* **Endpoint**: `https://api.anthropic.com/v1` (Direct Anthropic API)
+* **Key Source**: Azure Key Vault Secret `anthropic-api-key` or Container Apps secret
+* **Model**: `claude-3-sonnet` or `claude-3-opus`
+
+**Environment Variable Mapping:**
+
+```bash
+ANTHROPIC_API_KEY=sk-ant-api03-...
+```
+
+**Setting in Azure Container Apps:**
+
+```bash
+# Set secret for API and Worker containers
+az containerapp secret set --name staging-env-api --resource-group engram-rg \
+  --secrets "anthropic-api-key=<your-key>"
+  
+az containerapp secret set --name staging-env-worker --resource-group engram-rg \
+  --secrets "anthropic-api-key=<your-key>"
+
+# Restart containers to pick up new secret
+az containerapp update --name staging-env-api --resource-group engram-rg \
+  --set-env-vars "KEY_REFRESH_TS=$(date +%s)"
+```
+
+> [!NOTE]
+> After setting secrets, you must create a new revision (update with env var change) for the container to pick up the new value.
+
+---
 
 This section contains the **authoritative** configuration for the `gpt-5-chat` model, which uses the Azure AI Responses and Completions APIs.
 
