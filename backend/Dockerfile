@@ -21,17 +21,32 @@ COPY . ./backend/
 # Set Python path so 'backend' module is importable
 ENV PYTHONPATH=/app
 
+# Build arg to switch between API and Worker mode
+ARG WORKER_MODE=false
+ENV WORKER_MODE=${WORKER_MODE}
+
+# Create entrypoint script (before switching user)
+RUN printf '#!/bin/bash\n\
+    set -e\n\
+    if [ "$WORKER_MODE" = "true" ]; then\n\
+    echo "Starting Temporal Worker..."\n\
+    exec python -m backend.workflows.worker\n\
+    else\n\
+    echo "Starting API Server..."\n\
+    exec uvicorn backend.api.main:app --host 0.0.0.0 --port 8080\n\
+    fi\n' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+
 # Create non-root user
 RUN useradd -m -u 1000 engram && chown -R engram:engram /app
 USER engram
 
-# Expose port
+# Expose port (only used in API mode)
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import httpx; httpx.get('http://localhost:8080/health')"
+# Health check - varies by mode
+# Note: Worker mode uses process check, API mode uses HTTP check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD if [ "$WORKER_MODE" = "true" ]; then pgrep -f "workflows.worker" || exit 1; else python -c "import httpx; httpx.get('http://localhost:8080/health')"; fi
 
-# Run the application
-CMD ["uvicorn", "backend.api.main:app", "--host", "0.0.0.0", "--port", "8080"]
-
+# Use entrypoint script
+ENTRYPOINT ["/bin/bash", "/app/entrypoint.sh"]

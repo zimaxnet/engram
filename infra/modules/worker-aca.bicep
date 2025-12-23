@@ -61,9 +61,7 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
   properties: {
     managedEnvironmentId: acaEnvId
     configuration: {
-      ingress: {
-        external: false
-      }
+      // Worker doesn't expose HTTP - no ingress needed
       dapr: {
         enabled: false
       }
@@ -162,18 +160,8 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
             cpu: json('0.5')
             memory: '1Gi'
           }
-          // Worker starts THIRD (priority 3) - same as Backend, after Temporal+Zep
-          probes: [
-            {
-              type: 'Startup'
-              tcpSocket: {
-                port: 8080
-              }
-              initialDelaySeconds: 60
-              periodSeconds: 10
-              failureThreshold: 12     // 180s total window
-            }
-          ]
+          // Worker doesn't expose HTTP - no probes needed
+          // Container health is managed by Temporal's heartbeat mechanism
         }
       ]
       scale: {
