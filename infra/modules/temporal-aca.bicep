@@ -93,9 +93,12 @@ resource temporalServer 'Microsoft.App/containerApps@2023-05-01' = {
     managedEnvironmentId: acaEnvId
     configuration: {
       ingress: {
-        external: false
+        // IMPORTANT: Must be external for gRPC to work reliably!
+        // Internal ingress does NOT properly route gRPC traffic.
+        external: true
         targetPort: 7233
-        // transport: 'tcp' // Internal ingress handles this automatically, external TCP needs VNet
+        // REQUIRED: HTTP/2 transport for gRPC protocol
+        transport: 'http2'
         allowInsecure: false
       }
       dapr: {
