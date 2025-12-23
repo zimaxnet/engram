@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 
 
 async def create_temporal_client() -> Client:
-    """Create a Temporal client"""
+    """Create a Temporal client with Azure Container Apps support"""
     settings = get_settings()
 
     # Parse host and port
@@ -51,10 +51,22 @@ async def create_temporal_client() -> Client:
 
     logger.info(f"Connecting to Temporal at {host}:{port}")
 
-    client = await Client.connect(
-        f"{host}:{port}",
-        namespace=settings.temporal_namespace,
-    )
+    # Azure Container Apps internal ingress uses TLS on port 443
+    # For port 443, we need TLS enabled
+    use_tls = port == 443 or ".azurecontainerapps.io" in host
+    
+    if use_tls:
+        logger.info("Using TLS for Azure Container Apps connection")
+        client = await Client.connect(
+            f"{host}:{port}",
+            namespace=settings.temporal_namespace,
+            tls=True,  # Enable TLS for Azure internal ingress
+        )
+    else:
+        client = await Client.connect(
+            f"{host}:{port}",
+            namespace=settings.temporal_namespace,
+        )
 
     logger.info(f"Connected to Temporal namespace: {settings.temporal_namespace}")
     return client
