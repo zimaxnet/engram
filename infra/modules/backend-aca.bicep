@@ -214,7 +214,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             }
             {
               name: 'AZURE_AI_DEPLOYMENT'
-              value: 'gpt-5-chat'
+              value: 'gpt-4o'
             }
             {
               name: 'AZURE_AI_API_VERSION'
