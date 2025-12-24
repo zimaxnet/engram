@@ -1,16 +1,16 @@
-# Temporal on Azure Container Apps: Configuration Guide
+# Temporal on Azure Container Apps: Complete Setup Guide
 
-> **Last Updated**: December 23, 2025  
+> **Last Updated**: December 24, 2025  
 > **Status**: Production-Ready ✅  
 > **Maintainer**: Engram Platform Team
 
-## Overview
+## Executive Summary
 
-This document provides the definitive configuration for running Temporal durable workflows on Azure Container Apps (ACA). After extensive debugging, we identified the exact networking requirements for gRPC communication between the Temporal Server and Workers.
+This document provides the complete, battle-tested configuration for running Temporal durable workflows on Azure Container Apps (ACA). After extensive debugging on December 23-24, 2025, we identified the exact networking requirements for gRPC communication.
 
 ## TL;DR - The Working Configuration
 
-```
+```text
 Temporal Server:
   - Ingress Type: EXTERNAL (not internal!)
   - Transport: HTTP/2
@@ -25,168 +25,120 @@ Worker/API Connection:
 
 ---
 
-## Architecture
+## Step-by-Step Setup Guide
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                     Azure Container Apps Environment                         │
-│  ┌──────────────────┐                      ┌──────────────────┐            │
-│  │   Temporal UI    │                      │   Engram API     │            │
-│  │   (Port 8080)    │                      │   (Port 8080)    │            │
-│  └────────┬─────────┘                      └────────┬─────────┘            │
-│           │                                         │                       │
-│           │  HTTP                                   │  gRPC/TLS             │
-│           ▼                                         ▼                       │
-│  ┌──────────────────────────────────────────────────────────────────────┐  │
-│  │                     Azure Load Balancer / Ingress                     │  │
-│  │                         (TLS Termination)                             │  │
-│  └──────────────────────────────────────────────────────────────────────┘  │
-│                                    │                                        │
-│                                    │ HTTP/2                                 │
-│                                    ▼                                        │
-│                      ┌──────────────────────┐                              │
-│                      │   Temporal Server    │                              │
-│                      │   (Port 7233)        │                              │
-│                      │   HTTP/2 Transport   │                              │
-│                      └──────────────────────┘                              │
-│                                    ▲                                        │
-│                                    │ gRPC/TLS (port 443)                    │
-│  ┌──────────────────┐             │                                        │
-│  │  Engram Worker   │─────────────┘                                        │
-│  │  (Temporal SDK)  │                                                      │
-│  └──────────────────┘                                                      │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-                      ┌──────────────────────┐
-                      │  Azure PostgreSQL    │
-                      │  (Temporal DB)       │
-                      └──────────────────────┘
-```
+### Step 1: Deploy Temporal Server with Correct Ingress
 
----
-
-## Key Discoveries
-
-### 1. Internal Ingress Does NOT Work for gRPC
-
-**Problem**: Azure Container Apps internal ingress (`.internal.` FQDNs) does not reliably route gRPC traffic, even with HTTP/2 transport configured.
-
-**Symptoms**:
-
-- Connection timeouts to port 7233
-- `dial tcp 100.100.x.x:7233: i/o timeout`
-- Worker containers restart repeatedly
-
-**Solution**: Use **external ingress** for the Temporal Server.
-
-### 2. Port 443 Instead of 7233
-
-**Problem**: Azure Container Apps ingress routes through port 443 (HTTPS), not the container's target port directly.
-
-**Symptoms**:
-
-- Direct connection to `:7233` times out
-- Connection to `:443` reaches the container
-
-**Solution**: Connect to port **443**, not 7233. The ingress handles port translation internally.
-
-### 3. TLS Must Be Explicitly Enabled
-
-**Problem**: The Temporal SDK defaults to plaintext gRPC. Azure ingress requires TLS.
-
-**Symptoms**:
-
-- `ConnectionReset` or `BrokenPipe` errors
-- `transport error` in connection logs
-
-**Solution**: Enable TLS in the Temporal client:
-
-```python
-client = await Client.connect(
-    f"{host}:443",
-    namespace="default",
-    tls=True,  # REQUIRED for Azure Container Apps
-)
-```
-
----
-
-## Temporal Server Configuration
-
-### Bicep/ARM Configuration
+The Temporal Server must use **external** ingress with **HTTP/2** transport.
 
 ```bicep
+// infra/modules/temporal-aca.bicep
 resource temporalServer 'Microsoft.App/containerApps@2023-05-01' = {
-  name: 'staging-env-temporal-server'
+  name: '${appName}-server'
   properties: {
     configuration: {
       ingress: {
-        external: true          // EXTERNAL, not internal!
+        // CRITICAL: Must be external for gRPC to work!
+        external: true
         targetPort: 7233
-        transport: 'http2'      // Required for gRPC
+        // REQUIRED: HTTP/2 transport for gRPC protocol
+        transport: 'http2'
         allowInsecure: false
       }
     }
     template: {
-      containers: [
-        {
-          name: 'temporal-server'
-          image: 'temporalio/auto-setup:latest'
-          env: [
-            { name: 'DB', value: 'postgres12' }
-            { name: 'POSTGRES_USER', value: 'cogadmin' }
-            { name: 'POSTGRES_PWD', secretRef: 'postgres-password' }
-            { name: 'POSTGRES_SEEDS', value: '<postgres-fqdn>' }
-            // ... other env vars
-          ]
-        }
-      ]
+      containers: [{
+        name: 'temporal-server'
+        image: 'temporalio/auto-setup:latest'
+        env: [
+          { name: 'DB', value: 'postgres12' }
+          { name: 'POSTGRES_USER', value: 'cogadmin' }
+          { name: 'POSTGRES_PWD', secretRef: 'postgres-password' }
+          { name: 'POSTGRES_SEEDS', value: '<postgres-fqdn>' }
+          { name: 'POSTGRES_DB', value: '<database-name>' }
+          // IMPORTANT: Set to false to auto-create "default" namespace
+          { name: 'SKIP_DEFAULT_NAMESPACE_CREATION', value: 'false' }
+          { name: 'SQL_TLS', value: 'true' }
+          { name: 'SQL_TLS_ENABLED', value: 'true' }
+          { name: 'POSTGRES_TLS_ENABLED', value: 'true' }
+          { name: 'POSTGRES_TLS_DISABLE_HOST_VERIFICATION', value: 'true' }
+        ]
+      }]
     }
   }
 }
 ```
 
-### Azure CLI Commands
+**If already deployed with wrong config, fix via CLI:**
 
 ```bash
-# Set transport to HTTP/2 (required for gRPC)
-az containerapp ingress update \
-  --name staging-env-temporal-server \
-  --resource-group engram-rg \
-  --transport http2
-
-# Make ingress external (required for reliable gRPC)
+# Make ingress external
 az containerapp ingress update \
   --name staging-env-temporal-server \
   --resource-group engram-rg \
   --type external
 
-# Get the FQDN
+# Set HTTP/2 transport
+az containerapp ingress update \
+  --name staging-env-temporal-server \
+  --resource-group engram-rg \
+  --transport http2
+
+# Enable namespace creation
+az containerapp update \
+  --name staging-env-temporal-server \
+  --resource-group engram-rg \
+  --set-env-vars "SKIP_DEFAULT_NAMESPACE_CREATION=false"
+```
+
+### Step 2: Get the Temporal Server FQDN
+
+```bash
 az containerapp show \
   --name staging-env-temporal-server \
   --resource-group engram-rg \
   --query "properties.configuration.ingress.fqdn" \
   --output tsv
+
+# Example output:
+# staging-env-temporal-server.gentleriver-dd0de193.eastus2.azurecontainerapps.io
 ```
 
----
+⚠️ **IMPORTANT**: The FQDN should NOT contain `.internal.` - if it does, your ingress is still set to internal.
 
-## Worker/API Client Configuration
+### Step 3: Configure Worker with Correct TEMPORAL_HOST
 
-### Environment Variables
+The worker must connect to **port 443** (not 7233) because Azure ingress routes through HTTPS.
 
 ```bash
-# For Worker and API containers
-TEMPORAL_HOST=staging-env-temporal-server.gentleriver-dd0de193.eastus2.azurecontainerapps.io:443
-TEMPORAL_NAMESPACE=default
-TEMPORAL_TASK_QUEUE=engram-agents
+# Set the correct TEMPORAL_HOST format
+az containerapp update \
+  --name staging-env-worker \
+  --resource-group engram-rg \
+  --set-env-vars \
+    "TEMPORAL_HOST=staging-env-temporal-server.gentleriver-dd0de193.eastus2.azurecontainerapps.io:443" \
+    "TEMPORAL_NAMESPACE=default" \
+    "TEMPORAL_TASK_QUEUE=engram-agents"
 ```
 
-### Python Code with TLS Support
+### Step 4: Configure API with Same TEMPORAL_HOST
+
+```bash
+az containerapp update \
+  --name staging-env-api \
+  --resource-group engram-rg \
+  --set-env-vars \
+    "TEMPORAL_HOST=staging-env-temporal-server.gentleriver-dd0de193.eastus2.azurecontainerapps.io:443" \
+    "TEMPORAL_NAMESPACE=default" \
+    "TEMPORAL_TASK_QUEUE=engram-agents"
+```
+
+### Step 5: Update Python SDK to Use TLS
+
+The Temporal Python SDK must enable TLS when connecting through Azure ingress.
 
 ```python
-# backend/workflows/worker.py
+# backend/workflows/worker.py and backend/workflows/client.py
 
 async def create_temporal_client() -> Client:
     """Create a Temporal client with Azure Container Apps support"""
@@ -206,7 +158,7 @@ async def create_temporal_client() -> Client:
         client = await Client.connect(
             f"{host}:{port}",
             namespace=settings.temporal_namespace,
-            tls=True,  # Enable TLS
+            tls=True,  # REQUIRED for Azure Container Apps
         )
     else:
         client = await Client.connect(
@@ -218,11 +170,32 @@ async def create_temporal_client() -> Client:
     return client
 ```
 
----
+### Step 6: Add Required Secrets to Worker
 
-## Verification
+The worker needs the Anthropic API key for story generation:
 
-### Test Connection Locally
+```bash
+# Copy secret from API to worker
+ANTHROPIC_KEY=$(az containerapp secret show \
+  --name staging-env-api \
+  --resource-group engram-rg \
+  --secret-name anthropic-api-key \
+  --query "value" --output tsv)
+
+az containerapp secret set \
+  --name staging-env-worker \
+  --resource-group engram-rg \
+  --secrets "anthropic-api-key=$ANTHROPIC_KEY"
+
+az containerapp update \
+  --name staging-env-worker \
+  --resource-group engram-rg \
+  --set-env-vars "ANTHROPIC_API_KEY=secretref:anthropic-api-key"
+```
+
+### Step 7: Verify Connection
+
+**Local Python Test:**
 
 ```python
 import asyncio
@@ -239,9 +212,7 @@ async def test():
 asyncio.run(test())
 ```
 
-### Verify Worker Connection
-
-Check worker logs for successful connection:
+**Check Worker Logs:**
 
 ```bash
 az containerapp logs show \
@@ -251,83 +222,138 @@ az containerapp logs show \
   --tail 20 | grep -i "temporal\|connected\|started"
 ```
 
-**Expected output**:
+**Expected output:**
 
 ```
-Connecting to Temporal at staging-env-temporal-server...azurecontainerapps.io:443
+Connecting to Temporal at ...azurecontainerapps.io:443
 Using TLS for Azure Container Apps connection
 Connected to Temporal namespace: default
 Starting worker on task queue: engram-agents
 Worker started successfully
 ```
 
-### Verify via HTTP
+### Step 8: Test Story Workflow
 
 ```bash
-# Should return 415 (Unsupported Media Type) - confirms server is responding
-curl -s -o /dev/null -w "%{http_code}" \
-  https://staging-env-temporal-server.gentleriver-dd0de193.eastus2.azurecontainerapps.io/
+curl -X POST https://engram.work/api/v1/story/create \
+  -H "Content-Type: application/json" \
+  -d '{"topic": "Test Story", "include_diagram": false}'
 ```
 
 ---
 
-## Troubleshooting
+## Troubleshooting Guide
 
-### Error: Connection Timeout
+### Error: Connection Timeout to :7233
 
-**Symptom**: `dial tcp ... i/o timeout`
+**Symptom**: `dial tcp 100.100.x.x:7233: i/o timeout`
 
-**Cause**: Temporal Server ingress is internal or using wrong port
+**Cause**: Connecting to wrong port (7233 instead of 443)
 
-**Fix**:
+**Fix**: Update TEMPORAL_HOST to use port 443:
 
-1. Set ingress to `external`
-2. Use port `443` in TEMPORAL_HOST
+```bash
+az containerapp update --name staging-env-worker --resource-group engram-rg \
+  --set-env-vars "TEMPORAL_HOST=<fqdn>:443"
+```
 
 ### Error: ConnectionReset / BrokenPipe
 
 **Symptom**: `transport error: hyper::Error(Io, BrokenPipe)`
 
-**Cause**: TLS not enabled in client
+**Cause**: TLS not enabled in Python SDK
 
-**Fix**: Set `tls=True` in Client.connect()
+**Fix**: Enable `tls=True` in Client.connect()
 
-### Error: operation was canceled
+### Error: Namespace Not Found
 
-**Symptom**: `connection closed` or `operation was canceled`
+**Symptom**: `Namespace default is not found`
 
-**Cause**: Old container image without TLS code
+**Cause**: Temporal Server has SKIP_DEFAULT_NAMESPACE_CREATION=true
 
-**Fix**: Deploy new image with TLS support in create_temporal_client()
+**Fix**:
 
-### Worker Keeps Restarting
+```bash
+az containerapp update --name staging-env-temporal-server \
+  --resource-group engram-rg \
+  --set-env-vars "SKIP_DEFAULT_NAMESPACE_CREATION=false"
+```
 
-**Symptom**: Logs show "Connecting to Temporal..." repeatedly
+### Error: Anthropic API Key Not Configured
 
-**Cause**: Connection failing, container restarting
+**Symptom**: `Anthropic API key not configured. Cannot invoke Claude.`
 
-**Fix**: Check all of the above, ensure CI deployed new image
+**Cause**: Worker missing ANTHROPIC_API_KEY secret
+
+**Fix**: Add the secret (see Step 6 above)
 
 ---
 
-## Common Mistakes to Avoid
+## Configuration Summary
 
-| ❌ Don't | ✅ Do |
-|---------|-------|
-| Use internal ingress (`.internal.`) | Use external ingress |
-| Connect to port 7233 | Connect to port 443 |
-| Use plaintext gRPC | Enable `tls=True` |
-| Use simplified hostname (`app-name:7233`) | Use full FQDN with port 443 |
-| Expect immediate changes | Wait for new container revision |
+| Component | Setting | Value |
+|-----------|---------|-------|
+| Temporal Server Ingress | `external` | `true` |
+| Temporal Server Transport | `transport` | `http2` |
+| Temporal Server Port | `targetPort` | `7233` |
+| Worker/API TEMPORAL_HOST | Port | `443` (not 7233!) |
+| Python SDK | `tls` | `True` |
+| Namespace Creation | `SKIP_DEFAULT_NAMESPACE_CREATION` | `false` |
+
+---
+
+## Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     Azure Container Apps Environment                         │
+│                                                                              │
+│  ┌──────────────────┐     gRPC/TLS      ┌──────────────────────────────────┐│
+│  │   Engram API     │─────────────────▶ │                                  ││
+│  │   (Port 8080)    │     port 443      │      Azure Load Balancer         ││
+│  └──────────────────┘                   │         (Ingress)                ││
+│                                         │                                  ││
+│  ┌──────────────────┐     gRPC/TLS      │      TLS Termination + HTTP/2    ││
+│  │  Engram Worker   │─────────────────▶ │                                  ││
+│  │  (Temporal SDK)  │     port 443      └──────────────────────────────────┘│
+│  └──────────────────┘                              │                        │
+│                                                    │ HTTP/2                 │
+│                                                    ▼                        │
+│                                    ┌──────────────────────┐                 │
+│                                    │   Temporal Server    │                 │
+│                                    │   (Port 7233)        │                 │
+│                                    │   temporalio/auto-   │                 │
+│                                    │   setup:latest       │                 │
+│                                    └──────────────────────┘                 │
+│                                                    │                        │
+└────────────────────────────────────────────────────│────────────────────────┘
+                                                     │ PostgreSQL
+                                                     ▼
+                                      ┌──────────────────────┐
+                                      │  Azure PostgreSQL    │
+                                      │  (Temporal DB)       │
+                                      └──────────────────────┘
+```
+
+---
+
+## Key Discoveries (December 2025)
+
+1. **Internal ingress does NOT work for gRPC** - Azure Container Apps internal routing doesn't properly handle gRPC traffic
+
+2. **Port 443, not 7233** - Azure ingress does TLS termination on port 443 and forwards to the container's targetPort internally
+
+3. **TLS is mandatory** - Even though Azure handles TLS termination, the Python SDK must still use TLS to communicate with the ingress
+
+4. **Namespace must be created** - The `temporalio/auto-setup` image has `SKIP_DEFAULT_NAMESPACE_CREATION=true` by default
 
 ---
 
 ## Related Documentation
 
-- [Temporal Worker Postmortem](./temporal-worker-postmortem.md) - Details on the WORKER_MODE Dockerfile fix
+- [Temporal Worker Postmortem](./temporal-worker-postmortem.md)
 - [Azure Container Apps gRPC Support](https://learn.microsoft.com/en-us/azure/container-apps/grpc)
 - [Temporal Python SDK](https://docs.temporal.io/dev-guide/python)
-- [Temporal Self-Hosted Guide](https://docs.temporal.io/self-hosted-guide)
 
 ---
 
@@ -335,6 +361,6 @@ curl -s -o /dev/null -w "%{http_code}" \
 
 | Date | Change |
 |------|--------|
-| 2025-12-23 | Initial documentation with working configuration |
-| 2025-12-23 | Added TLS requirement discovery |
-| 2025-12-23 | Confirmed external ingress requirement |
+| 2025-12-24 | Complete step-by-step guide added |
+| 2025-12-24 | Successfully tested story workflow execution |
+| 2025-12-23 | Initial debugging and discovery of configuration requirements |
