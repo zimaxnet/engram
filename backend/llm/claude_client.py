@@ -59,9 +59,11 @@ class ClaudeClient:
     ) -> str:
         """
         Send messages to Claude and get a response.
+        Falls back to APIM gateway (Azure OpenAI) if Anthropic returns 429.
         """
         if not self.api_key:
-            raise ValueError("Anthropic API key not configured. Cannot invoke Claude.")
+            logger.warning("ClaudeClient: No API key, falling back to APIM gateway.")
+            return await self._fallback_to_apim(messages, system)
 
         payload = {
             "model": self.model,
@@ -97,11 +99,72 @@ class ClaudeClient:
                 return result
                 
             except httpx.HTTPStatusError as e:
+                if e.response.status_code == 429:
+                    logger.warning(f"ClaudeClient: Rate limited (429), falling back to APIM gateway.")
+                    return await self._fallback_to_apim(messages, system)
                 logger.error(f"ClaudeClient: HTTP error {e.response.status_code}: {e.response.text}")
                 raise
             except Exception as e:
                 logger.error(f"ClaudeClient: Error calling Claude: {e}")
                 raise
+
+    async def _fallback_to_apim(
+        self,
+        messages: list[dict],
+        system: Optional[str] = None,
+    ) -> str:
+        """
+        Fallback to APIM gateway (Azure OpenAI) when Claude is unavailable or rate-limited.
+        """
+        settings = get_settings()
+        
+        endpoint = settings.azure_ai_endpoint
+        api_key = settings.azure_ai_key
+        deployment = settings.azure_ai_deployment or "gpt-4o"
+        api_version = settings.azure_ai_api_version or "2024-10-01-preview"
+        
+        if not endpoint or not api_key:
+            raise ValueError("APIM fallback not configured. Set AZURE_AI_ENDPOINT and AZURE_AI_KEY.")
+        
+        # Build URL - handle trailing slash
+        base = endpoint.rstrip("/")
+        url = f"{base}/chat/completions?api-version={api_version}"
+        
+        # Convert Claude messages to OpenAI format
+        openai_messages = []
+        if system:
+            openai_messages.append({"role": "system", "content": system})
+        for msg in messages:
+            openai_messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
+        
+        payload = {
+            "model": deployment,
+            "messages": openai_messages,
+            "max_tokens": self.max_tokens,
+            "temperature": self.temperature,
+        }
+        
+        headers = {
+            "Content-Type": "application/json",
+            "api-key": api_key,
+        }
+        
+        logger.info(f"ClaudeClient: Fallback to APIM gateway at {url}")
+        
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            response = await client.post(url, headers=headers, json=payload)
+            response.raise_for_status()
+            data = response.json()
+            
+            # Extract from OpenAI format
+            choices = data.get("choices", [])
+            if choices:
+                result = choices[0].get("message", {}).get("content", "")
+            else:
+                result = ""
+            
+            logger.info(f"ClaudeClient: APIM fallback response received, length={len(result)}")
+            return result
 
     async def generate_story(
         self,
