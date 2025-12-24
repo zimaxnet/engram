@@ -260,5 +260,7 @@ resource temporalUI 'Microsoft.App/containerApps@2023-05-01' = {
 output temporalServerFqdn string = temporalServer.properties.configuration.ingress.fqdn
 output temporalUIUrl string = 'https://${temporalUI.properties.configuration.ingress.fqdn}'
 output temporalUIDefaultFqdn string = temporalUI.properties.configuration.ingress.fqdn
-output temporalHost string = '${temporalServer.properties.configuration.ingress.fqdn}:7233'
+// IMPORTANT: Use port 443 (Azure ingress HTTPS), NOT 7233 (internal gRPC port)
+// Clients must connect via TLS to the ingress which routes to the internal container port
+output temporalHost string = '${temporalServer.properties.configuration.ingress.fqdn}:443'
 
