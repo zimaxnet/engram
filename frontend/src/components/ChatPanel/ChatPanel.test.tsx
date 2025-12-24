@@ -3,7 +3,19 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { ChatPanel } from './ChatPanel'
 
-// Mock VoiceChat because it uses WebSocket
+// Mock react-markdown and remark-gfm to avoid ESM issues in tests
+vi.mock('react-markdown', () => ({
+    default: ({ children }: { children: React.ReactNode }) => <div data-testid="markdown">{children}</div>,
+}))
+
+vi.mock('remark-gfm', () => ({
+    default: () => 'remark-gfm-plugin',
+}))
+
+// Mock scrollIntoView unavailable in JSDOM
+window.HTMLElement.prototype.scrollIntoView = vi.fn()
+
+// Mock VoiceChat because we aren't testing voice logic heavily here.
 vi.mock('../VoiceChat/VoiceChat', () => ({
     default: () => <div data-testid="voice-chat-mock">Voice Chat Active</div>
 }))
@@ -27,8 +39,8 @@ describe('ChatPanel', () => {
         )
 
         // Verify mic button exists (using the mic icon text or title)
-        // Verify mic button exists (using the accessible name from title)
-        const micButton = screen.getByRole('button', { name: /Tap to talk/i })
+        // Verify mic button exists (using title because role match failed)
+        const micButton = screen.getByTitle('Tap to talk (Voice Live)')
         expect(micButton).toBeInTheDocument()
 
         // Overlay should not be visible initially

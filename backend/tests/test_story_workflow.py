@@ -3,16 +3,16 @@ import pytest
 from unittest.mock import MagicMock
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
+from temporalio import activity
 from backend.workflows.story_workflow import StoryWorkflow
 from backend.workflows.client import StoryWorkflowInput
-
-@pytest.mark.asyncio
-async def test_story_workflow_end_to_end():
-    """
-    Verify the StoryWorkflow executes successfully with mocked activities.
-    This ensures the orchestration logic (Story -> Visual -> Save) flows correctly.
-    """
-from temporalio import activity
+from backend.workflows.story_activities import (
+    GenerateStoryOutput,
+    GenerateDiagramOutput,
+    GenerateImageOutput,
+    SaveArtifactsOutput,
+    EnrichMemoryOutput
+)
 
 # Mock Activities defined at module level
 @activity.defn(name="generate_story_activity")
@@ -56,19 +56,23 @@ async def mock_enrich_memory(input):
 
 @pytest.mark.asyncio
 async def test_story_workflow_end_to_end():
+    """
+    Verify the StoryWorkflow executes successfully with mocked activities.
+    This ensures the orchestration logic (Story -> Visual -> Save) flows correctly.
+    """
     async with await WorkflowEnvironment.start_time_skipping() as env:
         # Start Worker with mocked activities
         async with Worker(
             env.client,
             task_queue="story-generation-queue",
             workflows=[StoryWorkflow],
-            activities={
-                "generate_story_activity": mock_generate_story,
-                "generate_image_activity": mock_generate_image,
-                "generate_diagram_activity": mock_generate_diagram,
-                "save_artifacts_activity": mock_save_artifacts,
-                "enrich_story_memory_activity": mock_enrich_memory
-            },
+            activities=[
+                mock_generate_story,
+                mock_generate_image,
+                mock_generate_diagram,
+                mock_save_artifacts,
+                mock_enrich_memory
+            ],
         ):
             # Execute Workflow
             result = await env.client.execute_workflow(
