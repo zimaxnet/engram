@@ -86,6 +86,12 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
           keyVaultUrl: '${keyVaultUri}secrets/anthropic-api-key'
           identity: identityResourceId
         }
+        // Required for Sage diagram generation with Gemini
+        {
+          name: 'gemini-api-key'
+          keyVaultUrl: '${keyVaultUri}secrets/gemini-api-key'
+          identity: identityResourceId
+        }
       ]
       registries: [
         {
@@ -165,6 +171,11 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'ANTHROPIC_API_KEY'
               secretRef: 'anthropic-api-key'
+            }
+            // Sage Agent: Diagram generation with Gemini
+            {
+              name: 'GEMINI_API_KEY'
+              secretRef: 'gemini-api-key'
             }
           ]
           resources: {
