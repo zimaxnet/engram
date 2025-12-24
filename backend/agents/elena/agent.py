@@ -344,6 +344,19 @@ You are not just a chatbot; you are an AI agent operating within the **Engram** 
 
     def _select_tool(self, content: str) -> tuple[str | None, dict]:
         text = content.lower()
+        
+        # Delegation to Sage (Check first to avoid shadowing by 'story' keyword in user story tool)
+        if any(k in text for k in ["story", "narrative", "visual", "diagram", "draw", "paint", "image", "picture"]):
+            # Simple heuristic: if she's asked to create these things, she delegates
+            if "create" in text or "generate" in text or "make" in text or "show" in text:
+                # Extract topic crudely
+                topic = content
+                for prefix in ["create a story about", "generate a visual for", "show me a picture of"]:
+                    if prefix in text:
+                        topic = content[text.index(prefix)+len(prefix):].strip()
+                        break
+                return "delegate_to_sage", {"topic": topic, "context": content}
+
         if "acceptance" in text or "user story" in text or "story" in text:
             return "create_user_story", {
                 "feature_description": content,
@@ -359,18 +372,7 @@ You are not just a chatbot; you are an AI agent operating within the **Engram** 
         if "validate" in text or "golden thread" in text:
             return "run_golden_thread", {"dataset_id": "cogai-thread", "mode": "deterministic"}
             
-        # Delegation to Sage
-        if any(k in text for k in ["story", "narrative", "visual", "diagram", "draw", "paint", "image", "picture"]):
-            # Simple heuristic: if she's asked to create these things, she delegates
-            if "create" in text or "generate" in text or "make" in text or "show" in text:
-                # Extract topic crudely
-                topic = content
-                for prefix in ["create a story about", "generate a visual for", "show me a picture of"]:
-                    if prefix in text:
-                        topic = content[text.index(prefix)+len(prefix):].strip()
-                        break
-                return "delegate_to_sage", {"topic": topic, "context": content}
-            
+
         return None, {}
 
     async def _maybe_use_tool(self, state: AgentState) -> AgentState:
