@@ -270,6 +270,7 @@ async def execute_story(
     topic: str,
     context: Optional[str] = None,
     include_diagram: bool = True,
+    include_image: bool = True,
     diagram_type: str = "architecture",
     timeout_seconds: int = 300,
 ) -> StoryWorkflowOutput:
@@ -311,6 +312,7 @@ async def execute_story(
             topic=topic,
             context=context,
             include_diagram=include_diagram,
+            include_image=include_image,
             diagram_type=diagram_type,
         ),
         id=workflow_id,

@@ -9,6 +9,7 @@ interface StoryDetailed {
     topic: string;
     story_content: string;
     diagram_spec?: any;
+    image_path?: string;
     created_at: string;
 }
 
@@ -18,7 +19,8 @@ export function StoryDetail() {
     const [story, setStory] = useState<StoryDetailed | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<'story' | 'diagram'>('story');
+    // Use 'visual' as default tab if image exists? Or stick to story.
+    const [activeTab, setActiveTab] = useState<'story' | 'diagram' | 'visual'>('story');
 
     useEffect(() => {
         if (!storyId) return;
@@ -71,6 +73,12 @@ export function StoryDetail() {
                         📐 Architecture Diagram
                     </button>
                 )}
+                <button
+                    className={`tab-button ${activeTab === 'visual' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('visual')}
+                >
+                    🎨 Visual
+                </button>
             </div>
 
             <div className="detail-content">
@@ -83,14 +91,32 @@ export function StoryDetail() {
                 {activeTab === 'diagram' && story.diagram_spec && (
                     <div className="diagram-view">
                         {/* 
-                In a real implementation, we would use a library like React Flow 
-                or Mermaid to render this spec. For now, we pretty-print the JSON 
-                as a proof of concept.
-             */}
+                            In a real implementation, we would use a library like React Flow 
+                            or Mermaid to render this spec. For now, we pretty-print the JSON 
+                            as a proof of concept.
+                         */}
                         <div className="diagram-placeholder">
                             <h3>Technical Specification</h3>
                             <pre>{JSON.stringify(story.diagram_spec, null, 2)}</pre>
                         </div>
+                    </div>
+                )}
+
+                {activeTab === 'visual' && (
+                    <div className="visual-view">
+                        {story.image_path ? (
+                            <img
+                                src={story.image_path}
+                                alt={story.topic}
+                                className="story-image-full"
+                                style={{ maxWidth: '100%', height: 'auto', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                            />
+                        ) : (
+                            <div className="no-visual">
+                                <p>No visual generated for this story.</p>
+                                <p><i>Ask Sage to "create a visual" for this topic.</i></p>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

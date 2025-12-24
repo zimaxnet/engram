@@ -42,12 +42,24 @@ async def create_story_tool(topic: str, context: Optional[str] = None) -> str:
         context: Optional background context
     """
     try:
-        from backend.llm.claude_client import get_claude_client
+        from backend.workflows.client import execute_story
         
-        client = get_claude_client()
-        story = await client.generate_story(topic, context)
+        # We assume tenant_id/user_id are available in context or hardcoded for the agent for now
+        # In a real scenario, these would come from the agent's state or context
+        result = await execute_story(
+            user_id="sage", 
+            tenant_id="default",  
+            topic=topic,
+            context=context,
+            include_diagram=True,
+            include_image=True,
+        )
         
-        return f"Story generated successfully:\n\n{story}"
+        if result.success:
+            return f"Story generated successfully via Temporal!\nStory ID: {result.story_id}\n\n{result.story_content}\n\n[Visual](/api/v1/images/{result.story_id}.png)"
+        else:
+            return f"Error generating story: {result.error}"
+
     except Exception as e:
         logger.error(f"create_story_tool error: {e}")
         return f"Error generating story: {e}"

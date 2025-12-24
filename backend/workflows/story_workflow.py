@@ -14,6 +14,7 @@ This ensures story generation survives crashes and can be monitored/queried.
 """
 
 import logging
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Optional
@@ -26,10 +27,12 @@ with workflow.unsafe.imports_passed_through():
     from backend.workflows.story_activities import (
         GenerateStoryInput,
         GenerateDiagramInput,
+        GenerateImageInput,
         SaveArtifactsInput,
         EnrichMemoryInput,
         generate_story_activity,
         generate_diagram_activity,
+        generate_image_activity,
         save_artifacts_activity,
         enrich_story_memory_activity,
     )
@@ -52,6 +55,7 @@ class StoryWorkflowInput:
     topic: str
     context: Optional[str] = None
     include_diagram: bool = True
+    include_image: bool = True
     diagram_type: str = "architecture"
 
 
@@ -65,6 +69,7 @@ class StoryWorkflowOutput:
     story_path: Optional[str] = None
     diagram_spec: Optional[dict] = None
     diagram_path: Optional[str] = None
+    image_path: Optional[str] = None
     memory_session_id: Optional[str] = None
     success: bool = True
     error: Optional[str] = None
@@ -117,6 +122,7 @@ class StoryWorkflow:
         self._diagram_spec: Optional[dict] = None
         self._story_path: Optional[str] = None
         self._diagram_path: Optional[str] = None
+        self._image_path: Optional[str] = None
         self._status: str = "starting"
         self._progress: int = 0
     
@@ -191,33 +197,71 @@ class StoryWorkflow:
             
             workflow.logger.info(f"Story generated: {len(self._story_content)} chars")
             
-            # Step 2: Generate Diagram with Gemini (optional, 25% of progress)
+            # Step 2: Generate Diagram and Image (Sequential for simplicity, or Parallel)
+            # Parallel execution is better for performance
+            
+            futures = []
+            
             if input.include_diagram:
-                self._status = "generating_diagram"
-                self._progress = 50
-                
-                workflow.logger.info("Step 2: Generating diagram with Gemini...")
-                
-                diagram_result = await workflow.execute_activity(
-                    generate_diagram_activity,
-                    GenerateDiagramInput(
-                        topic=input.topic,
-                        diagram_type=input.diagram_type,
-                    ),
-                    start_to_close_timeout=timedelta(minutes=2),
-                    retry_policy=LLM_RETRY_POLICY,
+                workflow.logger.info("Step 2a: Scheduling diagram generation...")
+                futures.append(
+                    workflow.execute_activity(
+                        generate_diagram_activity,
+                        GenerateDiagramInput(
+                            topic=input.topic,
+                            diagram_type=input.diagram_type,
+                        ),
+                        start_to_close_timeout=timedelta(minutes=2),
+                        retry_policy=LLM_RETRY_POLICY,
+                    )
                 )
-                
-                if diagram_result.success:
-                    self._diagram_spec = diagram_result.spec
+
+            if input.include_image:
+                 workflow.logger.info("Step 2b: Scheduling image generation...")
+                 futures.append(
+                    workflow.execute_activity(
+                        generate_image_activity,
+                        GenerateImageInput(
+                            prompt=input.topic, # Use topic as prompt for now
+                        ),
+                        start_to_close_timeout=timedelta(minutes=2),
+                        retry_policy=LLM_RETRY_POLICY,
+                    )
+                 )
+            
+            self._status = "generating_visuals"
+            self._progress = 50
+            
+            # Wait for all visual tasks
+            visual_results = await asyncio.gather(*futures, return_exceptions=True)
+            
+            # Process results (order depends on what was scheduled)
+            current_result_idx = 0
+            
+            if input.include_diagram:
+                res = visual_results[current_result_idx]
+                current_result_idx += 1
+                if isinstance(res, Exception):
+                     workflow.logger.warning(f"Diagram generation failed: {res}")
+                elif res.success:
+                    self._diagram_spec = res.spec
                     workflow.logger.info("Diagram spec generated")
                 else:
-                    workflow.logger.warning(f"Diagram generation failed: {diagram_result.error}")
-                    # Continue without diagram — not fatal
-                
-                self._progress = 65
-            else:
-                self._progress = 65
+                    workflow.logger.warning(f"Diagram generation failed: {res.error}")
+
+            image_data = None
+            if input.include_image:
+                res = visual_results[current_result_idx]
+                current_result_idx += 1
+                if isinstance(res, Exception):
+                     workflow.logger.warning(f"Image generation failed: {res}")
+                elif res.success:
+                    image_data = res.image_data
+                    workflow.logger.info(f"Image generated: {len(image_data)} bytes")
+                else:
+                    workflow.logger.warning(f"Image generation failed: {res.error}")
+
+            self._progress = 70
             
             # Step 3: Save Artifacts (20% of progress)
             self._status = "saving_artifacts"
@@ -231,6 +275,7 @@ class StoryWorkflow:
                     topic=input.topic,
                     story_content=self._story_content,
                     diagram_spec=self._diagram_spec,
+                    image_data=image_data,
                 ),
                 start_to_close_timeout=timedelta(seconds=30),
                 retry_policy=STORAGE_RETRY_POLICY,
@@ -239,6 +284,7 @@ class StoryWorkflow:
             if save_result.success:
                 self._story_path = save_result.story_path
                 self._diagram_path = save_result.diagram_path
+                self._image_path = save_result.image_path
                 workflow.logger.info(f"Artifacts saved: {save_result.story_path}")
             else:
                 workflow.logger.warning(f"Failed to save artifacts: {save_result.error}")
@@ -256,7 +302,8 @@ class StoryWorkflow:
                     user_id=input.user_id,
                     story_id=story_id,
                     topic=input.topic,
-                    content=self._story_content[:5000],  # Truncate for memory
+                    content=self._story_content[:5000], 
+                    image_path=self._image_path,
                 ),
                 start_to_close_timeout=timedelta(seconds=30),
                 retry_policy=STORAGE_RETRY_POLICY,
@@ -281,6 +328,7 @@ class StoryWorkflow:
                 story_path=self._story_path,
                 diagram_spec=self._diagram_spec,
                 diagram_path=self._diagram_path,
+                image_path=self._image_path,
                 memory_session_id=memory_session_id,
                 success=True,
                 tokens_used=tokens_used,

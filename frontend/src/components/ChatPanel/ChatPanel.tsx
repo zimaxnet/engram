@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useMemo, type FormEvent, type CSSProperties } from 'react'
 import type { Agent } from '../../types'
 import { sendChatMessage, type ApiError } from '../../services/api'
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import './ChatPanel.css'
 
 interface ChatPanelProps {
@@ -301,7 +303,23 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
                   <span className="message-name">{message.agentName}</span>
                 </div>
               )}
-              <div className="message-text">{message.content}</div>
+              {/* Render Markdown for better UX */}
+              <div className="message-text markdown-body">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    img: (props) => (
+                      <img
+                        {...props}
+                        style={{ maxWidth: '100%', borderRadius: '8px', marginTop: '10px' }}
+                        loading="lazy"
+                      />
+                    )
+                  }}
+                >
+                  {message.content}
+                </ReactMarkdown>
+              </div>
               <div className="message-footer">
                 <span className="message-time">
                   {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

@@ -43,6 +43,7 @@ class StoryResponse(BaseModel):
     story_path: Optional[str] = None
     diagram_spec: Optional[dict] = None
     diagram_path: Optional[str] = None
+    image_path: Optional[str] = None
     created_at: str
 
 
@@ -110,6 +111,7 @@ async def create_story(
             topic=request.topic,
             context=request.context,
             include_diagram=request.include_diagram,
+            include_image=True, # Always include image for now, or add to request model
             diagram_type=request.diagram_type,
         )
         
@@ -122,7 +124,9 @@ async def create_story(
             story_content=result.story_content,
             story_path=result.story_path,
             diagram_spec=result.diagram_spec,
+            diagram_spec=result.diagram_spec,
             diagram_path=result.diagram_path,
+            image_path=f"/api/v1/images/{result.story_id}.png" if (await _check_image_exists(result.story_id)) else None,
             created_at=datetime.now().isoformat(),
         )
         
@@ -133,6 +137,14 @@ async def create_story(
         # Fallback to direct execution if Temporal unavailable
         logger.warning("Falling back to direct execution (Temporal may be unavailable)")
         return await _create_story_direct(request, user)
+
+
+async def _check_image_exists(story_id: str) -> bool:
+    """Check if an image exists for the story."""
+    settings = get_settings()
+    docs_path = Path(settings.onedrive_docs_path or "docs")
+    image_path = docs_path / "images" / f"{story_id}.png"
+    return image_path.exists()
 
 
 async def _create_story_direct(request: StoryCreateRequest, user: SecurityContext) -> StoryResponse:
@@ -159,6 +171,15 @@ async def _create_story_direct(request: StoryCreateRequest, user: SecurityContex
             topic=request.topic,
             diagram_type=request.diagram_type,
         )
+        
+    # Generate image (always for simplicity in fallback)
+    logger.info(f"Creating image: {request.topic}")
+    gemini_client = get_gemini_client()
+    try:
+        image_data = await gemini_client.generate_image(prompt=request.topic)
+    except Exception as e:
+        logger.error(f"Failed to generate image in direct mode: {e}")
+        image_data = None
     
     # Generate file paths
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -179,6 +200,17 @@ async def _create_story_direct(request: StoryCreateRequest, user: SecurityContex
         diagram_file = diagrams_dir / diagram_filename
         diagram_file.write_text(json.dumps(diagram_spec, indent=2), encoding="utf-8")
         diagram_path = str(diagram_file)
+        
+    # Save image
+    image_path_str = None
+    if image_data:
+        docs_path = Path(get_settings().onedrive_docs_path or "docs")
+        images_dir = docs_path / "images"
+        images_dir.mkdir(parents=True, exist_ok=True)
+        image_filename = f"{story_id}.png"
+        image_file = images_dir / image_filename
+        image_file.write_bytes(image_data)
+        image_path_str = f"/api/v1/images/{story_id}.png"
     
     # Enrich memory
     try:
@@ -191,6 +223,8 @@ async def _create_story_direct(request: StoryCreateRequest, user: SecurityContex
             metadata={
                 "title": request.topic,
                 "type": "story",
+                "story_id": story_id,
+                "image_path": image_path_str,
                 "created_at": datetime.now().isoformat(),
             }
         )
@@ -212,6 +246,7 @@ async def _create_story_direct(request: StoryCreateRequest, user: SecurityContex
         story_path=str(story_path),
         diagram_spec=diagram_spec,
         diagram_path=diagram_path,
+        image_path=image_path_str,
         created_at=datetime.now().isoformat(),
     )
 
@@ -235,6 +270,11 @@ async def get_latest_story(user: SecurityContext = Depends(get_current_user)):
     if diagram_path.exists():
         diagram_spec = json.loads(diagram_path.read_text())
     
+    # Check for image
+    image_path_str = None
+    if (stories_dir.parent / "images" / f"{story_id}.png").exists():
+        image_path_str = f"/api/v1/images/{story_id}.png"
+    
     return StoryResponse(
         story_id=story_id,
         topic=story_id.split("-", 2)[-1].replace("-", " ") if "-" in story_id else story_id,
@@ -242,6 +282,7 @@ async def get_latest_story(user: SecurityContext = Depends(get_current_user)):
         story_path=str(latest),
         diagram_spec=diagram_spec,
         diagram_path=str(diagram_path) if diagram_path.exists() else None,
+        image_path=image_path_str,
         created_at=latest.stat().st_mtime.__str__(),
     )
 
@@ -262,6 +303,11 @@ async def get_story(story_id: str, user: SecurityContext = Depends(get_current_u
     if diagram_path.exists():
         diagram_spec = json.loads(diagram_path.read_text())
     
+    # Check for image
+    image_path_str = None
+    if (stories_dir.parent / "images" / f"{story_id}.png").exists():
+        image_path_str = f"/api/v1/images/{story_id}.png"
+    
     return StoryResponse(
         story_id=story_id,
         topic=story_id.split("-", 2)[-1].replace("-", " ") if "-" in story_id else story_id,
@@ -269,6 +315,7 @@ async def get_story(story_id: str, user: SecurityContext = Depends(get_current_u
         story_path=str(story_path),
         diagram_spec=diagram_spec,
         diagram_path=str(diagram_path) if diagram_path.exists() else None,
+        image_path=image_path_str,
         created_at=story_path.stat().st_mtime.__str__(),
     )
 
