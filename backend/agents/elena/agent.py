@@ -181,6 +181,43 @@ And I should [secondary outcome]
 """
 
 
+@tool
+async def delegate_to_sage(topic: str, context: Optional[str] = None) -> str:
+    """
+    Delegate a storytelling or visualization task to Sage Meridian.
+    Use this when the user asks for a story, diagram, or visual that requires detailed generation.
+    
+    Args:
+        topic: The topic of the story/visual
+        context: Optional context or requirements
+    """
+    try:
+        from backend.workflows.client import execute_story
+        
+        # Determine diagram type from context if possible, default to architecture
+        diagram_type = "architecture"
+        if context and "sequence" in context.lower():
+            diagram_type = "sequence"
+            
+        result = await execute_story(
+            user_id="elena-delegate",
+            tenant_id="default",
+            topic=topic,
+            context=context,
+            include_diagram=True,
+            include_image=True,
+            diagram_type=diagram_type
+        )
+        
+        if result.success:
+            return f"Delegated to Sage. He has created:\n\n**Story ID**: {result.story_id}\n\n{result.story_content[:200]}...\n\n[View Full Story & Visual](/stories/{result.story_id})"
+        else:
+            return f"Failed to delegate to Sage: {result.error}"
+            
+    except Exception as e:
+        return f"Error delegating to Sage: {e}"
+
+
 # =============================================================================
 # Elena Agent Implementation
 # =============================================================================
@@ -258,7 +295,10 @@ You are not just a chatbot; you are an AI agent operating within the **Engram** 
             create_user_story,
             trigger_ingestion_tool,
             run_golden_thread_tool,
+            trigger_ingestion_tool,
+            run_golden_thread_tool,
             search_memory_tool,
+            delegate_to_sage,
         ]
 
     # -------------------------------------------------------------------------
@@ -318,6 +358,18 @@ You are not just a chatbot; you are an AI agent operating within the **Engram** 
             return "trigger_ingestion", {"source_name": "New Source", "kind": "Upload"}
         if "validate" in text or "golden thread" in text:
             return "run_golden_thread", {"dataset_id": "cogai-thread", "mode": "deterministic"}
+            
+        # Delegation to Sage
+        if any(k in text for k in ["story", "narrative", "visual", "diagram", "draw", "paint", "image", "picture"]):
+            # Simple heuristic: if she's asked to create these things, she delegates
+            if "create" in text or "generate" in text or "make" in text or "show" in text:
+                # Extract topic crudely
+                topic = content
+                for prefix in ["create a story about", "generate a visual for", "show me a picture of"]:
+                    if prefix in text:
+                        topic = content[text.index(prefix)+len(prefix):].strip()
+                        break
+                return "delegate_to_sage", {"topic": topic, "context": content}
             
         return None, {}
 

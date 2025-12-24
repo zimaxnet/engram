@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { TreeNav } from './TreeNav/TreeNav';
 import { AGENTS, type AgentId } from '../types';
@@ -20,12 +21,22 @@ export function MainLayout({
     sessionId
 }: MainLayoutProps) {
     const agent = AGENTS[activeAgent];
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (
-        <div className="app-layout">
+        <div className={`app-layout ${isMobileMenuOpen ? 'mobile-menu-open' : ''}`}>
             {/* Header */}
             <header className="app-header">
-                <div className="logo">ENGRAM</div>
+                <div className="header-left">
+                    <button
+                        className="mobile-menu-toggle"
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        aria-label="Toggle menu"
+                    >
+                        ☰
+                    </button>
+                    <div className="logo">ENGRAM</div>
+                </div>
                 <div className="header-controls">
                     <div className="model-selector">
                         <span className="model-icon">⚡</span>
@@ -45,9 +56,21 @@ export function MainLayout({
             </header>
 
             <main className="main-content">
-                <aside className="column column-left">
-                    <TreeNav activeAgent={activeAgent} onAgentChange={onAgentChange} />
+                <aside className={`column column-left ${isMobileMenuOpen ? 'visible' : ''}`}>
+                    <div className="mobile-menu-header">
+                        <span className="mobile-menu-title">Navigation</span>
+                        <button className="mobile-menu-close" onClick={() => setIsMobileMenuOpen(false)}>×</button>
+                    </div>
+                    <TreeNav activeAgent={activeAgent} onAgentChange={(id) => {
+                        onAgentChange(id);
+                        setIsMobileMenuOpen(false);
+                    }} />
                 </aside>
+
+                {/* Mobile overlay backdrop */}
+                {isMobileMenuOpen && (
+                    <div className="mobile-menu-backdrop" onClick={() => setIsMobileMenuOpen(false)} />
+                )}
 
                 {/* Render child routes (ChatView, etc.) with context */}
                 <Outlet context={{ agent, selectedModel, onModelChange, sessionId }} />

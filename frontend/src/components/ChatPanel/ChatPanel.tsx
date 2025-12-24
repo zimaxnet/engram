@@ -42,58 +42,45 @@ function createWelcomeMessage(agent: Agent): Message {
   }
 }
 
+// Voice Chat Overlay Styles
+import VoiceChat from '../VoiceChat/VoiceChat';
 
-// Type definitions for Web Speech API
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  start(): void;
-  stop(): void;
-  abort(): void;
-  onresult: (event: SpeechRecognitionEvent) => void;
-  onend: (event: Event) => void;
-  onerror: (event: SpeechRecognitionErrorEvent) => void;
-}
+const overlayStyles: CSSProperties = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  width: '100vw',
+  height: '100vh',
+  background: 'rgba(0, 0, 0, 0.85)',
+  backdropFilter: 'blur(8px)',
+  WebkitBackdropFilter: 'blur(8px)',
+  zIndex: 2000,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexDirection: 'column',
+  padding: '2rem',
+};
 
-interface SpeechRecognitionEvent extends Event {
-  resultIndex: number;
-  results: SpeechRecognitionResultList;
-}
+const closeButtonStyles: CSSProperties = {
+  position: 'absolute',
+  top: '2rem',
+  right: '2rem',
+  background: 'rgba(255, 255, 255, 0.1)',
+  border: 'none',
+  borderRadius: '50%',
+  width: '48px',
+  height: '48px',
+  color: 'white',
+  fontSize: '1.5rem',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 2001,
+};
 
-interface SpeechRecognitionResultList {
-  length: number;
-  item(index: number): SpeechRecognitionResult;
-  [index: number]: SpeechRecognitionResult;
-}
 
-interface SpeechRecognitionResult {
-  isFinal: boolean;
-  length: number;
-  item(index: number): SpeechRecognitionAlternative;
-  [index: number]: SpeechRecognitionAlternative;
-}
-
-interface SpeechRecognitionAlternative {
-  transcript: string;
-  confidence: number;
-}
-
-interface SpeechRecognitionErrorEvent extends Event {
-  error: string;
-  message: string;
-}
-
-interface Window {
-  SpeechRecognition: {
-    new(): SpeechRecognition;
-  };
-  webkitSpeechRecognition: {
-    new(): SpeechRecognition;
-  };
-}
-
-declare var window: Window;
 
 export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: ChatPanelProps) {
   // Component remounts when agent changes (via key prop in App.tsx)
@@ -103,11 +90,10 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
   const [messages, setMessages] = useState<Message[]>([initialMessage])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
-  const [isRecording, setIsRecording] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Speech Recognition Ref
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  // Voice Live Mode State
+  const [isVoiceOpen, setIsVoiceOpen] = useState(false)
 
   // Initialize local sessionId once (used when caller doesn't supply a shared sessionId)
   const [localSessionId] = useState<string>(() =>
@@ -122,15 +108,9 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Cleanup microphone on unmount
   useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-        recognitionRef.current = null;
-      }
-    };
-  }, []);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -148,11 +128,6 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
     setInput('')
     setIsTyping(true)
     setError(null)
-
-    // Stop recording if active when sending
-    if (isRecording) {
-      stopRecording()
-    }
 
     try {
       // Call backend API
@@ -199,82 +174,11 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
     }
   }
 
-  const startRecording = () => {
-    try {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        setError('Speech recognition is not supported in this browser (try Chrome/Edge/Safari).');
-        return;
-      }
-
-      // Store initial input to append to
-      // We use a ref to track the starting point for this specific session
-      const currentInput = inputRef.current?.value || input;
-
-      const recognition = new SpeechRecognition();
-      // Use single-shot for chat input to avoid complex state management
-      // User can tap again to add more.
-      recognition.continuous = false;
-      recognition.interimResults = true;
-      recognition.lang = 'en-US';
-
-      recognition.onresult = (event) => {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript;
-        }
-
-        // Functional update to avoid closure staleness
-        // If we want to support typing while speaking, this acts as an append
-        // But for simplicity, we append the *current session* transcript to the *start* input
-        const separator = currentInput && !currentInput.endsWith(' ') ? ' ' : '';
-        setInput(currentInput + separator + transcript);
-      };
-
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error', event.error);
-        if (event.error === 'not-allowed') {
-          setError('Microphone access denied. Please allow microphone permissions.');
-        } else if (event.error === 'no-speech') {
-          // Ignore no-speech errors (common if user pauses)
-          return;
-        } else if (event.error === 'network') {
-          setError('Voice input declined by browser/network. Please try Chrome or check connection.');
-        } else {
-          setError(`Voice input error: ${event.error}`);
-        }
-        stopRecording();
-      };
-
-      recognition.onend = () => {
-        setIsRecording(false);
-      };
-
-      recognitionRef.current = recognition;
-      recognition.start();
-      setIsRecording(true);
-      setError(null);
-    } catch (e) {
-      console.error('Failed to start speech recognition', e);
-      setError('Failed to start voice input.');
-    }
+  const toggleVoiceMode = () => {
+    setIsVoiceOpen(!isVoiceOpen)
   }
 
-  const stopRecording = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
-    }
-    setIsRecording(false);
-  }
 
-  const toggleRecording = () => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
-  }
 
   return (
     <div className="chat-panel">
@@ -371,9 +275,9 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
       <form className="chat-input-area" onSubmit={handleSubmit}>
         <button
           type="button"
-          className={`voice-button ${isRecording ? 'recording' : ''}`}
-          onClick={toggleRecording}
-          title={isRecording ? 'Stop recording' : 'Start voice input'}
+          className={`voice-button ${isVoiceOpen ? 'recording' : ''}`}
+          onClick={toggleVoiceMode}
+          title={'Tap to talk (Voice Live)'}
         >
           🎤
         </button>
@@ -394,6 +298,54 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
           Send →
         </button>
       </form>
+
+      {/* Voice Overlay */}
+      {isVoiceOpen && (
+        <div style={overlayStyles}>
+          <button
+            style={closeButtonStyles}
+            onClick={() => setIsVoiceOpen(false)}
+            aria-label="Close voice chat"
+          >
+            ×
+          </button>
+          <div style={{
+            background: 'var(--glass-bg)',
+            border: '1px solid var(--glass-border)',
+            borderRadius: '16px',
+            padding: '2rem',
+            width: '100%',
+            maxWidth: '500px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '1.5rem',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+          }}>
+            <h3 style={{ margin: 0, fontWeight: 600 }}>Speaking with {agent.name}</h3>
+            <VoiceChat
+              agentId={agent.id}
+              sessionId={sessionId}
+              onStatusChange={(status) => {
+                if (status === 'error') {
+                  // Optional: handle error state
+                }
+              }}
+            />
+            <p style={{
+              fontSize: '0.875rem',
+              color: 'var(--color-text-dim)',
+              textAlign: 'center',
+              margin: 0
+            }}>
+              Press and hold the ring to speak.
+              Stories and visuals created here will appear in the chat.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
