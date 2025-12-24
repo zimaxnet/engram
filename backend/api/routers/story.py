@@ -124,7 +124,6 @@ async def create_story(
             story_content=result.story_content,
             story_path=result.story_path,
             diagram_spec=result.diagram_spec,
-            diagram_spec=result.diagram_spec,
             diagram_path=result.diagram_path,
             image_path=f"/api/v1/images/{result.story_id}.png" if (await _check_image_exists(result.story_id)) else None,
             created_at=datetime.now().isoformat(),

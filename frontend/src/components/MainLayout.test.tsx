@@ -2,27 +2,45 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { MainLayout } from './MainLayout'
-import { BrowserRouter } from 'react-router-dom'
+import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { AgentId } from '../types'
+import '@testing-library/jest-dom'
 
 describe('MainLayout', () => {
     it('renders children correctly', () => {
+        const props = {
+            activeAgent: 'elena' as AgentId,
+            onAgentChange: vi.fn(),
+            selectedModel: 'gpt-4',
+            onModelChange: vi.fn(),
+            sessionId: 'test-session'
+        }
+
         render(
-            <BrowserRouter>
-                <MainLayout>
-                    <div data-testid="child-content">Child Content</div>
-                </MainLayout>
-            </BrowserRouter>
+            <MemoryRouter initialEntries={['/']}>
+                <Routes>
+                    <Route path="/" element={<MainLayout {...props} />}>
+                        <Route index element={<div data-testid="child-content">Child Content</div>} />
+                    </Route>
+                </Routes>
+            </MemoryRouter>
         )
         expect(screen.getByTestId('child-content')).toBeInTheDocument()
     })
 
     it('toggles mobile sidebar when hamburger button is clicked', () => {
+        const props = {
+            activeAgent: 'elena' as AgentId,
+            onAgentChange: vi.fn(),
+            selectedModel: 'gpt-4',
+            onModelChange: vi.fn(),
+            sessionId: 'test-session'
+        }
+
         render(
-            <BrowserRouter>
-                <MainLayout>
-                    <div>Content</div>
-                </MainLayout>
-            </BrowserRouter>
+            <MemoryRouter>
+                <MainLayout {...props} />
+            </MemoryRouter>
         )
 
         // The button might only be visible on mobile, we might need to mock window size or check for existence

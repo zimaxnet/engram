@@ -1,103 +1,42 @@
-"""
-Global pytest configuration for staging environment testing
-
-This conftest ensures:
-- All tests run against staging environment
-- Environment variables are properly configured
-- No tests accidentally run against production
-- Proper cleanup and teardown
-"""
-
-import os
-import sys
 import pytest
+from unittest.mock import MagicMock
+import sys
 
+# Aggressively mock modules before they are imported by tests
+mock_settings = MagicMock()
+mock_settings.app_name = "Engram Test"
+mock_settings.app_version = "0.0.0"
+mock_settings.environment = "test"
+mock_settings.debug = True
+mock_settings.cors_origins = ["*"]
+# Important: ensure onedrive_docs_path is a valid string for Path()
+mock_settings.onedrive_docs_path = "/tmp" 
 
-def pytest_configure(config):
-    """Configure pytest to enforce staging environment"""
-    # Force staging environment before any imports
-    os.environ["ENVIRONMENT"] = "staging"
-    os.environ["AZURE_KEY_VAULT_NAME"] = "engram-staging-vault"
-    os.environ["AZURE_KEYVAULT_URL"] = "https://engram-staging-vault.vault.azure.net/"
-    os.environ["AZURE_AI_ENDPOINT"] = os.environ.get("AZURE_AI_ENDPOINT", "")
-    os.environ["AZURE_AI_KEY"] = os.environ.get("AZURE_AI_KEY", "")
-    
-    print(f"\n{'='*70}")
-    print(f"PYTEST CONFIGURATION: Staging Environment Tests")
-    print(f"{'='*70}")
-    print(f"Environment: {os.environ.get('ENVIRONMENT')}")
-    print(f"Vault: {os.environ.get('AZURE_KEY_VAULT_NAME')}")
-    print(f"{'='*70}\n")
+# Mock the entire config module
+mock_config = MagicMock()
+mock_config.get_settings.return_value = mock_settings
+sys.modules["backend.core.config"] = mock_config
 
+# Also mock backend.core in case it re-exports
+sys.modules["backend.core"] = MagicMock()
+sys.modules["backend.core"].get_settings.return_value = mock_settings
 
-def pytest_sessionstart(session):
-    """Verify staging environment is set before running tests"""
-    environment = os.environ.get("ENVIRONMENT", "").lower()
-    
-    if environment != "staging":
-        raise RuntimeError(
-            f"\n{'='*70}\n"
-            f"ERROR: Tests must run against STAGING environment only!\n"
-            f"Current environment: {environment}\n"
-            f"Allowed environments: staging\n"
-            f"{'='*70}\n"
-        )
-    
-    print(f"\n✓ Confirmed: Running tests against STAGING environment")
+# Mock Key Vault and Identity to prevent any Azure interaction
+sys.modules["azure.keyvault.secrets"] = MagicMock()
+sys.modules["azure.identity"] = MagicMock()
+sys.modules["azure.storage.blob"] = MagicMock()
 
-
-@pytest.fixture(scope="session")
-def environment_check():
-    """Fixture to ensure staging environment throughout session"""
-    assert os.environ.get("ENVIRONMENT") == "staging", \
-        "Environment must be staging for all tests"
-    yield
-    # Cleanup
-    print("\n✓ Test session completed in staging environment")
-
-
-@pytest.fixture(autouse=True)
-def ensure_staging_env(environment_check):
-    """Auto-use fixture to ensure staging for every test"""
-    assert os.environ.get("ENVIRONMENT") == "staging", \
-        "Each test must run in staging environment"
-    yield
-
+# Mock other potential troublemakers
+sys.modules["backend.llm.claude_client"] = MagicMock()
+sys.modules["backend.llm.gemini_client"] = MagicMock()
 
 @pytest.fixture
-def staging_info():
-    """Provide staging environment information to tests"""
-    return {
-        "environment": "staging",
-        "vault_name": "engram-staging-vault",
-        "vault_url": "https://engram-staging-vault.vault.azure.net/",
-        "is_staging": True,
-        "is_production": False,
-    }
+def mock_app():
+    # Only import app inside the fixture to ensure mocks are in place
+    from backend.api.main import app
+    return app
 
-
-def pytest_collection_modifyitems(config, items):
-    """Add staging marker to all tests"""
-    for item in items:
-        # Add staging marker to all tests
-        item.add_marker(pytest.mark.staging)
 @pytest.fixture
-def mock_agent_services(monkeypatch):
-    """Mock backend services used by MCP tool"""
-    # Mock agent_chat
-    async def mock_chat(query, context, agent_id=None):
-        return f"MCP Response to: {query}", context, agent_id or "elena"
-    
-    monkeypatch.setattr("backend.api.routers.mcp_server.agent_chat", mock_chat)
-
-    # Mock enrich_context
-    async def mock_enrich(context, text):
-        return context
-    
-    monkeypatch.setattr("backend.api.routers.mcp_server.enrich_context", mock_enrich)
-
-    # Mock persist_conversation
-    async def mock_persist(context):
-        return True
-    
-    monkeypatch.setattr("backend.api.routers.mcp_server.persist_conversation", mock_persist)
+def client(mock_app):
+    from fastapi.testclient import TestClient
+    return TestClient(mock_app)

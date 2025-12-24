@@ -27,7 +27,8 @@ describe('ChatPanel', () => {
         )
 
         // Verify mic button exists (using the mic icon text or title)
-        const micButton = screen.getByTitle(/Tap to talk/i)
+        // Verify mic button exists (using the accessible name from title)
+        const micButton = screen.getByRole('button', { name: /Tap to talk/i })
         expect(micButton).toBeInTheDocument()
 
         // Overlay should not be visible initially
