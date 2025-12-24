@@ -80,6 +80,12 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
           name: 'registry-password'
           value: registryPassword
         }
+        // Required for Sage story generation with Claude
+        {
+          name: 'anthropic-api-key'
+          keyVaultUrl: '${keyVaultUri}secrets/anthropic-api-key'
+          identity: identityResourceId
+        }
       ]
       registries: [
         {
@@ -154,6 +160,11 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'AZURE_AI_PROJECT_NAME'
               value: azureAiProjectName
+            }
+            // Sage Agent: Story generation with Claude
+            {
+              name: 'ANTHROPIC_API_KEY'
+              secretRef: 'anthropic-api-key'
             }
           ]
           resources: {
