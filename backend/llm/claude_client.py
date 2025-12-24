@@ -127,8 +127,9 @@ class ClaudeClient:
             raise ValueError("APIM fallback not configured. Set AZURE_AI_ENDPOINT and AZURE_AI_KEY.")
         
         # Build URL - handle trailing slash
+        # Note: OpenAI-compatible v1 endpoints don't need api-version
         base = endpoint.rstrip("/")
-        url = f"{base}/chat/completions?api-version={api_version}"
+        url = f"{base}/chat/completions"
         
         # Convert Claude messages to OpenAI format
         openai_messages = []
