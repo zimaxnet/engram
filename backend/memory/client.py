@@ -258,6 +258,37 @@ class ZepMemoryClient:
         # Zep's entity extraction is automatic - return empty for now
         return []
 
+    # =============================================================================
+    # Alias Methods for Story Activities Compatibility
+    # =============================================================================
+
+    async def add_session(
+        self, session_id: str, user_id: str, metadata: dict = None
+    ) -> dict:
+        """
+        Add/create a new session. Alias for get_or_create_session().
+        
+        Used by story_activities.py for memory enrichment.
+        """
+        return await self.get_or_create_session(
+            session_id=session_id,
+            user_id=user_id,
+            metadata=metadata,
+        )
+
+    async def add_messages(
+        self, session_id: str, messages: list[dict]
+    ) -> None:
+        """
+        Add messages to a session. Alias for add_memory().
+        
+        Used by story_activities.py for memory enrichment.
+        """
+        await self.add_memory(
+            session_id=session_id,
+            messages=messages,
+        )
+
     async def list_sessions(self, user_id: Optional[str] = None, limit: int = 20, offset: int = 0) -> list[dict]:
         """
         List conversation sessions (episodes).
