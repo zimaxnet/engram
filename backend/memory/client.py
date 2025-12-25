@@ -180,23 +180,47 @@ class ZepMemoryClient:
             # Fallback: search individual sessions with word-based matching
             query_words = set(query.lower().split())
             if sessions_data:
-                for sess in sessions_data[:10]:  # Search first 10 sessions
+                # Prioritize sessions that look like canonical knowledge (sess-* or doc-*)
+                prioritized_sessions = [s for s in sessions_data if s.get("session_id", "").startswith(("sess-", "doc-"))]
+                other_sessions = [s for s in sessions_data if not s.get("session_id", "").startswith(("sess-", "doc-"))]
+                
+                # Search up to 100 sessions, prioritizing canonical ones
+                sessions_to_search = (prioritized_sessions + other_sessions)[:100]
+                
+                for sess in sessions_to_search:
                     sess_id = sess.get("session_id")
-                    if sess_id:
-                        messages = await self.get_session_messages(sess_id, limit=20)
-                        for msg in messages:
-                            content = msg.get("content", "")
-                            content_lower = content.lower()
-                            # Score based on how many query words appear
-                            matches = sum(1 for w in query_words if w in content_lower)
-                            if matches >= 2 or (len(query_words) == 1 and matches == 1):
-                                score = min(0.9, 0.5 + (matches * 0.1))
-                                results.append({
-                                    "content": content,
-                                    "score": score,
-                                    "metadata": msg.get("metadata", {}),
-                                    "session_id": sess_id,
-                                })
+                    if not sess_id:
+                        continue
+                        
+                    # 1. Match against session metadata (High relevance)
+                    metadata = sess.get("metadata", {}) or {}
+                    summary = metadata.get("summary", "").lower()
+                    topics = [str(t).lower() for t in metadata.get("topics", [])]
+                    
+                    meta_matches = sum(1 for w in query_words if w in summary or any(w in t for t in topics))
+                    if meta_matches >= 1:
+                        results.append({
+                            "content": f"[Session Summary: {metadata.get('summary', '')}]",
+                            "score": min(0.95, 0.6 + (meta_matches * 0.15)),
+                            "metadata": metadata,
+                            "session_id": sess_id,
+                        })
+
+                    # 2. Match against messages
+                    messages = await self.get_session_messages(sess_id, limit=20)
+                    for msg in messages:
+                        content = msg.get("content", "")
+                        content_lower = content.lower()
+                        # Score based on how many query words appear
+                        matches = sum(1 for w in query_words if w in content_lower)
+                        if matches >= 2 or (len(query_words) == 1 and matches == 1):
+                            score = min(0.9, 0.5 + (matches * 0.1))
+                            results.append({
+                                "content": content,
+                                "score": score,
+                                "metadata": msg.get("metadata", {}),
+                                "session_id": sess_id,
+                            })
             
             # Sort by score descending
             results.sort(key=lambda x: x["score"], reverse=True)

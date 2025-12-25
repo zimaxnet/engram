@@ -176,7 +176,6 @@ class KeyVaultSettings:
     def apply_to_settings(self, settings: Settings) -> Settings:
         """Override settings with Key Vault secrets"""
         secret_mappings = {
-            "postgres-connection-string": "postgres_dsn",
             "zep-api-key": "zep_api_key",
             "azure-ai-key": "azure_ai_key",
             "azure-ai-endpoint": "azure_ai_endpoint",
@@ -190,7 +189,11 @@ class KeyVaultSettings:
         for secret_name, setting_attr in secret_mappings.items():
             value = self.get_secret(secret_name)
             if value and hasattr(settings, setting_attr):
-                setattr(settings, setting_attr, value)
+                try:
+                    setattr(settings, setting_attr, value)
+                except AttributeError:
+                    # Skip read-only properties
+                    continue
 
         return settings
 

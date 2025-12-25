@@ -118,6 +118,12 @@ export class ApiClient {
     })
   }
 
+  async deleteSession(sessionId: string) {
+    return this.request<{ success: boolean; message: string }>(`/chat/session/${sessionId}`, {
+      method: 'DELETE',
+    })
+  }
+
   // Health check
   async healthCheck() {
     return this.request<{ status: string; timestamp: string; version: string }>('/health')
@@ -527,6 +533,8 @@ export const sendChatMessage = (
   agentId?: string,
   sessionId?: string
 ) => apiClient.sendMessage(content, agentId, sessionId)
+
+export const clearSession = (sessionId: string) => apiClient.deleteSession(sessionId)
 
 export const checkHealth = () => apiClient.healthCheck()
 

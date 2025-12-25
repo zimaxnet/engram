@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo, type FormEvent, type CSSProperties } from 'react'
 import type { Agent } from '../../types'
-import { sendChatMessage, type ApiError } from '../../services/api'
+import { sendChatMessage, clearSession, type ApiError } from '../../services/api'
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import './ChatPanel.css'
@@ -174,6 +174,22 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
     }
   }
 
+  const handleClearSession = async () => {
+    if (!window.confirm('Clear session? This will reset conversation context.')) return
+
+    // Resolve sessionId from prop or local state
+    const sid = sessionIdProp || localSessionId;
+
+    try {
+      await clearSession(sid)
+      setMessages([createWelcomeMessage(agent)])
+      setInput('')
+      setError(null)
+    } catch (err: any) {
+      setError(`Failed to clear session: ${err.message}`)
+    }
+  }
+
   const toggleVoiceMode = () => {
     setIsVoiceOpen(!isVoiceOpen)
   }
@@ -281,6 +297,15 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
         >
           🎤
         </button>
+        <button
+          type="button"
+          onClick={handleClearSession}
+          className="voice-button"
+          title="Clear Session"
+          disabled={isTyping}
+        >
+          🧹
+        </button>
         <input
           ref={inputRef}
           type="text"
@@ -300,53 +325,55 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
       </form>
 
       {/* Voice Overlay */}
-      {isVoiceOpen && (
-        <div style={overlayStyles}>
-          <button
-            style={closeButtonStyles}
-            onClick={() => setIsVoiceOpen(false)}
-            aria-label="Close voice chat"
-          >
-            ×
-          </button>
-          <div style={{
-            background: 'var(--glass-bg)',
-            border: '1px solid var(--glass-border)',
-            borderRadius: '16px',
-            padding: '2rem',
-            width: '100%',
-            maxWidth: '500px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '1.5rem',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-          }}>
-            <h3 style={{ margin: 0, fontWeight: 600 }}>Speaking with {agent.name}</h3>
-            <VoiceChat
-              agentId={agent.id}
-              sessionId={sessionId}
-              onStatusChange={(status) => {
-                if (status === 'error') {
-                  // Optional: handle error state
-                }
-              }}
-            />
-            <p style={{
-              fontSize: '0.875rem',
-              color: 'var(--color-text-dim)',
-              textAlign: 'center',
-              margin: 0
+      {
+        isVoiceOpen && (
+          <div style={overlayStyles}>
+            <button
+              style={closeButtonStyles}
+              onClick={() => setIsVoiceOpen(false)}
+              aria-label="Close voice chat"
+            >
+              ×
+            </button>
+            <div style={{
+              background: 'var(--glass-bg)',
+              border: '1px solid var(--glass-border)',
+              borderRadius: '16px',
+              padding: '2rem',
+              width: '100%',
+              maxWidth: '500px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '1.5rem',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
             }}>
-              Press and hold the ring to speak.
-              Stories and visuals created here will appear in the chat.
-            </p>
+              <h3 style={{ margin: 0, fontWeight: 600 }}>Speaking with {agent.name}</h3>
+              <VoiceChat
+                agentId={agent.id}
+                sessionId={sessionId}
+                onStatusChange={(status) => {
+                  if (status === 'error') {
+                    // Optional: handle error state
+                  }
+                }}
+              />
+              <p style={{
+                fontSize: '0.875rem',
+                color: 'var(--color-text-dim)',
+                textAlign: 'center',
+                margin: 0
+              }}>
+                Press and hold the ring to speak.
+                Stories and visuals created here will appear in the chat.
+              </p>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   )
 }
 

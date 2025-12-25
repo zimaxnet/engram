@@ -61,10 +61,13 @@ export function MainLayout({
                         <span className="mobile-menu-title">Navigation</span>
                         <button className="mobile-menu-close" onClick={() => setIsMobileMenuOpen(false)}>×</button>
                     </div>
-                    <TreeNav activeAgent={activeAgent} onAgentChange={(id) => {
-                        onAgentChange(id);
-                        setIsMobileMenuOpen(false);
-                    }} />
+                    <TreeNav
+                        activeAgent={activeAgent}
+                        onAgentChange={(id) => {
+                            onAgentChange(id);
+                        }}
+                        onNavigate={() => setIsMobileMenuOpen(false)}
+                    />
                 </aside>
 
                 {/* Mobile overlay backdrop */}

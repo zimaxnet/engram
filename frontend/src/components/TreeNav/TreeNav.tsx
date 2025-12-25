@@ -6,6 +6,7 @@ import './TreeNav.css'
 interface TreeNavProps {
   activeAgent: AgentId
   onAgentChange: (agent: AgentId) => void
+  onNavigate?: () => void
 }
 
 interface TreeSection {
@@ -25,7 +26,7 @@ interface TreeItem {
   onClick?: () => void
 }
 
-export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
+export function TreeNav({ activeAgent, onAgentChange, onNavigate }: TreeNavProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -166,12 +167,23 @@ export function TreeNav({ activeAgent, onAgentChange }: TreeNavProps) {
     } else if (item.path) {
       navigate(item.path);
     }
+
+    // Always call onNavigate if provided to close mobile menu
+    if (onNavigate) {
+      onNavigate();
+    }
   };
 
   const isItemActive = (item: TreeItem) => {
     if (item.status === 'active') return true;
-    if (item.path && location.pathname.startsWith(item.path)) return true;
-    return false;
+    if (!item.path) return false;
+
+    // Exact match for root path to avoid highlighting it on every page
+    if (item.path === '/') {
+      return location.pathname === '/';
+    }
+
+    return location.pathname.startsWith(item.path);
   };
 
   return (
