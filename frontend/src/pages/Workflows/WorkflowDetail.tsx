@@ -36,7 +36,7 @@ const stepIoStyle = `
 
 import { getWorkflowDetail, type WorkflowDetailModel } from '../../services/workflowDetail'
 import { signalWorkflow } from '../../services/api'
-import { AGENTS, type AgentId } from '../../types'
+import { AGENTS } from '../../types'
 
 export function WorkflowDetail() {
   const { workflowId } = useParams()
