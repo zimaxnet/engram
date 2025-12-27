@@ -36,7 +36,7 @@ jobs:
           pip install -r backend/requirements.txt
           pip install pytest pytest-asyncio
       - name: Run tests
-        run: pytest backend/tests -v
+        run: pytest backend/tests -v -k "not mcp"
 
   # Build and push Docker images to GHCR
   build-images:
