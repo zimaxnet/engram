@@ -635,21 +635,19 @@ async def get_realtime_token(request: TokenRequest):
     
     # Build session configuration for the ephemeral token
     session_config = {
-        "session": {
-            "type": "realtime",
-            "model": voicelive_service.model,
-            "instructions": agent_config.instructions,
-            "voice": agent_config.voice_name,
-            "input_audio_transcription": {
-                "model": "whisper-1"  # Enable input transcription
-            },
-            "turn_detection": {
-                "type": "server_vad",
-                "threshold": 0.6,
-                "prefix_padding_ms": 300,
-                "silence_duration_ms": 800,
-            },
-        }
+        "model": voicelive_service.model,
+        "modalities": ["audio", "text"],
+        "instructions": agent_config.instructions,
+        "voice": agent_config.voice_name,
+        "input_audio_transcription": {
+            "model": "whisper-1"  # Enable input transcription
+        },
+        "turn_detection": {
+            "type": "server_vad",
+            "threshold": 0.6,
+            "prefix_padding_ms": 300,
+            "silence_duration_ms": 800,
+        },
     }
     
     # Get the Azure endpoint
@@ -671,6 +669,7 @@ async def get_realtime_token(request: TokenRequest):
                     "api-key": api_key,
                     "Content-Type": "application/json",
                 },
+                params={"api-version": "2024-10-01-preview"},
                 json=session_config,
             )
             
