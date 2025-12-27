@@ -17,7 +17,7 @@ const EPISODES_PER_PAGE = 10;
 
 export function Episodes() {
     const navigate = useNavigate();
-    const [, setEpisodes] = useState<Episode[]>([]);
+    const [, /* setEpisodes */] = useState<Episode[]>([]);
     const [allEpisodes, setAllEpisodes] = useState<Episode[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingTranscript, setLoadingTranscript] = useState(false);
@@ -35,7 +35,7 @@ export function Episodes() {
     
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
-    const [totalCount, setTotalCount] = useState(0);
+    const [, /* totalCount */] = useState(0);
 
     // Fetch episodes
     useEffect(() => {
