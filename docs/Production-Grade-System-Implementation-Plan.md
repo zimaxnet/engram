@@ -24,6 +24,28 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 
 ---
 
+## Agent Integration with GitHub Projects
+
+**Elena and Marcus are authorized to interact with GitHub Projects** to track implementation progress. Both agents have access to:
+
+- ✅ Create GitHub issues for tasks
+- ✅ Update issue status and progress
+- ✅ Query project status and metrics
+- ✅ List assigned tasks
+- ✅ Close completed tasks
+
+**Authorization:** Agents use a GitHub Personal Access Token (configured via `GITHUB_TOKEN` environment variable) with `repo`, `read:project`, and `write:project` scopes.
+
+**System Awareness:** The Engram system is aware of GitHub Projects progress through:
+- Agent queries to `get_project_status` tool
+- Automatic issue creation for new tasks
+- Progress tracking via issue state (open/closed)
+- Status reports generated from GitHub data
+
+See `docs/GitHub-Integration-Authorization.md` for detailed setup and authorization model.
+
+---
+
 ## Phase 1: Critical Security & Safety (Weeks 1-4)
 
 ### 🚨 Layer 6: Guardrails - CRITICAL PRIORITY

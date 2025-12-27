@@ -289,16 +289,28 @@ You are not just a chatbot; you are an AI agent operating within the **Engram** 
 
     @property
     def tools(self) -> list:
+        from backend.agents.github_tools import (
+            create_github_issue_tool,
+            update_github_issue_tool,
+            get_project_status_tool,
+            list_my_tasks_tool,
+            close_task_tool,
+        )
+        
         return [
             analyze_requirements,
             stakeholder_mapping,
             create_user_story,
             trigger_ingestion_tool,
             run_golden_thread_tool,
-            trigger_ingestion_tool,
-            run_golden_thread_tool,
             search_memory_tool,
             delegate_to_sage,
+            # GitHub integration tools
+            create_github_issue_tool,
+            update_github_issue_tool,
+            get_project_status_tool,
+            list_my_tasks_tool,
+            close_task_tool,
         ]
 
     # -------------------------------------------------------------------------

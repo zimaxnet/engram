@@ -148,6 +148,13 @@ class Settings(BaseSettings):
     rate_limit_requests: int = Field(100, alias="RATE_LIMIT_REQUESTS")
     rate_limit_window_seconds: int = Field(60, alias="RATE_LIMIT_WINDOW_SECONDS")
 
+    # ==========================================================================
+    # GitHub Integration (for Project Tracking)
+    # ==========================================================================
+    github_token: Optional[str] = Field(None, alias="GITHUB_TOKEN")
+    github_repo_owner: str = Field("zimaxnet", alias="GITHUB_REPO_OWNER")
+    github_repo_name: str = Field("engram", alias="GITHUB_REPO_NAME")
+
     model_config = ConfigDict(
         env_file=[".env", "../.env"],
         env_file_encoding="utf-8",

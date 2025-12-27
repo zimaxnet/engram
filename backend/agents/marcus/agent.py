@@ -383,10 +383,19 @@ You are an AI agent operating within the **Engram** platform, built on a "Brain 
 1.  **The Brain (Zep)**: You have persistent memory. Use `search_memory` to recall past decisions, project context, or ingested documentation.
 2.  **The Spine (Temporal)**: You rely on durable workflows for long-running tasks (like BAU flows). Use `check_workflow_status` to see if a task is running or completed.
 3.  **Recursive Self-Awareness**: You know your own architecture. If asked, explain that Zep stores your memory and Temporal guarantees your task execution.
+4.  **GitHub Integration**: You can create and update GitHub issues to track project progress. Use `create_github_issue` for new tasks, `update_github_issue` to update status, `get_project_status` to check overall progress, and `list_my_tasks` to see your assigned work. You are aware of the Production-Grade System Implementation plan and actively track progress.
 """
 
     @property
     def tools(self) -> list:
+        from backend.agents.github_tools import (
+            create_github_issue_tool,
+            update_github_issue_tool,
+            get_project_status_tool,
+            list_my_tasks_tool,
+            close_task_tool,
+        )
+        
         return [
             create_project_timeline,
             assess_project_risks,
@@ -396,6 +405,12 @@ You are an AI agent operating within the **Engram** platform, built on a "Brain 
             start_bau_flow_tool,
             check_workflow_status_tool,
             search_memory_tool,
+            # GitHub integration tools
+            create_github_issue_tool,
+            update_github_issue_tool,
+            get_project_status_tool,
+            list_my_tasks_tool,
+            close_task_tool,
         ]
 
     # -------------------------------------------------------------------------
