@@ -36,6 +36,35 @@ VOICE_MEMORY_TIMEOUT = 2.0
 VOICE_PERSIST_TIMEOUT = 10.0
 
 
+def validate_voicelive_endpoint(endpoint: str) -> tuple[bool, str]:
+    """
+    Validate and detect VoiceLive endpoint type.
+    
+    Returns:
+        (is_valid, endpoint_type) where endpoint_type is:
+        - "unified" for services.ai.azure.com endpoints
+        - "direct" for openai.azure.com endpoints
+        - "invalid" if endpoint format is unrecognized
+    """
+    if not endpoint:
+        return False, "invalid"
+    
+    endpoint_lower = endpoint.lower().rstrip('/')
+    
+    if "services.ai.azure.com" in endpoint_lower:
+        return True, "unified"
+    elif "openai.azure.com" in endpoint_lower:
+        return True, "direct"
+    else:
+        return False, "invalid"
+
+
+def get_endpoint_type(endpoint: str) -> str:
+    """Get the endpoint type (unified or direct) for logging/validation."""
+    _, endpoint_type = validate_voicelive_endpoint(endpoint)
+    return endpoint_type
+
+
 class VoiceConfigResponse(BaseModel):
     """Voice configuration response"""
     agent_id: str
@@ -630,10 +659,23 @@ async def get_realtime_token(request: TokenRequest):
             detail="VoiceLive not configured. Set AZURE_VOICELIVE_ENDPOINT and AZURE_VOICELIVE_KEY."
         )
     
+    # Validate endpoint format
+    endpoint = voicelive_service.endpoint.rstrip('/')
+    is_valid, endpoint_type = validate_voicelive_endpoint(endpoint)
+    if not is_valid:
+        logger.error(f"Invalid VoiceLive endpoint format: {endpoint}")
+        raise HTTPException(
+            status_code=503,
+            detail=f"Invalid VoiceLive endpoint format. Expected 'services.ai.azure.com' or 'openai.azure.com', got: {endpoint}"
+        )
+    
+    logger.info(f"Using {endpoint_type} endpoint: {endpoint}")
+    
     # Get agent configuration
     agent_config = voicelive_service.get_agent_voice_config(request.agent_id)
     
     # Build session configuration for the ephemeral token
+    # Note: Body must be flattened (not nested under "session") per Azure Realtime API spec
     session_config = {
         "model": voicelive_service.model,
         "modalities": ["audio", "text"],
@@ -650,16 +692,41 @@ async def get_realtime_token(request: TokenRequest):
         },
     }
     
-    # Get the Azure endpoint
-    endpoint = voicelive_service.endpoint.rstrip('/')
+    # Validate required fields
+    required_fields = ["model", "modalities", "instructions", "voice"]
+    missing_fields = [field for field in required_fields if field not in session_config or not session_config[field]]
+    if missing_fields:
+        logger.error(f"Missing required fields in session config: {missing_fields}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Invalid session configuration: missing required fields {missing_fields}"
+        )
     
-    # Token URL for Azure OpenAI Realtime
-    if "openai.azure.com" not in endpoint:
-        token_url = f"{endpoint}/openai/v1/realtime/client_secrets"
-    else:
-        # Direct OpenAI resource - Azure OpenAI requires deployment in path
-        deployment = voicelive_service.model
-        token_url = f"{endpoint}/openai/deployments/{deployment}/realtime/client_secrets"
+    # Validate modalities
+    if not isinstance(session_config["modalities"], list) or not session_config["modalities"]:
+        raise HTTPException(
+            status_code=500,
+            detail="modalities must be a non-empty list"
+        )
+    
+    # Determine endpoint type and construct token URL
+    def build_token_url(endpoint: str, model: str, endpoint_type: str) -> str:
+        """
+        Build the correct token URL based on endpoint type.
+        
+        For unified endpoints (services.ai.azure.com): /openai/realtime/client_secrets
+        For direct endpoints (openai.azure.com): /openai/deployments/{model}/realtime/client_secrets
+        """
+        if endpoint_type == "direct":
+            # Direct OpenAI resource - Azure OpenAI requires deployment in path
+            return f"{endpoint}/openai/deployments/{model}/realtime/client_secrets"
+        else:
+            # Unified endpoint (services.ai.azure.com) - no /v1, deployment in body/query
+            return f"{endpoint}/openai/realtime/client_secrets"
+    
+    token_url = build_token_url(endpoint, voicelive_service.model, endpoint_type)
+    logger.info(f"Requesting ephemeral token from: {token_url}")
+    logger.debug(f"Session config: {json.dumps(session_config, indent=2)}")
     
     try:
         # Get API key
@@ -679,11 +746,33 @@ async def get_realtime_token(request: TokenRequest):
             )
             
             if response.status_code != 200:
-                logger.error(f"Token request failed: {response.status_code} - {response.text}")
-                raise HTTPException(
-                    status_code=502,
-                    detail=f"Failed to get ephemeral token: {response.status_code}"
-                )
+                # Log full error response for debugging
+                error_body = response.text
+                try:
+                    error_json = response.json()
+                    error_detail = error_json.get("error", {}).get("message", error_body)
+                    logger.error(
+                        f"Token request failed: {response.status_code}\n"
+                        f"URL: {token_url}\n"
+                        f"Error: {error_detail}\n"
+                        f"Full response: {error_body}"
+                    )
+                    # Include Azure's error message in response (sanitized)
+                    raise HTTPException(
+                        status_code=502,
+                        detail=f"Failed to get ephemeral token: {error_detail}"
+                    )
+                except (ValueError, KeyError):
+                    # If response isn't JSON, use the text
+                    logger.error(
+                        f"Token request failed: {response.status_code}\n"
+                        f"URL: {token_url}\n"
+                        f"Response: {error_body}"
+                    )
+                    raise HTTPException(
+                        status_code=502,
+                        detail=f"Failed to get ephemeral token: {response.status_code} - {error_body[:200]}"
+                    )
             
             data = response.json()
             ephemeral_token = data.get("value", "")

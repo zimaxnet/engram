@@ -74,12 +74,16 @@ The backend requires these environment variables for VoiceLive:
 
 | Variable | Description | Example Value |
 |----------|-------------|---------------|
-| `AZURE_VOICELIVE_ENDPOINT` | Direct OpenAI Resource Endpoint | `https://zimax.openai.azure.com` |
+| `AZURE_VOICELIVE_ENDPOINT` | Azure OpenAI Resource Endpoint (unified or direct) | `https://zimax.services.ai.azure.com` or `https://zimax.openai.azure.com` |
 | `AZURE_VOICELIVE_KEY` | Cognitive Services API key | (from Key Vault) |
 | `AZURE_VOICELIVE_MODEL` | Model deployment name | `gpt-realtime` |
 
 > [!TIP]
-> Use the direct `{resource}.openai.azure.com` endpoint rather than the unified `services.ai.azure.com` endpoint for the Realtime API to avoid routing issues on ephemeral token requests.
+> **Endpoint Types**:
+> - **Unified endpoint** (`services.ai.azure.com`): Recommended for most scenarios. Token URL: `/openai/realtime/client_secrets`
+> - **Direct endpoint** (`openai.azure.com`): Use if unified endpoint has issues. Token URL: `/openai/deployments/{model}/realtime/client_secrets`
+> 
+> The backend automatically detects the endpoint type and constructs the correct URL.
 
 ### 2. Key Vault Configuration
 
@@ -116,7 +120,7 @@ The `backend-aca.bicep` file must inject the key from Key Vault:
 }
 {
   name: 'AZURE_VOICELIVE_ENDPOINT'
-  value: 'https://zimax.services.ai.azure.com/'
+  value: 'https://zimax.services.ai.azure.com'  // No trailing slash
 }
 {
   name: 'AZURE_VOICELIVE_MODEL'
@@ -183,11 +187,26 @@ voicelive_connection = await asyncio.wait_for(
 **Verification**:
 
 ```bash
-# Test with correct endpoint and key
-curl -X POST "https://zimax.services.ai.azure.com/openai/realtime?api-version=2024-10-01" \
+# Test unified endpoint (services.ai.azure.com)
+curl -X POST "https://zimax.services.ai.azure.com/openai/realtime/client_secrets?api-version=2024-10-01-preview" \
   -H "api-key: <your-key>" \
   -H "Content-Type: application/json" \
-  -d '{}' -v
+  -d '{
+    "model": "gpt-realtime",
+    "modalities": ["audio", "text"],
+    "instructions": "You are a helpful assistant.",
+    "voice": "en-US-Ava:DragonHDLatestNeural"
+  }' -v
+
+# Test direct endpoint (openai.azure.com)
+curl -X POST "https://zimax.openai.azure.com/openai/deployments/gpt-realtime/realtime/client_secrets?api-version=2024-10-01-preview" \
+  -H "api-key: <your-key>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "modalities": ["audio", "text"],
+    "instructions": "You are a helpful assistant.",
+    "voice": "en-US-Ava:DragonHDLatestNeural"
+  }' -v
 ```
 
 ### Issue: 401 Unauthorized
@@ -233,6 +252,96 @@ resource authConfig 'Microsoft.App/containerApps/authConfigs@2023-05-01' = {
 
 ```bash
 az containerapp auth update -n <app-name> -g <rg> --action AllowAnonymous --enabled false
+```
+
+### Issue: 400 Bad Request on Token Request
+
+**Symptom**: Backend returns 502 with message "Failed to get ephemeral token: 400" or Azure returns 400 Bad Request.
+
+**Root Cause**: Incorrect endpoint URL construction or request format for Azure OpenAI Realtime API.
+
+**Common Causes**:
+
+1. **Wrong endpoint path for unified endpoints**: Using `/openai/v1/realtime/client_secrets` instead of `/openai/realtime/client_secrets`
+2. **Missing or incorrect deployment in path**: Direct endpoints require deployment in URL path
+3. **Invalid request body format**: Missing required fields or incorrect structure
+4. **Wrong API version**: Using unsupported API version
+
+**Solution**:
+
+1. **Verify endpoint format**:
+   - **Unified endpoint** (`services.ai.azure.com`): Use `/openai/realtime/client_secrets` (no `/v1`)
+   - **Direct endpoint** (`openai.azure.com`): Use `/openai/deployments/{deployment}/realtime/client_secrets`
+
+2. **Check endpoint configuration**:
+   ```bash
+   # Verify endpoint is set correctly
+   az containerapp show \
+     --name <app-name> \
+     --resource-group <rg> \
+     --query "properties.template.containers[0].env[?name=='AZURE_VOICELIVE_ENDPOINT'].value" -o tsv
+   ```
+
+3. **Verify request body format** (must be flattened, not nested):
+   ```json
+   {
+     "model": "gpt-realtime",
+     "modalities": ["audio", "text"],
+     "instructions": "...",
+     "voice": "en-US-Ava:DragonHDLatestNeural",
+     "input_audio_transcription": {
+       "model": "whisper-1"
+     },
+     "turn_detection": {
+       "type": "server_vad",
+       "threshold": 0.6,
+       "prefix_padding_ms": 300,
+       "silence_duration_ms": 800
+     }
+   }
+   ```
+
+4. **Check backend logs** for detailed Azure error:
+   ```bash
+   az containerapp logs show \
+     --name <app-name> \
+     --resource-group <rg> \
+     --tail 50 \
+     --type console | grep -i "token\|400\|error"
+   ```
+
+5. **Test endpoint directly** with curl:
+   ```bash
+   # For unified endpoint
+   curl -X POST "https://<resource>.services.ai.azure.com/openai/realtime/client_secrets?api-version=2024-10-01-preview" \
+     -H "api-key: <your-key>" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "model": "gpt-realtime",
+       "modalities": ["audio", "text"],
+       "instructions": "You are a helpful assistant.",
+       "voice": "en-US-Ava:DragonHDLatestNeural"
+     }'
+   
+   # For direct endpoint
+   curl -X POST "https://<resource>.openai.azure.com/openai/deployments/gpt-realtime/realtime/client_secrets?api-version=2024-10-01-preview" \
+     -H "api-key: <your-key>" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "modalities": ["audio", "text"],
+       "instructions": "You are a helpful assistant.",
+       "voice": "en-US-Ava:DragonHDLatestNeural"
+     }'
+   ```
+
+6. **Verify API version**: Use `2024-10-01-preview` or `2025-08-28` (check Azure documentation for latest supported version)
+
+**Expected Response**:
+```json
+{
+  "value": "ephemeral-token-string",
+  "expires_at": "2025-12-27T20:00:00Z"
+}
 ```
 
 ### Issue: 500 External Server Error on Token Request
@@ -370,6 +479,10 @@ The current architecture routes all audio through the backend, creating:
 
 | Date | Change |
 |------|--------|
+| 2025-12-27 | Fixed 400 Bad Request error: corrected endpoint URL construction for unified vs direct endpoints |
+| 2025-12-27 | Added endpoint validation and improved error logging with Azure error details |
+| 2025-12-27 | Updated troubleshooting section with comprehensive 400 error resolution steps |
+| 2025-12-27 | Added request body validation and endpoint type detection |
 | 2025-12-22 | Documented VoiceLive v2 decoupled architecture approach |
 | 2025-12-21 | Fixed connection hang by adding 10s timeout |
 | 2025-12-21 | Switched to API Key auth (bypassing Managed Identity issues) |
