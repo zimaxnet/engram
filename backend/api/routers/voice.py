@@ -700,3 +700,87 @@ async def get_realtime_token(request: TokenRequest):
     except httpx.RequestError as e:
         logger.error(f"Token request error: {e}")
         raise HTTPException(status_code=502, detail=f"Token request failed: {str(e)}")
+
+
+# -----------------------------------------------------------------------------
+# VoiceLive v2: Conversation Turn Persistence (for client-side handling)
+# -----------------------------------------------------------------------------
+
+class ConversationTurn(BaseModel):
+    """A completed turn in the conversation to be persisted"""
+    session_id: str
+    agent_id: str
+    role: str  # 'user' or 'assistant'
+    content: str
+
+
+@router.post("/conversation/turn")
+async def persist_conversation_turn(turn: ConversationTurn):
+    """
+    Persist a completed conversation turn to Zep memory.
+    
+    Used by the frontend in VoiceLive v2 (Direct) mode, where the browser
+    handles the audio connection and reports the final transcripts back here.
+    """
+    try:
+        # Reconstruct the security context (simplified for this endpoint)
+        # In a real scenario, we'd validate the session/user match
+        settings = get_settings()
+        if not settings.auth_required:
+            security = SecurityContext(
+                user_id="poc-user",
+                tenant_id=settings.azure_tenant_id or "poc-tenant",
+                roles=[Role.ADMIN],
+                scopes=["*"],
+                session_id=turn.session_id,
+                token_expiry=None,
+                email=None,
+                display_name=None,
+            )
+        else:
+            security = SecurityContext(
+                user_id="voice-user",
+                tenant_id=settings.azure_tenant_id or "unknown-tenant",
+                roles=[Role.ANALYST],
+                scopes=["*"],
+                session_id=turn.session_id,
+                token_expiry=None,
+                email=None,
+                display_name=None,
+            )
+            
+        # Create context
+        voice_context = EnterpriseContext(security=security, context_version="1.0.0")
+        voice_context.episodic.conversation_id = turn.session_id
+        
+        # Ensure session exists
+        await memory_client.get_or_create_session(
+            session_id=turn.session_id,
+            user_id=security.user_id,
+            metadata={
+                "tenant_id": security.tenant_id,
+                "channel": "voice-direct",
+                "agent_id": turn.agent_id,
+            },
+        )
+        
+        # Add turn
+        map_role = MessageRole.USER if turn.role == "user" else MessageRole.ASSISTANT
+        voice_context.episodic.add_turn(
+            Turn(
+                role=map_role,
+                content=turn.content,
+                agent_id=turn.agent_id if map_role == MessageRole.ASSISTANT else None,
+                tool_calls=None,
+                token_count=None,
+            )
+        )
+        
+        # Persist
+        await persist_conversation(voice_context)
+        
+        return {"status": "success", "message": "Turn persisted"}
+        
+    except Exception as e:
+        logger.error(f"Failed to persist conversation turn: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

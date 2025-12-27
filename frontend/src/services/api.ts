@@ -500,6 +500,33 @@ export class ApiClient {
     }>>('/admin/audit')
   }
 
+  // Voice
+  async getVoiceToken(agentId: string, sessionId?: string) {
+    return this.request<{
+      token: string
+      endpoint: string
+      expires_at?: string
+    }>('/voice/realtime/token', {
+      method: 'POST',
+      body: JSON.stringify({ agent_id: agentId, session_id: sessionId }),
+    })
+  }
+
+  async persistTurn(turn: {
+    session_id: string
+    agent_id: string
+    role: string
+    content: string
+  }) {
+    return this.request<{
+      status: string
+      message: string
+    }>('/voice/conversation/turn', {
+      method: 'POST',
+      body: JSON.stringify(turn),
+    })
+  }
+
   // Stories
   async listStories() {
     return this.request<Array<{
@@ -578,3 +605,6 @@ export const getSystemSettings = () => apiClient.getSystemSettings();
 export const updateSystemSettings = (settings: unknown) => apiClient.updateSystemSettings(settings);
 export const listUsers = () => apiClient.listUsers();
 export const getAuditLogs = () => apiClient.getAuditLogs();
+
+export const getVoiceToken = (agentId: string, sessionId?: string) => apiClient.getVoiceToken(agentId, sessionId);
+export const persistTurn = (turn: { session_id: string; agent_id: string; role: string; content: string }) => apiClient.persistTurn(turn);

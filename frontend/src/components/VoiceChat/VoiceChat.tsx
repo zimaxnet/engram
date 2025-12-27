@@ -1,13 +1,12 @@
 /**
- * VoiceChat Component
+ * VoiceChat Component (Direct Azure Realtime Architecture)
  * 
- * Provides voice interaction with agents:
- * - Push-to-talk voice input
- * - Real-time transcription
- * - Voice output with avatar lip-sync
+ * connects directly to Azure OpenAI Realtime API using ephemeral tokens.
+ * Reports completed turns to backend for Zep ingestion.
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { getVoiceToken, persistTurn } from '../../services/api'; // We'll need to add these to api.ts
 import './VoiceChat.css';
 
 interface VoiceMessage {
@@ -22,12 +21,6 @@ interface Viseme {
   time_ms: number;
   viseme_id: number;
 }
-
-type IncomingMessage =
-  | { type: 'transcription'; speaker?: 'user' | 'assistant'; status: 'listening' | 'processing' | 'complete' | 'error'; text?: string }
-  | { type: 'audio'; data: string; format?: string }
-  | { type: 'agent_switched'; agent_id: string }
-  | { type: 'error'; message: string };
 
 interface VoiceChatProps {
   agentId: string;
@@ -58,22 +51,29 @@ export default function VoiceChat({
   const wsRef = useRef<WebSocket | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const playbackContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const animationFrameRef = useRef<number>(0);
   const streamRef = useRef<MediaStream | null>(null);
-  const onStatusChangeRef = useRef(onStatusChange);
-  // Use a state or effect to set the default session ID to ensure purity
-  const defaultSessionIdRef = useRef<string>('');
-  useEffect(() => {
-    if (!defaultSessionIdRef.current) {
-      defaultSessionIdRef.current = `voicelive-${Date.now()}`;
-    }
-  }, []);
 
-  // Store callbacks in refs to avoid stale closures
+  // Buffers for current turn
+  const assistantTranscriptRef = useRef('');
+  const userTranscriptRef = useRef('');
+
+  // Store callbacks
   const onMessageRef = useRef(onMessage);
   const onVisemesRef = useRef(onVisemes);
+  const onStatusChangeRef = useRef(onStatusChange);
+
+  // Generate local session ID if not provided
+  const [localSessionId] = useState(() => `voice-${Date.now()}`);
+  const activeSessionId = sessionIdProp || localSessionId;
+
+  // Refs for audio playback queue
+  const audioQueueRef = useRef<Float32Array[]>([]);
+  const isPlayingRef = useRef(false);
+  const nextStartTimeRef = useRef(0);
 
   useEffect(() => {
     onMessageRef.current = onMessage;
@@ -81,58 +81,37 @@ export default function VoiceChat({
     onStatusChangeRef.current = onStatusChange;
   }, [onMessage, onVisemes, onStatusChange]);
 
-  // Cleanup microphone on unmount
+  // Audio Playback Context
   useEffect(() => {
+    if (!playbackContextRef.current) {
+      playbackContextRef.current = new AudioContext({ sampleRate: 24000 });
+    }
     return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(t => t.stop());
-        streamRef.current = null;
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close().catch(() => { });
-        audioContextRef.current = null;
-      }
-      if (processorRef.current) {
-        processorRef.current.disconnect();
-        processorRef.current = null;
-      }
-      cancelAnimationFrame(animationFrameRef.current);
+      playbackContextRef.current?.close();
     };
   }, []);
 
-  // Audio Queue
-  const audioQueueRef = useRef<Float32Array[]>([]);
-  const isPlayingRef = useRef(false);
-  const nextStartTimeRef = useRef(0);
-
-  // Initialize playback audio context
-  useEffect(() => {
-    if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContext({ sampleRate: 24000 });
-    }
-  }, []);
-
-  // Use a named function expression to allow safe recursion without circular const reference
+  // Audio Processing Function (Recursive)
   const processAudioQueue = useCallback(function processQueue() {
-    if (!audioContextRef.current || audioQueueRef.current.length === 0) {
+    if (!playbackContextRef.current || audioQueueRef.current.length === 0) {
       isPlayingRef.current = false;
+      setIsSpeaking(false);
       return;
     }
 
     isPlayingRef.current = true;
+    setIsSpeaking(true);
     const audioData = audioQueueRef.current.shift();
     if (!audioData) return;
 
-    const buffer = audioContextRef.current.createBuffer(1, audioData.length, 24000);
+    const buffer = playbackContextRef.current.createBuffer(1, audioData.length, 24000);
     buffer.getChannelData(0).set(audioData);
 
-    const source = audioContextRef.current.createBufferSource();
+    const source = playbackContextRef.current.createBufferSource();
     source.buffer = buffer;
-    source.connect(audioContextRef.current.destination);
+    source.connect(playbackContextRef.current.destination);
 
-    // Schedule seamlessly
-    const currentTime = audioContextRef.current.currentTime;
-    // If nextStartTime is in the past (underrun), reset to now
+    const currentTime = playbackContextRef.current.currentTime;
     const startTime = Math.max(currentTime, nextStartTimeRef.current);
 
     source.start(startTime);
@@ -140,238 +119,225 @@ export default function VoiceChat({
 
     source.onended = () => {
       processQueue();
-      if (audioQueueRef.current.length === 0) {
-        setIsSpeaking(false);
-      }
     };
   }, []);
 
-  // Play audio and trigger visemes
-  const playAudio = useCallback(async (
-    audioBase64: string,
-    visemes: Viseme[]
-  ) => {
+  // Enqueue Audio
+  const enqueueAudio = useCallback((base64Audio: string) => {
     try {
-      // Decode base64 to raw PCM16 bytes
-      const binaryString = atob(audioBase64);
+      const binaryString = atob(base64Audio);
       const len = binaryString.length;
       const bytes = new Uint8Array(len);
       for (let i = 0; i < len; i++) {
         bytes[i] = binaryString.charCodeAt(i);
       }
-
-      // Convert PCM16 (Int16) to Float32 (-1.0 to 1.0)
-      // PCM16 is 2 bytes per sample, Little Endian
       const int16 = new Int16Array(bytes.buffer);
       const float32 = new Float32Array(int16.length);
-
       for (let i = 0; i < int16.length; i++) {
         float32[i] = int16[i] / 32768.0;
       }
 
-      // Enqueue
       audioQueueRef.current.push(float32);
 
-      // Start queue if stopped
       if (!isPlayingRef.current) {
-        // Reset time if we've been idle
-        if (audioContextRef.current) {
-          nextStartTimeRef.current = audioContextRef.current.currentTime;
+        if (playbackContextRef.current) {
+          nextStartTimeRef.current = playbackContextRef.current.currentTime;
         }
-        setIsSpeaking(true);
         processAudioQueue();
       }
-
-      // Handle visemes (fire immediately for responsiveness, though strictly should sync with audio)
-      if (onVisemesRef.current && visemes.length > 0) {
-        onVisemesRef.current(visemes);
-      }
-
     } catch (e) {
-      console.error('Failed to play audio:', e);
+      console.error('Audio decode error:', e);
     }
   }, [processAudioQueue]);
 
-  // Handle incoming WebSocket messages
-  const handleWebSocketMessage = useCallback(
-    (data: IncomingMessage) => {
-      switch (data.type) {
-        case 'transcription':
-          if (data.speaker === 'assistant') {
-            setAssistantTranscription(data.text || '');
-            if (data.status === 'complete' && data.text) {
-              onMessageRef.current?.({
-                id: `assistant-${Date.now()}`,
-                type: 'agent',
-                agentId,
-                text: data.text,
-                timestamp: new Date(),
-              });
-            }
-            if (data.status === 'error') {
-              setError(data.text || 'Assistant transcription error');
-            }
-            break;
-          }
-
-          // Default: user transcription
-          setUserTranscription(data.text || '');
-          setIsProcessing(data.status === 'processing');
-          if (data.status === 'complete' && data.text) {
-            onMessageRef.current?.({
-              id: `user-${Date.now()}`,
-              type: 'user',
-              text: data.text,
-              timestamp: new Date(),
-            });
-            setIsProcessing(false);
-          }
-          if (data.status === 'error') {
-            setError(data.text || 'Transcription error');
-            setIsProcessing(false);
-          }
-          break;
-
-        case 'audio':
-          // Server sends assistant PCM16 audio as base64
-          playAudio(data.data, []);
-          setIsSpeaking(true);
-          // Fallback timer to clear speaking state
-          setTimeout(() => setIsSpeaking(false), 1500);
-          break;
-
-        case 'agent_switched':
-          setUserTranscription('');
-          setAssistantTranscription('');
-          setIsProcessing(false);
-          setIsSpeaking(false);
-          break;
-
-        case 'error':
-          // Check if it's a configuration error - show friendly message
-          if (data.message?.includes('not configured') || data.message?.includes('AZURE_VOICELIVE')) {
-            setError('Voice coming soon - Azure VoiceLive integration pending');
-          } else {
-            setError(data.message || 'Unknown error');
-          }
-          setIsProcessing(false);
-          break;
-      }
-    },
-    [playAudio, agentId]
-  );
-
-  // Initialize WebSocket connection
+  // Main Connection Logic
   useEffect(() => {
-    const sessionId = sessionIdProp || defaultSessionIdRef.current;
-    const baseRaw =
-      import.meta.env.VITE_WS_URL ||
-      import.meta.env.VITE_API_URL ||
-      'http://localhost:8082';
+    let mounted = true;
 
-    const toWsBase = (raw: string) => {
+    const connectToAzure = async () => {
       try {
-        const u = new URL(raw);
-        if (u.protocol === 'https:') u.protocol = 'wss:';
-        else if (u.protocol === 'http:') u.protocol = 'ws:';
-        // ws/wss are already correct
-        return u.toString().replace(/\/$/, '');
-      } catch {
-        // Last resort: assume caller passed a ws(s) URL already
-        return raw.replace(/\/$/, '');
+        setConnectionStatus('connecting');
+        setError(null);
+
+        // 1. Get Ephemeral Token from specific agent endpoint
+        const tokenResponse = await getVoiceToken(agentId, activeSessionId);
+
+        // 2. Construct Realtime API URL
+        // Endpoint comes from backend, e.g., https://<resource>.openai.azure.com/
+        // We need wss://<resource>.openai.azure.com/openai/realtime?api-key=...&deployment=gpt-4o-realtime-preview-2024-10-01&api-version=2024-10-01-preview
+        const endpointUrl = new URL(tokenResponse.endpoint);
+        const protocol = endpointUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = endpointUrl.host;
+        const wsUrl = `${protocol}//${host}/openai/realtime?api-key=${tokenResponse.token}&deployment=gpt-4o-realtime-preview-2024-10-01&api-version=2024-10-01-preview`;
+
+        const ws = new WebSocket(wsUrl, 'realtime-openai-v1-beta'); // 'openai-insecure-api-key' or similar might be needed if not using protocol
+
+        ws.onopen = () => {
+          if (!mounted) return;
+          setConnectionStatus('connected');
+
+          // Send initial session configuration
+          // Note: Use 'session.update' event
+          ws.send(JSON.stringify({
+            type: 'session.update',
+            session: {
+              voice: agentId === 'marcus' ? 'echo' : 'alloy', // Map to Azure voices (shim, real map should be better)
+              instructions: `You are ${agentId}. Respond concisely.`, // Basic instructions, ideally fetched from config
+              input_audio_format: 'pcm16',
+              output_audio_format: 'pcm16',
+              turn_detection: {
+                type: 'server_vad',
+                threshold: 0.6,
+                prefix_padding_ms: 300,
+                silence_duration_ms: 800
+              }
+            }
+          }));
+        };
+
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+
+          switch (data.type) {
+            case 'response.audio.delta':
+              enqueueAudio(data.delta);
+              break;
+
+            case 'response.audio_transcript.delta':
+              assistantTranscriptRef.current += data.delta;
+              setAssistantTranscription(assistantTranscriptRef.current);
+              setIsProcessing(false);
+              break;
+
+            case 'response.audio_transcript.done':
+              // Verify / Finalize assistant text
+              const finalAssistantText = data.transcript;
+              if (finalAssistantText) {
+                onMessageRef.current?.({
+                  id: `assistant-${Date.now()}`,
+                  type: 'agent',
+                  text: finalAssistantText,
+                  agentId,
+                  timestamp: new Date()
+                });
+                // Report to backend
+                persistTurn({
+                  session_id: activeSessionId,
+                  agent_id: agentId,
+                  role: 'assistant',
+                  content: finalAssistantText
+                });
+              }
+              assistantTranscriptRef.current = '';
+              break;
+
+            case 'conversation.item.input_audio_transcription.delta':
+              userTranscriptRef.current += data.delta;
+              setUserTranscription(userTranscriptRef.current);
+              break;
+
+            case 'conversation.item.input_audio_transcription.completed':
+              const finalUserText = data.transcript;
+              if (finalUserText) {
+                setUserTranscription(finalUserText);
+                onMessageRef.current?.({
+                  id: `user-${Date.now()}`,
+                  type: 'user',
+                  text: finalUserText,
+                  timestamp: new Date()
+                });
+                // Report to backend
+                persistTurn({
+                  session_id: activeSessionId,
+                  agent_id: agentId,
+                  role: 'user',
+                  content: finalUserText
+                });
+              }
+              userTranscriptRef.current = '';
+              break;
+
+            case 'input_audio_buffer.speech_started':
+              setIsProcessing(true); // Actually, listening? No, user speaking.
+              // VAD detected speech
+              break;
+
+            case 'error':
+              console.error('Azure Realtime Error:', data);
+              setError(data.error?.message || 'Unknown Azure error');
+              break;
+          }
+        };
+
+        ws.onerror = (e) => {
+          console.error('WebSocket error', e);
+          setError('Connection error');
+          setConnectionStatus('error');
+        };
+
+        ws.onclose = () => {
+          if (mounted) setConnectionStatus('error');
+        };
+
+        wsRef.current = ws;
+
+      } catch (err: any) {
+        if (!mounted) return;
+        console.error('Connection failed:', err);
+        setError(err.message || 'Failed to connect');
+        setConnectionStatus('error');
       }
     };
 
-    const baseWs = toWsBase(baseRaw);
-    const wsUrl = `${baseWs}/api/v1/voice/voicelive/${sessionId}`;
-
-    let ws: WebSocket;
-    try {
-      ws = new WebSocket(wsUrl);
-    } catch (e) {
-      console.error('Voice WebSocket failed to initialize:', e);
-      setError('Connection error');
-      setConnectionStatus('error');
-      return;
-    }
-
-    ws.onopen = () => {
-      setConnectionStatus('connected');
-      // Set initial agent
-      ws.send(JSON.stringify({ type: 'agent', agent_id: agentId }));
-    };
-
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data) as IncomingMessage;
-      handleWebSocketMessage(data);
-    };
-
-    ws.onerror = (wsError) => {
-      console.error('Voice WebSocket error:', wsError);
-      setError('Connection error');
-      setConnectionStatus('error');
-    };
-
-    ws.onclose = () => {
-      setConnectionStatus('error');
-      setIsProcessing(false);
-      setIsListening(false);
-      setIsSpeaking(false);
-    };
-
-    wsRef.current = ws;
+    connectToAzure();
 
     return () => {
-      ws.close();
+      mounted = false;
+      wsRef.current?.close();
     };
-  }, [agentId, handleWebSocketMessage, sessionIdProp]);
+  }, [agentId, activeSessionId]);
 
-  // Notify parent of connection status changes
-  useEffect(() => {
-    onStatusChangeRef.current?.(connectionStatus);
-  }, [connectionStatus]);
-
-  // Send agent switch when agentId changes and socket ready
-  useEffect(() => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type: 'agent', agent_id: agentId }));
-    }
-  }, [agentId]);
-
-  // Start recording
+  // Mic Logic
   const startListening = async () => {
     try {
-      setError(null);
-      setAssistantTranscription('');
-      if (connectionStatus !== 'connected') {
-        setError('Voice connection not ready');
-        return;
-      }
+      if (connectionStatus !== 'connected') return;
 
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { channelCount: 1, sampleRate: 24000 },
+        audio: { channelCount: 1, sampleRate: 24000 }
       });
       streamRef.current = stream;
 
-      // Audio context for level visualization and PCM16 capture
       audioContextRef.current = new AudioContext({ sampleRate: 24000 });
       const source = audioContextRef.current.createMediaStreamSource(stream);
       analyserRef.current = audioContextRef.current.createAnalyser();
-      analyserRef.current.fftSize = 256;
       source.connect(analyserRef.current);
       updateAudioLevel();
 
       const processor = audioContextRef.current.createScriptProcessor(4096, 1, 1);
-      processor.onaudioprocess = (event) => {
-        const input = event.inputBuffer.getChannelData(0);
+      processor.onaudioprocess = (e) => {
+        const input = e.inputBuffer.getChannelData(0);
+        // Resample/Convert to PCM16
         const pcm16 = new Int16Array(input.length);
         for (let i = 0; i < input.length; i++) {
           const s = Math.max(-1, Math.min(1, input[i]));
           pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
         }
+
+        // Convert to Base64
+        // Note: Performance heavy for main thread, but standard for these demos
         const bytes = new Uint8Array(pcm16.buffer);
-        const base64 = btoa(String.fromCharCode(...bytes));
-        wsRef.current?.send(JSON.stringify({ type: 'audio', data: base64 }));
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        const base64 = btoa(binary);
+
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+          wsRef.current.send(JSON.stringify({
+            type: 'input_audio_buffer.append',
+            audio: base64
+          }));
+        }
       };
 
       source.connect(processor);
@@ -379,52 +345,48 @@ export default function VoiceChat({
       processorRef.current = processor;
 
       setIsListening(true);
-      setUserTranscription('');
-      setIsProcessing(true);
     } catch (e) {
-      console.error('Failed to start recording:', e);
-      setError('Microphone access denied');
+      console.error('Mic error:', e);
+      setError('Mic access denied');
     }
   };
 
-  // Stop recording
   const stopListening = () => {
     if (!isListening) return;
 
-    if (processorRef.current) {
-      processorRef.current.disconnect();
-      processorRef.current.onaudioprocess = null;
-      processorRef.current = null;
+    // Commit buffer
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({
+        type: 'input_audio_buffer.commit'
+      }));
+      wsRef.current.send(JSON.stringify({
+        type: 'response.create' // Trigger response generation
+      }));
     }
-    if (audioContextRef.current) {
-      audioContextRef.current.close().catch(() => { });
-      audioContextRef.current = null;
-    }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-    }
+
+    processorRef.current?.disconnect();
+    processorRef.current = null;
+    audioContextRef.current?.close();
+    audioContextRef.current = null;
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+
     cancelAnimationFrame(animationFrameRef.current);
     setAudioLevel(0);
     setIsListening(false);
-    wsRef.current?.send(JSON.stringify({ type: 'cancel' }));
   };
 
-  // Update audio level visualization
   const updateAudioLevel = () => {
     if (analyserRef.current) {
-      const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-      analyserRef.current.getByteFrequencyData(dataArray);
-
-      // Calculate average level
-      const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-      setAudioLevel(average / 255);
-
+      const array = new Uint8Array(analyserRef.current.frequencyBinCount);
+      analyserRef.current.getByteFrequencyData(array);
+      const avg = array.reduce((a, b) => a + b) / array.length;
+      setAudioLevel(avg / 255);
       animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
     }
   };
 
-  // Get button state class
+  // Button Class Helper
   const getButtonClass = () => {
     if (disabled) return 'voice-button disabled';
     if (connectionStatus === 'connecting') return 'voice-button disabled';
@@ -437,18 +399,26 @@ export default function VoiceChat({
 
   return (
     <div className="voice-chat">
-      {/* Audio element for playback */}
       <audio ref={audioRef} style={{ display: 'none' }} />
 
       {/* Voice Button */}
       <div className="voice-button-container">
         <button
           className={getButtonClass()}
-          onMouseDown={startListening}
+          onMouseDown={(e) => {
+            if (e.button !== 0) return;
+            startListening();
+          }}
           onMouseUp={stopListening}
           onMouseLeave={stopListening}
-          onTouchStart={startListening}
-          onTouchEnd={stopListening}
+          onTouchStart={(e) => {
+            e.preventDefault(); // Prevent scrolling/ghost clicks
+            startListening();
+          }}
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            stopListening();
+          }}
           disabled={disabled || isProcessing || isSpeaking}
           title={isListening ? 'Release to send' : 'Hold to speak'}
         >

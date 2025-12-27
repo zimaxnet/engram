@@ -59,13 +59,13 @@ const overlayStyles: CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
   flexDirection: 'column',
-  padding: '2rem',
+  padding: '1rem',
 };
 
 const closeButtonStyles: CSSProperties = {
   position: 'absolute',
-  top: '2rem',
-  right: '2rem',
+  top: '1rem',
+  right: '1rem',
   background: 'rgba(255, 255, 255, 0.1)',
   border: 'none',
   borderRadius: '50%',

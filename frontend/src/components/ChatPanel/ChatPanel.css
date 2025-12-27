@@ -215,6 +215,29 @@
   border-top: 1px solid var(--glass-border);
 }
 
+@media (max-width: 768px) {
+  .chat-input-area {
+    padding: var(--space-sm);
+    gap: var(--space-xs);
+  }
+
+  .voice-button {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .chat-input {
+    height: 40px;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+
+  .send-button {
+    height: 40px;
+    padding: 0 var(--space-md);
+  }
+}
+
 .voice-button {
   width: 44px;
   height: 44px;
