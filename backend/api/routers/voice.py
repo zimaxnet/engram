@@ -620,6 +620,9 @@ async def get_voice_status():
             "marcus": {
                 "voice": voicelive_service.get_agent_voice_config("marcus").voice_name,
             },
+            "sage": {
+                "voice": voicelive_service.get_agent_voice_config("sage").voice_name,
+            },
         },
     }
 

@@ -72,6 +72,8 @@ class Settings(BaseSettings):
     elena_voice_name: str = Field("en-US-JennyNeural", alias="ELENA_VOICE_NAME")
     # Marcus voice configuration
     marcus_voice_name: str = Field("en-US-GuyNeural", alias="MARCUS_VOICE_NAME")
+    # Sage voice configuration
+    sage_voice_name: str = Field("en-US-DavisNeural", alias="SAGE_VOICE_NAME")
 
     # ==========================================================================
     # Azure VoiceLive (Real-time Voice) - Direct Azure AI Services
@@ -81,9 +83,11 @@ class Settings(BaseSettings):
     azure_voicelive_endpoint: Optional[str] = Field(None, alias="AZURE_VOICELIVE_ENDPOINT")
     azure_voicelive_key: Optional[str] = Field(None, alias="AZURE_VOICELIVE_KEY")  # Optional for POC
     azure_voicelive_model: str = Field("gpt-realtime", alias="AZURE_VOICELIVE_MODEL")
-    azure_voicelive_voice: str = Field("en-US-Ava:DragonHDLatestNeural", alias="AZURE_VOICELIVE_VOICE")
+    azure_voicelive_voice: str = Field("en-US-Seraphina:DragonHDLatestNeural", alias="AZURE_VOICELIVE_VOICE")
     # Marcus voice configuration for VoiceLive
-    marcus_voicelive_voice: str = Field("en-US-GuyNeural", alias="MARCUS_VOICELIVE_VOICE")
+    marcus_voicelive_voice: str = Field("en-US-Ollie:DragonHDLatestNeural", alias="MARCUS_VOICELIVE_VOICE")
+    # Sage voice configuration for VoiceLive
+    sage_voicelive_voice: str = Field("en-US-Brian:DragonHDLatestNeural", alias="SAGE_VOICELIVE_VOICE")
     # Project name for unified endpoints (optional, used for project-based endpoints)
     # When using Azure AI Foundry projects, set this to the project name (e.g., "zimax")
     azure_voicelive_project_name: Optional[str] = Field(None, alias="AZURE_VOICELIVE_PROJECT_NAME")

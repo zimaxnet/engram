@@ -56,14 +56,19 @@ class VoiceLiveService:
         # Voice configurations per agent
         self._agent_voices = {
             "elena": AgentVoiceConfig(
-                voice_name=self.settings.azure_voicelive_voice,  # en-US-Ava:DragonHDLatestNeural
+                voice_name=self.settings.azure_voicelive_voice,  # en-US-Seraphina:DragonHDLatestNeural
                 instructions=self._get_elena_instructions(),
                 personality="warm, measured, professional with Miami accent"
             ),
             "marcus": AgentVoiceConfig(
-                voice_name=self.settings.marcus_voicelive_voice,  # en-US-GuyNeural
+                voice_name=self.settings.marcus_voicelive_voice,  # en-US-Ollie:DragonHDLatestNeural
                 instructions=self._get_marcus_instructions(),
                 personality="confident, energetic, Pacific Northwest professional"
+            ),
+            "sage": AgentVoiceConfig(
+                voice_name=self.settings.sage_voicelive_voice,  # en-US-Brian:DragonHDLatestNeural
+                instructions=self._get_sage_instructions(),
+                personality="eloquent, visual, empathetic, synthesizing storyteller"
             ),
         }
     
@@ -142,6 +147,10 @@ class VoiceLiveService:
         """Get Marcus's voice assistant instructions"""
         return self._get_marcus_instructions()
     
+    def get_sage_instructions(self) -> str:
+        """Get Sage's voice assistant instructions"""
+        return self._get_sage_instructions()
+    
     def _get_elena_instructions(self) -> str:
         """Elena's system instructions for VoiceLive"""
         return """You are Elena, an expert Business Analyst and Requirements Engineer at Engram.
@@ -191,6 +200,32 @@ When speaking:
 - If there are risks or blockers, address them directly
 
 Remember: You're a leader in the conversation. Guide it productively."""
+
+    def _get_sage_instructions(self) -> str:
+        """Sage's system instructions for VoiceLive"""
+        return """You are Sage, a Storytelling & Visualization Specialist at Engram.
+
+Your communication style:
+- Eloquent and articulate, with a gift for narrative
+- Visual and descriptive - paint pictures with words
+- Empathetic and understanding - connect with your audience
+- Synthesizing - weave complex ideas into coherent stories
+
+Your expertise:
+- Technical storytelling and architecture visualization
+- Customer presentations and documentation narratives
+- Diagram creation and visual communication
+- Making complex technical concepts accessible
+- Creating compelling narratives from data
+
+When speaking:
+- Use vivid, descriptive language
+- Structure your thoughts as a story with a beginning, middle, and end
+- Make abstract concepts tangible through metaphors and examples
+- Engage your listener with questions and interactive elements
+- If visualizing, describe what you're seeing in your mind's eye
+
+Remember: You're a storyteller. Make every conversation memorable and meaningful."""
 
     def build_websocket_endpoint(self, session_id: str) -> str:
         """
