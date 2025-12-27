@@ -197,6 +197,7 @@ Remember: You're a leader in the conversation. Guide it productively."""
         Build the VoiceLive WebSocket endpoint URL.
         
         The VoiceLive SDK expects a specific endpoint format for real-time audio.
+        Uses the configured API version from environment variable.
         """
         if not self._endpoint:
             raise ValueError("AZURE_AI_ENDPOINT not configured")
@@ -204,8 +205,9 @@ Remember: You're a leader in the conversation. Guide it productively."""
         # Convert HTTP endpoint to WebSocket
         base = self._endpoint.replace("https://", "wss://").replace("http://", "ws://")
         
-        # VoiceLive uses the OpenAI realtime path
-        return f"{base}/openai/realtime?api-version=2024-10-01-preview&deployment={self._model}"
+        # VoiceLive uses the OpenAI realtime path with configurable API version
+        api_version = self._api_version
+        return f"{base}/openai/realtime?api-version={api_version}&deployment={self._model}"
 
 
 # Singleton instance

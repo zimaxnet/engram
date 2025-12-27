@@ -1,12 +1,14 @@
 /**
- * VoiceChat Component (Direct Azure Realtime Architecture)
+ * VoiceChat Component (WebSocket Proxy Architecture)
  * 
- * connects directly to Azure OpenAI Realtime API using ephemeral tokens.
- * Reports completed turns to backend for Zep ingestion.
+ * Connects to backend WebSocket proxy which handles Azure VoiceLive connection.
+ * Backend automatically persists transcripts to Zep memory.
+ * 
+ * This approach works with unified endpoints (services.ai.azure.com) which
+ * don't support REST token endpoints.
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { getVoiceToken, persistTurn } from '../../services/api'; // We'll need to add these to api.ts
 import './VoiceChat.css';
 
 interface VoiceMessage {
@@ -150,133 +152,134 @@ export default function VoiceChat({
     }
   }, [processAudioQueue]);
 
-  // Main Connection Logic
+  // Main Connection Logic - WebSocket Proxy
   useEffect(() => {
     let mounted = true;
 
-    const connectToAzure = async () => {
+    const connectToBackend = () => {
       try {
         setConnectionStatus('connecting');
         setError(null);
 
-        // 1. Get Ephemeral Token from specific agent endpoint
-        const tokenResponse = await getVoiceToken(agentId, activeSessionId);
-
-        // 2. Construct Realtime API URL
-        // Endpoint comes from backend, e.g., https://<resource>.openai.azure.com/
-        // We need wss://<resource>.openai.azure.com/openai/realtime?api-key=...&deployment=gpt-4o-realtime-preview-2024-10-01&api-version=2024-10-01-preview
-        const endpointUrl = new URL(tokenResponse.endpoint);
-        const protocol = endpointUrl.protocol === 'https:' ? 'wss:' : 'ws:';
-        const host = endpointUrl.host;
-        const wsUrl = `${protocol}//${host}/openai/realtime?api-key=${tokenResponse.token}&deployment=gpt-4o-realtime-preview-2024-10-01&api-version=2024-10-01-preview`;
-
-        const ws = new WebSocket(wsUrl, 'realtime-openai-v1-beta'); // 'openai-insecure-api-key' or similar might be needed if not using protocol
+        // Connect to backend WebSocket proxy endpoint
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8082';
+        const wsUrl = apiUrl.replace(/^http/, 'ws') + `/api/v1/voice/voicelive/${activeSessionId}`;
+        
+        const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
           if (!mounted) return;
           setConnectionStatus('connected');
-
-          // Send initial session configuration
-          // Note: Use 'session.update' event
-          ws.send(JSON.stringify({
-            type: 'session.update',
-            session: {
-              voice: agentId === 'marcus' ? 'echo' : 'alloy', // Map to Azure voices (shim, real map should be better)
-              instructions: `You are ${agentId}. Respond concisely.`, // Basic instructions, ideally fetched from config
-              input_audio_format: 'pcm16',
-              output_audio_format: 'pcm16',
-              turn_detection: {
-                type: 'server_vad',
-                threshold: 0.6,
-                prefix_padding_ms: 300,
-                silence_duration_ms: 800
-              }
-            }
-          }));
+          onStatusChangeRef.current?.('connected');
+          
+          // Backend handles agent configuration automatically based on session
+          // If we need to switch agent, send agent message
+          if (agentId) {
+            ws.send(JSON.stringify({
+              type: 'agent',
+              agent_id: agentId
+            }));
+          }
         };
 
         ws.onmessage = (event) => {
-          const data = JSON.parse(event.data);
+          if (!mounted) return;
+          
+          try {
+            const data = JSON.parse(event.data);
 
-          switch (data.type) {
-            case 'response.audio.delta':
-              enqueueAudio(data.delta);
-              break;
+            switch (data.type) {
+              case 'audio':
+                // Audio chunk from assistant
+                if (data.data) {
+                  enqueueAudio(data.data);
+                  setIsSpeaking(true);
+                }
+                break;
 
-            case 'response.audio_transcript.delta':
-              assistantTranscriptRef.current += data.delta;
-              setAssistantTranscription(assistantTranscriptRef.current);
-              setIsProcessing(false);
-              break;
+              case 'transcription':
+                // Transcript updates (user or assistant)
+                if (data.speaker === 'user') {
+                  if (data.status === 'complete') {
+                    // Final user transcript
+                    const finalText = data.text || '';
+                    setUserTranscription(finalText);
+                    userTranscriptRef.current = '';
+                    if (finalText) {
+                      onMessageRef.current?.({
+                        id: `user-${Date.now()}`,
+                        type: 'user',
+                        text: finalText,
+                        timestamp: new Date()
+                      });
+                    }
+                  } else if (data.status === 'processing') {
+                    // Partial user transcript
+                    setUserTranscription(data.text || '');
+                    userTranscriptRef.current = data.text || '';
+                  } else if (data.status === 'listening') {
+                    setIsProcessing(true);
+                  }
+                } else if (data.speaker === 'assistant') {
+                  if (data.status === 'complete') {
+                    // Final assistant transcript
+                    const finalText = data.text || '';
+                    setAssistantTranscription(finalText);
+                    assistantTranscriptRef.current = '';
+                    setIsProcessing(false);
+                    if (finalText) {
+                      onMessageRef.current?.({
+                        id: `assistant-${Date.now()}`,
+                        type: 'agent',
+                        text: finalText,
+                        agentId,
+                        timestamp: new Date()
+                      });
+                    }
+                  } else if (data.status === 'processing') {
+                    // Partial assistant transcript
+                    setAssistantTranscription(data.text || '');
+                    assistantTranscriptRef.current = data.text || '';
+                    setIsProcessing(false);
+                  }
+                }
+                break;
 
-            case 'response.audio_transcript.done':
-              // Verify / Finalize assistant text
-              const finalAssistantText = data.transcript;
-              if (finalAssistantText) {
-                onMessageRef.current?.({
-                  id: `assistant-${Date.now()}`,
-                  type: 'agent',
-                  text: finalAssistantText,
-                  agentId,
-                  timestamp: new Date()
-                });
-                // Report to backend
-                persistTurn({
-                  session_id: activeSessionId,
-                  agent_id: agentId,
-                  role: 'assistant',
-                  content: finalAssistantText
-                });
-              }
-              assistantTranscriptRef.current = '';
-              break;
+              case 'agent_switched':
+                // Agent was switched (backend confirms)
+                console.log('Agent switched to:', data.agent_id);
+                break;
 
-            case 'conversation.item.input_audio_transcription.delta':
-              userTranscriptRef.current += data.delta;
-              setUserTranscription(userTranscriptRef.current);
-              break;
+              case 'error':
+                console.error('VoiceLive Error:', data);
+                setError(data.message || 'Unknown error');
+                setConnectionStatus('error');
+                onStatusChangeRef.current?.('error');
+                break;
 
-            case 'conversation.item.input_audio_transcription.completed':
-              const finalUserText = data.transcript;
-              if (finalUserText) {
-                setUserTranscription(finalUserText);
-                onMessageRef.current?.({
-                  id: `user-${Date.now()}`,
-                  type: 'user',
-                  text: finalUserText,
-                  timestamp: new Date()
-                });
-                // Report to backend
-                persistTurn({
-                  session_id: activeSessionId,
-                  agent_id: agentId,
-                  role: 'user',
-                  content: finalUserText
-                });
-              }
-              userTranscriptRef.current = '';
-              break;
-
-            case 'input_audio_buffer.speech_started':
-              setIsProcessing(true); // Actually, listening? No, user speaking.
-              // VAD detected speech
-              break;
-
-            case 'error':
-              console.error('Azure Realtime Error:', data);
-              setError(data.error?.message || 'Unknown Azure error');
-              break;
+              default:
+                console.log('Unknown message type:', data.type, data);
+            }
+          } catch (e) {
+            console.error('Failed to parse WebSocket message:', e, event.data);
           }
         };
 
         ws.onerror = (e) => {
           console.error('WebSocket error', e);
-          setError('Connection error');
-          setConnectionStatus('error');
+          if (mounted) {
+            setError('Connection error');
+            setConnectionStatus('error');
+            onStatusChangeRef.current?.('error');
+          }
         };
 
-        ws.onclose = () => {
-          if (mounted) setConnectionStatus('error');
+        ws.onclose = (event) => {
+          console.log('WebSocket closed', event.code, event.reason);
+          if (mounted) {
+            setConnectionStatus('error');
+            onStatusChangeRef.current?.('error');
+          }
         };
 
         wsRef.current = ws;
@@ -286,16 +289,30 @@ export default function VoiceChat({
         console.error('Connection failed:', err);
         setError(err.message || 'Failed to connect');
         setConnectionStatus('error');
+        onStatusChangeRef.current?.('error');
       }
     };
 
-    connectToAzure();
+    connectToBackend();
 
     return () => {
       mounted = false;
-      wsRef.current?.close();
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
     };
-  }, [agentId, activeSessionId]);
+  }, [activeSessionId]);
+
+  // Handle agent switching when agentId prop changes
+  useEffect(() => {
+    if (wsRef.current?.readyState === WebSocket.OPEN && agentId) {
+      wsRef.current.send(JSON.stringify({
+        type: 'agent',
+        agent_id: agentId
+      }));
+    }
+  }, [agentId]);
 
   // Mic Logic
   const startListening = async () => {
@@ -333,9 +350,11 @@ export default function VoiceChat({
         const base64 = btoa(binary);
 
         if (wsRef.current?.readyState === WebSocket.OPEN) {
+          // Send audio chunk to backend WebSocket proxy
+          // Backend forwards to Azure VoiceLive
           wsRef.current.send(JSON.stringify({
-            type: 'input_audio_buffer.append',
-            audio: base64
+            type: 'audio',
+            data: base64
           }));
         }
       };
@@ -354,15 +373,9 @@ export default function VoiceChat({
   const stopListening = () => {
     if (!isListening) return;
 
-    // Commit buffer
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        type: 'input_audio_buffer.commit'
-      }));
-      wsRef.current.send(JSON.stringify({
-        type: 'response.create' // Trigger response generation
-      }));
-    }
+    // Backend handles VAD (Voice Activity Detection) automatically
+    // No need to send commit/response.create - backend detects speech end
+    // Just stop sending audio chunks
 
     processorRef.current?.disconnect();
     processorRef.current = null;

@@ -10,30 +10,62 @@ VoiceLive enables real-time voice conversations with Engram agents (Elena, Marcu
 
 ## Architecture
 
-Engram uses the **VoiceLive v2 (Direct Connection)** architecture for low-latency, resilient voice interactions.
+Engram uses the **WebSocket Proxy** architecture for reliable, production-ready voice interactions with unified endpoints.
 
-### Direct Connection (v2 - Primary)
+### WebSocket Proxy (Production - Current)
+
+> [!IMPORTANT]
+> **Unified endpoints** (`services.ai.azure.com`) do **not support** the REST token endpoint (`/openai/realtime/client_secrets`). The WebSocket proxy approach is the recommended production configuration.
+
+![VoiceLive WebSocket Proxy Architecture with Zep Memory Ingestion](/assets/diagrams/voicelive-websocket-proxy-architecture.png)
+
+*Figure: Complete VoiceLive WebSocket proxy architecture showing real-time audio flow, transcript extraction, and automatic persistence to Zep episodic memory. The diagram illustrates how user and assistant turns are captured from VoiceLive events and stored in EnterpriseContext before being persisted to Zep for long-term context retrieval.*
+
+**Architecture Overview:**
+
+```
+┌─────────────┐    WebSocket          ┌──────────────┐    VoiceLive SDK    ┌─────────────────────────┐
+│   Browser   │ ◀────────────────────▶│   Backend    │ ◀──────────────────▶│ Azure Cognitive Services│
+│  (VoiceChat)│   wss://.../voicelive/ │ (voice.py)   │   Direct Connection  │   (gpt-realtime model)  │
+└─────────────┘   {session_id}         └──────────────┘                     └─────────────────────────┘
+      │                                      │                                      │
+      │ Audio (PCM16, 24kHz)                │                                      │ Audio + Events
+      │ Transcripts                          │                                      │
+      │                                      │ (Automatic Turn Persistence)         │
+      │                                      ▼                                      │
+      │                              ┌──────────────┐                              │
+      │                              │     Zep      │                              │
+      │                              │   (Memory)   │                              │
+      └──────────────────────────────└──────────────┘                              │
+```
+
+**Benefits:**
+- ✅ Works with unified endpoints (`services.ai.azure.com`)
+- ✅ Backend handles authentication automatically
+- ✅ Memory enrichment integrated
+- ✅ All VoiceLive events supported
+- ✅ Production-ready and tested
+
+### Direct Connection (v2 - Future)
+
+> [!NOTE]
+> Direct browser-to-Azure connection requires a **direct OpenAI endpoint** (`openai.azure.com`), not unified endpoints. This architecture is planned for future implementation when direct endpoints are available.
 
 ```
 ┌─────────────┐    Ephemeral Token    ┌──────────────┐
 │   Browser   │ ◀────────────────────▶│   Backend    │
 │  (VoiceChat)│    POST /realtime/token │ (voice.py)   │
 └─────────────┘                       └──────────────┘
-       ▲                                      │
-       │                                      │ (Manual Turn Persistence)
-       │ WebRTC / WebSocket                   │ POST /conversation/turn
-       │ (Direct Connection)                  ▼
-       │                              ┌──────────────┐
+      ▲                                      │
+      │                                      │ (Manual Turn Persistence)
+      │ WebRTC / WebSocket                   │ POST /conversation/turn
+      │ (Direct Connection)                  ▼
+      │                              ┌──────────────┐
 ┌─────────────────────────┐           │     Zep      │
 │ Azure Cognitive Services│           │   (Memory)   │
 │   (gpt-realtime model)  │           └──────────────┘
 └─────────────────────────┘
 ```
-
-### Proxy Connection (v1 - Legacy)
-
-> [!NOTE]
-> The v1 architecture routed all audio through the backend. This is deprecated and should only be used if direct browser-to-Azure connection is blocked by corporate firewalls.
 
 ## Prerequisites
 
@@ -72,22 +104,31 @@ az cognitiveservices account deployment list \
 
 The backend requires these environment variables for VoiceLive:
 
-| Variable | Description | Example Value |
-|----------|-------------|---------------|
-| `AZURE_VOICELIVE_ENDPOINT` | Azure OpenAI Resource Endpoint (unified or direct) | `https://zimax.services.ai.azure.com` or `https://zimax.openai.azure.com` |
-| `AZURE_VOICELIVE_KEY` | Cognitive Services API key | (from Key Vault) |
-| `AZURE_VOICELIVE_MODEL` | Model deployment name | `gpt-realtime` |
-| `AZURE_VOICELIVE_PROJECT_NAME` | Project name for unified endpoints (optional) | `zimax` (if using Azure AI Foundry projects) |
-| `AZURE_VOICELIVE_API_VERSION` | API version for Realtime API | `2024-10-01-preview` or `2025-10-01` |
+| Variable | Description | Example Value | Required |
+|----------|-------------|---------------|----------|
+| `AZURE_VOICELIVE_ENDPOINT` | Azure OpenAI Resource Endpoint (unified or direct) | `https://zimax.services.ai.azure.com` or `https://zimax.openai.azure.com` | ✅ Yes |
+| `AZURE_VOICELIVE_KEY` | Cognitive Services API key | (from Key Vault) | ✅ Yes |
+| `AZURE_VOICELIVE_MODEL` | Model deployment name | `gpt-realtime` | ✅ Yes |
+| `AZURE_VOICELIVE_PROJECT_NAME` | Project name for unified endpoints (optional) | `zimax` (if using Azure AI Foundry projects) | ⚠️ Optional |
+| `AZURE_VOICELIVE_API_VERSION` | API version for Realtime API | `2025-10-01` (recommended) or `2024-10-01-preview` (legacy) | ✅ Yes |
 
-> [!TIP]
-> **Endpoint Types**:
-> - **Unified endpoint** (`services.ai.azure.com`): 
->   - **Standard**: Token URL: `/openai/realtime/client_secrets`
->   - **Project-based**: Token URL: `/api/projects/{project}/openai/realtime/client_secrets` (set `AZURE_VOICELIVE_PROJECT_NAME`)
-> - **Direct endpoint** (`openai.azure.com`): Token URL: `/openai/deployments/{model}/realtime/client_secrets`
+> [!IMPORTANT]
+> **Endpoint Types and Token Support**:
 > 
-> The backend automatically detects the endpoint type and constructs the correct URL. If you're using Azure AI Foundry projects, set `AZURE_VOICELIVE_PROJECT_NAME` to enable project-based endpoints.
+> - **Unified endpoint** (`services.ai.azure.com`): 
+>   - ✅ **WebSocket Proxy**: Use `/api/v1/voice/voicelive/{session_id}` (recommended)
+>   - ❌ **REST Token Endpoint**: `/openai/realtime/client_secrets` is **NOT supported**
+>   - ⚠️ **Project-based**: Token URL `/api/projects/{project}/openai/realtime/client_secrets` may not be available
+>   - **Configuration**: Set `AZURE_VOICELIVE_ENDPOINT=https://zimax.services.ai.azure.com` (no trailing slash)
+>   - **API Version**: Use `2025-10-01` (latest with enhanced features) or `2024-10-01-preview` (legacy)
+> 
+> - **Direct endpoint** (`openai.azure.com`): 
+>   - ✅ **REST Token Endpoint**: `/openai/deployments/{model}/realtime/client_secrets` is supported
+>   - ✅ **WebSocket Proxy**: Also supported as alternative
+>   - **Configuration**: Set `AZURE_VOICELIVE_ENDPOINT=https://zimax.openai.azure.com` (no trailing slash)
+>   - **API Version**: Use `2025-10-01` (recommended) or `2024-10-01-preview` (legacy)
+> 
+> **Current Production Configuration**: Unified endpoint with WebSocket proxy (working and tested).
 
 ### 2. Key Vault Configuration
 
@@ -363,7 +404,8 @@ az containerapp auth update -n <app-name> -g <rg> --action AllowAnonymous --enab
    ```
 
 6. **Verify API version**: 
-   - Standard endpoints: Use `2024-10-01-preview`
+   - **Recommended**: Use `2025-10-01` (latest version with enhanced features: 140+ languages, Neural HD voices, improved VAD, 4K avatars)
+   - **Legacy**: Use `2024-10-01-preview` for backward compatibility
    - Project-based endpoints: The `/client_secrets` REST endpoint may not be available. The SDK uses `2025-10-01` for direct WebSocket connections, but REST token endpoints may require different versions or may not be supported.
    - Check Azure documentation for latest supported version
 
@@ -403,11 +445,77 @@ The body must be **flattened** (not nested under `"session"`) and include `modal
 
 And the request must include `api-version=2024-10-01-preview` or `2025-08-28`.
 
+## Architecture Diagram
+
+For a detailed visual representation of the VoiceLive WebSocket proxy architecture, including all components, data flows, and memory ingestion paths, see:
+
+![VoiceLive WebSocket Proxy Architecture](/assets/diagrams/voicelive-websocket-proxy-architecture.png)
+
+*Figure: Complete VoiceLive WebSocket proxy architecture showing real-time audio flow, transcript extraction, and automatic persistence to Zep episodic memory.*
+
+The diagram illustrates:
+
+- **Real-time audio flow**: Browser ↔ Backend ↔ Azure VoiceLive (PCM16, 24kHz)
+- **Event processing**: VoiceLive events processed and accumulated into complete turns
+- **Transcript extraction**: User and assistant transcripts extracted from VoiceLive events
+- **Memory persistence**: Automatic async persistence of completed turns to Zep episodic memory
+- **EnterpriseContext integration**: 4-layer context model storing turns before persistence
+- **Component details**: Code references, event types, data formats, and configuration
+
+**Key Components Shown:**
+- Browser/Frontend (VoiceChat component)
+- Backend WebSocket Proxy (`/api/v1/voice/voicelive/{session_id}`)
+- Azure VoiceLive (gpt-realtime model, API 2025-10-01)
+- Event Processor (transcript accumulation)
+- EnterpriseContext (4-layer context)
+- Memory Persistence (async to Zep)
+- Zep Memory Service (episodic storage)
+
+The JSON source for this diagram is available at `docs/assets/diagrams/voicelive-websocket-proxy-diagram.json` for regeneration or customization.
+
+## Production Configuration (Current)
+
+### Working Configuration
+
+**Endpoint Type**: Unified (`services.ai.azure.com`)  
+**Connection Method**: WebSocket Proxy  
+**Status**: ✅ Production-Ready and Tested
+
+**Environment Variables**:
+```bash
+AZURE_VOICELIVE_ENDPOINT=https://zimax.services.ai.azure.com
+AZURE_VOICELIVE_KEY=<from-key-vault>
+AZURE_VOICELIVE_MODEL=gpt-realtime
+AZURE_VOICELIVE_API_VERSION=2025-10-01
+AZURE_VOICELIVE_PROJECT_NAME=  # Empty (not using projects)
+```
+
+**Frontend Connection**:
+```typescript
+// WebSocket proxy endpoint (recommended for unified endpoints)
+const ws = new WebSocket(
+  `wss://staging-env-api.gentleriver-dd0de193.eastus2.azurecontainerapps.io/api/v1/voice/voicelive/${sessionId}`
+);
+```
+
+**Backend Endpoint**: `WS /api/v1/voice/voicelive/{session_id}`
+
+### Why WebSocket Proxy?
+
+1. **Unified Endpoint Limitation**: REST token endpoint (`/realtime/token`) returns 404 with unified endpoints
+2. **Reliability**: Backend handles authentication and connection management
+3. **Integration**: Automatic memory enrichment and event handling
+4. **Production Tested**: Verified working in Azure deployment
+
 ## Verification Procedures
 
 ### 1. Verify VoiceLive Status (Production)
 
 ```bash
+# From command line
+curl -s https://staging-env-api.gentleriver-dd0de193.eastus2.azurecontainerapps.io/api/v1/voice/status | jq '.'
+
+# Or via SWA
 curl -s https://engram.work/api/v1/voice/status | jq '.'
 ```
 
@@ -425,6 +533,20 @@ Expected output:
   }
 }
 ```
+
+### 2. Verify WebSocket Proxy Endpoint
+
+```bash
+# Test WebSocket endpoint availability (should return 426 Upgrade Required or 400 Bad Request for non-WebSocket requests)
+curl -i -N \
+  -H "Connection: Upgrade" \
+  -H "Upgrade: websocket" \
+  -H "Sec-WebSocket-Version: 13" \
+  -H "Sec-WebSocket-Key: test" \
+  https://staging-env-api.gentleriver-dd0de193.eastus2.azurecontainerapps.io/api/v1/voice/voicelive/test-session
+```
+
+Expected: HTTP 426 (Upgrade Required) or 400 (Bad Request) - indicates WebSocket endpoint is available.
 
 ### 2. Verify Connection (Local)
 
@@ -518,9 +640,13 @@ The current architecture routes all audio through the backend, creating:
 
 | Date | Change |
 |------|--------|
+| 2025-12-27 | **Updated to API version 2025-10-01**: Latest version with 140+ languages, Neural HD voices, improved VAD, 4K avatars |
+| 2025-12-27 | **Updated architecture**: Documented WebSocket proxy as production approach for unified endpoints |
+| 2025-12-27 | **Added production configuration section**: Current working setup with unified endpoint |
+| 2025-12-27 | **Updated Bicep**: Added `AZURE_VOICELIVE_PROJECT_NAME` and `AZURE_VOICELIVE_API_VERSION` environment variables |
+| 2025-12-27 | **Clarified endpoint limitations**: Unified endpoints do not support REST token endpoint |
 | 2025-12-27 | Fixed 400 Bad Request error: corrected endpoint URL construction for unified vs direct endpoints |
 | 2025-12-27 | Added support for project-based unified endpoints (`/api/projects/{project}/openai/realtime/client_secrets`) |
-| 2025-12-27 | Added `AZURE_VOICELIVE_PROJECT_NAME` and `AZURE_VOICELIVE_API_VERSION` configuration options |
 | 2025-12-27 | Added endpoint validation and improved error logging with Azure error details |
 | 2025-12-27 | Updated troubleshooting section with comprehensive 400 error resolution steps |
 | 2025-12-27 | Added request body validation and endpoint type detection |

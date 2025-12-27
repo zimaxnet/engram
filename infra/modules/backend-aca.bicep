@@ -237,6 +237,14 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
               value: 'gpt-realtime'
             }
             {
+              name: 'AZURE_VOICELIVE_PROJECT_NAME'
+              value: ''  // Optional: set to project name if using Azure AI Foundry projects
+            }
+            {
+              name: 'AZURE_VOICELIVE_API_VERSION'
+              value: '2025-10-01'  // Latest version with 140+ languages, Neural HD voices, improved VAD, 4K avatars
+            }
+            {
               name: 'CORS_ORIGINS'
               value: '["https://engram.work", "https://*.azurestaticapps.net", "http://localhost:5173", "*"]'
             }
