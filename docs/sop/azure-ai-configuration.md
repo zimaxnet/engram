@@ -18,6 +18,9 @@ For standard agent chat, the backend can use **Azure AI Foundry Model Router** f
 * **Endpoint**: `https://zimax-gw.azure-api.net/zimax/openai/v1`
 * **Model Router**: Deployed Model Router deployment name (e.g., `model-router`)
 * **Key Source**: Azure Key Vault Secret `azure-ai-key` (APIM Subscription Key)
+* **Available APIs**: 
+  - Chat Completions API (`/chat/completions`) - Used by Engram agents
+  - Responses API (`/responses`) - Simpler input/output format
 
 **Environment Variable Mapping (`backend/.env`):**
 
@@ -26,6 +29,33 @@ For standard agent chat, the backend can use **Azure AI Foundry Model Router** f
 AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax/openai/v1
 AZURE_AI_MODEL_ROUTER=model-router  # Model Router deployment name
 AZURE_AI_KEY=<APIM_SUBSCRIPTION_KEY>
+```
+
+**API Examples:**
+
+```python
+# Chat Completions API (used by Engram agents)
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://zimax-gw.azure-api.net/zimax/openai/v1/",
+    api_key="<your-api-key>"
+)
+
+completion = client.chat.completions.create(
+    model="model-router",
+    messages=[
+        {"role": "user", "content": "What is the capital of France?"}
+    ],
+    temperature=0.7,
+)
+
+# Responses API (simpler format)
+response = client.responses.create(
+    model="model-router",
+    input="What is the capital of France?",
+)
+print(f"answer: {response.output[0]}")
 ```
 
 **Option B: Model Router via Foundry Direct**
