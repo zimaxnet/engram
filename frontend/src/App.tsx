@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './App.css';
 import { MainLayout } from './components/MainLayout';
 import { ChatView } from './pages/Chat/ChatView';
@@ -24,14 +24,14 @@ import { VoiceInteractionPage } from './pages/Voice/VoiceInteractionPage';
 import { StoriesPage } from './pages/Stories/StoriesPage';
 import { StoryDetail } from './pages/Stories/StoryDetail';
 
-function App() {
-  // Keep backend containers warm while user is active
-  useKeepAlive();
-
+function AppContent() {
+  const location = useLocation();
   const [activeAgent, setActiveAgent] = useState<AgentId>('elena');
   const [selectedModel, setSelectedModel] = useState('gpt-5-chat');
+  
   // Single conversation/session ID shared across Chat + Voice so both persist into the same Zep session.
-  const [sessionId] = useState<string>(() => {
+  // Can be overridden via navigation state (e.g., from Episodes page)
+  const [sessionId, setSessionId] = useState<string>(() => {
     const key = 'engram_session_id'
     const fallback = `session-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
     try {
@@ -44,21 +44,36 @@ function App() {
     }
   });
 
+  // Update session ID and agent when navigating from Episodes
+  useEffect(() => {
+    const state = location.state as { sessionId?: string; agentId?: string } | null;
+    if (state?.sessionId) {
+      try {
+        sessionStorage.setItem('engram_session_id', state.sessionId);
+        setSessionId(state.sessionId);
+      } catch (err) {
+        console.error('Failed to update session ID:', err);
+      }
+    }
+    if (state?.agentId && ['elena', 'marcus', 'sage'].includes(state.agentId)) {
+      setActiveAgent(state.agentId as AgentId);
+    }
+  }, [location.state]);
+
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <MainLayout
-              activeAgent={activeAgent}
-              onAgentChange={setActiveAgent}
-              selectedModel={selectedModel}
-              onModelChange={setSelectedModel}
-              sessionId={sessionId}
-            />
-          }
-        >
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <MainLayout
+            activeAgent={activeAgent}
+            onAgentChange={setActiveAgent}
+            selectedModel={selectedModel}
+            onModelChange={setSelectedModel}
+            sessionId={sessionId}
+          />
+        }
+      >
           {/* Main Chat Interface */}
           <Route index element={<ChatView />} />
 
@@ -121,6 +136,16 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
+  );
+}
+
+function App() {
+  // Keep backend containers warm while user is active
+  useKeepAlive();
+
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   );
 }
