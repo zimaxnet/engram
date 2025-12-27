@@ -10,18 +10,30 @@ VoiceLive enables real-time voice conversations with Engram agents (Elena, Marcu
 
 ## Architecture
 
+Engram uses the **VoiceLive v2 (Direct Connection)** architecture for low-latency, resilient voice interactions.
+
+### Direct Connection (v2 - Primary)
+
 ```
-┌─────────────┐    WebSocket    ┌──────────────┐    WebSocket    ┌─────────────────────────┐
-│   Browser   │ ◀──────────────▶│   Backend    │ ◀──────────────▶│ Azure Cognitive Services│
-│  (VoiceChat)│   Audio/JSON    │ (voice.py)   │   Audio/Events  │   (gpt-realtime model)  │
-└─────────────┘                 └──────────────┘                 └─────────────────────────┘
-                                       │
-                                       ▼
-                                ┌──────────────┐
-                                │     Zep      │
-                                │   (Memory)   │
-                                └──────────────┘
+┌─────────────┐    Ephemeral Token    ┌──────────────┐
+│   Browser   │ ◀────────────────────▶│   Backend    │
+│  (VoiceChat)│    POST /realtime/token │ (voice.py)   │
+└─────────────┘                       └──────────────┘
+       ▲                                      │
+       │                                      │ (Manual Turn Persistence)
+       │ WebRTC / WebSocket                   │ POST /conversation/turn
+       │ (Direct Connection)                  ▼
+       │                              ┌──────────────┐
+┌─────────────────────────┐           │     Zep      │
+│ Azure Cognitive Services│           │   (Memory)   │
+│   (gpt-realtime model)  │           └──────────────┘
+└─────────────────────────┘
 ```
+
+### Proxy Connection (v1 - Legacy)
+
+> [!NOTE]
+> The v1 architecture routed all audio through the backend. This is deprecated and should only be used if direct browser-to-Azure connection is blocked by corporate firewalls.
 
 ## Prerequisites
 
@@ -62,9 +74,12 @@ The backend requires these environment variables for VoiceLive:
 
 | Variable | Description | Example Value |
 |----------|-------------|---------------|
-| `AZURE_VOICELIVE_ENDPOINT` | Direct Cognitive Services endpoint | `https://zimax.services.ai.azure.com/` |
+| `AZURE_VOICELIVE_ENDPOINT` | Direct OpenAI Resource Endpoint | `https://zimax.openai.azure.com` |
 | `AZURE_VOICELIVE_KEY` | Cognitive Services API key | (from Key Vault) |
 | `AZURE_VOICELIVE_MODEL` | Model deployment name | `gpt-realtime` |
+
+> [!TIP]
+> Use the direct `{resource}.openai.azure.com` endpoint rather than the unified `services.ai.azure.com` endpoint for the Realtime API to avoid routing issues on ephemeral token requests.
 
 ### 2. Key Vault Configuration
 
@@ -157,7 +172,7 @@ voicelive_connection = await asyncio.wait_for(
 )
 ```
 
-2. Switch to API Key authentication (stored in Key Vault).
+1. Switch to API Key authentication (stored in Key Vault).
 
 ### Issue: 404 Model Not Found
 
@@ -191,25 +206,54 @@ az cognitiveservices account keys list \
   --resource-group zimax-ai
 ```
 
-2. For Managed Identity, assign the "Cognitive Services OpenAI User" role.
+1. For Managed Identity, assign the "Cognitive Services OpenAI User" role.
 
-### Issue: WebSocket 401 in Browser
+### Issue: 401 Unauthorized (Platform Level)
 
-**Symptom**: Frontend WebSocket connection fails with 401.
+**Symptom**: `curl` to `/api/v1/voice/realtime/token` returns 401 even when `AUTH_REQUIRED=false`.
 
-**Root Cause**: Azure Container Apps Platform Authentication blocking WebSockets.
+**Root Cause**: Azure Container Apps "Platform Authentication" (EasyAuth) is enabled and intercepting requests before they reach the FastAPI application.
 
-**Solution**: Disable platform authentication in `backend-aca.bicep`:
+**Solution**:
+
+1. Ensure the `authConfig` resource in Bicep is set to `AllowAnonymous`:
 
 ```bicep
-configuration: {
-  activeRevisionsMode: 'Single'
-  ingress: {
-    // ... other config ...
+resource authConfig 'Microsoft.App/containerApps/authConfigs@2023-05-01' = {
+  parent: backendApp
+  name: 'current'
+  properties: {
+    platform: { enabled: false }
+    globalValidation: { unauthenticatedClientAction: 'AllowAnonymous' }
   }
-  // Do NOT include authConfigs that enable platform auth
 }
 ```
+
+1. Manually disable via CLI if necessary:
+
+```bash
+az containerapp auth update -n <app-name> -g <rg> --action AllowAnonymous --enabled false
+```
+
+### Issue: 500 External Server Error on Token Request
+
+**Symptom**: Backend returns 500 with message "Failed to get ephemeral token".
+
+**Root Cause**: Incorrect JSON body structure or API version for Azure OpenAI.
+
+**Solution**:
+The body must be **flattened** (not nested under `"session"`) and include `modalities`:
+
+```json
+{
+  "model": "gpt-realtime",
+  "modalities": ["audio", "text"],
+  "instructions": "...",
+  "voice": "..."
+}
+```
+
+And the request must include `api-version=2024-10-01-preview` or `2025-08-28`.
 
 ## Verification Procedures
 
