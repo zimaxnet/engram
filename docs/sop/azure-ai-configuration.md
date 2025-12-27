@@ -239,13 +239,106 @@ completion = client.chat.completions.create(
 print(completion.choices[0].message)
 ```
 
-## Troubleshooting 401 Unauthorized
+## Troubleshooting Chat Issues
+
+### Common Error: "I apologize, but I encountered an issue processing your request"
+
+This generic error message indicates the chat endpoint caught an exception. Check the backend logs for detailed error information.
+
+#### 1. Check Environment Variables
+
+Verify all required environment variables are set in Azure Container Apps:
+
+```bash
+# Required for Model Router via APIM Gateway
+AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax/openai/v1
+AZURE_AI_MODEL_ROUTER=model-router  # If using Model Router
+AZURE_AI_KEY=<APIM_SUBSCRIPTION_KEY>  # Must be APIM key, not Foundry key
+AZURE_AI_API_VERSION=2024-10-01-preview
+```
+
+#### 2. Test Model Router Configuration
+
+Use the diagnostic script to test the configuration:
+
+```bash
+python3 scripts/test-chat-model-router.py
+```
+
+This will:
+- Verify environment variables are set
+- Test the API endpoint connectivity
+- Validate authentication
+- Test agent chat functionality
+
+#### 3. Verify APIM Subscription Key
+
+The `AZURE_AI_KEY` must be the **APIM Subscription Key**, not the Cognitive Services key:
+
+```bash
+# Get APIM subscription key from Azure Portal
+# Or from Key Vault secret: azure-ai-key
+```
+
+#### 4. Check Model Router Deployment Name
+
+If using Model Router, verify the deployment name matches exactly:
+
+```bash
+# In Azure AI Foundry, check the Model Router deployment name
+# It should match AZURE_AI_MODEL_ROUTER exactly (case-sensitive)
+```
+
+#### 5. Verify Endpoint Format
+
+For APIM Gateway, the endpoint must include `/openai/v1`:
+
+```bash
+# Correct
+AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax/openai/v1
+
+# Incorrect (missing /openai/v1)
+AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax
+```
+
+#### 6. Check Backend Logs
+
+View detailed error logs in Azure Container Apps:
+
+```bash
+# View logs for API container
+az containerapp logs show \
+  --name staging-env-api \
+  --resource-group engram-rg \
+  --follow
+
+# Look for errors like:
+# - "FoundryChatClient: Error calling LLM"
+# - "Agent execution failed"
+# - HTTP status codes (401, 404, 500)
+```
+
+#### 7. Test Direct API Call
+
+Test the Model Router API directly:
+
+```bash
+curl -X POST "https://zimax-gw.azure-api.net/zimax/openai/v1/chat/completions" \
+  -H "Ocp-Apim-Subscription-Key: <APIM_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "model-router",
+    "messages": [{"role": "user", "content": "Hello"}]
+  }'
+```
+
+### Troubleshooting 401 Unauthorized
 
 If an agent returns `401 PermissionDenied`:
 
 1. **Check the Endpoint**: Ensure `AZURE_AI_ENDPOINT` matches `AZURE_EXISTING_AIPROJECT_ENDPOINT` (`https://zimax-gw.azure-api.net/zimax/openai/v1/`).
 2. **Check the Key**: Ensure `AZURE_AI_KEY` matches the APIM Subscription Key (`cf23...`), NOT the backend Foundry resource key.
-3. **Verify Deployment**: The deployment name must be `gpt-5-chat` (or `gpt-5.1-chat` if explicitly versioned).
+3. **Verify Deployment**: The deployment name must match exactly (e.g., `model-router` for Model Router, or `gpt-5-chat` for direct deployment).
 
 ## Zep Memory: Sessions vs. Episodes
 

@@ -111,7 +111,13 @@ async def send_message(message: ChatMessage, user: SecurityContext = Depends(get
         agent = get_agent(agent_id)
 
     except Exception as e:
-        logger.error(f"Agent execution failed: {e}")
+        logger.error(f"Agent execution failed: {e}", exc_info=True)
+        # Log detailed error information for debugging
+        error_details = str(e)
+        if hasattr(e, '__cause__') and e.__cause__:
+            error_details += f" (caused by: {e.__cause__})"
+        logger.error(f"Error details: {error_details}")
+        
         # Fallback response
         agent_id = message.agent_id or "elena"
         try:
