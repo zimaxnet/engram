@@ -4,6 +4,15 @@
 
 The Engram Context Engine now integrates with GitHub Projects to enable comprehensive tracking of the Production-Grade Agentic System implementation. This integration allows Elena (Business Analyst) and Marcus (Project Manager) agents to actively manage tasks, track progress, and maintain visibility across all seven layers of agentic AI systems.
 
+## Creating the Story
+
+**To create a story about this integration**, delegate to Sage through Elena or Marcus:
+
+- **Via Elena**: "Elena, please delegate to Sage to create a story about GitHub Projects integration..."
+- **Via Marcus**: "Marcus, please delegate to Sage to create a story about our GitHub Projects integration..."
+
+See [How to Create GitHub Projects Story](./How-to-Create-GitHub-Projects-Story.md) for detailed instructions.
+
 ## Integration Architecture
 
 ### Seven Layers of Agentic AI Systems
