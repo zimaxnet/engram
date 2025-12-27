@@ -43,8 +43,7 @@ param identityResourceId string
 @description('User-assigned identity client ID (for DefaultAzureCredential).')
 param identityClientId string
 
-@description('Whether API requests require user auth (Entra JWT). Set false for POC/staging to reduce friction.')
-param authRequired bool = true
+@description('Whether API requests require user auth (Entra JWT). Set false for POC/staging to reduce friction.')\nparam authRequired bool = false  // POC default: false (set true for production)
 
 @description('Registry username.')
 param registryUsername string
