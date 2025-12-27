@@ -9,9 +9,35 @@ Engram uses a dual-path approach for Azure AI integration:
 
 ## Configuration Standards
 
-### 1. Azure APIM Gateway (Primary Chat)
+### 1. Azure AI Foundry Model Router (Recommended for Chat)
 
-For standard agent chat (`gpt-5-chat`, `gpt-4o`), the backend **MUST** connect via the APIM Gateway.
+For standard agent chat, the backend can use **Azure AI Foundry Model Router** for intelligent model selection and cost optimization.
+
+* **Endpoint**: `https://zimax.services.ai.azure.com/` (Direct Cognitive Services)
+* **Project**: Set if using project-based endpoints
+* **Model Router**: Deployed Model Router deployment name (e.g., `model-router-prod`)
+* **Key Source**: Azure Key Vault Secret `azure-ai-key` (Cognitive Services key)
+
+**Environment Variable Mapping (`backend/.env`):**
+
+```bash
+# Model Router Configuration (Recommended)
+AZURE_AI_ENDPOINT=https://zimax.services.ai.azure.com/
+AZURE_AI_PROJECT_NAME=zimax  # Optional, if using project-based endpoints
+AZURE_AI_MODEL_ROUTER=model-router-prod  # Model Router deployment name
+AZURE_AI_KEY=<Cognitive-Services-Key>
+AZURE_AI_API_VERSION=2024-10-01-preview
+```
+
+**Benefits:**
+- Dynamic model selection based on query complexity
+- Cost optimization (routes simple queries to cheaper models)
+- Automatic fallback and load balancing
+- Single endpoint for multiple models
+
+### 1a. Azure APIM Gateway (Alternative for Chat)
+
+For standard agent chat (`gpt-5-chat`, `gpt-4o`), the backend can also connect via the APIM Gateway.
 
 * **Endpoint**: `https://zimax-gw.azure-api.net/zimax/openai/v1`
 * **Key Source**: Azure Key Vault Secret `azure-ai-key`
@@ -20,7 +46,7 @@ For standard agent chat (`gpt-5-chat`, `gpt-4o`), the backend **MUST** connect v
 **Environment Variable Mapping (`backend/.env`):**
 
 ```bash
-# Correct Configuration
+# APIM Gateway Configuration (Alternative)
 AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax/openai/v1
 AZURE_AI_KEY=<APIM_SUBSCRIPTION_KEY> 
 AZURE_AI_DEPLOYMENT=gpt-5-chat

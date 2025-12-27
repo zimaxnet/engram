@@ -67,6 +67,9 @@ class Settings(BaseSettings):
     azure_ai_key: Optional[str] = Field(None, alias="AZURE_AI_KEY")
     azure_ai_deployment: str = Field("gpt-5.1-chat", alias="AZURE_AI_DEPLOYMENT")
     azure_ai_api_version: str = Field("2024-10-01-preview", alias="AZURE_AI_API_VERSION")
+    # Model Router: If set, use Azure AI Foundry Model Router instead of direct deployment
+    # Set to the Model Router deployment name (e.g., "model-router-prod")
+    azure_ai_model_router: Optional[str] = Field(None, alias="AZURE_AI_MODEL_ROUTER")
 
     # Elena voice configuration
     elena_voice_name: str = Field("en-US-JennyNeural", alias="ELENA_VOICE_NAME")
