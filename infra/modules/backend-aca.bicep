@@ -31,6 +31,9 @@ param azureAiEndpoint string = ''
 @description('Azure AI Services project name.')
 param azureAiProjectName string = ''
 
+@description('Azure AI Model Router deployment name (optional, for intelligent routing).')
+param azureAiModelRouter string = ''
+
 @description('Azure VoiceLive endpoint (Azure AI Services direct).')
 param azureVoiceLiveEndpoint string = 'https://zimax.services.ai.azure.com'
 

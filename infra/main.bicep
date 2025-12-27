@@ -64,6 +64,9 @@ param azureAiEndpoint string = ''
 @description('Azure AI Services project name.')
 param azureAiProjectName string = ''
 
+@description('Azure AI Model Router deployment name (optional, for intelligent routing).')
+param azureAiModelRouter string = ''
+
 @description('Azure AI Services API key for Foundry.')
 @secure()
 param azureAiKey string = ''
