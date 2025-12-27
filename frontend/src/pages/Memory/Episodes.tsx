@@ -35,7 +35,7 @@ export function Episodes() {
     
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
-    const [totalCount, setTotalCount] = useState(0);
+    const [_totalCount, setTotalCount] = useState(0);
 
     // Fetch episodes
     useEffect(() => {
