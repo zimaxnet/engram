@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>FinOps Strategy | Engram - Context Engineering Platform</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="FinOps Strategy" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Enterprise AI Memory &amp; Cognition Platform" />
+<meta property="og:description" content="Enterprise AI Memory &amp; Cognition Platform" />
+<link rel="canonical" href="https://wiki.engram.work/finops.html" />
+<meta property="og:url" content="https://wiki.engram.work/finops.html" />
+<meta property="og:site_name" content="Engram - Context Engineering Platform" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="FinOps Strategy" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"Enterprise AI Memory &amp; Cognition Platform","headline":"FinOps Strategy","url":"https://wiki.engram.work/finops.html"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+    <!--[if lt IE 9]>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <![endif]-->
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1><a href="https://wiki.engram.work/">Engram - Context Engineering Platform</a></h1>
+
+        
+
+        <p>Enterprise AI Memory & Cognition Platform</p>
+
+        
+
+        
+
+        
+      </header>
+      <section>
+
+      <h1 id="home--finops-strategy"><a href="/">Home</a> › FinOps Strategy</h1>
+
+<h1 id="finops-strategy">FinOps Strategy</h1>
+
+<p>Engram is designed with <strong>cost-conscious architecture</strong> as a first-class concern. This guide details our approach to minimizing and tracking costs while maintaining enterprise-grade capabilities.</p>
+
+<h2 id="cost-philosophy">Cost Philosophy</h2>
+
+<blockquote>
+  <p><strong>“Pay only for what you use, when you use it.”</strong></p>
+</blockquote>
+
+<h3 id="design-principles">Design Principles</h3>
+
+<ol>
+  <li><strong>Scale-to-Zero</strong>: All compute scales to zero when idle</li>
+  <li><strong>Right-Sizing</strong>: Match resources to actual workload</li>
+  <li><strong>Caching</strong>: Reduce redundant API calls</li>
+  <li><strong>Monitoring</strong>: Track and alert on cost anomalies</li>
+</ol>
+
+<hr />
+
+<h2 id="infrastructure-cost-breakdown">Infrastructure Cost Breakdown</h2>
+
+<h3 id="azure-container-apps-scale-to-zero">Azure Container Apps (Scale-to-Zero)</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Service</th>
+      <th>Min Replicas</th>
+      <th>Max Replicas</th>
+      <th>vCPU</th>
+      <th>Memory</th>
+      <th>Est. Cost/Month</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>API</td>
+      <td>0</td>
+      <td>10</td>
+      <td>0.5</td>
+      <td>1GB</td>
+      <td>$0-15*</td>
+    </tr>
+    <tr>
+      <td>Worker</td>
+      <td>0</td>
+      <td>5</td>
+      <td>0.5</td>
+      <td>1GB</td>
+      <td>$0-10*</td>
+    </tr>
+    <tr>
+      <td>Frontend</td>
+      <td>Static</td>
+      <td>Static</td>
+      <td>N/A</td>
+      <td>N/A</td>
+      <td>$9</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><em>Scales to zero when no requests</em></p>
+
+<h3 id="database--storage">Database &amp; Storage</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Service</th>
+      <th>Tier</th>
+      <th>Configuration</th>
+      <th>Est. Cost/Month</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>PostgreSQL</td>
+      <td>B1ms</td>
+      <td>1 vCore, 2GB RAM</td>
+      <td>$13</td>
+    </tr>
+    <tr>
+      <td>Storage Account</td>
+      <td>Standard</td>
+      <td>LRS, Hot tier</td>
+      <td>$1</td>
+    </tr>
+    <tr>
+      <td>Key Vault</td>
+      <td>Standard</td>
+      <td>&lt; 10K operations</td>
+      <td>$0.03/10K ops</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="ai-services-foundry">AI Services (Foundry)</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Service</th>
+      <th>Model</th>
+      <th>Pricing</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Azure AI (Foundry)</td>
+      <td>gpt-4o</td>
+      <td>$5/$15 per 1M tokens</td>
+      <td>Input/Output</td>
+    </tr>
+    <tr>
+      <td>Azure AI (Foundry)</td>
+      <td>gpt-4o-mini</td>
+      <td>$0.15/$0.60 per 1M tokens</td>
+      <td>Cost-efficient</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="estimated-monthly-costs">Estimated Monthly Costs</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Scenario</th>
+      <th>Description</th>
+      <th>Est. Cost</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Idle</strong></td>
+      <td>No active users</td>
+      <td>~$23</td>
+    </tr>
+    <tr>
+      <td><strong>Light</strong></td>
+      <td>100 conversations/day</td>
+      <td>~$50-80</td>
+    </tr>
+    <tr>
+      <td><strong>Medium</strong></td>
+      <td>1,000 conversations/day</td>
+      <td>~$200-400</td>
+    </tr>
+    <tr>
+      <td><strong>Heavy</strong></td>
+      <td>10,000 conversations/day</td>
+      <td>~$1,500-3,000</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2 id="cost-optimization-strategies">Cost Optimization Strategies</h2>
+
+<h3 id="1-model-selection">1. Model Selection</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Route simple queries to cheaper models
+</span><span class="k">if</span> <span class="n">query_complexity</span> <span class="o">==</span> <span class="sh">"</span><span class="s">simple</span><span class="sh">"</span><span class="p">:</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="sh">"</span><span class="s">gpt-4o-mini</span><span class="sh">"</span>  <span class="c1"># 30x cheaper
+</span><span class="k">else</span><span class="p">:</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="sh">"</span><span class="s">gpt-4o</span><span class="sh">"</span>
+</code></pre></div></div>
+
+<p><strong>Impact</strong>: 60-80% cost reduction on simple queries</p>
+
+<h3 id="2-memory-caching">2. Memory Caching</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Cache frequently accessed context
+</span><span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">get_user_context</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">return</span> <span class="k">await</span> <span class="n">memory_client</span><span class="p">.</span><span class="nf">get_context</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p><strong>Impact</strong>: Reduce memory API calls by 50%+</p>
+
+<h3 id="3-response-streaming">3. Response Streaming</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Stream responses instead of waiting for full completion
+</span><span class="k">async</span> <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">agent</span><span class="p">.</span><span class="nf">stream</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+    <span class="k">yield</span> <span class="n">chunk</span>
+</code></pre></div></div>
+
+<p><strong>Impact</strong>: Better UX, similar cost, faster perceived response</p>
+
+<h3 id="4-conversation-summarization">4. Conversation Summarization</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Summarize long conversations to reduce context size
+</span><span class="k">if</span> <span class="nf">len</span><span class="p">(</span><span class="n">context</span><span class="p">.</span><span class="n">episodic</span><span class="p">.</span><span class="n">recent_turns</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
+    <span class="n">context</span><span class="p">.</span><span class="n">episodic</span><span class="p">.</span><span class="n">summary</span> <span class="o">=</span> <span class="k">await</span> <span class="nf">summarize</span><span class="p">(</span><span class="n">context</span><span class="p">.</span><span class="n">episodic</span><span class="p">.</span><span class="n">recent_turns</span><span class="p">)</span>
+    <span class="n">context</span><span class="p">.</span><span class="n">episodic</span><span class="p">.</span><span class="n">recent_turns</span> <span class="o">=</span> <span class="n">context</span><span class="p">.</span><span class="n">episodic</span><span class="p">.</span><span class="n">recent_turns</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span>
+</code></pre></div></div>
+
+<p><strong>Impact</strong>: 40% token reduction on long conversations</p>
+
+<hr />
+
+<h2 id="budget-controls">Budget Controls</h2>
+
+<h3 id="azure-budget-alerts">Azure Budget Alerts</h3>
+
+<div class="language-bicep highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">resource</span> <span class="n">budget</span> <span class="s1">'Microsoft.Consumption/budgets@2021-10-01'</span> <span class="p">=</span> <span class="pi">{</span>
+  <span class="py">name</span><span class="p">:</span> <span class="s1">'engram-monthly-budget'</span>
+  <span class="py">properties</span><span class="p">:</span> <span class="pi">{</span>
+    <span class="py">category</span><span class="p">:</span> <span class="s1">'Cost'</span>
+    <span class="py">amount</span><span class="p">:</span> <span class="m">500</span>
+    <span class="py">timeGrain</span><span class="p">:</span> <span class="s1">'Monthly'</span>
+    <span class="py">notifications</span><span class="p">:</span> <span class="pi">{</span>
+      <span class="s1">'50percent'</span><span class="p">:</span> <span class="pi">{</span>
+        <span class="py">enabled</span><span class="p">:</span> <span class="k">true</span>
+        <span class="py">operator</span><span class="p">:</span> <span class="s1">'GreaterThan'</span>
+        <span class="py">threshold</span><span class="p">:</span> <span class="m">50</span>
+        <span class="py">contactEmails</span><span class="p">:</span> <span class="p">[</span><span class="s1">'alerts@company.com'</span><span class="p">]</span>
+      <span class="pi">}</span>
+      <span class="s1">'80percent'</span><span class="p">:</span> <span class="pi">{</span>
+        <span class="py">enabled</span><span class="p">:</span> <span class="k">true</span>
+        <span class="py">operator</span><span class="p">:</span> <span class="s1">'GreaterThan'</span>
+        <span class="py">threshold</span><span class="p">:</span> <span class="m">80</span>
+        <span class="py">contactEmails</span><span class="p">:</span> <span class="p">[</span><span class="s1">'alerts@company.com'</span><span class="p">]</span>
+      <span class="pi">}</span>
+      <span class="s1">'100percent'</span><span class="p">:</span> <span class="pi">{</span>
+        <span class="py">enabled</span><span class="p">:</span> <span class="k">true</span>
+        <span class="py">operator</span><span class="p">:</span> <span class="s1">'GreaterThan'</span>
+        <span class="py">threshold</span><span class="p">:</span> <span class="m">100</span>
+        <span class="py">contactEmails</span><span class="p">:</span> <span class="p">[</span><span class="s1">'alerts@company.com'</span><span class="p">]</span>
+      <span class="pi">}</span>
+    <span class="pi">}</span>
+  <span class="pi">}</span>
+<span class="pi">}</span>
+</code></pre></div></div>
+
+<h3 id="application-level-limits">Application-Level Limits</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Rate limiting per user
+</span><span class="n">RATE_LIMITS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">Role</span><span class="p">.</span><span class="n">VIEWER</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>      <span class="c1"># 10 requests/minute
+</span>    <span class="n">Role</span><span class="p">.</span><span class="n">ANALYST</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>     <span class="c1"># 30 requests/minute
+</span>    <span class="n">Role</span><span class="p">.</span><span class="n">MANAGER</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span>     <span class="c1"># 60 requests/minute
+</span>    <span class="n">Role</span><span class="p">.</span><span class="n">ADMIN</span><span class="p">:</span> <span class="mi">120</span><span class="p">,</span>      <span class="c1"># 120 requests/minute
+</span><span class="p">}</span>
+
+<span class="c1"># Token limits per request
+</span><span class="n">MAX_TOKENS_PER_REQUEST</span> <span class="o">=</span> <span class="mi">4096</span>
+<span class="n">MAX_TOKENS_PER_USER_PER_DAY</span> <span class="o">=</span> <span class="mi">100000</span>
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="cost-tracking">Cost Tracking</h2>
+
+<h3 id="metrics-dashboard">Metrics Dashboard</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>Description</th>
+      <th>Alert Threshold</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">tokens_used_total</code></td>
+      <td>Total tokens consumed</td>
+      <td>&gt; 1M/day</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">api_calls_total</code></td>
+      <td>External API calls</td>
+      <td>&gt; 10K/day</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">workflow_executions</code></td>
+      <td>Temporal workflows</td>
+      <td>&gt; 5K/day</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="daily-cost-report">Daily Cost Report</h3>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">-- Query for daily cost breakdown</span>
+<span class="k">SELECT</span> 
+  <span class="nb">DATE</span><span class="p">(</span><span class="nb">timestamp</span><span class="p">)</span> <span class="k">as</span> <span class="nb">date</span><span class="p">,</span>
+  <span class="n">agent_id</span><span class="p">,</span>
+  <span class="k">SUM</span><span class="p">(</span><span class="n">tokens_input</span><span class="p">)</span> <span class="k">as</span> <span class="n">input_tokens</span><span class="p">,</span>
+  <span class="k">SUM</span><span class="p">(</span><span class="n">tokens_output</span><span class="p">)</span> <span class="k">as</span> <span class="n">output_tokens</span><span class="p">,</span>
+  <span class="k">SUM</span><span class="p">(</span><span class="n">tokens_input</span> <span class="o">*</span> <span class="mi">0</span><span class="p">.</span><span class="mi">000005</span> <span class="o">+</span> <span class="n">tokens_output</span> <span class="o">*</span> <span class="mi">0</span><span class="p">.</span><span class="mi">000015</span><span class="p">)</span> <span class="k">as</span> <span class="n">estimated_cost</span>
+<span class="k">FROM</span> <span class="n">agent_executions</span>
+<span class="k">WHERE</span> <span class="nb">timestamp</span> <span class="o">&gt;</span> <span class="n">NOW</span><span class="p">()</span> <span class="o">-</span> <span class="n">INTERVAL</span> <span class="s1">'30 days'</span>
+<span class="k">GROUP</span> <span class="k">BY</span> <span class="nb">DATE</span><span class="p">(</span><span class="nb">timestamp</span><span class="p">),</span> <span class="n">agent_id</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="nb">date</span> <span class="k">DESC</span><span class="p">;</span>
+</code></pre></div></div>
+
+<h3 id="cost-attribution">Cost Attribution</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Tag all resources with cost center
+</span><span class="n">context</span><span class="p">.</span><span class="n">operational</span><span class="p">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="sh">"</span><span class="s">cost_center</span><span class="sh">"</span><span class="p">:</span> <span class="n">user</span><span class="p">.</span><span class="n">department</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">project</span><span class="sh">"</span><span class="p">:</span> <span class="n">context</span><span class="p">.</span><span class="n">operational</span><span class="p">.</span><span class="n">workflow_id</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">agent</span><span class="sh">"</span><span class="p">:</span> <span class="n">context</span><span class="p">.</span><span class="n">operational</span><span class="p">.</span><span class="n">active_agent</span><span class="p">,</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="scaling-recommendations">Scaling Recommendations</h2>
+
+<h3 id="development-environment">Development Environment</h3>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Minimal resources for dev</span>
+<span class="na">api</span><span class="pi">:</span>
+  <span class="na">replicas</span><span class="pi">:</span> <span class="s">0-1</span>
+  <span class="na">cpu</span><span class="pi">:</span> <span class="m">0.25</span>
+  <span class="na">memory</span><span class="pi">:</span> <span class="s">512MB</span>
+  
+<span class="na">database</span><span class="pi">:</span>
+  <span class="na">tier</span><span class="pi">:</span> <span class="s">B1ms</span>  <span class="c1"># ~$13/month</span>
+</code></pre></div></div>
+
+<h3 id="production-environment">Production Environment</h3>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Scaled for production</span>
+<span class="na">api</span><span class="pi">:</span>
+  <span class="na">replicas</span><span class="pi">:</span> <span class="s">0-10</span>
+  <span class="na">cpu</span><span class="pi">:</span> <span class="m">1.0</span>
+  <span class="na">memory</span><span class="pi">:</span> <span class="s">2GB</span>
+  <span class="na">auto_scale</span><span class="pi">:</span>
+    <span class="na">min</span><span class="pi">:</span> <span class="m">0</span>
+    <span class="na">max</span><span class="pi">:</span> <span class="m">10</span>
+    <span class="na">target_cpu</span><span class="pi">:</span> <span class="s">70%</span>
+    
+<span class="na">database</span><span class="pi">:</span>
+  <span class="na">tier</span><span class="pi">:</span> <span class="s">GP_Gen5_2</span>  <span class="c1"># ~$150/month</span>
+  <span class="na">read_replicas</span><span class="pi">:</span> <span class="m">1</span>
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="reserved-capacity">Reserved Capacity</h2>
+
+<p>For predictable workloads, consider:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Service</th>
+      <th>On-Demand</th>
+      <th>1-Year Reserved</th>
+      <th>3-Year Reserved</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>PostgreSQL</td>
+      <td>$0.034/hr</td>
+      <td>$0.022/hr (35% off)</td>
+      <td>$0.017/hr (50% off)</td>
+    </tr>
+    <tr>
+      <td>Container Apps</td>
+      <td>Pay-per-use</td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>Azure AI (Foundry)</td>
+      <td>Standard</td>
+      <td>PTU (Provisioned)</td>
+      <td>PTU</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="when-to-use-reserved-capacity">When to Use Reserved Capacity</h3>
+
+<ul>
+  <li><strong>PostgreSQL</strong>: Always (predictable baseline)</li>
+  <li><strong>Azure AI PTU</strong>: When &gt; 100K tokens/hour sustained</li>
+  <li><strong>Container Apps</strong>: Never (scale-to-zero is better)</li>
+</ul>
+
+<hr />
+
+<h2 id="cost-optimization-checklist">Cost Optimization Checklist</h2>
+
+<h3 id="infrastructure">Infrastructure</h3>
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Enable scale-to-zero on all container apps</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Use B1ms PostgreSQL SKU for staging/dev (cost-optimized)</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Consider reserved capacity for PostgreSQL (35-50% savings)</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Tag all resources for cost attribution</li>
+</ul>
+
+<h3 id="application-level">Application-Level</h3>
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Cache Evidence Telemetry (60s TTL, reduces Monitor API calls by ~95%)</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Paginate BAU artifacts (reduces memory queries by 50-80%)</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Use gpt-4o-mini for simple queries (30x cheaper)</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Implement conversation summarization (40% token reduction)</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Batch Golden Thread runs for bulk operations (30-40% workflow overhead reduction)</li>
+</ul>
+
+<h3 id="monitoring--alerts">Monitoring &amp; Alerts</h3>
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Set up budget alerts at 50%, 80%, 100%</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Monitor daily token usage</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Review monthly cost reports</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Track Evidence Telemetry cache hit rate (target &gt; 80%)</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Alert on Golden Thread run failures (indicates waste)</li>
+</ul>
+
+
+
+      </section>
+      <footer>
+        
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="/assets/js/scale.fix.js"></script>
+  </body>
+</html>

@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unstructured Enterprise Deployment Strategy - Engram Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #00d4ff;
+            border-bottom: 3px solid #a855f7;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        h2 {
+            color: #00d4ff;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            padding-top: 1rem;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        h3 {
+            color: #a855f7;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        h4 {
+            color: #10b981;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .executive-summary {
+            background: #0a0e1a;
+            color: #e2e8f0;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .executive-summary h2 {
+            color: #00d4ff;
+            border: none;
+            margin-top: 0;
+        }
+        
+        .executive-summary ul {
+            margin-left: 2rem;
+            margin-top: 1rem;
+        }
+        
+        .executive-summary li {
+            margin-bottom: 0.5rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+        }
+        
+        th {
+            background: #0a0e1a;
+            color: #00d4ff;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .critical {
+            background: #fee2e2;
+            color: #991b1b;
+            font-weight: 600;
+        }
+        
+        .required {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        code {
+            background: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            background: #0a0e1a;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+        
+        pre code {
+            background: transparent;
+            padding: 0;
+            color: #e2e8f0;
+        }
+        
+        .architecture-diagram {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            font-family: monospace;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        
+        .risk-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .risk-box h4 {
+            color: #92400e;
+            margin-top: 0;
+        }
+        
+        .mitigation {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .mitigation h4 {
+            color: #065f46;
+            margin-top: 0;
+        }
+        
+        .phase {
+            background: #e0e7ff;
+            border-left: 4px solid #6366f1;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .phase h4 {
+            color: #312e81;
+            margin-top: 0;
+        }
+        
+        .references {
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 3rem;
+        }
+        
+        .references ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        
+        .references li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .references a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+        
+        .references a:hover {
+            text-decoration: underline;
+        }
+        
+        .toc {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .toc h3 {
+            margin-top: 0;
+        }
+        
+        .toc ul {
+            list-style: none;
+            margin-left: 1rem;
+        }
+        
+        .toc li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .toc a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Unstructured Enterprise Deployment Strategy for Engram Platform</h1>
+        
+        <div class="executive-summary">
+            <h2>Executive Summary</h2>
+            <p>This document outlines Zimax Networks LC's strategy for deploying Unstructured in customer environments (dev/test/UAT/prod). Unstructured is central to Engram's success as the ETL layer, providing document partitioning and chunking for ingestion into Zep memory. This plan addresses enterprise requirements including partitioning strategy selection, chunking parameter configuration, customer-managed key encryption, connector management, and NIST AI RMF compliance.</p>
+            
+            <p><strong>Key Decision</strong>: Unstructured OSS (Python library) integrated into Engram API for customer environments to enable:</p>
+            <ul>
+                <li>Full control over partitioning and chunking strategies</li>
+                <li>Custom configuration per document type</li>
+                <li>Data residency in customer-controlled infrastructure</li>
+                <li>Cost optimization through right-sizing (vs. Platform consumption-based pricing)</li>
+                <li>Integration with customer's existing document processing workflows</li>
+            </ul>
+        </div>
+        
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#section1">1. Unstructured OSS vs Unstructured Platform: Enterprise Comparison</a></li>
+                <li><a href="#section2">2. Partitioning Strategy Configuration: Critical Quality vs. Performance Trade-offs</a></li>
+                <li><a href="#section3">3. Chunking Parameter Configuration: RAG Quality Optimization</a></li>
+                <li><a href="#section4">4. Data Encryption: Customer-Managed Keys for Document Processing</a></li>
+                <li><a href="#section5">5. Kubernetes Deployment Strategy</a></li>
+                <li><a href="#section6">6. NIST AI RMF Compliance Integration</a></li>
+                <li><a href="#section7">7. Operational Responsibilities</a></li>
+                <li><a href="#section8">8. Implementation Roadmap</a></li>
+                <li><a href="#section9">9. Risk Mitigation</a></li>
+                <li><a href="#section10">10. Success Metrics</a></li>
+                <li><a href="#section11">11. Next Steps</a></li>
+            </ul>
+        </div>
+        
+        <section id="section1">
+            <h2>1. Unstructured OSS vs Unstructured Platform: Enterprise Comparison</h2>
+            
+            <h3>Feature Comparison Matrix</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Unstructured OSS (Python Library)</th>
+                        <th>Unstructured Platform (Managed)</th>
+                        <th>Engram Requirement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Deployment</strong></td>
+                        <td>Python library integrated into application</td>
+                        <td>Managed service (Dedicated Instance or In-VPC)</td>
+                        <td class="required">✅ Required - Integrated into Engram API</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Partitioning Control</strong></td>
+                        <td>Full control over strategies (fast, hi_res, auto)</td>
+                        <td>Managed strategies (Basic, Advanced, Platinum)</td>
+                        <td class="required">✅ Required - Custom strategy per document type</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Chunking Control</strong></td>
+                        <td>Full control over chunking parameters</td>
+                        <td>Managed chunking with customization</td>
+                        <td class="required">✅ Required - Fine-tuned chunking for RAG</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Data Residency</strong></td>
+                        <td>Customer-controlled (runs in customer infrastructure)</td>
+                        <td>In-VPC option available</td>
+                        <td class="required">✅ Required - Customer data residency</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Encryption Keys</strong></td>
+                        <td>Customer-managed (application-level)</td>
+                        <td>Platform-managed or In-VPC</td>
+                        <td class="critical">✅ <strong>CRITICAL</strong> - Customer-managed keys required</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Connector Management</strong></td>
+                        <td>Custom implementation per connector</td>
+                        <td>50+ pre-built connectors</td>
+                        <td class="required">✅ Required - Custom connector integration</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cost Model</strong></td>
+                        <td>Infrastructure costs only</td>
+                        <td>Consumption-based pricing</td>
+                        <td class="required">✅ Required - Predictable costs</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Model Selection</strong></td>
+                        <td>Full control (BYOM)</td>
+                        <td>Managed models or BYOM</td>
+                        <td class="required">✅ Required - Customer LLM accounts</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Multi-Tenancy</strong></td>
+                        <td>Custom implementation</td>
+                        <td>Built-in workspace isolation</td>
+                        <td class="required">✅ Required - Customer-defined isolation</td>
+                    </tr>
+                    <tr>
+                        <td><strong>On-Call Support</strong></td>
+                        <td>Zimax Networks LC team</td>
+                        <td>Unstructured support team</td>
+                        <td class="required">✅ Zimax Networks LC provides support</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Partitioning Strategy</strong></td>
+                        <td>Configurable per request</td>
+                        <td>Pre-configured tiers</td>
+                        <td class="critical">✅ <strong>CRITICAL</strong> - Strategy selection affects quality</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Chunking Parameters</strong></td>
+                        <td>Full control (max_characters, overlap, etc.)</td>
+                        <td>Managed with customization</td>
+                        <td class="required">✅ Required - RAG-optimized chunking</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Decision Rationale for OSS</h3>
+            <p><strong>Why Unstructured OSS for Customer Environments:</strong></p>
+            <ol>
+                <li><strong>Partitioning Strategy Control</strong>: Engram requires fine-grained control over partitioning strategies (fast vs. hi_res) based on document type and use case. OSS allows per-document strategy selection.</li>
+                <li><strong>Chunking Optimization</strong>: RAG quality depends heavily on chunking parameters. OSS provides full control over <code>max_characters</code>, <code>new_after_n_chars</code>, <code>combine_text_under_n_chars</code>, enabling optimization for customer-specific use cases.</li>
+                <li><strong>Cost Predictability</strong>: For enterprise customers with predictable document volumes, OSS integrated into Engram API provides cost predictability vs. Platform consumption-based pricing.</li>
+                <li><strong>Data Residency</strong>: Customer documents must remain in customer-controlled infrastructure. OSS runs entirely within customer's application, ensuring no data leaves customer environment.</li>
+                <li><strong>Custom Connector Integration</strong>: Customers may have proprietary document sources. OSS allows custom connector implementation without Platform dependency.</li>
+                <li><strong>Model Selection</strong>: Customers require BYOM (Bring Your Own Model) for OCR/VLM capabilities. OSS allows direct integration with customer's Azure OpenAI or other LLM accounts.</li>
+            </ol>
+            <p><strong>Staging POC Exception</strong>: Current library-based integration is acceptable for testing and production. Platform may be considered for specific use cases requiring managed connectors.</p>
+        </section>
+        
+        <section id="section2">
+            <h2>2. Partitioning Strategy Configuration: Critical Quality vs. Performance Trade-offs</h2>
+            
+            <h3>The Challenge</h3>
+            <p>Unstructured's partitioning strategy selection is a <strong>critical decision</strong> that affects:</p>
+            <ul>
+                <li>Document Quality: hi_res provides better extraction but is slower</li>
+                <li>Processing Speed: fast strategy is quick but may miss complex layouts</li>
+                <li>Cost: hi_res requires more compute resources (OCR, VLM)</li>
+                <li>Accuracy: Strategy choice directly impacts downstream RAG quality</li>
+            </ul>
+            <p>Unlike Temporal's immutable history shard count or Zep's vector dimensions, partitioning strategy can be changed per document, but <strong>strategy selection must be standardized</strong> across document types for consistency.</p>
+            
+            <h3>Partitioning Strategy Selection Matrix</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Strategy</th>
+                        <th>Use Case</th>
+                        <th>Processing Time</th>
+                        <th>Quality</th>
+                        <th>Cost</th>
+                        <th>OCR/VLM Required</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>fast</strong></td>
+                        <td>Simple text documents, native PDFs</td>
+                        <td>Fast (seconds)</td>
+                        <td>Good</td>
+                        <td>Low</td>
+                        <td>No</td>
+                    </tr>
+                    <tr>
+                        <td><strong>hi_res</strong></td>
+                        <td>Complex layouts, scanned PDFs, images</td>
+                        <td>Slow (minutes)</td>
+                        <td>Excellent</td>
+                        <td>High</td>
+                        <td>Yes (OCR)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>auto</strong></td>
+                        <td>Mixed document types</td>
+                        <td>Variable</td>
+                        <td>Good-Excellent</td>
+                        <td>Variable</td>
+                        <td>Conditional</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ocr_only</strong></td>
+                        <td>Scanned documents only</td>
+                        <td>Medium</td>
+                        <td>Good</td>
+                        <td>Medium</td>
+                        <td>Yes (OCR only)</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Engram Platform Strategy Selection</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Document Type</th>
+                        <th>Recommended Strategy</th>
+                        <th>Rationale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Native PDFs</strong></td>
+                        <td><code>fast</code></td>
+                        <td>Text already extractable, no OCR needed</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Scanned PDFs</strong></td>
+                        <td><code>hi_res</code></td>
+                        <td>Requires OCR for text extraction</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Images (PNG, JPG)</strong></td>
+                        <td><code>hi_res</code></td>
+                        <td>Requires OCR/VLM for text extraction</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Word Documents</strong></td>
+                        <td><code>fast</code></td>
+                        <td>Native text extraction sufficient</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Excel/CSV</strong></td>
+                        <td><code>fast</code></td>
+                        <td>Structured data, no OCR needed</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Handwritten/Complex</strong></td>
+                        <td><code>hi_res</code></td>
+                        <td>Requires VLM for accurate extraction</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <section id="section3">
+            <h2>3. Chunking Parameter Configuration: RAG Quality Optimization</h2>
+            
+            <h3>The Challenge</h3>
+            <p>Chunking parameters directly impact RAG retrieval quality:</p>
+            <ul>
+                <li>Too Large: Chunks contain multiple topics, reducing retrieval precision</li>
+                <li>Too Small: Context is fragmented, reducing answer quality</li>
+                <li>No Overlap: Context boundaries may split related content</li>
+                <li>Poor Boundaries: Chunks may split sentences or paragraphs</li>
+            </ul>
+            <p><strong>Chunking parameters are configurable per request</strong>, but <strong>standardization is critical</strong> for consistent RAG performance.</p>
+            
+            <h3>Chunking Strategy Comparison</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Strategy</th>
+                        <th>Use Case</th>
+                        <th>Pros</th>
+                        <th>Cons</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>by_title</strong></td>
+                        <td>Documents with clear structure</td>
+                        <td>Preserves semantic boundaries</td>
+                        <td>May not work for unstructured docs</td>
+                    </tr>
+                    <tr>
+                        <td><strong>by_page</strong></td>
+                        <td>Page-based documents</td>
+                        <td>Simple, predictable</td>
+                        <td>May split related content</td>
+                    </tr>
+                    <tr>
+                        <td><strong>fixed_size</strong></td>
+                        <td>Uniform chunking needed</td>
+                        <td>Consistent chunk sizes</td>
+                        <td>May split sentences/paragraphs</td>
+                    </tr>
+                    <tr>
+                        <td><strong>semantic</strong></td>
+                        <td>Maximum semantic coherence</td>
+                        <td>Best for RAG quality</td>
+                        <td>More compute-intensive</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p><strong>Engram Recommendation</strong>: <strong>by_title</strong> for most documents, with fallback to <strong>semantic</strong> for unstructured content.</p>
+        </section>
+        
+        <section id="section4">
+            <h2>4. Data Encryption: Customer-Managed Keys for Document Processing</h2>
+            
+            <h3>NIST AI RMF Alignment</h3>
+            <p>Per <a href="https://www.nist.gov/itl/ai-risk-management-framework">NIST AI RMF</a>, data encryption requirements:</p>
+            
+            <p><strong>Govern Function</strong>:</p>
+            <ul>
+                <li>Establish encryption policies for document processing (PII, PHI, business secrets)</li>
+                <li>Define key management responsibilities</li>
+            </ul>
+            
+            <p><strong>Map Function</strong>:</p>
+            <ul>
+                <li>Identify sensitive data in documents (PII in PDFs, PHI in medical records, business secrets)</li>
+                <li>Map encryption requirements to document types</li>
+            </ul>
+            
+            <p><strong>Measure Function</strong>:</p>
+            <ul>
+                <li>Verify encryption at rest and in transit</li>
+                <li>Audit key rotation and access</li>
+            </ul>
+            
+            <p><strong>Manage Function</strong>:</p>
+            <ul>
+                <li>Implement customer-managed key rotation</li>
+                <li>Monitor encryption compliance</li>
+            </ul>
+            
+            <h3>Unstructured Encryption Architecture</h3>
+            <div class="architecture-diagram">┌─────────────────────────────────────────────────────────┐
+│                    Engram Platform                       │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│  Document Upload (Encrypted in Transit)                 │
+│         │                                                │
+│         ▼                                                │
+│  ┌──────────────────┐                                   │
+│  │ Engram API       │ ← TLS 1.3 encryption              │
+│  │ (FastAPI)        │   - Document received encrypted   │
+│  └──────────────────┘                                   │
+│         │                                                │
+│         ▼                                                │
+│  ┌──────────────────┐                                   │
+│  │ Document Storage │ ← Temporary storage (encrypted)   │
+│  │ (Azure Blob)     │   - Customer-managed keys        │
+│  └──────────────────┘   - TDE enabled                  │
+│         │                                                │
+│         ▼                                                │
+│  ┌──────────────────┐                                   │
+│  │ Unstructured OSS │ ← Processing (in-memory)          │
+│  │ (Python Library) │   - No persistent storage         │
+│  └──────────────────┘   - Runs in customer K8s          │
+│         │                                                │
+│         ▼                                                │
+│  ┌──────────────────┐                                   │
+│  │ Chunk Storage    │ ← Encrypted chunks                │
+│  │ (Zep/PostgreSQL) │   - PostgreSQL TDE                │
+│  └──────────────────┘   - Customer-managed keys        │
+│         │                                                │
+│         ▼                                                │
+│  ┌──────────────────┐                                   │
+│  │ Azure Key Vault  │ ← Customer-managed encryption keys│
+│  │ (Customer KMS)   │   - Full control over keys        │
+│  └──────────────────┘   - Key rotation capability       │
+└─────────────────────────────────────────────────────────┘</div>
+        </section>
+        
+        <section id="section5">
+            <h2>5. Kubernetes Deployment Strategy</h2>
+            
+            <h3>Current State (Staging POC)</h3>
+            <p><strong>Current</strong>: Unstructured OSS integrated into Engram API Container App</p>
+            <ul>
+                <li>Python library (<code>unstructured[all-docs]</code>) installed in API container</li>
+                <li>Processing happens synchronously in API request handler</li>
+                <li>No separate service deployment</li>
+            </ul>
+            
+            <p><strong>Limitation</strong>: Synchronous processing blocks API requests for large documents.</p>
+            
+            <h3>Target State (Customer Environments)</h3>
+            <p><strong>Deployment</strong>: Unstructured OSS integrated into Engram API with optional worker pool</p>
+            
+            <div class="architecture-diagram">Kubernetes Cluster (Customer's)
+├── Engram API Namespace
+│   ├── API Server (Deployment)
+│   │   ├── FastAPI application
+│   │   ├── Unstructured OSS library
+│   │   └── Document processing (synchronous for small docs)
+│   ├── ETL Worker Pool (Optional, Deployment)
+│   │   ├── Background document processing
+│   │   ├── Unstructured OSS library
+│   │   └── Async processing for large documents
+│   └── Monitoring (Prometheus exporters)
+├── Azure Blob Storage (Customer's managed storage)
+│   └── Document storage (encrypted, TDE)
+└── PostgreSQL (Customer's managed database)
+    └── Chunk storage (via Zep, encrypted)</div>
+        </section>
+        
+        <section id="section6">
+            <h2>6. NIST AI RMF Compliance Integration</h2>
+            
+            <h3>Framework Mapping</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>NIST AI RMF Function</th>
+                        <th>Unstructured Implementation</th>
+                        <th>Engram Controls</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Govern</strong></td>
+                        <td>Document processing policies, data classification</td>
+                        <td>Customer-defined governance</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Map</strong></td>
+                        <td>Document type classification, sensitivity tagging</td>
+                        <td>PII/PHI detection and handling</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Measure</strong></td>
+                        <td>Processing quality metrics, extraction accuracy</td>
+                        <td>Golden Thread validation</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Manage</strong></td>
+                        <td>Document retention, GDPR compliance, key rotation</td>
+                        <td>Data lifecycle management</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Data Encryption Controls (NIST AI RMF)</h3>
+            <p><strong>Control ID</strong>: AI-SEC-01 (Data Encryption)</p>
+            <p><strong>Implementation</strong>:</p>
+            <ol>
+                <li>✅ <strong>Encryption at Rest</strong>: All documents encrypted via Azure Blob Storage TDE</li>
+                <li>✅ <strong>Encryption in Transit</strong>: TLS 1.3 for all API communications</li>
+                <li>✅ <strong>Key Management</strong>: Customer-managed keys via Azure Key Vault</li>
+                <li>✅ <strong>Key Rotation</strong>: Automated quarterly rotation</li>
+                <li>✅ <strong>Processing Security</strong>: In-memory processing, no persistent storage</li>
+            </ol>
+        </section>
+        
+        <section id="section7">
+            <h2>7. Operational Responsibilities</h2>
+            
+            <h3>Zimax Networks LC Support Model</h3>
+            <p><strong>For Customer Environments (dev/test/UAT/prod)</strong>:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Responsibility</th>
+                        <th>Zimax Networks LC</th>
+                        <th>Customer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Unstructured OSS integration</td>
+                        <td class="required">✅ Library integration & configuration</td>
+                        <td>Application deployment</td>
+                    </tr>
+                    <tr>
+                        <td>Partitioning strategy tuning</td>
+                        <td class="required">✅ Configuration & optimization</td>
+                        <td>Document type requirements</td>
+                    </tr>
+                    <tr>
+                        <td>Chunking parameter optimization</td>
+                        <td class="required">✅ Tuning & validation</td>
+                        <td>RAG quality requirements</td>
+                    </tr>
+                    <tr>
+                        <td>Document storage encryption</td>
+                        <td class="required">✅ Blob Storage TDE setup</td>
+                        <td>Key management</td>
+                    </tr>
+                    <tr>
+                        <td>Monitoring & alerting</td>
+                        <td class="required">✅ Setup & maintenance</td>
+                        <td>Alert response</td>
+                    </tr>
+                    <tr>
+                        <td>Updates & patches</td>
+                        <td class="required">✅ Planning & execution</td>
+                        <td>Maintenance windows</td>
+                    </tr>
+                    <tr>
+                        <td>Troubleshooting</td>
+                        <td class="required">✅ 24/7 support</td>
+                        <td>Issue reporting</td>
+                    </tr>
+                    <tr>
+                        <td>Compliance documentation</td>
+                        <td class="required">✅ Preparation</td>
+                        <td>Audit participation</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p><strong>Dedicated Resources Required</strong>:</p>
+            <ul>
+                <li><strong>ETL Engineer</strong>: Unstructured OSS expertise, partitioning/chunking optimization</li>
+                <li><strong>ML Engineer</strong>: OCR/VLM model integration, quality optimization</li>
+                <li><strong>K8s Engineer</strong>: Deployment automation, resource optimization</li>
+                <li><strong>Security Engineer</strong>: Encryption, compliance, NIST AI RMF</li>
+                <li><strong>SRE</strong>: Monitoring, alerting, incident response</li>
+            </ul>
+        </section>
+        
+        <section id="section8">
+            <h2>8. Implementation Roadmap</h2>
+            
+            <div class="phase">
+                <h4>Phase 1: Foundation (Months 1-2)</h4>
+                <ul>
+                    <li>Research and document partitioning strategy selection methodology</li>
+                    <li>Build document type analyzer tool</li>
+                    <li>Create chunking parameter optimization guide</li>
+                    <li>Design encryption architecture</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 2: Encryption Implementation (Months 2-3)</h4>
+                <ul>
+                    <li>Configure Azure Blob Storage TDE with customer-managed keys</li>
+                    <li>Implement in-memory processing security</li>
+                    <li>Create key rotation workflow</li>
+                    <li>Test encryption end-to-end</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 3: Configuration Optimization (Months 3-4)</h4>
+                <ul>
+                    <li>Tune partitioning strategies per document type</li>
+                    <li>Optimize chunking parameters for RAG quality</li>
+                    <li>Integrate with Golden Thread validation</li>
+                    <li>Document configuration procedures</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 4: Compliance & Documentation (Months 4-5)</h4>
+                <ul>
+                    <li>Map NIST AI RMF controls to implementation</li>
+                    <li>Create security assessment documentation</li>
+                    <li>Prepare audit evidence</li>
+                    <li>Train support team</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 5: Production Deployment (Months 5-6)</h4>
+                <ul>
+                    <li>Deploy to customer dev environment</li>
+                    <li>Validate partitioning/chunking quality</li>
+                    <li>Test encryption with customer keys</li>
+                    <li>Gradual rollout to test/UAT/prod</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section id="section9">
+            <h2>9. Risk Mitigation</h2>
+            
+            <div class="risk-box">
+                <h4>Risk: Poor Partitioning Strategy Selection</h4>
+                <div class="mitigation">
+                    <h4>Mitigation</h4>
+                    <ul>
+                        <li>Document type analysis tool</li>
+                        <li>Standardized strategy mapping</li>
+                        <li>Quality monitoring and alerting</li>
+                        <li>Fallback strategies for unknown types</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="risk-box">
+                <h4>Risk: Suboptimal Chunking Parameters</h4>
+                <div class="mitigation">
+                    <h4>Mitigation</h4>
+                    <ul>
+                        <li>Golden Thread validation integration</li>
+                        <li>Per-document-type tuning</li>
+                        <li>RAG quality metrics</li>
+                        <li>Continuous optimization based on retrieval performance</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="risk-box">
+                <h4>Risk: Encryption Key Compromise</h4>
+                <div class="mitigation">
+                    <h4>Mitigation</h4>
+                    <ul>
+                        <li>Key rotation workflow</li>
+                        <li>Dual-key support during rotation</li>
+                        <li>Audit logging of all key access</li>
+                        <li>Azure Blob Storage TDE with customer-managed keys</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="risk-box">
+                <h4>Risk: Processing Performance Issues</h4>
+                <div class="mitigation">
+                    <h4>Mitigation</h4>
+                    <ul>
+                        <li>Async worker pool for large documents</li>
+                        <li>Resource limits and monitoring</li>
+                        <li>Strategy selection based on document complexity</li>
+                        <li>Performance testing in UAT</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <section id="section10">
+            <h2>10. Success Metrics</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Target</th>
+                        <th>Measurement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Document processing time p95</td>
+                        <td>&lt; 30s (fast), &lt; 5m (hi_res)</td>
+                        <td>Application metrics</td>
+                    </tr>
+                    <tr>
+                        <td>Partitioning quality score</td>
+                        <td>&gt; 0.90</td>
+                        <td>Golden Thread validation</td>
+                    </tr>
+                    <tr>
+                        <td>Chunking RAG hit rate</td>
+                        <td>&gt; 90%</td>
+                        <td>Retrieval quality metrics</td>
+                    </tr>
+                    <tr>
+                        <td>Encryption coverage</td>
+                        <td>100% of documents</td>
+                        <td>Audit logs</td>
+                    </tr>
+                    <tr>
+                        <td>Key rotation success rate</td>
+                        <td>100%</td>
+                        <td>Rotation workflow logs</td>
+                    </tr>
+                    <tr>
+                        <td>Processing error rate</td>
+                        <td>&lt; 1%</td>
+                        <td>Application metrics</td>
+                    </tr>
+                    <tr>
+                        <td>Support response time</td>
+                        <td>&lt; 1 hour (P1)</td>
+                        <td>Incident tracking</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <section id="section11">
+            <h2>11. Next Steps</h2>
+            <ol>
+                <li><strong>Approve this strategy</strong> for customer environment deployment</li>
+                <li><strong>Allocate resources</strong> for ETL engineer, ML engineer, K8s engineer, security engineer</li>
+                <li><strong>Begin Phase 1</strong> implementation (document analyzer, partitioning strategy guide)</li>
+                <li><strong>Engage with customer</strong> document team for document type requirements</li>
+                <li><strong>Schedule security assessment</strong> preparation timeline</li>
+            </ol>
+        </section>
+        
+        <div class="references">
+            <h2>References</h2>
+            <ul>
+                <li><a href="https://docs.unstructured.io/">Unstructured Documentation</a></li>
+                <li><a href="https://github.com/Unstructured-IO/unstructured">Unstructured Python Library</a></li>
+                <li><a href="https://learn.microsoft.com/azure/storage/common/storage-service-encryption">Azure Blob Storage Encryption</a></li>
+                <li><a href="https://www.nist.gov/itl/ai-risk-management-framework">NIST AI Risk Management Framework</a></li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
+

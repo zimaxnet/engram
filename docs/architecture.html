@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architecture - Engram</title>
+  <meta name="description" content="Deep dive into Engram's Brain + Spine architecture, 4-layer context schema, and component design.">
+  <link rel="canonical" href="https://wiki.engram.work/architecture.html">
+  <link rel="stylesheet" href="/assets/css/engram.css">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+  <button class="mobile-nav-toggle" aria-label="Toggle navigation" onclick="document.querySelector('.site-nav').classList.toggle('open')">☰</button>
+  
+  <div class="site-wrapper">
+    <!-- Side Navigation -->
+    <nav class="site-nav">
+      <div class="nav-header">
+        <a href="/" class="nav-logo">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="14" stroke="#00d4ff" stroke-width="2"/>
+            <circle cx="16" cy="16" r="6" fill="#a855f7"/>
+            <path d="M16 2v6M16 24v6M2 16h6M24 16h6" stroke="#00d4ff" stroke-width="2"/>
+          </svg>
+          <div>
+            <div class="nav-logo-text">Engram</div>
+            <div class="nav-tagline">Context Engineering Platform</div>
+          </div>
+        </a>
+      </div>
+      
+      <div class="nav-sections">
+        <div class="nav-section">
+          <div class="nav-section-title">Getting Started</div>
+          <ul class="nav-links">
+            <li><a href="/"><span class="icon">🏠</span> Home</a></li>
+            <li><a href="/architecture.html" class="active"><span class="icon">🏗️</span> Architecture</a></li>
+            <li><a href="/agents.html"><span class="icon">🤖</span> Agent Personas</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Platform Features</div>
+          <ul class="nav-links">
+            <li><a href="/system-navigator.html"><span class="icon">🧭</span> System Navigator</a></li>
+            <li><a href="/connectors.html"><span class="icon">🔌</span> Connectors</a></li>
+            <li><a href="/storage-strategy.html"><span class="icon">💾</span> Storage Strategy</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Enterprise Deployment</div>
+          <ul class="nav-links">
+            <li><a href="/deployment.html"><span class="icon">🚀</span> Deployment Guide</a></li>
+            <li><a href="/pricing.html"><span class="icon">💰</span> Pricing & Tiers</a></li>
+            <li><a href="/poc-vs-enterprise.html"><span class="icon">📊</span> POC vs Enterprise</a></li>
+            <li><a href="/enterprise-env-model.html"><span class="icon">🌐</span> Environment Model</a></li>
+            <li><a href="/finops.html"><span class="icon">📈</span> FinOps Strategy</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Component Guides</div>
+          <ul class="nav-links">
+            <li><a href="/temporal-enterprise-deployment.html"><span class="icon">⏱️</span> Temporal</a></li>
+            <li><a href="/zep-enterprise-deployment.html"><span class="icon">🧠</span> Zep Memory</a></li>
+            <li><a href="/postgresql-blob-storage-enterprise-deployment.html"><span class="icon">🗄️</span> PostgreSQL</a></li>
+            <li><a href="/unstructured-enterprise-deployment.html"><span class="icon">📄</span> Unstructured ETL</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Development</div>
+          <ul class="nav-links">
+            <li><a href="/TESTING-GUIDE.html"><span class="icon">🧪</span> Testing Guide</a></li>
+            <li><a href="/LOCAL-TESTING-GUIDE.html"><span class="icon">💻</span> Local Setup</a></li>
+            <li><a href="/app-insights-guide.html"><span class="icon">📊</span> Observability</a></li>
+            <li><a href="/visual-development.html"><span class="icon">🎨</span> Visual Dev</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="nav-footer">
+        Built with Context Engineering<br>
+        <a href="https://github.com/zimaxnet/engram">GitHub</a> · <a href="https://engram.work">engram.work</a>
+      </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="site-content">
+      <header class="page-header">
+        <div class="container">
+          <div class="breadcrumb">
+            <a href="/">Home</a>
+            <span class="sep">›</span>
+            <span>Architecture</span>
+          </div>
+          <h1 class="page-title">Architecture Deep Dive</h1>
+          <p class="page-subtitle">Brain + Spine pattern, 4-layer context schema, and component design.</p>
+        </div>
+      </header>
+      
+      <section class="page-body">
+        <div class="container">
+          
+          <!-- Overview -->
+          <div class="content-section">
+            <h2>Overview</h2>
+            <p>The Engram platform implements a <strong>Brain + Spine</strong> architecture pattern, separating cognitive reasoning (Brain) from durable execution (Spine), with a persistent memory layer providing long-term knowledge storage.</p>
+            
+            <div class="card" style="margin-top: 1.5rem;">
+              <div class="card-body">
+                <pre><code>┌─────────────────────────────────────────────────────────────┐
+│                      ENGRAM PLATFORM                         │
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐     │
+│  │   BRAIN     │    │   SPINE     │    │   MEMORY    │     │
+│  │  (LangGraph)│◄──►│  (Temporal) │◄──►│    (Zep)    │     │
+│  │   Agents    │    │  Workflows  │    │   Graphiti  │     │
+│  └─────────────┘    └─────────────┘    └─────────────┘     │
+│         │                  │                  │             │
+│         └──────────────────┴──────────────────┘             │
+│                            │                                │
+│              ┌─────────────┴─────────────┐                  │
+│              │    4-Layer Context        │                  │
+│              │  1. Security Context      │                  │
+│              │  2. Episodic State        │                  │
+│              │  3. Semantic Knowledge    │                  │
+│              │  4. Operational State     │                  │
+│              └───────────────────────────┘                  │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Core Principles -->
+          <div class="content-section">
+            <h2>Core Principles</h2>
+            
+            <h3>1. Context Engineering over Prompt Engineering</h3>
+            <p>Traditional prompt engineering focuses on crafting individual prompts. <strong>Context Engineering</strong> takes a holistic view:</p>
+            
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Aspect</th>
+                    <th>Prompt Engineering</th>
+                    <th>Context Engineering</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Focus</strong></td>
+                    <td>Single prompt</td>
+                    <td>Full context lifecycle</td>
+                  </tr>
+                  <tr>
+                    <td><strong>State</strong></td>
+                    <td>Stateless</td>
+                    <td>Stateful across sessions</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Memory</strong></td>
+                    <td>Limited context window</td>
+                    <td>Unlimited via external memory</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Security</strong></td>
+                    <td>Ad-hoc</td>
+                    <td>Built into context schema</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <h3 style="margin-top: 2rem;">2. Brain + Spine Separation</h3>
+            
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Component</th>
+                    <th>Brain (LangGraph)</th>
+                    <th>Spine (Temporal)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Purpose</strong></td>
+                    <td>Reasoning & decisions</td>
+                    <td>Durable execution</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Lifecycle</strong></td>
+                    <td>Stateless functions</td>
+                    <td>Long-running workflows</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Failure</strong></td>
+                    <td>Retry at LLM level</td>
+                    <td>Workflow-level recovery</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Scale</strong></td>
+                    <td>Horizontal (replicas)</td>
+                    <td>Workflow distribution</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- 4-Layer Context Schema -->
+          <div class="content-section">
+            <h2>The 4-Layer Context Schema</h2>
+            <p>Every interaction in Engram flows through a structured context object:</p>
+            
+            <div class="features-grid" style="margin-top: 1.5rem;">
+              <div class="feature-card" style="border-top: 4px solid var(--engram-cyan);">
+                <h3 class="feature-title">Layer 1: Security Context</h3>
+                <p class="feature-desc">Establishes WHO is making the request and WHAT they can access.</p>
+                <pre style="margin-top: 1rem; font-size: 0.8rem;"><code>class SecurityContext:
+    user_id: str
+    tenant_id: str
+    roles: List[Role]
+    scopes: List[str]
+    session_id: str</code></pre>
+              </div>
+              
+              <div class="feature-card" style="border-top: 4px solid var(--engram-purple);">
+                <h3 class="feature-title">Layer 2: Episodic State</h3>
+                <p class="feature-desc">Captures WHAT happened in the current and recent conversations.</p>
+                <pre style="margin-top: 1rem; font-size: 0.8rem;"><code>class EpisodicState:
+    conversation_id: str
+    recent_turns: List[Turn]
+    summary: Optional[str]
+    last_updated_at: datetime</code></pre>
+              </div>
+              
+              <div class="feature-card" style="border-top: 4px solid var(--engram-green);">
+                <h3 class="feature-title">Layer 3: Semantic Knowledge</h3>
+                <p class="feature-desc">Provides WHAT we know from long-term memory.</p>
+                <pre style="margin-top: 1rem; font-size: 0.8rem;"><code>class SemanticKnowledge:
+    retrieved_facts: List[Fact]
+    entity_context: Dict
+    graph_nodes: List[Node]</code></pre>
+              </div>
+              
+              <div class="feature-card" style="border-top: 4px solid var(--status-warn);">
+                <h3 class="feature-title">Layer 4: Operational State</h3>
+                <p class="feature-desc">Tracks WHAT we're doing right now.</p>
+                <pre style="margin-top: 1rem; font-size: 0.8rem;"><code>class OperationalState:
+    current_plan: List[str]
+    active_tools: List[str]
+    workflow_id: Optional[str]
+    status: str
+    active_agent: Optional[str]</code></pre>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Component Architecture -->
+          <div class="content-section">
+            <h2>Component Architecture</h2>
+            
+            <div class="nav-cards">
+              <a href="/temporal-enterprise-deployment.html" class="nav-card">
+                <div class="nav-card-icon">⏱️</div>
+                <div class="nav-card-content">
+                  <p class="nav-card-title">Temporal (Spine)</p>
+                  <p class="nav-card-desc">Durable workflow orchestration, human-in-the-loop, crash recovery.</p>
+                </div>
+              </a>
+              <a href="/zep-enterprise-deployment.html" class="nav-card">
+                <div class="nav-card-icon">🧠</div>
+                <div class="nav-card-content">
+                  <p class="nav-card-title">Zep + Graphiti (Memory)</p>
+                  <p class="nav-card-desc">Episodic and semantic memory with temporal knowledge graphs.</p>
+                </div>
+              </a>
+              <a href="/agents.html" class="nav-card">
+                <div class="nav-card-icon">🤖</div>
+                <div class="nav-card-content">
+                  <p class="nav-card-title">LangGraph Agents (Brain)</p>
+                  <p class="nav-card-desc">Cognitive reasoning with Elena (Analyst) and Marcus (PM).</p>
+                </div>
+              </a>
+              <a href="/unstructured-enterprise-deployment.html" class="nav-card">
+                <div class="nav-card-icon">📄</div>
+                <div class="nav-card-content">
+                  <p class="nav-card-title">Unstructured (ETL)</p>
+                  <p class="nav-card-desc">Document parsing and ingestion pipeline.</p>
+                </div>
+              </a>
+            </div>
+          </div>
+          
+          <!-- Data Flow -->
+          <div class="content-section">
+            <h2>Request Flow</h2>
+            
+            <div class="card">
+              <div class="card-body">
+                <ol style="margin: 0; padding-left: 1.5rem;">
+                  <li style="margin-bottom: 1rem;"><strong>Request arrives</strong> at FastAPI → Security context extracted from Entra ID token</li>
+                  <li style="margin-bottom: 1rem;"><strong>Temporal workflow started</strong> → Workflow ID assigned for durability</li>
+                  <li style="margin-bottom: 1rem;"><strong>Context assembled</strong> → Episodic state from Zep, semantic knowledge from Graphiti</li>
+                  <li style="margin-bottom: 1rem;"><strong>Agent reasoning</strong> → LangGraph processes with full context</li>
+                  <li style="margin-bottom: 1rem;"><strong>Validation gate</strong> → Response validated against quality/safety rules</li>
+                  <li style="margin-bottom: 1rem;"><strong>Memory persistence</strong> → New facts, entities, episodes stored in Zep</li>
+                  <li><strong>Response returned</strong> → With trace ID for observability</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Next Steps -->
+          <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: var(--gray-100); border-radius: var(--radius);">
+            <h3 style="margin: 0 0 0.5rem;">Ready to deploy?</h3>
+            <p style="color: var(--gray-600); margin: 0 0 1.5rem;">Check out the deployment guide for local and Azure setup.</p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+              <a href="/deployment.html" class="btn btn-primary">Deployment Guide →</a>
+              <a href="/pricing.html" class="btn btn-secondary">View Pricing</a>
+            </div>
+          </div>
+          
+        </div>
+      </section>
+      
+      <footer class="site-footer">
+        <p>Built with ❤️ using <strong>Context Engineering</strong></p>
+        <p><a href="https://github.com/zimaxnet/engram">GitHub</a> · <a href="https://engram.work">engram.work</a> · <a href="https://wiki.engram.work">Documentation</a></p>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

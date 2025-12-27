@@ -1,0 +1,730 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Enterprise Agentic Stack</title>
+    
+<style>
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+        background-color: #f9f9f9;
+    }
+    h1, h2, h3 {
+        color: #111;
+        margin-top: 1.5em;
+    }
+    h1 { border-bottom: 2px solid #eaeaea; padding-bottom: 0.3em; }
+    h2 { border-bottom: 1px solid #eaeaea; padding-bottom: 0.3em; }
+    code {
+        background-color: #eee;
+        padding: 0.2rem 0.4rem;
+        border-radius: 3px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+        font-size: 85%;
+    }
+    pre {
+        background-color: #f6f8fa;
+        padding: 1rem;
+        border-radius: 6px;
+        overflow-x: auto;
+    }
+    pre code {
+        background-color: transparent;
+        padding: 0;
+    }
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1rem 0;
+    }
+    th, td {
+        border: 1px solid #dfe2e5;
+        padding: 0.6rem 1rem;
+    }
+    th {
+        background-color: #f6f8fa;
+        font-weight: 600;
+    }
+    tr:nth-child(even) {
+        background-color: #fff;
+    }
+    a { color: #0366d6; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    blockquote {
+        border-left: 4px solid #dfe2e5;
+        color: #6a737d;
+        margin: 0;
+        padding: 0 1rem;
+    }
+</style>
+
+</head>
+<body>
+    <h1 id="engram-agentic-system-maturity-assessment">Engram Agentic System Maturity Assessment</h1>
+<h2 id="executive-summary">Executive Summary</h2>
+<p>This document provides a comprehensive maturity assessment of the Engram system against the <strong>Seven Layers of Production-Grade Agentic Systems</strong> framework. Using a 5-star rating system, we evaluate each layer and subsection, identify gaps, and provide a clear path forward to full production-grade maturity.</p>
+<p><strong>Overall System Maturity: ⭐⭐⭐☆☆ (3.0/5.0)</strong></p>
+<p>The Engram system demonstrates a solid foundation with key components implemented across all seven layers. Notable strengths include the Temporal-based durable execution, Zep memory integration, MCP protocol implementation, and OpenTelemetry observability. However, significant gaps exist in guardrails, advanced reasoning patterns, and evaluation frameworks that must be addressed for full enterprise-grade maturity.</p>
+<hr />
+<h2 id="maturity-rating-legend">Maturity Rating Legend</h2>
+<table>
+<thead>
+<tr>
+<th>Rating</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>⭐⭐⭐⭐⭐</td>
+<td><strong>Fully Mature</strong> - Production-ready, comprehensive implementation with best practices</td>
+</tr>
+<tr>
+<td>⭐⭐⭐⭐☆</td>
+<td><strong>Advanced</strong> - Strong implementation with minor gaps to address</td>
+</tr>
+<tr>
+<td>⭐⭐⭐☆☆</td>
+<td><strong>Developing</strong> - Core functionality present, needs enhancement for production</td>
+</tr>
+<tr>
+<td>⭐⭐☆☆☆</td>
+<td><strong>Basic</strong> - Initial implementation, significant enhancements required</td>
+</tr>
+<tr>
+<td>⭐☆☆☆☆</td>
+<td><strong>Minimal</strong> - Placeholder or proof-of-concept level</td>
+</tr>
+<tr>
+<td>☆☆☆☆☆</td>
+<td><strong>Not Implemented</strong> - No current implementation</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="layer-assessment-matrix">Layer Assessment Matrix</h2>
+<h3 id="layer-1-the-interaction-layer">Layer 1: The Interaction Layer</h3>
+<blockquote>
+<p><em>"Beyond Chatbots to Generative Interfaces"</em></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Subsection</th>
+<th>Rating</th>
+<th>Current State</th>
+<th>Gaps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1.1 Generative UI (GenUI)</strong></td>
+<td>⭐⭐⭐☆☆</td>
+<td>Static component-based UI with React. <code>ChatPanel.tsx</code> renders structured markdown responses with images. Basic component library exists.</td>
+<td>No declarative GenUI system. Agent outputs plain text/markdown, no structured UI payloads. No dynamic component selection based on content type.</td>
+</tr>
+<tr>
+<td><strong>1.2 Latency Management &amp; Streaming</strong></td>
+<td>⭐⭐⭐⭐☆</td>
+<td>WebSocket streaming in <code>chat.py</code> with typing indicators. Token streaming via chunked responses. SSE for MCP communications.</td>
+<td>No progressive structural updates for UI components. Missing optimistic UI patterns for complex operations.</td>
+</tr>
+<tr>
+<td><strong>1.3 Human-in-the-Loop (HITL)</strong></td>
+<td>⭐⭐⭐☆☆</td>
+<td>Temporal workflow signals (<code>ApprovalSignal</code>, <code>UserInputSignal</code>) in <code>agent_workflow.py</code>. Basic approval/rejection patterns implemented.</td>
+<td>No frontend UI for approval workflows. "Edit" capability for tool parameters not implemented. HITL mostly backend-only.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Layer 1 Average: ⭐⭐⭐☆☆ (3.0/5.0)</strong></p>
+<h4 id="path-to-full-maturity-layer-1">Path to Full Maturity - Layer 1</h4>
+<ol>
+<li><strong>GenUI Enhancement (Priority: High)</strong></li>
+<li>Implement a component schema system where agents output structured JSON payloads</li>
+<li>Create a registry of typed UI components (<code>&lt;DataTable /&gt;</code>, <code>&lt;Chart /&gt;</code>, <code>&lt;ApprovalCard /&gt;</code>)</li>
+<li>Use Zod schemas for type-safe agent UI outputs</li>
+<li>
+<p>Reference: <a href="https://ai-sdk.dev/docs/ai-sdk-ui/generative-user-interfaces">Vercel AI SDK Generative UI</a></p>
+</li>
+<li>
+<p><strong>Advanced Streaming (Priority: Medium)</strong></p>
+</li>
+<li>Implement separate streams for text content vs. structural UI updates</li>
+<li>Add progressive rendering for charts and tables as data arrives</li>
+<li>
+<p>Implement optimistic updates for form submissions</p>
+</li>
+<li>
+<p><strong>Complete HITL UI (Priority: High)</strong></p>
+</li>
+<li>Build a <code>PendingApprovals</code> component in the frontend</li>
+<li>Implement parameter editing UI for tool calls before execution</li>
+<li>Add real-time workflow status visualization</li>
+</ol>
+<hr />
+<h3 id="layer-2-the-orchestration-layer">Layer 2: The Orchestration Layer</h3>
+<blockquote>
+<p><em>"The Nervous System of Agency"</em></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Subsection</th>
+<th>Rating</th>
+<th>Current State</th>
+<th>Gaps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>2.1 Cyclic Graph Architecture</strong></td>
+<td>⭐⭐⭐⭐☆</td>
+<td>LangGraph StateGraph in <code>agents/base.py</code>. Cyclic reasoning with <code>_reason_node</code> → <code>_respond_node</code> flow. <code>_should_continue</code> conditional routing.</td>
+<td>Limited self-correction on tool failures. No explicit ReAct loop implementation.</td>
+</tr>
+<tr>
+<td><strong>2.2 Durable Execution</strong></td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>Full Temporal integration (<code>workflows/agent_workflow.py</code>). Event sourcing with automatic replay. Retry policies with exponential backoff. <code>ConversationWorkflow</code> for long-running sessions.</td>
+<td>Well-implemented. Consider adding explicit checkpointing for state inspection.</td>
+</tr>
+<tr>
+<td><strong>2.3 Multi-Agent Patterns</strong></td>
+<td>⭐⭐⭐☆☆</td>
+<td><code>AgentRouter</code> with supervisor pattern. Elena, Marcus, Sage agents with keyword-based routing. Handoff detection via regex.</td>
+<td>No hierarchical agent planning. Network/collaboration pattern not implemented. Agent communication is indirect (via router only).</td>
+</tr>
+<tr>
+<td><strong>2.4 State Management</strong></td>
+<td>⭐⭐⭐⭐☆</td>
+<td><code>EnterpriseContext</code> with Security, Episodic, Semantic, Operational layers. Thread isolation via session IDs. In-memory session storage.</td>
+<td>No branching/forking for "what-if" scenarios. Session storage is not persistent (in-memory dict).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Layer 2 Average: ⭐⭐⭐⭐☆ (3.75/5.0)</strong></p>
+<h4 id="path-to-full-maturity-layer-2">Path to Full Maturity - Layer 2</h4>
+<ol>
+<li><strong>Enhanced Self-Correction (Priority: Medium)</strong></li>
+<li>Implement explicit ReAct loop in agent reasoning</li>
+<li>Add tool output parsing with error detection</li>
+<li>
+<p>Enable retry with alternative strategy on tool failures</p>
+</li>
+<li>
+<p><strong>Hierarchical Agent Planning (Priority: Medium)</strong></p>
+</li>
+<li>Implement a <code>PlannerAgent</code> that decomposes complex goals</li>
+<li>Add milestone tracking in workflow state</li>
+<li>
+<p>Reference: LangGraph's hierarchical patterns</p>
+</li>
+<li>
+<p><strong>State Persistence &amp; Branching (Priority: High)</strong></p>
+</li>
+<li>Migrate session storage from in-memory dict to Redis/PostgreSQL</li>
+<li>Implement state forking for decision exploration</li>
+<li>Add "time travel" debugging capability via Temporal history</li>
+</ol>
+<hr />
+<h3 id="layer-3-the-cognitive-layer">Layer 3: The Cognitive Layer</h3>
+<blockquote>
+<p><em>"Reasoning Strategies and Model Routing"</em></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Subsection</th>
+<th>Rating</th>
+<th>Current State</th>
+<th>Gaps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>3.1 LLM Gateway &amp; Routing</strong></td>
+<td>⭐⭐⭐☆☆</td>
+<td><code>FoundryChatClient</code> for Azure OpenAI. <code>GeminiClient</code> and <code>ClaudeClient</code> exist. Fallback logic in clients for API failures.</td>
+<td>No centralized LLM Gateway (LiteLLM/Portkey). No smart routing based on query complexity. No cost-optimized model selection.</td>
+</tr>
+<tr>
+<td><strong>3.2 Advanced Reasoning Patterns</strong></td>
+<td>⭐⭐☆☆☆</td>
+<td>Basic prompt engineering in agent system prompts. No explicit Chain-of-Thought enforcement. Limited structured output validation.</td>
+<td>No ReAct pattern implementation. No PydanticAI-style type-safe outputs. No explicit reasoning step auditing.</td>
+</tr>
+<tr>
+<td><strong>3.3 Fine-Tuning vs. RAG Strategy</strong></td>
+<td>⭐⭐⭐⭐☆</td>
+<td>RAG via Zep memory integration. Semantic search for knowledge retrieval. Context enrichment before agent reasoning.</td>
+<td>No fine-tuned models. RAG is the primary knowledge strategy (appropriate per best practices).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Layer 3 Average: ⭐⭐⭐☆☆ (2.67/5.0)</strong></p>
+<h4 id="path-to-full-maturity-layer-3">Path to Full Maturity - Layer 3</h4>
+<ol>
+<li><strong>Implement LLM Gateway (Priority: High)</strong></li>
+<li>Deploy LiteLLM as centralized gateway</li>
+<li>Configure smart routing rules: complexity → model selection</li>
+<li>Add provider fallback chains (Azure → Anthropic → Gemini)</li>
+<li>Implement load balancing across deployments</li>
+<li>
+<p>Reference: <a href="https://docs.litellm.ai/">LiteLLM Gateway</a></p>
+</li>
+<li>
+<p><strong>Structured Output Enforcement (Priority: High)</strong></p>
+</li>
+<li>Integrate PydanticAI for type-safe agent responses</li>
+<li>Define output schemas for all agent response types</li>
+<li>
+<p>Add automatic re-prompting on validation failure</p>
+</li>
+<li>
+<p><strong>Reasoning Pattern Implementation (Priority: Medium)</strong></p>
+</li>
+<li>Implement explicit ReAct loop with thought/action/observation steps</li>
+<li>Add Chain-of-Thought prompting with reasoning capture</li>
+<li>Enable reasoning trace export for auditing</li>
+</ol>
+<hr />
+<h3 id="layer-4-the-memory-layer">Layer 4: The Memory Layer</h3>
+<blockquote>
+<p><em>"Context Engineering and Knowledge Graphs"</em></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Subsection</th>
+<th>Rating</th>
+<th>Current State</th>
+<th>Gaps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>4.1 Agentic Knowledge Graphs (GraphRAG)</strong></td>
+<td>⭐⭐⭐☆☆</td>
+<td>Zep integration via <code>memory/client.py</code>. Semantic search with facts extraction. Entity and relationship storage. REST API for Zep Cloud.</td>
+<td>No local Knowledge Graph (Neo4j/KuzuDB). No multi-hop graph traversal. No hybrid BM25+vector+graph search.</td>
+</tr>
+<tr>
+<td><strong>4.2 Context Engineering</strong></td>
+<td>⭐⭐⭐☆☆</td>
+<td><code>enrich_context()</code> populates Episodic + Semantic layers. Context passed to agent prompts. Memory timeout handling (2s).</td>
+<td>No automatic summarization of old turns. No rolling window compression. No anchor summarization pattern.</td>
+</tr>
+<tr>
+<td><strong>4.3 Data Privacy &amp; Isolation</strong></td>
+<td>⭐⭐⭐⭐☆</td>
+<td>Multi-tenant <code>SecurityContext</code> with user_id, tenant_id. Session-scoped memory operations. Memory search scoped to user context.</td>
+<td>No explicit ACL enforcement at vector store level. Global memory search exists (intentionally for vision statements).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Layer 4 Average: ⭐⭐⭐☆☆ (3.33/5.0)</strong></p>
+<h4 id="path-to-full-maturity-layer-4">Path to Full Maturity - Layer 4</h4>
+<ol>
+<li><strong>GraphRAG Implementation (Priority: High)</strong></li>
+<li>Deploy Graphiti (Zep's knowledge graph) or KuzuDB locally</li>
+<li>Implement entity extraction pipeline during ingestion</li>
+<li>Add multi-hop traversal queries for complex relationships</li>
+<li>
+<p>Reference: <a href="https://github.com/getzep/graphiti">Graphiti by Zep</a></p>
+</li>
+<li>
+<p><strong>Context Optimization (Priority: Medium)</strong></p>
+</li>
+<li>Implement automatic summarization after N turns</li>
+<li>Add rolling window with verbatim recent + summarized older context</li>
+<li>Create "anchor" summaries for long-running conversations</li>
+<li>
+<p>Reference: <a href="https://medium.com/agenticais/context-engineering-techniques-in-agent-memory-patterns-8105d619df16">Context Engineering Patterns</a></p>
+</li>
+<li>
+<p><strong>Hybrid Search Implementation (Priority: Medium)</strong></p>
+</li>
+<li>Add BM25 keyword search alongside vector search</li>
+<li>Implement result fusion from multiple retrieval methods</li>
+<li>Tune retrieval based on query type classification</li>
+</ol>
+<hr />
+<h3 id="layer-5-the-tooling-layer">Layer 5: The Tooling Layer</h3>
+<blockquote>
+<p><em>"MCP and Safe Execution Environments"</em></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Subsection</th>
+<th>Rating</th>
+<th>Current State</th>
+<th>Gaps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>5.1 Model Context Protocol (MCP)</strong></td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>Full FastMCP implementation in <code>mcp_server.py</code>. Tools: chat, memory search, ingestion, workflows. Resources: context definitions. SSE transport.</td>
+<td>Excellent implementation. Consider adding more specialized tool servers.</td>
+</tr>
+<tr>
+<td><strong>5.2 Sandboxed Execution</strong></td>
+<td>⭐☆☆☆☆</td>
+<td>No sandboxed code execution environment. Agents cannot execute generated code.</td>
+<td>Missing E2B or Firecracker integration. No ephemeral MicroVM support.</td>
+</tr>
+<tr>
+<td><strong>5.3 Tool Schema Validation</strong></td>
+<td>⭐⭐⭐☆☆</td>
+<td>Pydantic models for API request/response validation. OpenAPI auto-generated via FastAPI. Basic parameter validation.</td>
+<td>No pre-execution middleware for tool call validation. No agent self-healing on validation errors.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Layer 5 Average: ⭐⭐⭐☆☆ (3.0/5.0)</strong></p>
+<h4 id="path-to-full-maturity-layer-5">Path to Full Maturity - Layer 5</h4>
+<ol>
+<li><strong>Sandboxed Execution (Priority: Medium)</strong></li>
+<li>Integrate <a href="https://e2b.dev">E2B</a> for secure code execution</li>
+<li>Create <code>code_executor</code> tool for agents</li>
+<li>Enable data analysis capabilities (CSV processing, calculations)</li>
+<li>
+<p>Implement network isolation and execution timeouts</p>
+</li>
+<li>
+<p><strong>Tool Validation Middleware (Priority: High)</strong></p>
+</li>
+<li>Create pre-execution validation layer for all tool calls</li>
+<li>Generate structured errors on validation failure</li>
+<li>Feed errors back to agent for self-correction</li>
+<li>
+<p>Add parameter sanitization for security</p>
+</li>
+<li>
+<p><strong>Expand MCP Tool Ecosystem (Priority: Low)</strong></p>
+</li>
+<li>Create specialized MCP servers for common integrations</li>
+<li>Add file system, database, and external API tools</li>
+<li>Publish tools as reusable MCP server packages</li>
+</ol>
+<hr />
+<h3 id="layer-6-the-guardrails-layer">Layer 6: The Guardrails Layer</h3>
+<blockquote>
+<p><em>"Governance, Safety, and Compliance"</em></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Subsection</th>
+<th>Rating</th>
+<th>Current State</th>
+<th>Gaps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>6.1 Input Guardrails</strong></td>
+<td>⭐☆☆☆☆</td>
+<td>Basic authentication (<code>get_current_user</code>). No prompt injection detection. No PII redaction.</td>
+<td><strong>Critical Gap</strong>: No input sanitization. No jailbreak detection. No sensitive data masking.</td>
+</tr>
+<tr>
+<td><strong>6.2 Execution Guardrails</strong></td>
+<td>⭐⭐☆☆☆</td>
+<td>Temporal workflow timeouts. Memory operation timeouts (2s). Basic error handling.</td>
+<td>No rate limiting per user/tenant. No policy-as-code (OPA). No tool call policy enforcement.</td>
+</tr>
+<tr>
+<td><strong>6.3 Output Guardrails</strong></td>
+<td>⭐☆☆☆☆</td>
+<td>Golden Thread validation for system integrity. Basic hallucination mention in metrics mock.</td>
+<td>No actual hallucination detection. No topic/tone filtering. No "Judge" model verification.</td>
+</tr>
+<tr>
+<td><strong>6.4 Circuit Breaker Pattern</strong></td>
+<td>☆☆☆☆☆</td>
+<td>Not implemented.</td>
+<td>No failure tracking. No automatic escalation. No cost-based circuit breakers.</td>
+</tr>
+<tr>
+<td><strong>6.5 NIST/ASL Compliance</strong></td>
+<td>☆☆☆☆☆</td>
+<td>No explicit compliance mapping.</td>
+<td>No NIST AI RMF mapping. No safety level classification.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Layer 6 Average: ⭐☆☆☆☆ (0.8/5.0)</strong> ⚠️ <strong>Critical Priority</strong></p>
+<h4 id="path-to-full-maturity-layer-6">Path to Full Maturity - Layer 6</h4>
+<blockquote>
+<p>[!CAUTION]
+<strong>Layer 6 represents the most critical gap in the system.</strong> Without proper guardrails, the system is vulnerable to prompt injection, data leakage, and compliance failures. This should be the highest priority for production readiness.</p>
+</blockquote>
+<ol>
+<li><strong>Input Guardrails (Priority: Critical)</strong></li>
+</ol>
+<p><code>python
+   # Implement in backend/guardrails/input_guard.py
+   class InputGuardrails:
+       def detect_prompt_injection(text: str) -&gt; bool
+       def redact_pii(text: str) -&gt; str
+       def validate_input(text: str) -&gt; GuardResult</code></p>
+<ul>
+<li>Deploy <a href="https://github.com/protectai/rebuff">Rebuff</a> or Microsoft Presidio</li>
+<li>Add PII detection and redaction before LLM calls</li>
+<li>Implement jailbreak pattern detection</li>
+<li>
+<p>Log all filtered inputs for audit</p>
+</li>
+<li>
+<p><strong>Policy Engine (Priority: High)</strong></p>
+</li>
+<li>Integrate Open Policy Agent (OPA)</li>
+<li>Define tool call policies (e.g., "no delete operations", "no external emails")</li>
+<li>Implement rate limiting per user/tenant</li>
+<li>
+<p>Add cost limits per session/user</p>
+</li>
+<li>
+<p><strong>Output Guardrails (Priority: High)</strong></p>
+</li>
+<li>Implement LLM-as-Judge pattern for output verification</li>
+<li>Add hallucination scoring using retrieved context</li>
+<li>Deploy topic filtering for out-of-scope responses</li>
+<li>
+<p>Reference: <a href="https://galileo.ai/blog/ai-agent-guardrails-framework">Galileo Guardrails</a></p>
+</li>
+<li>
+<p><strong>Circuit Breaker (Priority: Medium)</strong></p>
+</li>
+</ul>
+<p><code>python
+   class CircuitBreaker:
+       max_failures: int = 3
+       cost_limit: float = 5.00
+       trip_on_low_confidence: bool = True</code></p>
+<ul>
+<li>Track consecutive failures per session</li>
+<li>Implement cost-based execution limits</li>
+<li>
+<p>Add automatic human escalation on trip</p>
+</li>
+<li>
+<p><strong>Compliance Mapping (Priority: Medium)</strong></p>
+</li>
+<li>Map existing controls to NIST AI RMF categories</li>
+<li>Document risk assessment for each agent capability</li>
+<li>Create compliance dashboard</li>
+</ul>
+<hr />
+<h3 id="layer-7-the-observability-layer">Layer 7: The Observability Layer</h3>
+<blockquote>
+<p><em>"Tracing, Evaluation, and Infrastructure"</em></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Subsection</th>
+<th>Rating</th>
+<th>Current State</th>
+<th>Gaps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>7.1 Distributed Tracing</strong></td>
+<td>⭐⭐⭐⭐☆</td>
+<td>OpenTelemetry in <code>observability/telemetry.py</code>. Azure Monitor integration. <code>trace_function</code> decorator. Trace IDs in workflow responses.</td>
+<td>No dedicated LLMOps tool (LangSmith/Arize Phoenix). Limited agent execution visualization.</td>
+</tr>
+<tr>
+<td><strong>7.2 Evaluation (Evals)</strong></td>
+<td>⭐⭐☆☆☆</td>
+<td>Golden Thread validation with mock checks. <code>ValidationService</code> with synthetic test runs. No real evaluation metrics.</td>
+<td>No DeepEval/Ragas integration. No faithfulness/relevance scoring. No golden dataset actual testing.</td>
+</tr>
+<tr>
+<td><strong>7.3 Infrastructure</strong></td>
+<td>⭐⭐⭐⭐☆</td>
+<td>Azure Container Apps (long-running). Docker Compose for local. GitHub Actions CI/CD. Kubernetes-ready architecture.</td>
+<td>Good infrastructure. Consider serverless for simple endpoints.</td>
+</tr>
+<tr>
+<td><strong>7.4 Cost Governance</strong></td>
+<td>⭐⭐☆☆☆</td>
+<td>Token tracking in responses. Cost approximation in frontend. Metrics router with token counters.</td>
+<td>No hard budget caps. No session cost limits. No "denial of wallet" protection.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Layer 7 Average: ⭐⭐⭐☆☆ (3.0/5.0)</strong></p>
+<h4 id="path-to-full-maturity-layer-7">Path to Full Maturity - Layer 7</h4>
+<ol>
+<li><strong>LLMOps Platform (Priority: High)</strong></li>
+<li>Deploy Arize Phoenix for execution trace visualization</li>
+<li>Add LangSmith integration for debugging agent paths</li>
+<li>Enable trace replay for failure analysis</li>
+<li>
+<p>Reference: <a href="https://docs.arize.com/phoenix/">Arize Phoenix</a></p>
+</li>
+<li>
+<p><strong>Evaluation Framework (Priority: High)</strong></p>
+</li>
+<li>Integrate DeepEval for automated testing</li>
+<li>Create golden datasets with expected answers</li>
+<li>
+<p>Implement continuous eval in CI/CD:</p>
+<p><code>bash
+ pytest --deepeval tests/evals/</code></p>
+</li>
+<li>
+<p>Add metrics: Faithfulness, Answer Relevance, Context Precision</p>
+</li>
+<li>
+<p>Reference: <a href="https://deepeval.com/">DeepEval</a></p>
+</li>
+<li>
+<p><strong>Cost Governance (Priority: Medium)</strong></p>
+</li>
+<li>Implement per-session cost tracking in workflows</li>
+<li>Add hard limits with automatic termination</li>
+<li>Create cost dashboards per tenant/user</li>
+<li>Set up alerts for anomalous spending</li>
+</ol>
+<hr />
+<h2 id="overall-maturity-summary">Overall Maturity Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Subsections Avg</th>
+<th>Weight</th>
+<th>Weighted Score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Layer 1: Interaction</strong></td>
+<td>3.0</td>
+<td>10%</td>
+<td>0.30</td>
+</tr>
+<tr>
+<td><strong>Layer 2: Orchestration</strong></td>
+<td>3.75</td>
+<td>20%</td>
+<td>0.75</td>
+</tr>
+<tr>
+<td><strong>Layer 3: Cognition</strong></td>
+<td>2.67</td>
+<td>15%</td>
+<td>0.40</td>
+</tr>
+<tr>
+<td><strong>Layer 4: Memory</strong></td>
+<td>3.33</td>
+<td>15%</td>
+<td>0.50</td>
+</tr>
+<tr>
+<td><strong>Layer 5: Tools</strong></td>
+<td>3.0</td>
+<td>10%</td>
+<td>0.30</td>
+</tr>
+<tr>
+<td><strong>Layer 6: Guardrails</strong></td>
+<td>0.8</td>
+<td>20%</td>
+<td>0.16</td>
+</tr>
+<tr>
+<td><strong>Layer 7: Observability</strong></td>
+<td>3.0</td>
+<td>10%</td>
+<td>0.30</td>
+</tr>
+<tr>
+<td><strong>TOTAL</strong></td>
+<td></td>
+<td>100%</td>
+<td><strong>2.71/5.0</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="priority-roadmap">Priority Roadmap</h2>
+<h3 id="phase-1-critical-security-safety-weeks-1-4">Phase 1: Critical Security &amp; Safety (Weeks 1-4)</h3>
+<p><strong>Focus: Layer 6 Guardrails</strong></p>
+<ul>
+<li>[ ] Implement prompt injection detection</li>
+<li>[ ] Add PII redaction middleware</li>
+<li>[ ] Deploy rate limiting per user/tenant</li>
+<li>[ ] Create circuit breaker pattern</li>
+<li>[ ] Implement cost limits per session</li>
+</ul>
+<h3 id="phase-2-production-reliability-weeks-5-8">Phase 2: Production Reliability (Weeks 5-8)</h3>
+<p><strong>Focus: Layers 3 + 7</strong></p>
+<ul>
+<li>[ ] Deploy LLM Gateway (LiteLLM)</li>
+<li>[ ] Integrate evaluation framework (DeepEval)</li>
+<li>[ ] Add structured output validation (PydanticAI)</li>
+<li>[ ] Implement cost governance dashboards</li>
+</ul>
+<h3 id="phase-3-advanced-capabilities-weeks-9-12">Phase 3: Advanced Capabilities (Weeks 9-12)</h3>
+<p><strong>Focus: Layers 1 + 4</strong></p>
+<ul>
+<li>[ ] Implement Generative UI component system</li>
+<li>[ ] Deploy GraphRAG with knowledge graphs</li>
+<li>[ ] Add context compression and summarization</li>
+<li>[ ] Complete HITL approval UI</li>
+</ul>
+<h3 id="phase-4-enterprise-polish-weeks-13-16">Phase 4: Enterprise Polish (Weeks 13-16)</h3>
+<p><strong>Focus: Layers 2 + 5</strong></p>
+<ul>
+<li>[ ] Hierarchical agent planning</li>
+<li>[ ] State branching and "what-if" scenarios</li>
+<li>[ ] Sandboxed code execution (E2B)</li>
+<li>[ ] NIST AI RMF compliance mapping</li>
+</ul>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The Engram system demonstrates a solid architectural foundation with particularly strong implementations in:</p>
+<ul>
+<li><strong>Durable Execution</strong> via Temporal</li>
+<li><strong>Memory Integration</strong> via Zep</li>
+<li><strong>MCP Protocol</strong> implementation</li>
+<li><strong>OpenTelemetry Observability</strong></li>
+</ul>
+<p>However, the <strong>Guardrails Layer (Layer 6)</strong> represents a critical gap that must be addressed before any production deployment. The system currently lacks essential safety measures including prompt injection detection, PII redaction, and output validation.</p>
+<p>By following the phased roadmap outlined above, the system can achieve full production-grade maturity within 16 weeks, with critical security gaps addressed in the first 4 weeks.</p>
+<hr />
+<h2 id="references">References</h2>
+<ol>
+<li><a href="./Production-Grade-Agentic-System-Layers.docx.md">Production-Grade-Agentic-System-Layers.docx.md</a> - Framework document</li>
+<li><a href="https://docs.litellm.ai/">LiteLLM Gateway</a> - LLM proxy and gateway</li>
+<li><a href="https://deepeval.com/">DeepEval</a> - LLM evaluation framework</li>
+<li><a href="https://docs.arize.com/phoenix/">Arize Phoenix</a> - LLMOps observability</li>
+<li><a href="https://e2b.dev/">E2B Sandboxes</a> - Secure code execution</li>
+<li><a href="https://www.openpolicyagent.org/">Open Policy Agent</a> - Policy engine</li>
+<li><a href="https://github.com/getzep/graphiti">Graphiti by Zep</a> - Knowledge graphs</li>
+<li><a href="https://www.nist.gov/itl/ai-risk-management-framework">NIST AI RMF</a> - AI risk management</li>
+</ol>
+<hr />
+<p><em>Assessment Date: December 25, 2024</em><br />
+<em>Assessed By: Antigravity AI Assistant</em><br />
+<em>Document Version: 1.0</em></p>
+</body>
+</html>
+    

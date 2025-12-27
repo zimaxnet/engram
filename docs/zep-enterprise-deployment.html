@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zep Enterprise Deployment Strategy - Engram Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #00d4ff;
+            border-bottom: 3px solid #a855f7;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        h2 {
+            color: #00d4ff;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            padding-top: 1rem;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        h3 {
+            color: #a855f7;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        h4 {
+            color: #10b981;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .executive-summary {
+            background: #0a0e1a;
+            color: #e2e8f0;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .executive-summary h2 {
+            color: #00d4ff;
+            border: none;
+            margin-top: 0;
+        }
+        
+        .executive-summary ul {
+            margin-left: 2rem;
+            margin-top: 1rem;
+        }
+        
+        .executive-summary li {
+            margin-bottom: 0.5rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+        }
+        
+        th {
+            background: #0a0e1a;
+            color: #00d4ff;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .critical {
+            background: #fee2e2;
+            color: #991b1b;
+            font-weight: 600;
+        }
+        
+        .required {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        code {
+            background: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            background: #0a0e1a;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+        
+        pre code {
+            background: transparent;
+            padding: 0;
+            color: #e2e8f0;
+        }
+        
+        .architecture-diagram {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            font-family: monospace;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        
+        .risk-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .risk-box h4 {
+            color: #92400e;
+            margin-top: 0;
+        }
+        
+        .mitigation {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .mitigation h4 {
+            color: #065f46;
+            margin-top: 0;
+        }
+        
+        .phase {
+            background: #e0e7ff;
+            border-left: 4px solid #6366f1;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .phase h4 {
+            color: #312e81;
+            margin-top: 0;
+        }
+        
+        .references {
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 3rem;
+        }
+        
+        .references ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        
+        .references li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .references a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+        
+        .references a:hover {
+            text-decoration: underline;
+        }
+        
+        .toc {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .toc h3 {
+            margin-top: 0;
+        }
+        
+        .toc ul {
+            list-style: none;
+            margin-left: 1rem;
+        }
+        
+        .toc li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .toc a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Zep Enterprise Deployment Strategy for Engram Platform</h1>
+        
+        <div class="executive-summary">
+            <h2>Executive Summary</h2>
+            <p>This document outlines Zimax Networks LC's strategy for deploying Zep OSS in customer Kubernetes environments (dev/test/UAT/prod). Zep is central to Engram's success as the Memory layer, providing episodic memory (conversation history) and semantic memory (Graphiti knowledge graph). This plan addresses enterprise requirements including PostgreSQL/pgvector configuration, customer-managed key encryption, Graphiti knowledge graph management, and NIST AI RMF compliance.</p>
+            
+            <p><strong>Key Decision</strong>: Zep OSS (self-hosted) for customer environments to enable:</p>
+            <ul>
+                <li>Full control over data encryption with customer-managed keys</li>
+                <li>Custom PostgreSQL/pgvector configuration and sizing</li>
+                <li>Data residency in customer-controlled infrastructure</li>
+                <li>Cost optimization through right-sizing (vs. consumption-based Cloud pricing)</li>
+                <li>Integration with customer's existing PostgreSQL infrastructure</li>
+            </ul>
+        </div>
+        
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#section1">1. Zep OSS vs Zep Cloud: Enterprise Comparison</a></li>
+                <li><a href="#section2">2. PostgreSQL/pgvector Configuration: Critical Sizing Strategy</a></li>
+                <li><a href="#section3">3. Data Encryption: Customer-Managed Keys with PostgreSQL TDE</a></li>
+                <li><a href="#section4">4. Kubernetes Deployment with Helm Charts</a></li>
+                <li><a href="#section5">5. NIST AI RMF Compliance Integration</a></li>
+                <li><a href="#section6">6. Operational Responsibilities</a></li>
+                <li><a href="#section7">7. Implementation Roadmap</a></li>
+                <li><a href="#section8">8. Risk Mitigation</a></li>
+                <li><a href="#section9">9. Success Metrics</a></li>
+                <li><a href="#section10">10. Next Steps</a></li>
+            </ul>
+        </div>
+        
+        <section id="section1">
+            <h2>1. Zep OSS vs Zep Cloud: Enterprise Comparison</h2>
+            
+            <h3>Feature Comparison Matrix</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Zep OSS (Self-Hosted)</th>
+                        <th>Zep Cloud (Managed)</th>
+                        <th>Engram Requirement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Deployment</strong></td>
+                        <td>Self-hosted on customer infrastructure</td>
+                        <td>Fully managed by Zep</td>
+                        <td class="required">✅ Required - Customer K8s cluster</td>
+                    </tr>
+                    <tr>
+                        <td><strong>PostgreSQL Control</strong></td>
+                        <td>Full control over PostgreSQL/pgvector config</td>
+                        <td>Managed database instances</td>
+                        <td class="required">✅ Required - Customer-managed PostgreSQL</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Data Residency</strong></td>
+                        <td>Customer-controlled infrastructure</td>
+                        <td>Zep-managed infrastructure</td>
+                        <td class="required">✅ Required - Customer data residency</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Encryption Keys</strong></td>
+                        <td>Customer-managed keys (BYOK)</td>
+                        <td>Zep-managed or BYOK option</td>
+                        <td class="critical">✅ <strong>CRITICAL</strong> - Customer-managed keys required</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Graphiti Configuration</strong></td>
+                        <td>Full control over knowledge graph settings</td>
+                        <td>Managed configuration</td>
+                        <td class="required">✅ Required - Custom Graphiti tuning</td>
+                    </tr>
+                    <tr>
+                        <td><strong>RBAC/SSO</strong></td>
+                        <td>Custom implementation</td>
+                        <td>Built-in (Enterprise)</td>
+                        <td class="required">✅ Required - Customer SSO integration</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Compliance</strong></td>
+                        <td>Customer-managed compliance</td>
+                        <td>SOC 2 Type II, HIPAA included</td>
+                        <td class="required">✅ Required - Customer-specific compliance</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cost Model</strong></td>
+                        <td>Infrastructure costs only</td>
+                        <td>Consumption-based pricing</td>
+                        <td class="required">✅ Required - Predictable costs</td>
+                    </tr>
+                    <tr>
+                        <td><strong>BYOM (Bring Your Own Model)</strong></td>
+                        <td>Full control</td>
+                        <td>Supported</td>
+                        <td class="required">✅ Required - Customer LLM accounts</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Multi-Tenancy</strong></td>
+                        <td>Custom implementation</td>
+                        <td>Tenant isolation</td>
+                        <td class="required">✅ Required - Customer-defined isolation</td>
+                    </tr>
+                    <tr>
+                        <td><strong>On-Call Support</strong></td>
+                        <td>Zimax Networks LC team</td>
+                        <td>Zep support team</td>
+                        <td class="required">✅ Zimax Networks LC provides support</td>
+                    </tr>
+                    <tr>
+                        <td><strong>PostgreSQL Sizing</strong></td>
+                        <td>Customer-controlled sizing</td>
+                        <td>Managed sizing</td>
+                        <td class="critical">✅ <strong>CRITICAL</strong> - Right-sizing for cost optimization</td>
+                    </tr>
+                    <tr>
+                        <td><strong>pgvector Configuration</strong></td>
+                        <td>Full control over vector dimensions/indexes</td>
+                        <td>Managed configuration</td>
+                        <td class="required">✅ Required - Custom vector tuning</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Decision Rationale for OSS</h3>
+            <p><strong>Why Zep OSS for Customer Environments:</strong></p>
+            <ol>
+                <li><strong>Customer-Managed PostgreSQL</strong>: Engram uses PostgreSQL with pgvector extension. Customers require full control over database sizing, backups, and configuration to meet their infrastructure standards.</li>
+                <li><strong>Data Residency</strong>: Customer data (conversation history, knowledge graphs, facts) must remain in customer-controlled infrastructure. Zep Cloud stores data in Zep-managed infrastructure.</li>
+                <li><strong>Cost Predictability</strong>: For enterprise customers with predictable workloads, OSS on customer infrastructure provides cost predictability vs. consumption-based Cloud pricing.</li>
+                <li><strong>PostgreSQL Integration</strong>: Many customers already have PostgreSQL infrastructure. Zep OSS allows integration with existing databases, reducing operational overhead.</li>
+                <li><strong>Custom Graphiti Tuning</strong>: Graphiti knowledge graph requires tuning for customer-specific use cases. OSS provides full control over graph configuration, entity extraction, and relationship modeling.</li>
+                <li><strong>Encryption Control</strong>: Customer-managed keys (BYOK) are required for security assessments. OSS allows full control over encryption via PostgreSQL Transparent Data Encryption (TDE) and application-level encryption.</li>
+            </ol>
+            <p><strong>Staging POC Exception</strong>: Current ACA deployment is acceptable for testing only. Production requires Kubernetes deployment with customer-managed PostgreSQL.</p>
+        </section>
+        
+        <section id="section2">
+            <h2>2. PostgreSQL/pgvector Configuration: Critical Sizing Strategy</h2>
+            
+            <h3>The Challenge</h3>
+            <p>PostgreSQL with pgvector is the foundation of Zep's memory system. Unlike Temporal's immutable history shard count, PostgreSQL configuration can be changed, but <strong>vector dimension and index type decisions are difficult to reverse</strong>:</p>
+            <ul>
+                <li>Vector Dimensions: Once set, changing dimensions requires re-indexing all vectors (expensive operation)</li>
+                <li>Index Type: HNSW vs. IVFFlat index choice affects query performance and cannot be easily swapped</li>
+                <li>Connection Pooling: Must be configured correctly upfront for production workloads</li>
+                <li>Autovacuum Tuning: Critical for maintaining vector index health</li>
+            </ul>
+            
+            <h3>PostgreSQL Sizing Formula</h3>
+            <pre><code>PostgreSQL Capacity = (Episodic Memory + Semantic Memory) × Growth Factor
+
+Where:
+- Episodic Memory = Sessions × Avg Messages/Session × Avg Message Size
+- Semantic Memory = Facts × Avg Fact Size + Graph Relationships × Overhead
+- Growth Factor = 2.0-3.0 (for growth and retention)</code></pre>
+            
+            <h3>Engram Platform PostgreSQL Sizing</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Environment</th>
+                        <th>Expected Load</th>
+                        <th>Recommended SKU</th>
+                        <th>Rationale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Dev</strong></td>
+                        <td>100 sessions, 1K facts</td>
+                        <td>B1ms (1 vCore, 2GB)</td>
+                        <td>Minimal, cost-optimized</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Test</strong></td>
+                        <td>500 sessions, 10K facts</td>
+                        <td>B2s (2 vCore, 4GB)</td>
+                        <td>Testing load scenarios</td>
+                    </tr>
+                    <tr>
+                        <td><strong>UAT</strong></td>
+                        <td>2K sessions, 100K facts</td>
+                        <td>D2s_v3 (2 vCore, 8GB)</td>
+                        <td>Production-like load</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Production</strong></td>
+                        <td>10K+ sessions, 1M+ facts</td>
+                        <td>D4s_v3 (4 vCore, 16GB) or higher</td>
+                        <td>Enterprise scale with headroom</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p><strong>Formula Applied (Production)</strong>:</p>
+            <pre><code>10,000 sessions × 50 messages/session × 500 bytes = 250 MB episodic
+1,000,000 facts × 1 KB/fact = 1 GB semantic
+Total: ~1.25 GB data × 3.0 (growth + indexes) = 3.75 GB
+Recommended: D4s_v3 (16GB RAM) for headroom and performance</code></pre>
+            
+            <h3>pgvector Configuration Strategy</h3>
+            
+            <h4>1. Vector Dimension Selection</h4>
+            <p><strong>Decision Point</strong>: Vector dimensions are set at table creation and difficult to change.</p>
+            <p><strong>Engram Standard</strong>: 1536 dimensions (OpenAI text-embedding-3-small compatibility)</p>
+            
+            <h4>2. Index Type Selection</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Index Type</th>
+                        <th>Build Time</th>
+                        <th>Query Performance</th>
+                        <th>Update Cost</th>
+                        <th>Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>HNSW</strong></td>
+                        <td>Slow (hours for large datasets)</td>
+                        <td>Excellent (sub-10ms)</td>
+                        <td>High (rebuild required)</td>
+                        <td>Production, read-heavy</td>
+                    </tr>
+                    <tr>
+                        <td><strong>IVFFlat</strong></td>
+                        <td>Fast (minutes)</td>
+                        <td>Good (10-50ms)</td>
+                        <td>Medium (periodic rebuild)</td>
+                        <td>Development, write-heavy</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p><strong>Engram Recommendation</strong>: <strong>HNSW for production</strong> (better query performance, acceptable build time)</p>
+            
+            <h4>3. Connection Pooling Configuration</h4>
+            <p><strong>Critical for Production</strong>: PostgreSQL connection limits must be managed via connection pooling.</p>
+            
+            <h4>4. Autovacuum Tuning</h4>
+            <p><strong>Critical for Vector Index Health</strong>: Autovacuum maintains index statistics and prevents bloat.</p>
+        </section>
+        
+        <section id="section3">
+            <h2>3. Data Encryption: Customer-Managed Keys with PostgreSQL TDE</h2>
+            
+            <h3>NIST AI RMF Alignment</h3>
+            <p>Per <a href="https://www.nist.gov/itl/ai-risk-management-framework">NIST AI RMF</a>, data encryption requirements:</p>
+            
+            <p><strong>Govern Function</strong>:</p>
+            <ul>
+                <li>Establish encryption policies for AI memory data (conversation history, knowledge graphs)</li>
+                <li>Define key management responsibilities</li>
+            </ul>
+            
+            <p><strong>Map Function</strong>:</p>
+            <ul>
+                <li>Identify sensitive data in memory (PII in conversations, PHI in facts, business secrets)</li>
+                <li>Map encryption requirements to memory types (episodic vs. semantic)</li>
+            </ul>
+            
+            <p><strong>Measure Function</strong>:</p>
+            <ul>
+                <li>Verify encryption at rest and in transit</li>
+                <li>Audit key rotation and access</li>
+            </ul>
+            
+            <p><strong>Manage Function</strong>:</p>
+            <ul>
+                <li>Implement customer-managed key rotation</li>
+                <li>Monitor encryption compliance</li>
+            </ul>
+            
+            <h3>Zep Encryption Architecture</h3>
+            <div class="architecture-diagram">┌─────────────────────────────────────────────────────────┐
+│                    Engram Platform                       │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│  Memory Data (Plaintext)                                │
+│  - Episodic: Conversation history                       │
+│  - Semantic: Facts, entities, relationships              │
+│         │                                                │
+│         ▼                                                │
+│  ┌──────────────────┐                                   │
+│  │ Application-Level │ ← Optional: Field-level encryption│
+│  │ Encryption (Zep)  │   - PII/PHI fields only          │
+│  └──────────────────┘   - Uses customer KMS             │
+│         │                                                │
+│         ▼                                                │
+│  ┌──────────────────┐                                   │
+│  │ PostgreSQL TDE    │ ← Database-level encryption       │
+│  │ (Transparent)     │   - All data at rest             │
+│  └──────────────────┘   - Customer-managed keys        │
+│         │                  (Azure Key Vault)             │
+│         ▼                                                │
+│  Encrypted Data (PostgreSQL Storage)                    │
+│         │                                                │
+│         ▼                                                │
+│  ┌──────────────────┐                                   │
+│  │ Azure Key Vault  │ ← Customer-managed encryption keys│
+│  │ (Customer KMS)   │   - Full control over keys        │
+│  └──────────────────┘   - Key rotation capability       │
+└─────────────────────────────────────────────────────────┘</div>
+            
+            <h3>Implementation Plan</h3>
+            
+            <h4>Phase 1: PostgreSQL Transparent Data Encryption (TDE)</h4>
+            <p><strong>Azure PostgreSQL Flexible Server TDE</strong>:</p>
+            <ul>
+                <li>Built-in TDE using Azure Key Vault</li>
+                <li>Customer-managed keys (CMK) supported</li>
+                <li>Zero application changes required</li>
+            </ul>
+            
+            <h4>Phase 2: Application-Level Encryption (Optional)</h4>
+            <p><strong>For PII/PHI Fields</strong>: Additional encryption for sensitive fields within memory data.</p>
+            
+            <h4>Phase 3: Key Rotation Strategy</h4>
+            <p><strong>NIST AI RMF Requirement</strong>: Regular key rotation</p>
+            <p><strong>Implementation</strong>:</p>
+            <ol>
+                <li><strong>PostgreSQL TDE Key Rotation</strong>: Azure PostgreSQL supports online key rotation</li>
+                <li><strong>Application Key Rotation</strong>: Gradual re-encryption of sensitive fields</li>
+                <li><strong>Dual-Key Support</strong>: Maintain current + previous key during rotation</li>
+                <li><strong>Automated Rotation</strong>: Scheduled rotation (e.g., quarterly)</li>
+            </ol>
+        </section>
+        
+        <section id="section4">
+            <h2>4. Kubernetes Deployment with Helm Charts</h2>
+            
+            <h3>Current State (Staging POC)</h3>
+            <p><strong>Current</strong>: Zep deployed in Azure Container Apps (ACA)</p>
+            <ul>
+                <li><code>zep-server</code> Container App</li>
+                <li>PostgreSQL backend (Azure Database for PostgreSQL Flexible Server)</li>
+                <li>pgvector extension enabled</li>
+            </ul>
+            
+            <p><strong>Limitation</strong>: ACA doesn't support advanced K8s features needed for enterprise:</p>
+            <ul>
+                <li>Custom PostgreSQL configuration</li>
+                <li>Advanced networking (service mesh)</li>
+                <li>Pod security policies</li>
+                <li>Resource quotas and limits</li>
+            </ul>
+            
+            <h3>Target State (Customer Environments)</h3>
+            <p><strong>Deployment</strong>: Zep OSS via Helm Charts (custom or community)</p>
+            
+            <div class="architecture-diagram">Kubernetes Cluster (Customer's)
+├── Zep Namespace
+│   ├── Zep Server (Deployment)
+│   │   ├── API Server (3 replicas)
+│   │   ├── Memory Service (2 replicas)
+│   │   └── Graphiti Service (2 replicas)
+│   ├── PgBouncer (Optional, for connection pooling)
+│   └── Monitoring (Prometheus exporters)
+├── PostgreSQL (Customer's managed database)
+│   ├── Azure Database for PostgreSQL Flexible Server
+│   │   └── pgvector extension enabled
+│   └── OR Customer's on-premises PostgreSQL
+└── Monitoring (Prometheus/Grafana)</div>
+        </section>
+        
+        <section id="section5">
+            <h2>5. NIST AI RMF Compliance Integration</h2>
+            
+            <h3>Framework Mapping</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>NIST AI RMF Function</th>
+                        <th>Zep Implementation</th>
+                        <th>Engram Controls</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Govern</strong></td>
+                        <td>Memory retention policies, data classification</td>
+                        <td>Customer-defined governance</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Map</strong></td>
+                        <td>Memory type classification (episodic vs. semantic)</td>
+                        <td>Sensitivity tagging in metadata</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Measure</strong></td>
+                        <td>Memory quality metrics, retrieval hit rates</td>
+                        <td>Cost, performance, security metrics</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Manage</strong></td>
+                        <td>Memory deletion, GDPR compliance, key rotation</td>
+                        <td>Data lifecycle management</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Data Encryption Controls (NIST AI RMF)</h3>
+            <p><strong>Control ID</strong>: AI-SEC-01 (Data Encryption)</p>
+            <p><strong>Implementation</strong>:</p>
+            <ol>
+                <li>✅ <strong>Encryption at Rest</strong>: All memory data encrypted via PostgreSQL TDE</li>
+                <li>✅ <strong>Encryption in Transit</strong>: TLS 1.3 for all PostgreSQL and Zep API communications</li>
+                <li>✅ <strong>Key Management</strong>: Customer-managed keys via Azure Key Vault</li>
+                <li>✅ <strong>Key Rotation</strong>: Automated quarterly rotation</li>
+                <li>✅ <strong>Field-Level Encryption</strong>: Optional encryption for PII/PHI fields</li>
+            </ol>
+        </section>
+        
+        <section id="section6">
+            <h2>6. Operational Responsibilities</h2>
+            
+            <h3>Zimax Networks LC Support Model</h3>
+            <p><strong>For Customer Environments (dev/test/UAT/prod)</strong>:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Responsibility</th>
+                        <th>Zimax Networks LC</th>
+                        <th>Customer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Zep deployment</td>
+                        <td class="required">✅ Helm chart deployment</td>
+                        <td>Infrastructure provisioning</td>
+                    </tr>
+                    <tr>
+                        <td>PostgreSQL sizing</td>
+                        <td class="required">✅ Assessment & recommendation</td>
+                        <td>Approval & provisioning</td>
+                    </tr>
+                    <tr>
+                        <td>pgvector configuration</td>
+                        <td class="required">✅ Setup & optimization</td>
+                        <td>Database access</td>
+                    </tr>
+                    <tr>
+                        <td>Graphiti tuning</td>
+                        <td class="required">✅ Configuration & optimization</td>
+                        <td>Use case requirements</td>
+                    </tr>
+                    <tr>
+                        <td>Monitoring & alerting</td>
+                        <td class="required">✅ Setup & maintenance</td>
+                        <td>Alert response</td>
+                    </tr>
+                    <tr>
+                        <td>Updates & patches</td>
+                        <td class="required">✅ Planning & execution</td>
+                        <td>Maintenance windows</td>
+                    </tr>
+                    <tr>
+                        <td>Troubleshooting</td>
+                        <td class="required">✅ 24/7 support</td>
+                        <td>Issue reporting</td>
+                    </tr>
+                    <tr>
+                        <td>Compliance documentation</td>
+                        <td class="required">✅ Preparation</td>
+                        <td>Audit participation</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p><strong>Dedicated Resources Required</strong>:</p>
+            <ul>
+                <li><strong>Zep SME</strong>: Deep expertise in OSS deployment and Graphiti</li>
+                <li><strong>PostgreSQL DBA</strong>: pgvector optimization, performance tuning</li>
+                <li><strong>K8s Engineer</strong>: Helm charts, deployment automation</li>
+                <li><strong>Security Engineer</strong>: Encryption, compliance, NIST AI RMF</li>
+                <li><strong>SRE</strong>: Monitoring, alerting, incident response</li>
+            </ul>
+        </section>
+        
+        <section id="section7">
+            <h2>7. Implementation Roadmap</h2>
+            
+            <div class="phase">
+                <h4>Phase 1: Foundation (Months 1-2)</h4>
+                <ul>
+                    <li>Research and document PostgreSQL/pgvector sizing methodology</li>
+                    <li>Build PostgreSQL sizing calculator tool</li>
+                    <li>Create Helm chart for Zep OSS</li>
+                    <li>Design Graphiti knowledge graph architecture</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 2: Encryption Implementation (Months 2-3)</h4>
+                <ul>
+                    <li>Configure PostgreSQL TDE with customer-managed keys</li>
+                    <li>Implement application-level encryption for PII/PHI</li>
+                    <li>Create key rotation workflow</li>
+                    <li>Test encryption end-to-end</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 3: Helm Chart Deployment (Months 3-4)</h4>
+                <ul>
+                    <li>Customize Zep Helm chart for enterprise</li>
+                    <li>Create deployment automation</li>
+                    <li>Test in dev environment</li>
+                    <li>Document deployment procedures</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 4: Compliance & Documentation (Months 4-5)</h4>
+                <ul>
+                    <li>Map NIST AI RMF controls to implementation</li>
+                    <li>Create security assessment documentation</li>
+                    <li>Prepare audit evidence</li>
+                    <li>Train support team</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 5: Production Deployment (Months 5-6)</h4>
+                <ul>
+                    <li>Deploy to customer dev environment</li>
+                    <li>Validate PostgreSQL sizing</li>
+                    <li>Test encryption with customer keys</li>
+                    <li>Gradual rollout to test/UAT/prod</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section id="section8">
+            <h2>8. Risk Mitigation</h2>
+            
+            <div class="risk-box">
+                <h4>Risk: PostgreSQL Under-Sizing</h4>
+                <div class="mitigation">
+                    <h4>Mitigation</h4>
+                    <ul>
+                        <li>Conservative sizing (3x growth factor)</li>
+                        <li>Monitoring with early warning alerts</li>
+                        <li>Azure allows online SKU scaling (minimal downtime)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="risk-box">
+                <h4>Risk: Vector Dimension Mismatch</h4>
+                <div class="mitigation">
+                    <h4>Mitigation</h4>
+                    <ul>
+                        <li>Standardize on 1536 dimensions (OpenAI compatibility)</li>
+                        <li>Document dimension requirements upfront</li>
+                        <li>Re-indexing procedure documented (requires downtime)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="risk-box">
+                <h4>Risk: Encryption Key Compromise</h4>
+                <div class="mitigation">
+                    <h4>Mitigation</h4>
+                    <ul>
+                        <li>Key rotation workflow</li>
+                        <li>Dual-key support during rotation</li>
+                        <li>Audit logging of all key access</li>
+                        <li>PostgreSQL TDE with customer-managed keys</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="risk-box">
+                <h4>Risk: Graphiti Performance Issues</h4>
+                <div class="mitigation">
+                    <h4>Mitigation</h4>
+                    <ul>
+                        <li>Performance testing in UAT</li>
+                        <li>Graphiti configuration tuning guide</li>
+                        <li>Monitoring and alerting on query latency</li>
+                        <li>Index optimization recommendations</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <section id="section9">
+            <h2>9. Success Metrics</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Target</th>
+                        <th>Measurement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>PostgreSQL connection pool utilization</td>
+                        <td>&lt; 70%</td>
+                        <td>Prometheus metrics</td>
+                    </tr>
+                    <tr>
+                        <td>Vector search latency p95</td>
+                        <td>&lt; 100ms</td>
+                        <td>Application metrics</td>
+                    </tr>
+                    <tr>
+                        <td>Memory retrieval hit rate</td>
+                        <td>&gt; 90%</td>
+                        <td>Zep metrics</td>
+                    </tr>
+                    <tr>
+                        <td>Encryption coverage</td>
+                        <td>100% of memory data</td>
+                        <td>Audit logs</td>
+                    </tr>
+                    <tr>
+                        <td>Key rotation success rate</td>
+                        <td>100%</td>
+                        <td>Rotation workflow logs</td>
+                    </tr>
+                    <tr>
+                        <td>Deployment time</td>
+                        <td>&lt; 2 hours</td>
+                        <td>Deployment automation</td>
+                    </tr>
+                    <tr>
+                        <td>Support response time</td>
+                        <td>&lt; 1 hour (P1)</td>
+                        <td>Incident tracking</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <section id="section10">
+            <h2>10. Next Steps</h2>
+            <ol>
+                <li><strong>Approve this strategy</strong> for customer environment deployment</li>
+                <li><strong>Allocate resources</strong> for Zep SME, PostgreSQL DBA, K8s engineer, security engineer</li>
+                <li><strong>Begin Phase 1</strong> implementation (PostgreSQL sizing calculator, Helm chart research)</li>
+                <li><strong>Engage with customer</strong> database team for PostgreSQL integration requirements</li>
+                <li><strong>Schedule security assessment</strong> preparation timeline</li>
+            </ol>
+        </section>
+        
+        <div class="references">
+            <h2>References</h2>
+            <ul>
+                <li><a href="https://docs.getzep.com/">Zep Documentation</a></li>
+                <li><a href="https://github.com/getzep/graphiti">Graphiti Knowledge Graph</a></li>
+                <li><a href="https://github.com/pgvector/pgvector">PostgreSQL pgvector Extension</a></li>
+                <li><a href="https://learn.microsoft.com/azure/postgresql/flexible-server/concepts-data-encryption">Azure Database for PostgreSQL TDE</a></li>
+                <li><a href="https://www.nist.gov/itl/ai-risk-management-framework">NIST AI Risk Management Framework</a></li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
+

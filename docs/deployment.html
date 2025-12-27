@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deployment Guide - Engram</title>
+  <meta name="description" content="Deploy Engram locally or to Azure with Infrastructure as Code.">
+  <link rel="canonical" href="https://wiki.engram.work/deployment.html">
+  <link rel="stylesheet" href="/assets/css/engram.css">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+  <button class="mobile-nav-toggle" aria-label="Toggle navigation" onclick="document.querySelector('.site-nav').classList.toggle('open')">☰</button>
+  
+  <div class="site-wrapper">
+    <!-- Side Navigation -->
+    <nav class="site-nav">
+      <div class="nav-header">
+        <a href="/" class="nav-logo">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="14" stroke="#00d4ff" stroke-width="2"/>
+            <circle cx="16" cy="16" r="6" fill="#a855f7"/>
+            <path d="M16 2v6M16 24v6M2 16h6M24 16h6" stroke="#00d4ff" stroke-width="2"/>
+          </svg>
+          <div>
+            <div class="nav-logo-text">Engram</div>
+            <div class="nav-tagline">Context Engineering Platform</div>
+          </div>
+        </a>
+      </div>
+      
+      <div class="nav-sections">
+        <div class="nav-section">
+          <div class="nav-section-title">Getting Started</div>
+          <ul class="nav-links">
+            <li><a href="/"><span class="icon">🏠</span> Home</a></li>
+            <li><a href="/architecture.html"><span class="icon">🏗️</span> Architecture</a></li>
+            <li><a href="/agents.html"><span class="icon">🤖</span> Agent Personas</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Platform Features</div>
+          <ul class="nav-links">
+            <li><a href="/system-navigator.html"><span class="icon">🧭</span> System Navigator</a></li>
+            <li><a href="/connectors.html"><span class="icon">🔌</span> Connectors</a></li>
+            <li><a href="/storage-strategy.html"><span class="icon">💾</span> Storage Strategy</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Enterprise Deployment</div>
+          <ul class="nav-links">
+            <li><a href="/deployment.html" class="active"><span class="icon">🚀</span> Deployment Guide</a></li>
+            <li><a href="/pricing.html"><span class="icon">💰</span> Pricing & Tiers</a></li>
+            <li><a href="/poc-vs-enterprise.html"><span class="icon">📊</span> POC vs Enterprise</a></li>
+            <li><a href="/enterprise-env-model.html"><span class="icon">🌐</span> Environment Model</a></li>
+            <li><a href="/finops.html"><span class="icon">📈</span> FinOps Strategy</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Component Guides</div>
+          <ul class="nav-links">
+            <li><a href="/temporal-enterprise-deployment.html"><span class="icon">⏱️</span> Temporal</a></li>
+            <li><a href="/zep-enterprise-deployment.html"><span class="icon">🧠</span> Zep Memory</a></li>
+            <li><a href="/postgresql-blob-storage-enterprise-deployment.html"><span class="icon">🗄️</span> PostgreSQL</a></li>
+            <li><a href="/unstructured-enterprise-deployment.html"><span class="icon">📄</span> Unstructured ETL</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Development</div>
+          <ul class="nav-links">
+            <li><a href="/TESTING-GUIDE.html"><span class="icon">🧪</span> Testing Guide</a></li>
+            <li><a href="/LOCAL-TESTING-GUIDE.html"><span class="icon">💻</span> Local Setup</a></li>
+            <li><a href="/app-insights-guide.html"><span class="icon">📊</span> Observability</a></li>
+            <li><a href="/visual-development.html"><span class="icon">🎨</span> Visual Dev</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="nav-footer">
+        Built with Context Engineering<br>
+        <a href="https://github.com/zimaxnet/engram">GitHub</a> · <a href="https://engram.work">engram.work</a>
+      </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="site-content">
+      <header class="page-header">
+        <div class="container">
+          <div class="breadcrumb">
+            <a href="/">Home</a>
+            <span class="sep">›</span>
+            <span>Enterprise Deployment</span>
+            <span class="sep">›</span>
+            <span>Deployment Guide</span>
+          </div>
+          <h1 class="page-title">Deployment Guide</h1>
+          <p class="page-subtitle">Get Engram running locally or deploy to Azure with Infrastructure as Code.</p>
+        </div>
+      </header>
+      
+      <section class="page-body">
+        <div class="container">
+          
+          <!-- Prerequisites -->
+          <div class="content-section">
+            <h2>Prerequisites</h2>
+            
+            <h3>Required Tools</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Tool</th>
+                    <th>Version</th>
+                    <th>Purpose</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Docker</strong></td>
+                    <td>24+</td>
+                    <td>Container runtime for local dev</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Node.js</strong></td>
+                    <td>20+</td>
+                    <td>Frontend build</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Python</strong></td>
+                    <td>3.11+</td>
+                    <td>Backend development</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Azure CLI</strong></td>
+                    <td>2.50+</td>
+                    <td>Azure resource management</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Bicep CLI</strong></td>
+                    <td>Latest</td>
+                    <td>Infrastructure as code</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <h3 style="margin-top: 2rem;">Azure Resources (for cloud deployment)</h3>
+            <ul>
+              <li>Azure subscription with Owner or Contributor access</li>
+              <li>Resource provider registrations for:
+                <ul>
+                  <li>Microsoft.App (Container Apps)</li>
+                  <li>Microsoft.KeyVault</li>
+                  <li>Microsoft.DBforPostgreSQL</li>
+                  <li>Microsoft.Storage</li>
+                  <li>Microsoft.CognitiveServices</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+          
+          <!-- Local Development -->
+          <div class="content-section">
+            <h2>Local Development</h2>
+            
+            <div class="callout callout-info">
+              <p class="callout-title">🚀 Quick Start</p>
+              <p>Get Engram running locally in under 5 minutes with Docker Compose.</p>
+            </div>
+            
+            <pre><code># Clone the repository
+git clone https://github.com/zimaxnet/engram.git
+cd engram
+
+# Create environment file
+cp .env.example .env
+# Edit .env with your Azure AI Foundry credentials
+
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Access the platform
+open http://localhost:5173</code></pre>
+            
+            <h3 style="margin-top: 2rem;">Service URLs</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Service</th>
+                    <th>URL</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Frontend</strong></td>
+                    <td><code>http://localhost:5173</code></td>
+                    <td>System Navigator UI</td>
+                  </tr>
+                  <tr>
+                    <td><strong>API</strong></td>
+                    <td><code>http://localhost:8082</code></td>
+                    <td>FastAPI backend</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Temporal UI</strong></td>
+                    <td><code>http://localhost:8080</code></td>
+                    <td>Workflow monitoring</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Zep</strong></td>
+                    <td><code>http://localhost:8000</code></td>
+                    <td>Memory service</td>
+                  </tr>
+                  <tr>
+                    <td><strong>PostgreSQL</strong></td>
+                    <td><code>localhost:5432</code></td>
+                    <td>Database</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <h3 style="margin-top: 2rem;">Environment Variables</h3>
+            <pre><code># .env file
+ENVIRONMENT=development
+DEBUG=true
+
+# Azure AI Foundry (required for agent functionality)
+AZURE_AI_ENDPOINT=https://your-endpoint.services.ai.azure.com/
+AZURE_AI_KEY=your-key-here
+AZURE_AI_DEPLOYMENT=gpt-4o-mini
+
+# Database (defaults work for docker-compose)
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=password
+POSTGRES_DB=engram
+
+# Zep (self-hosted)
+ZEP_API_URL=http://localhost:8000
+ZEP_API_KEY=
+
+# Temporal
+TEMPORAL_HOST=localhost:7233
+TEMPORAL_NAMESPACE=default</code></pre>
+          </div>
+          
+          <!-- Azure Deployment -->
+          <div class="content-section">
+            <h2>Azure Deployment</h2>
+            
+            <p>Engram uses <strong>Infrastructure as Code (IaC)</strong> with Bicep for Azure deployments. Choose a deployment tier based on your needs:</p>
+            
+            <div class="nav-cards" style="margin-top: 1.5rem;">
+              <a href="/pricing.html" class="nav-card">
+                <div class="nav-card-icon">💰</div>
+                <div class="nav-card-content">
+                  <p class="nav-card-title">Pricing & Tiers</p>
+                  <p class="nav-card-desc">5 deployment levels from $23/mo POC to Enterprise.</p>
+                </div>
+              </a>
+              <a href="/poc-vs-enterprise.html" class="nav-card">
+                <div class="nav-card-icon">📊</div>
+                <div class="nav-card-content">
+                  <p class="nav-card-title">POC vs Enterprise</p>
+                  <p class="nav-card-desc">Compare options and choose your path.</p>
+                </div>
+              </a>
+            </div>
+            
+            <h3 style="margin-top: 2rem;">Quick Azure Deployment (POC)</h3>
+            <pre><code># Login to Azure
+az login
+
+# Set subscription
+az account set --subscription "Your Subscription"
+
+# Create resource group
+az group create --name rg-engram-poc --location eastus2
+
+# Deploy infrastructure
+az deployment group create \
+  --resource-group rg-engram-poc \
+  --template-file infra/main.bicep \
+  --parameters environment=staging
+
+# Get outputs
+az deployment group show \
+  --resource-group rg-engram-poc \
+  --name main \
+  --query properties.outputs</code></pre>
+            
+            <h3 style="margin-top: 2rem;">Infrastructure Components</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Component</th>
+                    <th>Azure Service</th>
+                    <th>Purpose</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Compute</strong></td>
+                    <td>Container Apps / AKS</td>
+                    <td>API, Worker, Frontend</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Database</strong></td>
+                    <td>PostgreSQL Flexible Server</td>
+                    <td>Primary data store</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Memory</strong></td>
+                    <td>Container Apps (Zep)</td>
+                    <td>AI memory service</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Orchestration</strong></td>
+                    <td>Container Apps (Temporal)</td>
+                    <td>Workflow engine</td>
+                  </tr>
+                  <tr>
+                    <td><strong>AI</strong></td>
+                    <td>Azure AI Foundry</td>
+                    <td>LLM inference</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Auth</strong></td>
+                    <td>Microsoft Entra ID</td>
+                    <td>Identity & SSO</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Observability</strong></td>
+                    <td>Application Insights</td>
+                    <td>Traces, metrics, logs</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Secrets</strong></td>
+                    <td>Key Vault</td>
+                    <td>Credential management</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- Component Guides -->
+          <div class="content-section">
+            <h2>Component Deployment Guides</h2>
+            <p>Detailed guides for deploying and configuring each major component:</p>
+            
+            <div class="nav-cards">
+              <a href="/temporal-enterprise-deployment.html" class="nav-card">
+                <div class="nav-card-icon">⏱️</div>
+                <div class="nav-card-content">
+                  <p class="nav-card-title">Temporal</p>
+                  <p class="nav-card-desc">Durable workflow orchestration and Temporal Cloud options.</p>
+                </div>
+              </a>
+              <a href="/zep-enterprise-deployment.html" class="nav-card">
+                <div class="nav-card-icon">🧠</div>
+                <div class="nav-card-content">
+                  <p class="nav-card-title">Zep Memory</p>
+                  <p class="nav-card-desc">AI memory service with Graphiti knowledge graph.</p>
+                </div>
+              </a>
+              <a href="/postgresql-blob-storage-enterprise-deployment.html" class="nav-card">
+                <div class="nav-card-icon">🗄️</div>
+                <div class="nav-card-content">
+                  <p class="nav-card-title">PostgreSQL</p>
+                  <p class="nav-card-desc">Database setup, HA, and blob storage integration.</p>
+                </div>
+              </a>
+              <a href="/unstructured-enterprise-deployment.html" class="nav-card">
+                <div class="nav-card-icon">📄</div>
+                <div class="nav-card-content">
+                  <p class="nav-card-title">Unstructured ETL</p>
+                  <p class="nav-card-desc">Document parsing and ingestion pipeline.</p>
+                </div>
+              </a>
+            </div>
+          </div>
+          
+          <!-- CI/CD -->
+          <div class="content-section">
+            <h2>CI/CD Pipeline</h2>
+            
+            <p>Engram includes GitHub Actions workflows for continuous integration and deployment:</p>
+            
+            <ul>
+              <li><strong>CI</strong>: Runs on every PR—frontend tests, backend tests, e2e tests</li>
+              <li><strong>Deploy</strong>: Deploys to staging on merge to <code>develop</code>, production on merge to <code>main</code></li>
+              <li><strong>Wiki</strong>: Auto-publishes documentation to GitHub Pages</li>
+            </ul>
+            
+            <div class="callout callout-success" style="margin-top: 1rem;">
+              <p class="callout-title">💡 Secrets Setup</p>
+              <p>Configure GitHub secrets for deployment. See <a href="/github-secrets.html">GitHub Secrets Guide</a> for details.</p>
+            </div>
+          </div>
+          
+          <!-- Next Steps -->
+          <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: var(--gray-100); border-radius: var(--radius);">
+            <h3 style="margin: 0 0 0.5rem;">Need more detail?</h3>
+            <p style="color: var(--gray-600); margin: 0 0 1.5rem;">Check out pricing, local testing, or the testing guide.</p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+              <a href="/pricing.html" class="btn btn-primary">Pricing & Tiers →</a>
+              <a href="/LOCAL-TESTING-GUIDE.html" class="btn btn-secondary">Local Testing</a>
+              <a href="/TESTING-GUIDE.html" class="btn btn-secondary">Testing Guide</a>
+            </div>
+          </div>
+          
+        </div>
+      </section>
+      
+      <footer class="site-footer">
+        <p>Built with ❤️ using <strong>Context Engineering</strong></p>
+        <p><a href="https://github.com/zimaxnet/engram">GitHub</a> · <a href="https://engram.work">engram.work</a> · <a href="https://wiki.engram.work">Documentation</a></p>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

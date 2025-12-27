@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing & Deployment Tiers - Engram</title>
+  <meta name="description" content="Comprehensive pricing for five Engram deployment levels, from POC to Enterprise Production.">
+  <link rel="canonical" href="https://wiki.engram.work/pricing.html">
+  <link rel="stylesheet" href="/assets/css/engram.css">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+  <button class="mobile-nav-toggle" aria-label="Toggle navigation" onclick="document.querySelector('.site-nav').classList.toggle('open')">☰</button>
+  
+  <div class="site-wrapper">
+    <!-- Side Navigation -->
+    <nav class="site-nav">
+      <div class="nav-header">
+        <a href="/" class="nav-logo">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="14" stroke="#00d4ff" stroke-width="2"/>
+            <circle cx="16" cy="16" r="6" fill="#a855f7"/>
+            <path d="M16 2v6M16 24v6M2 16h6M24 16h6" stroke="#00d4ff" stroke-width="2"/>
+          </svg>
+          <div>
+            <div class="nav-logo-text">Engram</div>
+            <div class="nav-tagline">Context Engineering Platform</div>
+          </div>
+        </a>
+      </div>
+      
+      <div class="nav-sections">
+        <div class="nav-section">
+          <div class="nav-section-title">Getting Started</div>
+          <ul class="nav-links">
+            <li><a href="/"><span class="icon">🏠</span> Home</a></li>
+            <li><a href="/architecture.html"><span class="icon">🏗️</span> Architecture</a></li>
+            <li><a href="/agents.html"><span class="icon">🤖</span> Agent Personas</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Platform Features</div>
+          <ul class="nav-links">
+            <li><a href="/system-navigator.html"><span class="icon">🧭</span> System Navigator</a></li>
+            <li><a href="/connectors.html"><span class="icon">🔌</span> Connectors</a></li>
+            <li><a href="/storage-strategy.html"><span class="icon">💾</span> Storage Strategy</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Enterprise Deployment</div>
+          <ul class="nav-links">
+            <li><a href="/deployment.html"><span class="icon">🚀</span> Deployment Guide</a></li>
+            <li><a href="/pricing.html" class="active"><span class="icon">💰</span> Pricing & Tiers</a></li>
+            <li><a href="/poc-vs-enterprise.html"><span class="icon">📊</span> POC vs Enterprise</a></li>
+            <li><a href="/enterprise-env-model.html"><span class="icon">🌐</span> Environment Model</a></li>
+            <li><a href="/finops.html"><span class="icon">📈</span> FinOps Strategy</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Component Guides</div>
+          <ul class="nav-links">
+            <li><a href="/temporal-enterprise-deployment.html"><span class="icon">⏱️</span> Temporal</a></li>
+            <li><a href="/zep-enterprise-deployment.html"><span class="icon">🧠</span> Zep Memory</a></li>
+            <li><a href="/postgresql-blob-storage-enterprise-deployment.html"><span class="icon">🗄️</span> PostgreSQL</a></li>
+            <li><a href="/unstructured-enterprise-deployment.html"><span class="icon">📄</span> Unstructured ETL</a></li>
+          </ul>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Development</div>
+          <ul class="nav-links">
+            <li><a href="/TESTING-GUIDE.html"><span class="icon">🧪</span> Testing Guide</a></li>
+            <li><a href="/LOCAL-TESTING-GUIDE.html"><span class="icon">💻</span> Local Setup</a></li>
+            <li><a href="/app-insights-guide.html"><span class="icon">📊</span> Observability</a></li>
+            <li><a href="/visual-development.html"><span class="icon">🎨</span> Visual Dev</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="nav-footer">
+        Built with Context Engineering<br>
+        <a href="https://github.com/zimaxnet/engram">GitHub</a> · <a href="https://engram.work">engram.work</a>
+      </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="site-content">
+      <header class="page-header">
+        <div class="container">
+          <div class="breadcrumb">
+            <a href="/">Home</a>
+            <span class="sep">›</span>
+            <span>Enterprise Deployment</span>
+            <span class="sep">›</span>
+            <span>Pricing & Tiers</span>
+          </div>
+          <h1 class="page-title">Pricing & Deployment Tiers</h1>
+          <p class="page-subtitle">Five deployment levels from cost-optimized POC to fully supported Enterprise Production.</p>
+        </div>
+      </header>
+      
+      <section class="page-body">
+        <div class="container">
+          
+          <!-- Executive Summary -->
+          <div class="callout callout-info">
+            <p class="callout-title">💡 Executive Summary</p>
+            <p>This document provides comprehensive pricing estimates for <strong>five deployment levels</strong> of the Engram platform, from a cost-optimized <strong>Staging POC</strong> with Azure Container Apps (scale-to-zero) to a fully supported <strong>Enterprise Production</strong> deployment with Kubernetes. All pricing is based on Azure public pricing and includes Infrastructure as Code (IaC) deployment strategies for customer Azure tenants.</p>
+            <p><strong>Current Deployment:</strong> Staging POC with ACA (scale-to-zero) and PostgreSQL B1ms SKU (~$23/month idle, ~$50-80/month light usage).</p>
+          </div>
+          
+          <!-- Deployment Tiers Overview -->
+          <div class="content-section">
+            <div class="section-header" style="text-align: left;">
+              <h2 class="section-title">Deployment Level Overview</h2>
+            </div>
+            
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Level</th>
+                    <th>Name</th>
+                    <th>Use Case</th>
+                    <th>Monthly Cost</th>
+                    <th>Support</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="pill pill-cyan">L1</span></td>
+                    <td><strong>Staging POC</strong></td>
+                    <td>Development & demos</td>
+                    <td>$23 – $80</td>
+                    <td>Community</td>
+                  </tr>
+                  <tr>
+                    <td><span class="pill pill-cyan">L2</span></td>
+                    <td><strong>Dev/Test</strong></td>
+                    <td>Team development</td>
+                    <td>$150 – $300</td>
+                    <td>Community</td>
+                  </tr>
+                  <tr>
+                    <td><span class="pill pill-green">L3</span></td>
+                    <td><strong>Production Starter</strong></td>
+                    <td>Small production workloads</td>
+                    <td>$400 – $800</td>
+                    <td>Email (8×5)</td>
+                  </tr>
+                  <tr>
+                    <td><span class="pill pill-purple">L4</span></td>
+                    <td><strong>Enterprise Standard</strong></td>
+                    <td>Enterprise workloads</td>
+                    <td>$1,500 – $3,000</td>
+                    <td>Priority (24×5)</td>
+                  </tr>
+                  <tr>
+                    <td><span class="pill pill-orange">L5</span></td>
+                    <td><strong>Enterprise Production</strong></td>
+                    <td>Mission-critical, HA</td>
+                    <td>$5,000 – $10,000+</td>
+                    <td>Premium (24×7)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- Tier Cards -->
+          <div class="pricing-grid">
+            
+            <!-- Level 1 -->
+            <div class="pricing-card">
+              <div class="pricing-header">
+                <span class="pill pill-cyan" style="margin-bottom: 0.5rem;">Level 1</span>
+                <h3 class="pricing-name">Staging POC</h3>
+                <div class="pricing-price">$23 – $80</div>
+                <div class="pricing-period">per month</div>
+              </div>
+              <div class="pricing-body">
+                <ul class="pricing-features">
+                  <li>Azure Container Apps (scale-to-zero)</li>
+                  <li>PostgreSQL Flexible B1ms (1 vCore)</li>
+                  <li>Shared Zep instance</li>
+                  <li>Self-hosted Temporal</li>
+                  <li>Perfect for demos & development</li>
+                </ul>
+                <a href="/deployment.html" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem;">Get Started</a>
+              </div>
+            </div>
+            
+            <!-- Level 2 -->
+            <div class="pricing-card">
+              <div class="pricing-header">
+                <span class="pill pill-cyan" style="margin-bottom: 0.5rem;">Level 2</span>
+                <h3 class="pricing-name">Dev/Test</h3>
+                <div class="pricing-price">$150 – $300</div>
+                <div class="pricing-period">per month</div>
+              </div>
+              <div class="pricing-body">
+                <ul class="pricing-features">
+                  <li>Azure Container Apps (always-on)</li>
+                  <li>PostgreSQL Flexible B2s (2 vCores)</li>
+                  <li>Dedicated Zep instance</li>
+                  <li>Temporal with PostgreSQL backend</li>
+                  <li>Multiple developer access</li>
+                </ul>
+                <a href="/deployment.html" class="btn btn-secondary" style="width: 100%; justify-content: center; margin-top: 1rem;">Learn More</a>
+              </div>
+            </div>
+            
+            <!-- Level 3 -->
+            <div class="pricing-card">
+              <div class="pricing-header">
+                <span class="pill pill-green" style="margin-bottom: 0.5rem;">Level 3</span>
+                <h3 class="pricing-name">Production Starter</h3>
+                <div class="pricing-price">$400 – $800</div>
+                <div class="pricing-period">per month</div>
+              </div>
+              <div class="pricing-body">
+                <ul class="pricing-features">
+                  <li>ACA with reserved capacity</li>
+                  <li>PostgreSQL GP_Standard_D2s (4 vCores)</li>
+                  <li>Production Zep with HA</li>
+                  <li>Temporal Cloud (Starter)</li>
+                  <li>Basic monitoring & alerts</li>
+                  <li>Email support (8×5)</li>
+                </ul>
+                <a href="/poc-vs-enterprise.html" class="btn btn-secondary" style="width: 100%; justify-content: center; margin-top: 1rem;">Compare Options</a>
+              </div>
+            </div>
+            
+            <!-- Level 4 -->
+            <div class="pricing-card featured">
+              <div class="pricing-header">
+                <span class="pill pill-purple" style="margin-bottom: 0.5rem;">Level 4</span>
+                <h3 class="pricing-name">Enterprise Standard</h3>
+                <div class="pricing-price">$1,500 – $3,000</div>
+                <div class="pricing-period">per month</div>
+              </div>
+              <div class="pricing-body">
+                <ul class="pricing-features">
+                  <li>Azure Kubernetes Service (AKS)</li>
+                  <li>PostgreSQL GP_Standard_D4s (8 vCores)</li>
+                  <li>Zep with read replicas</li>
+                  <li>Temporal Cloud (Standard)</li>
+                  <li>Full observability stack</li>
+                  <li>Multi-region ready</li>
+                  <li>Priority support (24×5)</li>
+                </ul>
+                <a href="/enterprise-env-model.html" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem;">Enterprise Guide</a>
+              </div>
+            </div>
+            
+            <!-- Level 5 -->
+            <div class="pricing-card">
+              <div class="pricing-header">
+                <span class="pill pill-orange" style="margin-bottom: 0.5rem;">Level 5</span>
+                <h3 class="pricing-name">Enterprise Production</h3>
+                <div class="pricing-price">$5,000+</div>
+                <div class="pricing-period">per month</div>
+              </div>
+              <div class="pricing-body">
+                <ul class="pricing-features">
+                  <li>AKS with node pools & autoscaling</li>
+                  <li>PostgreSQL HA with geo-replication</li>
+                  <li>Zep cluster with sharding</li>
+                  <li>Temporal Cloud (Enterprise)</li>
+                  <li>Full DR & backup strategy</li>
+                  <li>Compliance certifications</li>
+                  <li>Premium support (24×7 + TAM)</li>
+                </ul>
+                <a href="mailto:enterprise@engram.work" class="btn btn-secondary" style="width: 100%; justify-content: center; margin-top: 1rem;">Contact Sales</a>
+              </div>
+            </div>
+            
+          </div>
+          
+          <!-- Component Breakdown -->
+          <div class="content-section" style="margin-top: 3rem;">
+            <div class="section-header" style="text-align: left;">
+              <h2 class="section-title">Component Cost Breakdown</h2>
+              <p class="section-subtitle">Detailed infrastructure costs by component.</p>
+            </div>
+            
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Component</th>
+                    <th>L1 POC</th>
+                    <th>L2 Dev/Test</th>
+                    <th>L3 Prod Starter</th>
+                    <th>L4 Enterprise</th>
+                    <th>L5 Enterprise+</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Compute</strong></td>
+                    <td>$0–$15</td>
+                    <td>$50–$100</td>
+                    <td>$150–$300</td>
+                    <td>$500–$1,000</td>
+                    <td>$1,500–$3,000</td>
+                  </tr>
+                  <tr>
+                    <td><strong>PostgreSQL</strong></td>
+                    <td>$15–$25</td>
+                    <td>$50–$75</td>
+                    <td>$150–$250</td>
+                    <td>$400–$800</td>
+                    <td>$1,000–$2,000</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Zep/Memory</strong></td>
+                    <td>$0–$10</td>
+                    <td>$25–$50</td>
+                    <td>$50–$100</td>
+                    <td>$200–$400</td>
+                    <td>$500–$1,000</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Temporal</strong></td>
+                    <td>$0 (self-host)</td>
+                    <td>$0 (self-host)</td>
+                    <td>$50–$100</td>
+                    <td>$200–$400</td>
+                    <td>$500–$1,000</td>
+                  </tr>
+                  <tr>
+                    <td><strong>AI Models</strong></td>
+                    <td>Pay-per-use</td>
+                    <td>Pay-per-use</td>
+                    <td>$50–$200</td>
+                    <td>$200–$500</td>
+                    <td>$500–$2,000</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Observability</strong></td>
+                    <td>$0–$5</td>
+                    <td>$10–$25</td>
+                    <td>$25–$50</td>
+                    <td>$100–$200</td>
+                    <td>$300–$500</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Networking/Other</strong></td>
+                    <td>$0–$5</td>
+                    <td>$10–$25</td>
+                    <td>$25–$50</td>
+                    <td>$100–$200</td>
+                    <td>$200–$500</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- FinOps Callout -->
+          <div class="callout callout-success" style="margin-top: 2rem;">
+            <p class="callout-title">💡 FinOps Optimization</p>
+            <p>Engram is designed with a <strong>FinOps-first</strong> approach. Key cost optimizations include:</p>
+            <ul style="margin: 0.5rem 0 0 1.5rem;">
+              <li><strong>Scale-to-zero</strong> on Azure Container Apps for idle workloads</li>
+              <li><strong>Reserved instances</strong> for predictable production workloads</li>
+              <li><strong>Spot instances</strong> for batch/background processing</li>
+              <li><strong>Tiered storage</strong> with automatic lifecycle policies</li>
+              <li><strong>Right-sizing</strong> recommendations via Azure Advisor</li>
+            </ul>
+            <p style="margin-top: 0.75rem;"><a href="/finops.html">Learn more about our FinOps strategy →</a></p>
+          </div>
+          
+          <!-- CTA -->
+          <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: var(--gray-100); border-radius: var(--radius);">
+            <h3 style="margin: 0 0 0.5rem;">Need help choosing?</h3>
+            <p style="color: var(--gray-600); margin: 0 0 1.5rem;">Compare POC and Enterprise options or contact us for a custom quote.</p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+              <a href="/poc-vs-enterprise.html" class="btn btn-primary">POC vs Enterprise →</a>
+              <a href="mailto:enterprise@engram.work" class="btn btn-secondary">Contact Sales</a>
+            </div>
+          </div>
+          
+        </div>
+      </section>
+      
+      <footer class="site-footer">
+        <p>Built with ❤️ using <strong>Context Engineering</strong></p>
+        <p><a href="https://github.com/zimaxnet/engram">GitHub</a> · <a href="https://engram.work">engram.work</a> · <a href="https://wiki.engram.work">Documentation</a></p>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

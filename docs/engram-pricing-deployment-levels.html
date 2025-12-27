@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Engram Platform Pricing & Deployment Levels</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #00d4ff;
+            border-bottom: 3px solid #a855f7;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        h2 {
+            color: #00d4ff;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            padding-top: 1rem;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        h3 {
+            color: #a855f7;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        h4 {
+            color: #10b981;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .executive-summary {
+            background: #0a0e1a;
+            color: #e2e8f0;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .executive-summary h2 {
+            color: #00d4ff;
+            border: none;
+            margin-top: 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+        }
+        
+        th {
+            background: #0a0e1a;
+            color: #00d4ff;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .level-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-right: 0.5rem;
+        }
+        
+        .level-1 { background: #dbeafe; color: #1e40af; }
+        .level-2 { background: #d1fae5; color: #065f46; }
+        .level-3 { background: #fef3c7; color: #92400e; }
+        .level-4 { background: #fce7f3; color: #831843; }
+        .level-5 { background: #fee2e2; color: #991b1b; }
+        
+        .cost-highlight {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .cost-highlight h4 {
+            color: #92400e;
+            margin-top: 0;
+        }
+        
+        .pricing-table {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        code {
+            background: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            background: #0a0e1a;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+        
+        pre code {
+            background: transparent;
+            padding: 0;
+            color: #e2e8f0;
+        }
+        
+        .iac-structure {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            font-family: monospace;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        
+        .optimization-box {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .optimization-box h4 {
+            color: #065f46;
+            margin-top: 0;
+        }
+        
+        .support-table {
+            background: #e0e7ff;
+            border-left: 4px solid #6366f1;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .support-table h4 {
+            color: #312e81;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Engram Platform Pricing & Deployment Levels</h1>
+        
+        <div class="executive-summary">
+            <h2>Executive Summary</h2>
+            <p>This document provides comprehensive pricing estimates for <strong>five deployment levels</strong> of the Engram platform, from a cost-optimized <strong>Staging POC</strong> with Azure Container Apps (scale-to-zero) to a fully supported <strong>Enterprise Production</strong> deployment with Kubernetes. All pricing is based on Azure public pricing as of 2024 and includes Infrastructure as Code (IAC) deployment strategies for customer Azure tenants.</p>
+            <p><strong>Current Deployment</strong>: Staging POC with ACA (scale-to-zero) and PostgreSQL B1ms SKU (~$23/month idle, ~$50-80/month light usage).</p>
+        </div>
+        
+        <h2>Deployment Level Overview</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Level</th>
+                    <th>Environment</th>
+                    <th>Compute</th>
+                    <th>Database</th>
+                    <th>Storage</th>
+                    <th>Support</th>
+                    <th>Est. Monthly Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="level-badge level-1">Level 1</span></td>
+                    <td>Staging POC</td>
+                    <td>ACA (scale-to-zero)</td>
+                    <td>PostgreSQL B1ms</td>
+                    <td>Blob Storage (LRS)</td>
+                    <td>Self-service</td>
+                    <td><strong>$23-80</strong></td>
+                </tr>
+                <tr>
+                    <td><span class="level-badge level-2">Level 2</span></td>
+                    <td>Development</td>
+                    <td>Kubernetes (2 nodes)</td>
+                    <td>PostgreSQL B1ms</td>
+                    <td>Blob Storage (LRS)</td>
+                    <td>Business hours</td>
+                    <td><strong>$200-400</strong></td>
+                </tr>
+                <tr>
+                    <td><span class="level-badge level-3">Level 3</span></td>
+                    <td>Test</td>
+                    <td>Kubernetes (3 nodes)</td>
+                    <td>PostgreSQL D2s_v3</td>
+                    <td>Blob Storage (ZRS)</td>
+                    <td>Business hours</td>
+                    <td><strong>$500-800</strong></td>
+                </tr>
+                <tr>
+                    <td><span class="level-badge level-4">Level 4</span></td>
+                    <td>UAT</td>
+                    <td>Kubernetes (4 nodes)</td>
+                    <td>PostgreSQL D4s_v3 (HA)</td>
+                    <td>Blob Storage (GRS)</td>
+                    <td>Extended hours</td>
+                    <td><strong>$1,200-2,000</strong></td>
+                </tr>
+                <tr>
+                    <td><span class="level-badge level-5">Level 5</span></td>
+                    <td>Production</td>
+                    <td>Kubernetes (6+ nodes)</td>
+                    <td>PostgreSQL D8s_v3 (HA)</td>
+                    <td>Blob Storage (GZRS)</td>
+                    <td>24/7 support</td>
+                    <td><strong>$3,000-5,000</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h2>Level 1: Staging POC (Current Deployment)</h2>
+        
+        <h3>Description</h3>
+        <p><strong>Purpose</strong>: Initial proof-of-concept, testing, and validation. Minimal cost with scale-to-zero capabilities.</p>
+        
+        <h4>Architecture</h4>
+        <ul>
+            <li><strong>Compute</strong>: Azure Container Apps (Consumption plan, scale-to-zero)</li>
+            <li><strong>Database</strong>: Azure Database for PostgreSQL Flexible Server (B1ms - Burstable)</li>
+            <li><strong>Storage</strong>: Azure Blob Storage (Standard, LRS, Hot tier)</li>
+            <li><strong>Orchestration</strong>: Temporal OSS (deployed in ACA)</li>
+            <li><strong>Memory</strong>: Zep OSS (deployed in ACA)</li>
+            <li><strong>ETL</strong>: Unstructured OSS (integrated in FastAPI)</li>
+            <li><strong>UI</strong>: Azure Static Web Apps</li>
+        </ul>
+        
+        <div class="cost-highlight">
+            <h4>Infrastructure Costs (Idle - Scale-to-Zero)</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Configuration</th>
+                        <th>Monthly Cost (Idle)</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Container Apps</strong></td>
+                        <td>Scale-to-zero (0 replicas)</td>
+                        <td>$0</td>
+                        <td>No cost when idle</td>
+                    </tr>
+                    <tr>
+                        <td><strong>PostgreSQL B1ms</strong></td>
+                        <td>1 vCore, 2GB RAM, 32GB storage</td>
+                        <td>$13</td>
+                        <td>Always-on (required for Temporal)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Blob Storage</strong></td>
+                        <td>~10GB, Standard LRS, Hot tier</td>
+                        <td>$0.18</td>
+                        <td>Minimal storage</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Static Web Apps</strong></td>
+                        <td>Standard tier</td>
+                        <td>$9</td>
+                        <td>Always-on hosting</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Key Vault</strong></td>
+                        <td>Standard tier, &lt;10K operations</td>
+                        <td>$0.03</td>
+                        <td>Minimal operations</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Log Analytics</strong></td>
+                        <td>~5GB/month, 30-day retention</td>
+                        <td>$0.50</td>
+                        <td>Basic logging</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total (Idle)</strong></td>
+                        <td></td>
+                        <td><strong>~$23/month</strong></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="cost-highlight">
+            <h4>Infrastructure Costs (Light Usage - 100 conversations/day)</h4>
+            <p><strong>Total: ~$65/month</strong></p>
+        </div>
+        
+        <h3>IAC Deployment</h3>
+        <p><strong>Location</strong>: <code>infra/environments/staging/</code></p>
+        <pre><code>az deployment group create \
+  --resource-group rg-engram-staging \
+  --template-file infra/environments/staging/main.bicep \
+  --parameters @infra/environments/staging/parameters.json</code></pre>
+        
+        <h2>Level 2: Development Environment</h2>
+        
+        <h3>Description</h3>
+        <p><strong>Purpose</strong>: Ongoing development, integration testing, CI/CD pipelines. Stable environment for developers.</p>
+        
+        <div class="cost-highlight">
+            <h4>Estimated Monthly Cost: ~$344/month</h4>
+            <p>Includes: AKS (2 nodes), PostgreSQL B1ms, Blob Storage, Static Web Apps, AI Services, and support costs.</p>
+        </div>
+        
+        <h3>IAC Deployment</h3>
+        <p><strong>Location</strong>: <code>infra/environments/dev/</code></p>
+        <pre><code># Deploy infrastructure
+az deployment group create \
+  --resource-group rg-engram-dev \
+  --template-file infra/environments/dev/main.bicep \
+  --parameters @infra/environments/dev/parameters.json
+
+# Deploy Temporal via Helm
+helm install temporal temporalio/temporal \
+  --namespace engram \
+  --values infra/environments/dev/temporal-helm-values.yaml
+
+# Deploy Zep via Helm
+helm install zep zep/zep \
+  --namespace engram \
+  --values infra/environments/dev/zep-helm-values.yaml</code></pre>
+        
+        <h2>Level 3: Test Environment</h2>
+        
+        <h3>Description</h3>
+        <p><strong>Purpose</strong>: Pre-production testing, load testing, integration validation. Production-like configuration.</p>
+        
+        <div class="cost-highlight">
+            <h4>Estimated Monthly Cost: ~$850/month</h4>
+            <p>Includes: AKS (3 nodes), PostgreSQL D2s_v3, Blob Storage (ZRS), Static Web Apps, AI Services, and support costs.</p>
+        </div>
+        
+        <h2>Level 4: UAT Environment</h2>
+        
+        <h3>Description</h3>
+        <p><strong>Purpose</strong>: User Acceptance Testing, production-like environment, extended support hours.</p>
+        
+        <div class="cost-highlight">
+            <h4>Estimated Monthly Cost: ~$2,710/month</h4>
+            <p>Includes: AKS (4 nodes), PostgreSQL D4s_v3 (HA), Blob Storage (GRS), Static Web Apps, AI Services, Codec Server, extended support, and all infrastructure components.</p>
+        </div>
+        
+        <h2>Level 5: Production Environment</h2>
+        
+        <h3>Description</h3>
+        <p><strong>Purpose</strong>: Fully supported enterprise production deployment with 24/7 support, SLA guarantees, and maximum scalability.</p>
+        
+        <div class="cost-highlight">
+            <h4>Estimated Monthly Cost: ~$9,268/month (Base Infrastructure)</h4>
+            <p><strong>Note</strong>: Production costs vary significantly based on actual usage (AI tokens, storage, compute), auto-scaling behavior, data volume, and support requirements.</p>
+        </div>
+        
+        <h3>Infrastructure Components</h3>
+        <ul>
+            <li><strong>AKS Cluster</strong>: 6+ nodes (Standard_D8s_v3), System + User node pools, auto-scaling</li>
+            <li><strong>Temporal OSS</strong>: 6 replicas (server), 3 replicas (UI), Codec Server (HA)</li>
+            <li><strong>Zep OSS</strong>: 6 replicas</li>
+            <li><strong>PostgreSQL</strong>: D8s_v3 (8 vCore, 32GB RAM, 256GB storage), Zone-Redundant HA, 1 read replica</li>
+            <li><strong>Blob Storage</strong>: Standard GZRS, Hot/Cool tier lifecycle</li>
+            <li><strong>Support</strong>: 24/7 support, dedicated resources</li>
+        </ul>
+        
+        <h2>Cost Optimization Strategies</h2>
+        
+        <div class="optimization-box">
+            <h4>Across All Levels</h4>
+            <ul>
+                <li><strong>Reserved Capacity</strong>: 1-year or 3-year reservations for PostgreSQL (35-50% savings)</li>
+                <li><strong>Right-Sizing</strong>: Start conservative, scale based on metrics</li>
+                <li><strong>Lifecycle Management</strong>: Blob Storage tiering (Hot → Cool → Archive)</li>
+                <li><strong>Caching</strong>: Application-level caching to reduce database load</li>
+                <li><strong>Model Selection</strong>: Use gpt-4o-mini for simple queries (30x cheaper)</li>
+                <li><strong>Auto-Scaling</strong>: Scale down during off-peak hours</li>
+                <li><strong>Cost Monitoring</strong>: Azure Cost Management + Budget alerts</li>
+            </ul>
+        </div>
+        
+        <h2>Support & Operational Costs</h2>
+        
+        <div class="support-table">
+            <h4>Support Tiers</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Level</th>
+                        <th>Support Hours</th>
+                        <th>Response Time</th>
+                        <th>Monthly Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Level 1</strong></td>
+                        <td>Self-service</td>
+                        <td>N/A</td>
+                        <td>$0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Level 2</strong></td>
+                        <td>Business hours (9am-5pm)</td>
+                        <td>4 hours</td>
+                        <td>$200</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Level 3</strong></td>
+                        <td>Business hours (9am-5pm)</td>
+                        <td>2 hours</td>
+                        <td>$400</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Level 4</strong></td>
+                        <td>Extended hours (8am-8pm)</td>
+                        <td>1 hour</td>
+                        <td>$500</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Level 5</strong></td>
+                        <td>24/7 support</td>
+                        <td>15 minutes</td>
+                        <td>$2,000</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <h2>IAC Code Structure</h2>
+        
+        <div class="iac-structure">infra/
+├── environments/
+│   ├── staging/
+│   │   ├── main.bicep              # Main infrastructure (current)
+│   │   ├── parameters.json         # Staging parameters
+│   │   └── README.md               # Deployment instructions
+│   ├── dev/
+│   │   ├── main.bicep              # Dev infrastructure
+│   │   ├── aks-cluster.bicep       # AKS cluster config
+│   │   ├── temporal-helm-values.yaml
+│   │   ├── zep-helm-values.yaml
+│   │   ├── parameters.json
+│   │   └── README.md
+│   ├── test/
+│   │   ├── main.bicep              # Test infrastructure
+│   │   ├── aks-cluster.bicep       # AKS cluster config (HA)
+│   │   ├── temporal-helm-values.yaml
+│   │   ├── zep-helm-values.yaml
+│   │   ├── parameters.json
+│   │   └── README.md
+│   ├── uat/
+│   │   ├── main.bicep              # UAT infrastructure
+│   │   ├── aks-cluster.bicep       # AKS cluster config (HA)
+│   │   ├── temporal-helm-values.yaml
+│   │   ├── zep-helm-values.yaml
+│   │   ├── codec-server-helm-values.yaml
+│   │   ├── parameters.json
+│   │   └── README.md
+│   └── prod/
+│       ├── main.bicep              # Production infrastructure
+│       ├── aks-cluster.bicep       # AKS cluster config (HA, auto-scaling)
+│       ├── temporal-helm-values.yaml
+│       ├── zep-helm-values.yaml
+│       ├── codec-server-helm-values.yaml
+│       ├── postgres-ha.bicep       # PostgreSQL HA config
+│       ├── backup-policy.bicep     # Backup policies
+│       ├── monitoring.bicep        # Monitoring config
+│       ├── parameters.json
+│       └── README.md
+├── modules/                        # Reusable Bicep modules (existing)
+│   ├── backend-aca.bicep
+│   ├── temporal-aca.bicep
+│   ├── zep-aca.bicep
+│   └── ...
+└── helm/                           # Helm chart values
+    ├── temporal/
+    │   ├── values-staging.yaml
+    │   ├── values-dev.yaml
+    │   ├── values-test.yaml
+    │   ├── values-uat.yaml
+    │   └── values-prod.yaml
+    ├── zep/
+    │   ├── values-staging.yaml
+    │   ├── values-dev.yaml
+    │   ├── values-test.yaml
+    │   ├── values-uat.yaml
+    │   └── values-prod.yaml
+    └── codec-server/
+        ├── values-uat.yaml
+        └── values-prod.yaml</div>
+        
+        <h2>Next Steps</h2>
+        <ol>
+            <li><strong>Review this pricing document</strong> with stakeholders</li>
+            <li><strong>Select deployment level</strong> based on requirements</li>
+            <li><strong>Prepare customer Azure tenant</strong> (subscription, resource groups, networking)</li>
+            <li><strong>Deploy infrastructure</strong> using IAC code</li>
+            <li><strong>Configure monitoring and alerting</strong> for cost tracking</li>
+            <li><strong>Set up budget alerts</strong> in Azure Cost Management</li>
+            <li><strong>Schedule regular cost reviews</strong> (monthly)</li>
+        </ol>
+        
+        <h2>References</h2>
+        <ul>
+            <li><a href="https://azure.microsoft.com/en-us/pricing/details/container-apps/">Azure Container Apps Pricing</a></li>
+            <li><a href="https://azure.microsoft.com/en-us/pricing/details/kubernetes-service/">Azure Kubernetes Service Pricing</a></li>
+            <li><a href="https://azure.microsoft.com/en-us/pricing/details/postgresql/">Azure Database for PostgreSQL Pricing</a></li>
+            <li><a href="https://azure.microsoft.com/en-us/pricing/details/storage/blobs/">Azure Blob Storage Pricing</a></li>
+            <li><a href="https://azure.microsoft.com/en-us/pricing/details/app-service/static/">Azure Static Web Apps Pricing</a></li>
+            <li><a href="https://github.com/temporalio/helm-charts">Temporal Helm Charts</a></li>
+            <li><a href="https://docs.getzep.com/">Zep Documentation</a></li>
+        </ul>
+        
+        <p><strong>Note</strong>: All pricing is estimated based on Azure public pricing as of 2024. Actual costs may vary based on regional pricing differences, usage patterns, reserved capacity discounts, enterprise agreements, and support requirements.</p>
+        <p>For accurate pricing, use the <a href="https://azure.microsoft.com/en-us/pricing/calculator/">Azure Pricing Calculator</a> with your specific requirements.</p>
+    </div>
+</body>
+</html>
+

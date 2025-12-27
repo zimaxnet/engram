@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Engram Enterprise Platform Deployment Strategy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #00d4ff;
+            border-bottom: 3px solid #a855f7;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        h2 {
+            color: #00d4ff;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            padding-top: 1rem;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        h3 {
+            color: #a855f7;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        h4 {
+            color: #10b981;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .executive-summary {
+            background: #0a0e1a;
+            color: #e2e8f0;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .executive-summary h2 {
+            color: #00d4ff;
+            border: none;
+            margin-top: 0;
+        }
+        
+        .executive-summary ul {
+            margin-left: 2rem;
+            margin-top: 1rem;
+        }
+        
+        .executive-summary li {
+            margin-bottom: 0.5rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+        }
+        
+        th {
+            background: #0a0e1a;
+            color: #00d4ff;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .critical {
+            background: #fee2e2;
+            color: #991b1b;
+            font-weight: 600;
+        }
+        
+        .required {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        code {
+            background: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            background: #0a0e1a;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+        
+        pre code {
+            background: transparent;
+            padding: 0;
+            color: #e2e8f0;
+        }
+        
+        .architecture-diagram {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            font-family: monospace;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        
+        .risk-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .risk-box h4 {
+            color: #92400e;
+            margin-top: 0;
+        }
+        
+        .mitigation {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .mitigation h4 {
+            color: #065f46;
+            margin-top: 0;
+        }
+        
+        .phase {
+            background: #e0e7ff;
+            border-left: 4px solid #6366f1;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .phase h4 {
+            color: #312e81;
+            margin-top: 0;
+        }
+        
+        .references {
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 3rem;
+        }
+        
+        .references ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        
+        .references li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .references a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+        
+        .references a:hover {
+            text-decoration: underline;
+        }
+        
+        .toc {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .toc h3 {
+            margin-top: 0;
+        }
+        
+        .toc ul {
+            list-style: none;
+            margin-left: 1rem;
+        }
+        
+        .toc li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .toc a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        
+        .component-link {
+            background: #e0e7ff;
+            border-left: 4px solid #6366f1;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .component-link a {
+            color: #312e81;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        
+        .component-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Engram Enterprise Platform Deployment Strategy</h1>
+        
+        <div class="executive-summary">
+            <h2>Executive Summary</h2>
+            <p>This document provides a <strong>unified enterprise deployment strategy</strong> for the complete Engram platform, integrating all core components: <strong>Temporal</strong> (Durable Spine), <strong>Zep</strong> (Memory Layer), <strong>Unstructured</strong> (ETL Layer), <strong>PostgreSQL/Blob Storage</strong> (Data Layer), and <strong>Navigation UI</strong> (Integration Layer). This master plan addresses enterprise requirements for deploying the full Engram stack in customer environments (dev/test/UAT/prod), including component integration, data flows, unified encryption, NIST AI RMF compliance, and operational responsibilities.</p>
+            
+            <p><strong>Platform Overview</strong>: Engram is a <strong>Cognition-as-a-Service</strong> platform that orchestrates AI agents through durable workflows, maintains provenance-first memory, processes documents with layout-aware fidelity, and provides a unified enterprise interface. All components are deployed in customer-controlled infrastructure with customer-managed encryption keys.</p>
+            
+            <p><strong>Key Decision</strong>: Self-hosted OSS components (Temporal OSS, Zep OSS, Unstructured OSS) integrated with customer-managed infrastructure (PostgreSQL, Blob Storage) and a React-based Navigation UI, all deployed in customer Kubernetes environments to enable:</p>
+            <ul>
+                <li>Full control over data encryption with customer-managed keys</li>
+                <li>Data residency in customer-controlled infrastructure</li>
+                <li>Custom RBAC, SSO, and compliance controls</li>
+                <li>Cost optimization through right-sizing</li>
+                <li>Unified enterprise interface for all capabilities</li>
+            </ul>
+        </div>
+        
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#section1">1. Platform Architecture: Component Integration</a></li>
+                <li><a href="#section2">2. Component Integration Matrix</a></li>
+                <li><a href="#section3">3. Enterprise Deployment Strategy: Unified Approach</a></li>
+                <li><a href="#section4">4. Unified Encryption Strategy</a></li>
+                <li><a href="#section5">5. NIST AI RMF Compliance: Platform-Level</a></li>
+                <li><a href="#section6">6. Operational Responsibilities: Full Stack Support</a></li>
+                <li><a href="#section7">7. Implementation Roadmap: Coordinated Deployment</a></li>
+                <li><a href="#section8">8. Risk Mitigation: Platform-Level</a></li>
+                <li><a href="#section9">9. Success Metrics: Platform-Wide</a></li>
+                <li><a href="#section10">10. Component-Specific Deployment Documents</a></li>
+                <li><a href="#section11">11. Next Steps</a></li>
+            </ul>
+        </div>
+        
+        <section id="section1">
+            <h2>1. Platform Architecture: Component Integration</h2>
+            
+            <h3>Complete Platform Stack</h3>
+            <div class="architecture-diagram">┌─────────────────────────────────────────────────────────────────┐
+│                    Engram Enterprise Platform                     │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │         Navigation UI (React + FastAPI)                    │  │
+│  │         Integration Layer                                 │  │
+│  │         - TreeNav Component                                │  │
+│  │         - Service Layer (api.ts, bau.ts, metrics.ts)      │  │
+│  │         - FastAPI Routers (Agents, Chat, Memory, etc.)    │  │
+│  └────────────────────┬─────────────────────────────────────┘  │
+│                       │                                         │
+│         ┌─────────────┼─────────────┐                           │
+│         │             │             │                           │
+│         ▼             ▼             ▼                           │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐                      │
+│  │ Temporal │  │   Zep    │  │Unstructured│                     │
+│  │  (OSS)   │  │  (OSS)   │  │   (OSS)   │                     │
+│  │          │  │          │  │           │                     │
+│  │ Durable  │  │  Memory  │  │    ETL    │                     │
+│  │  Spine   │  │  Layer   │  │   Layer   │                     │
+│  └────┬─────┘  └────┬─────┘  └─────┬─────┘                     │
+│       │             │              │                            │
+│       │             │              │                            │
+│       └─────────────┼──────────────┘                            │
+│                     │                                            │
+│                     ▼                                            │
+│         ┌──────────────────────┐                                │
+│         │   Data Layer          │                                │
+│         │                       │                                │
+│         │  ┌──────────────┐    │                                │
+│         │  │  PostgreSQL  │    │                                │
+│         │  │  (pgvector)  │    │                                │
+│         │  │  System of   │    │                                │
+│         │  │  Recall      │    │                                │
+│         │  └──────────────┘    │                                │
+│         │                       │                                │
+│         │  ┌──────────────┐    │                                │
+│         │  │ Blob Storage │    │                                │
+│         │  │  System of   │    │                                │
+│         │  │  Record      │    │                                │
+│         │  └──────────────┘    │                                │
+│         └──────────────────────┘                                │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘</div>
+            
+            <h3>Component Responsibilities</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Role</th>
+                        <th>Key Function</th>
+                        <th>Deployment</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Navigation UI</strong></td>
+                        <td>Integration Layer</td>
+                        <td>Unified interface, API gateway, user flows</td>
+                        <td>Azure Static Web Apps + FastAPI Container</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Temporal OSS</strong></td>
+                        <td>Durable Spine</td>
+                        <td>Workflow orchestration, state management, signals/queries</td>
+                        <td>Kubernetes (customer cluster)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Zep OSS</strong></td>
+                        <td>Memory Layer</td>
+                        <td>Episodic memory (conversations), semantic memory (Graphiti), vector search</td>
+                        <td>Kubernetes + PostgreSQL</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Unstructured OSS</strong></td>
+                        <td>ETL Layer</td>
+                        <td>Document partitioning, chunking, layout-aware parsing</td>
+                        <td>Integrated in FastAPI Container</td>
+                    </tr>
+                    <tr>
+                        <td><strong>PostgreSQL (pgvector)</strong></td>
+                        <td>System of Recall</td>
+                        <td>Vector embeddings, knowledge graph, episodic memory storage</td>
+                        <td>Azure Database for PostgreSQL Flexible Server</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Blob Storage</strong></td>
+                        <td>System of Record</td>
+                        <td>Raw documents, parsed artifacts, provenance metadata</td>
+                        <td>Azure Blob Storage</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <section id="section2">
+            <h2>2. Component Integration Matrix</h2>
+            
+            <h3>How Components Connect</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Integration Point</th>
+                        <th>Source Component</th>
+                        <th>Target Component</th>
+                        <th>Protocol</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Document Ingestion</strong></td>
+                        <td>Navigation UI</td>
+                        <td>Unstructured (via FastAPI)</td>
+                        <td>HTTP/REST</td>
+                        <td>Upload documents for processing</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Document Processing</strong></td>
+                        <td>Unstructured</td>
+                        <td>Blob Storage</td>
+                        <td>Azure SDK</td>
+                        <td>Store parsed artifacts</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Memory Indexing</strong></td>
+                        <td>Unstructured</td>
+                        <td>Zep (via FastAPI)</td>
+                        <td>HTTP/REST</td>
+                        <td>Index chunks to semantic memory</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Vector Storage</strong></td>
+                        <td>Zep</td>
+                        <td>PostgreSQL (pgvector)</td>
+                        <td>PostgreSQL Protocol</td>
+                        <td>Store vector embeddings</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Workflow Orchestration</strong></td>
+                        <td>Navigation UI</td>
+                        <td>Temporal</td>
+                        <td>gRPC</td>
+                        <td>Start/monitor workflows</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Memory Retrieval</strong></td>
+                        <td>Temporal Activities</td>
+                        <td>Zep (via FastAPI)</td>
+                        <td>HTTP/REST</td>
+                        <td>Retrieve context for agents</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Agent Execution</strong></td>
+                        <td>Temporal Workflows</td>
+                        <td>Zep Memory</td>
+                        <td>HTTP/REST</td>
+                        <td>Query memory during agent turns</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Workflow Status</strong></td>
+                        <td>Temporal</td>
+                        <td>Navigation UI (via FastAPI)</td>
+                        <td>gRPC → HTTP/REST</td>
+                        <td>Display workflow status</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Evidence Collection</strong></td>
+                        <td>All Components</td>
+                        <td>Navigation UI</td>
+                        <td>HTTP/REST</td>
+                        <td>Telemetry and metrics</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Document Retrieval</strong></td>
+                        <td>Zep Memory</td>
+                        <td>Blob Storage</td>
+                        <td>Azure SDK</td>
+                        <td>Link memory to source documents</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Data Flow: Document to Agent Response</h3>
+            <div class="architecture-diagram">1. User uploads document via Navigation UI
+   │
+   ▼
+2. FastAPI ETL Router receives document
+   │
+   ▼
+3. Unstructured OSS processes document (partitioning + chunking)
+   │
+   ├──► Chunks → Zep API → PostgreSQL (pgvector) [System of Recall]
+   │
+   └──► Parsed artifacts → Blob Storage [System of Record]
+   │
+   ▼
+4. User starts conversation via Navigation UI
+   │
+   ▼
+5. FastAPI Chat Router → Temporal Workflow (AgentWorkflow)
+   │
+   ▼
+6. Temporal Activity: search_memory → Zep API
+   │
+   ▼
+7. Zep queries PostgreSQL (pgvector) for relevant chunks
+   │
+   ▼
+8. Temporal Activity: generate_response (with retrieved context)
+   │
+   ▼
+9. Response returned to Navigation UI
+   │
+   ▼
+10. User views workflow execution in Navigation UI</div>
+        </section>
+        
+        <section id="section3">
+            <h2>3. Enterprise Deployment Strategy: Unified Approach</h2>
+            
+            <h3>Deployment Architecture</h3>
+            <p><strong>Customer Kubernetes Cluster</strong>:</p>
+            <ul>
+                <li><strong>Temporal OSS</strong>: Deployed via Helm charts, manages workflow execution</li>
+                <li><strong>Zep OSS</strong>: Deployed as Kubernetes service, connects to PostgreSQL</li>
+                <li><strong>FastAPI Container</strong>: Includes Unstructured OSS, serves Navigation UI backend</li>
+            </ul>
+            
+            <p><strong>Customer Azure Infrastructure</strong>:</p>
+            <ul>
+                <li><strong>PostgreSQL Flexible Server</strong>: Zep memory storage with pgvector</li>
+                <li><strong>Blob Storage</strong>: Document storage with lifecycle management</li>
+                <li><strong>Static Web Apps</strong>: Navigation UI frontend</li>
+                <li><strong>Container Apps</strong>: FastAPI backend (scale-to-zero)</li>
+            </ul>
+            
+            <p><strong>Customer Key Vault</strong>:</p>
+            <ul>
+                <li><strong>Unified Encryption Keys</strong>: Single customer-managed key for all components
+                    <ul>
+                        <li>PostgreSQL TDE</li>
+                        <li>Blob Storage TDE</li>
+                        <li>Temporal Data Converter (Codec Server)</li>
+                        <li>Application-level encryption (if needed)</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h3>Deployment Sequence</h3>
+            <div class="phase">
+                <h4>Phase 1: Data Layer (PostgreSQL + Blob Storage)</h4>
+                <ul>
+                    <li>Provision PostgreSQL Flexible Server with pgvector</li>
+                    <li>Configure Blob Storage with lifecycle policies</li>
+                    <li>Set up customer-managed encryption keys</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 2: Memory Layer (Zep OSS)</h4>
+                <ul>
+                    <li>Deploy Zep to Kubernetes</li>
+                    <li>Configure PostgreSQL connection</li>
+                    <li>Set up Graphiti knowledge graph</li>
+                    <li>Test vector search</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 3: ETL Layer (Unstructured OSS)</h4>
+                <ul>
+                    <li>Integrate Unstructured into FastAPI</li>
+                    <li>Configure partitioning strategies</li>
+                    <li>Test document processing</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 4: Durable Spine (Temporal OSS)</h4>
+                <ul>
+                    <li>Deploy Temporal to Kubernetes</li>
+                    <li>Configure history shards (immutable)</li>
+                    <li>Set up Data Converter + Codec Server</li>
+                    <li>Test workflow execution</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 5: Integration Layer (Navigation UI)</h4>
+                <ul>
+                    <li>Deploy FastAPI backend</li>
+                    <li>Deploy React frontend</li>
+                    <li>Configure authentication/SSO</li>
+                    <li>Test end-to-end flows</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section id="section4">
+            <h2>4. Unified Encryption Strategy</h2>
+            
+            <h3>Customer-Managed Keys (CMK) Across All Components</h3>
+            <p><strong>Single Key Vault Approach</strong>:</p>
+            <ul>
+                <li>One Azure Key Vault for all encryption keys</li>
+                <li>Unified key rotation workflow</li>
+                <li>Single audit trail for key access</li>
+            </ul>
+            
+            <h3>Component Encryption</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Encryption Method</th>
+                        <th>Key Source</th>
+                        <th>Configuration</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>PostgreSQL</strong></td>
+                        <td>TDE (Transparent Data Encryption)</td>
+                        <td>Customer Key Vault</td>
+                        <td>Azure PostgreSQL Flexible Server TDE</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Blob Storage</strong></td>
+                        <td>Storage Service Encryption</td>
+                        <td>Customer Key Vault</td>
+                        <td>Blob Storage TDE with CMK</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Temporal</strong></td>
+                        <td>Data Converter + Codec Server</td>
+                        <td>Customer Key Vault</td>
+                        <td>Custom encryption in workflow data</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Zep</strong></td>
+                        <td>Inherits from PostgreSQL</td>
+                        <td>Customer Key Vault</td>
+                        <td>PostgreSQL TDE covers Zep data</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Unstructured</strong></td>
+                        <td>Inherits from Blob Storage</td>
+                        <td>Customer Key Vault</td>
+                        <td>Blob Storage TDE covers documents</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h4>Key Rotation Strategy</h4>
+            <ol>
+                <li>Quarterly automated rotation</li>
+                <li>Dual-key support during rotation</li>
+                <li>Zero-downtime rotation for all components</li>
+                <li>Unified rotation workflow</li>
+            </ol>
+        </section>
+        
+        <section id="section5">
+            <h2>5. NIST AI RMF Compliance: Platform-Level</h2>
+            
+            <h3>Framework Mapping Across Components</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>NIST AI RMF Function</th>
+                        <th>Temporal</th>
+                        <th>Zep</th>
+                        <th>Unstructured</th>
+                        <th>PostgreSQL/Blob</th>
+                        <th>Navigation UI</th>
+                        <th>Platform Control</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Govern</strong></td>
+                        <td>Workflow policies</td>
+                        <td>Memory retention</td>
+                        <td>Partitioning config</td>
+                        <td>Lifecycle policies</td>
+                        <td>Settings UI</td>
+                        <td>Unified governance</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Map</strong></td>
+                        <td>Workflow metadata</td>
+                        <td>Data classification</td>
+                        <td>Document tagging</td>
+                        <td>Tier classification</td>
+                        <td>Provenance display</td>
+                        <td>End-to-end mapping</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Measure</strong></td>
+                        <td>Workflow metrics</td>
+                        <td>Memory quality</td>
+                        <td>Parse success</td>
+                        <td>Performance metrics</td>
+                        <td>Telemetry dashboard</td>
+                        <td>Unified metrics</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Manage</strong></td>
+                        <td>Workflow controls</td>
+                        <td>Memory management</td>
+                        <td>Chunking optimization</td>
+                        <td>Backup/restore</td>
+                        <td>User flows</td>
+                        <td>Platform management</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>Compliance Evidence</h3>
+            <p><strong>Data Encryption</strong>:</p>
+            <ul>
+                <li>✅ PostgreSQL TDE with customer-managed keys</li>
+                <li>✅ Blob Storage TDE with customer-managed keys</li>
+                <li>✅ Temporal Data Converter encryption</li>
+                <li>✅ Unified key rotation workflow</li>
+            </ul>
+            
+            <p><strong>Access Control</strong>:</p>
+            <ul>
+                <li>✅ RBAC at Navigation UI level</li>
+                <li>✅ Tenant isolation in Zep memory</li>
+                <li>✅ Workflow access control in Temporal</li>
+                <li>✅ Document access control in Blob Storage</li>
+            </ul>
+            
+            <p><strong>Audit Trail</strong>:</p>
+            <ul>
+                <li>✅ Workflow execution logs (Temporal)</li>
+                <li>✅ Memory access logs (Zep)</li>
+                <li>✅ Document processing logs (Unstructured)</li>
+                <li>✅ API access logs (FastAPI)</li>
+                <li>✅ Unified audit dashboard (Navigation UI)</li>
+            </ul>
+            
+            <p><strong>Provenance</strong>:</p>
+            <ul>
+                <li>✅ Document source tracking (Blob Storage)</li>
+                <li>✅ Memory fact provenance (Zep)</li>
+                <li>✅ Workflow trace IDs (Temporal)</li>
+                <li>✅ End-to-end traceability (Navigation UI)</li>
+            </ul>
+        </section>
+        
+        <section id="section6">
+            <h2>6. Operational Responsibilities: Full Stack Support</h2>
+            
+            <h3>Zimax Networks LC Support Model</h3>
+            <p><strong>For Customer Environments (dev/test/UAT/prod)</strong>:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Responsibility</th>
+                        <th>Zimax Networks LC</th>
+                        <th>Customer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Platform Deployment</strong></td>
+                        <td class="required">✅ Coordinated deployment of all components</td>
+                        <td>Infrastructure approval</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Component Integration</strong></td>
+                        <td class="required">✅ Integration testing and validation</td>
+                        <td>Integration requirements</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Unified Encryption</strong></td>
+                        <td class="required">✅ CMK configuration across all components</td>
+                        <td>Key management</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Performance Optimization</strong></td>
+                        <td class="required">✅ Cross-component optimization</td>
+                        <td>Performance requirements</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Monitoring & Alerting</strong></td>
+                        <td class="required">✅ Unified monitoring dashboard</td>
+                        <td>Alert response</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Backup & Disaster Recovery</strong></td>
+                        <td class="required">✅ Coordinated backup strategy</td>
+                        <td>RPO/RTO requirements</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Updates & Patches</strong></td>
+                        <td class="required">✅ Coordinated update planning</td>
+                        <td>Maintenance windows</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Troubleshooting</strong></td>
+                        <td class="required">✅ 24/7 support for all components</td>
+                        <td>Issue reporting</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Compliance Documentation</strong></td>
+                        <td class="required">✅ Platform-level compliance evidence</td>
+                        <td>Audit participation</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p><strong>Dedicated Resources Required</strong>:</p>
+            <ul>
+                <li><strong>Platform Architect</strong>: Overall architecture and integration</li>
+                <li><strong>Temporal Engineer</strong>: Workflow orchestration expertise</li>
+                <li><strong>Zep/PostgreSQL DBA</strong>: Memory layer optimization</li>
+                <li><strong>ETL Engineer</strong>: Unstructured configuration</li>
+                <li><strong>Frontend/Backend Engineers</strong>: Navigation UI development</li>
+                <li><strong>DevOps Engineer</strong>: Kubernetes deployment and monitoring</li>
+                <li><strong>Security Engineer</strong>: Encryption and compliance</li>
+                <li><strong>SRE</strong>: Monitoring, alerting, incident response</li>
+            </ul>
+        </section>
+        
+        <section id="section7">
+            <h2>7. Implementation Roadmap: Coordinated Deployment</h2>
+            
+            <div class="phase">
+                <h4>Phase 1: Foundation (Months 1-2)</h4>
+                <ul>
+                    <li>Platform architecture design</li>
+                    <li>Component integration planning</li>
+                    <li>Unified encryption architecture</li>
+                    <li>Customer infrastructure assessment</li>
+                    <li>Resource allocation</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 2: Data Layer Deployment (Months 2-3)</h4>
+                <ul>
+                    <li>PostgreSQL Flexible Server provisioning</li>
+                    <li>Blob Storage configuration</li>
+                    <li>Customer-managed key setup</li>
+                    <li>Lifecycle policy configuration</li>
+                    <li>Performance baseline testing</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 3: Memory & ETL Layers (Months 3-4)</h4>
+                <ul>
+                    <li>Zep OSS deployment to Kubernetes</li>
+                    <li>PostgreSQL connection and testing</li>
+                    <li>Unstructured OSS integration</li>
+                    <li>Document processing testing</li>
+                    <li>Memory indexing validation</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 4: Durable Spine (Months 4-5)</h4>
+                <ul>
+                    <li>Temporal OSS deployment to Kubernetes</li>
+                    <li>History shard configuration</li>
+                    <li>Data Converter + Codec Server setup</li>
+                    <li>Workflow execution testing</li>
+                    <li>Integration with Zep memory</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 5: Integration Layer (Months 5-6)</h4>
+                <ul>
+                    <li>FastAPI backend deployment</li>
+                    <li>Navigation UI frontend deployment</li>
+                    <li>Authentication/SSO integration</li>
+                    <li>End-to-end flow testing</li>
+                    <li>Performance optimization</li>
+                </ul>
+            </div>
+            
+            <div class="phase">
+                <h4>Phase 6: Production Readiness (Months 6-7)</h4>
+                <ul>
+                    <li>Security assessment</li>
+                    <li>Compliance documentation</li>
+                    <li>Disaster recovery testing</li>
+                    <li>Load testing</li>
+                    <li>Gradual production rollout</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section id="section8">
+            <h2>8. Risk Mitigation: Platform-Level</h2>
+            
+            <div class="risk-box">
+                <h4>Risk: Component Integration Failures</h4>
+                <p><strong>Mitigation</strong>:</p>
+                <ul>
+                    <li>Comprehensive integration testing</li>
+                    <li>Service layer abstraction for resilience</li>
+                    <li>Circuit breakers for component failures</li>
+                    <li>Graceful degradation strategies</li>
+                </ul>
+            </div>
+            
+            <div class="risk-box">
+                <h4>Risk: Data Consistency Across Components</h4>
+                <p><strong>Mitigation</strong>:</p>
+                <ul>
+                    <li>Eventual consistency patterns</li>
+                    <li>Idempotent operations</li>
+                    <li>Transaction boundaries where possible</li>
+                    <li>Data validation at integration points</li>
+                </ul>
+            </div>
+            
+            <div class="risk-box">
+                <h4>Risk: Performance Bottlenecks</h4>
+                <p><strong>Mitigation</strong>:</p>
+                <ul>
+                    <li>Cross-component performance monitoring</li>
+                    <li>Caching at integration points</li>
+                    <li>Async processing for long-running tasks</li>
+                    <li>Right-sizing all components</li>
+                </ul>
+            </div>
+            
+            <div class="risk-box">
+                <h4>Risk: Encryption Key Compromise</h4>
+                <p><strong>Mitigation</strong>:</p>
+                <ul>
+                    <li>Unified key rotation workflow</li>
+                    <li>Isolated Key Vault (separate security boundary)</li>
+                    <li>Audit logging of all key access</li>
+                    <li>Dual-key support during rotation</li>
+                </ul>
+            </div>
+            
+            <div class="risk-box">
+                <h4>Risk: Deployment Coordination Failures</h4>
+                <p><strong>Mitigation</strong>:</p>
+                <ul>
+                    <li>Coordinated deployment runbooks</li>
+                    <li>Dependency mapping</li>
+                    <li>Rollback procedures for each component</li>
+                    <li>Staged deployment approach</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section id="section9">
+            <h2>9. Success Metrics: Platform-Wide</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Target</th>
+                        <th>Measurement</th>
+                        <th>Components Involved</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>End-to-End Latency</strong></td>
+                        <td>&lt; 2s (document → response)</td>
+                        <td>Request tracing</td>
+                        <td>Navigation UI → Temporal → Zep → Response</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Document Processing Time</strong></td>
+                        <td>&lt; 5s (p95)</td>
+                        <td>ETL metrics</td>
+                        <td>Unstructured → Blob Storage → Zep</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Memory Retrieval Time</strong></td>
+                        <td>&lt; 200ms (p95)</td>
+                        <td>Zep metrics</td>
+                        <td>Zep → PostgreSQL (pgvector)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Workflow Execution Success</strong></td>
+                        <td>&gt; 99.5%</td>
+                        <td>Temporal metrics</td>
+                        <td>Temporal workflow completion</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Platform Uptime</strong></td>
+                        <td>&gt; 99.9%</td>
+                        <td>Unified monitoring</td>
+                        <td>All components</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Encryption Coverage</strong></td>
+                        <td>100%</td>
+                        <td>Security audit</td>
+                        <td>All data at rest</td>
+                    </tr>
+                    <tr>
+                        <td><strong>API Error Rate</strong></td>
+                        <td>&lt; 1%</td>
+                        <td>FastAPI metrics</td>
+                        <td>Navigation UI backend</td>
+                    </tr>
+                    <tr>
+                        <td><strong>User Satisfaction (NPS)</strong></td>
+                        <td>&gt; 50</td>
+                        <td>User surveys</td>
+                        <td>Navigation UI</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <section id="section10">
+            <h2>10. Component-Specific Deployment Documents</h2>
+            
+            <p>This master document provides the unified platform strategy. For detailed component-specific deployment strategies, refer to:</p>
+            
+            <div class="component-link">
+                <h4>1. <a href="temporal-enterprise-deployment.html">Temporal Enterprise Deployment Strategy</a></h4>
+                <ul>
+                    <li>Temporal OSS vs. Temporal Cloud comparison</li>
+                    <li>History shard count management</li>
+                    <li>Data encryption with customer-managed keys (Codec Server)</li>
+                    <li>Kubernetes deployment with Helm charts</li>
+                    <li>NIST AI RMF alignment</li>
+                </ul>
+            </div>
+            
+            <div class="component-link">
+                <h4>2. <a href="zep-enterprise-deployment.html">Zep Enterprise Deployment Strategy</a></h4>
+                <ul>
+                    <li>Zep OSS vs. Zep Cloud comparison</li>
+                    <li>PostgreSQL/pgvector configuration and sizing</li>
+                    <li>Data encryption with customer-managed keys</li>
+                    <li>Graphiti knowledge graph management</li>
+                    <li>NIST AI RMF alignment</li>
+                </ul>
+            </div>
+            
+            <div class="component-link">
+                <h4>3. <a href="unstructured-enterprise-deployment.html">Unstructured Enterprise Deployment Strategy</a></h4>
+                <ul>
+                    <li>Unstructured OSS vs. Unstructured Platform comparison</li>
+                    <li>Partitioning/chunking configuration strategy</li>
+                    <li>Data encryption with customer-managed keys</li>
+                    <li>Kubernetes deployment</li>
+                    <li>Connector ecosystem</li>
+                    <li>NIST AI RMF alignment</li>
+                </ul>
+            </div>
+            
+            <div class="component-link">
+                <h4>4. <a href="postgresql-blob-storage-enterprise-deployment.html">PostgreSQL & Blob Storage Enterprise Deployment Strategy</a></h4>
+                <ul>
+                    <li>PostgreSQL Flexible Server vs. alternatives</li>
+                    <li>SKU selection and sizing strategy</li>
+                    <li>Blob Storage tier selection and lifecycle management</li>
+                    <li>Customer-managed key encryption</li>
+                    <li>Integration patterns</li>
+                    <li>NIST AI RMF alignment</li>
+                </ul>
+            </div>
+            
+            <div class="component-link">
+                <h4>5. <a href="navigation-ui-enterprise-deployment.html">Navigation UI Enterprise Deployment Strategy</a></h4>
+                <ul>
+                    <li>Frontend-backend integration architecture</li>
+                    <li>Navigation patterns and user flows</li>
+                    <li>Enterprise deployment considerations</li>
+                    <li>Integration with all Engram components</li>
+                    <li>Authentication and RBAC</li>
+                    <li>NIST AI RMF compliance from UI/UX perspective</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section id="section11">
+            <h2>11. Next Steps</h2>
+            <ol>
+                <li><strong>Approve this unified platform strategy</strong> for customer environment deployment</li>
+                <li><strong>Review component-specific documents</strong> for detailed deployment requirements</li>
+                <li><strong>Allocate resources</strong> for Platform Architect, component engineers, DevOps, Security, SRE</li>
+                <li><strong>Engage with customer</strong> for infrastructure requirements and IdP integration</li>
+                <li><strong>Begin Phase 1</strong> implementation (platform architecture, infrastructure assessment)</li>
+                <li><strong>Schedule security assessment</strong> preparation timeline</li>
+            </ol>
+        </section>
+        
+        <div class="references">
+            <h2>References</h2>
+            
+            <h3>Component Documentation</h3>
+            <ul>
+                <li><a href="temporal-enterprise-deployment.html">Temporal Enterprise Deployment Strategy</a></li>
+                <li><a href="zep-enterprise-deployment.html">Zep Enterprise Deployment Strategy</a></li>
+                <li><a href="unstructured-enterprise-deployment.html">Unstructured Enterprise Deployment Strategy</a></li>
+                <li><a href="postgresql-blob-storage-enterprise-deployment.html">PostgreSQL & Blob Storage Enterprise Deployment Strategy</a></li>
+                <li><a href="navigation-ui-enterprise-deployment.html">Navigation UI Enterprise Deployment Strategy</a></li>
+            </ul>
+            
+            <h3>External References</h3>
+            <ul>
+                <li><a href="https://docs.temporal.io/">Temporal Documentation</a></li>
+                <li><a href="https://docs.getzep.com/">Zep Documentation</a></li>
+                <li><a href="https://unstructured.io/docs/">Unstructured Documentation</a></li>
+                <li><a href="https://learn.microsoft.com/azure/postgresql/">Azure Database for PostgreSQL</a></li>
+                <li><a href="https://learn.microsoft.com/azure/storage/blobs/">Azure Blob Storage</a></li>
+                <li><a href="https://www.nist.gov/itl/ai-risk-management-framework">NIST AI Risk Management Framework</a></li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
+

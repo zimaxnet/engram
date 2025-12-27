@@ -1,0 +1,711 @@
+{
+  "schema": {
+    "name": "engram.nano-banana-pro.diagram",
+    "version": "1.0"
+  },
+  "document": {
+    "id": "engram-chat-voice-diagram",
+    "title": "Engram Chat (Elena) + VoiceLive Flow (Navigation UI → Context Engine → AI Gateway → GPT-5)",
+    "created_at_utc": "2025-12-17T00:00:00Z",
+    "intended_use": "Paste into Nano Banana Pro (or similar) to generate a visual diagram of the Engram chat + voice runtime flow.",
+    "repo_paths_referenced": [
+      "frontend/src/components/ChatPanel/ChatPanel.tsx",
+      "frontend/src/services/api.ts",
+      "frontend/src/components/VoiceChat/VoiceChat.tsx",
+      "frontend/src/pages/Voice/VoiceInteractionPage.tsx",
+      "backend/api/main.py",
+      "backend/api/middleware/auth.py",
+      "backend/api/routers/chat.py",
+      "backend/agents/base.py",
+      "backend/memory/client.py",
+      "backend/api/routers/voice.py",
+      "backend/voice/voicelive_service.py"
+    ],
+    "notes": [
+      "This describes the runtime path for the UI chat with Elena through FastAPI + LangGraph, with best-effort Zep enrichment and persistence.",
+      "Temporal is part of the Engram platform (durable spine), but the synchronous /api/v1/chat path does not require Temporal.",
+      "FastMCP exists as /api/v1/mcp for SSE (Model Context Protocol). It is not on the primary UI chat happy-path unless you wire the UI to it."
+    ]
+  },
+  "placeholders": {
+    "FRONTEND_ORIGIN": "https://<frontend-hostname>",
+    "API_BASE_URL": "https://<api-hostname>",
+    "AI_GW_BASE_URL": "https://<apim-hostname>/<project>/openai/v1",
+    "AI_GW_PROJECT_NAME": "zimax",
+    "AI_GW_MODEL": "gpt-5-chat",
+    "ZEP_INTERNAL_URL": "http://<zep-app>.internal.<aca-env>.<region>.azurecontainerapps.io:8000",
+    "TEMPORAL_HOST": "<temporal-host>:7233",
+    "VOICELIVE_ENDPOINT": "https://<ai-services-hostname>",
+    "VOICELIVE_MODEL": "gpt-realtime",
+    "AUTH_BEARER_TOKEN": "<entra-jwt-or-dev-token>",
+    "AI_GW_SUBSCRIPTION_KEY": "<apim-subscription-key>",
+    "ZEP_API_KEY": "<zep-api-key>",
+    "VOICELIVE_API_KEY": "<voicelive-api-key>"
+  },
+  "rendering_hints": {
+    "layout": {
+      "style": "swimlanes",
+      "swimlanes": [
+        "User / Browser",
+        "Engram Navigation UI (SWA)",
+        "Engram API (FastAPI in Azure Container Apps)",
+        "Context Engine (LangGraph/LangChain + Memory)",
+        "Zep Memory Service (internal ACA)",
+        "AI Gateway (APIM OpenAI-compatible)",
+        "Model (GPT-5 Chat)",
+        "VoiceLive (Realtime)",
+        "Observability (Logs/OTel)"
+      ],
+      "direction": "left-to-right",
+      "group_boundaries": [
+        {
+          "id": "boundary_public_internet",
+          "label": "Public Internet",
+          "contains": ["ui.browser", "frontend.swa", "backend.ingress", "ai_gw.apim", "model.gpt5chat", "voicelive.azure"]
+        },
+        {
+          "id": "boundary_aca_internal",
+          "label": "Azure Container Apps Environment (internal network)",
+          "contains": ["backend.fastapi", "backend.context_engine", "zep.service"]
+        }
+      ]
+    },
+    "visual_style": {
+      "theme": "dark-glass",
+      "use_icons": true,
+      "color_by_type": {
+        "ui": "#60a5fa",
+        "api": "#34d399",
+        "memory": "#f59e0b",
+        "gateway": "#a78bfa",
+        "model": "#f472b6",
+        "voice": "#22c55e",
+        "observability": "#94a3b8"
+      },
+      "callouts": [
+        "Differentiate User→API auth (Bearer) from API→AI auth (subscription key or MI).",
+        "Annotate Zep enrichment timeout (2s) and persistence background task timeout (10s).",
+        "Annotate VoiceLive audio format (PCM16 @ 16kHz) and WebSocket message shapes."
+      ]
+    }
+  },
+  "components": [
+    {
+      "id": "ui.browser",
+      "type": "actor",
+      "name": "User in Browser",
+      "runtime": "Browser (Chrome/Edge/Safari)",
+      "responsibilities": [
+        "Select Elena in navigation UI",
+        "Type chat message and click Send",
+        "Optionally initiate voice interaction (microphone permission, push-to-talk)"
+      ]
+    },
+    {
+      "id": "frontend.swa",
+      "type": "frontend",
+      "name": "Engram Navigation UI (Azure Static Web Apps)",
+      "runtime": "React + Vite (SPA)",
+      "key_files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/ChatPanel/ChatPanel.tsx",
+        "frontend/src/services/api.ts",
+        "frontend/src/components/VoiceChat/VoiceChat.tsx",
+        "frontend/src/pages/Voice/VoiceInteractionPage.tsx"
+      ],
+      "config": {
+        "VITE_API_URL": "API base URL (no trailing slash)",
+        "VITE_WS_URL": "Optional explicit WS base; if omitted, derived from VITE_API_URL"
+      }
+    },
+    {
+      "id": "backend.ingress",
+      "type": "edge",
+      "name": "Azure Container Apps Ingress",
+      "protocols": ["HTTPS"],
+      "notes": [
+        "If you enable Container App 'Authentication' at the platform layer, requests may be rejected before reaching FastAPI."
+      ]
+    },
+    {
+      "id": "backend.fastapi",
+      "type": "service",
+      "name": "Engram API (FastAPI + Uvicorn)",
+      "runtime": "Python 3.11",
+      "entrypoint": "backend/api/main.py:create_app()",
+      "routes": [
+        "GET /health",
+        "POST /api/v1/chat",
+        "GET /api/v1/agents",
+        "WS /api/v1/voice/voicelive/{session_id}",
+        "GET /api/v1/voice/status",
+        "GET /api/v1/mcp/sse (FastMCP)"
+      ]
+    },
+    {
+      "id": "backend.auth",
+      "type": "middleware",
+      "name": "AuthN/AuthZ (get_current_user)",
+      "runtime": "FastAPI dependency",
+      "file": "backend/api/middleware/auth.py",
+      "behaviors": [
+        "Production/UAT: expects Authorization: Bearer <Entra JWT>",
+        "Development: if no bearer token, returns a default dev SecurityContext; supports dev_ tokens"
+      ]
+    },
+    {
+      "id": "backend.context_engine",
+      "type": "service",
+      "name": "Engram Context Engine (EnterpriseContext + LangGraph)",
+      "runtime": "Python",
+      "key_files": [
+        "backend/api/routers/chat.py",
+        "backend/agents/base.py",
+        "backend/memory/*"
+      ]
+    },
+    {
+      "id": "zep.service",
+      "type": "service",
+      "name": "Zep Memory Service",
+      "runtime": "Zep (container)",
+      "access": "internal (ACA internal FQDN) + API key",
+      "notes": [
+        "Used for semantic facts and episodic memory retrieval/persistence.",
+        "Engram chat path uses best-effort enrichment and persistence; chat continues if Zep is slow/unavailable."
+      ]
+    },
+    {
+      "id": "ai_gw.apim",
+      "type": "gateway",
+      "name": "AI Gateway (Azure API Management, OpenAI-compatible)",
+      "base_url_pattern": "https://<apim-hostname>/<project>/openai/v1",
+      "example_base_url": "https://zimax-gw.azure-api.net/zimax/openai/v1",
+      "auth": {
+        "type": "api_key",
+        "headers": ["api-key", "Ocp-Apim-Subscription-Key"],
+        "source": "AZURE_AI_KEY (typically Key Vault secret)"
+      }
+    },
+    {
+      "id": "model.gpt5chat",
+      "type": "model",
+      "name": "GPT-5 Chat",
+      "deployment_or_model": "gpt-5-chat",
+      "api_style": "OpenAI-compatible chat.completions"
+    },
+    {
+      "id": "voicelive.azure",
+      "type": "service",
+      "name": "Azure AI VoiceLive (Realtime)",
+      "runtime": "azure-ai-voicelive SDK",
+      "auth": {
+        "type": "api_key (current implementation)",
+        "source": "AZURE_VOICELIVE_KEY",
+        "note": "Code contains a plan for DefaultAzureCredential, but backend router currently uses AzureKeyCredential."
+      }
+    },
+    {
+      "id": "observability",
+      "type": "observability",
+      "name": "Logging + OpenTelemetry",
+      "signals": [
+        "Request started/completed logs",
+        "x-request-id header",
+        "x-response-time-ms header",
+        "OTel traces/metrics (if configured)"
+      ]
+    }
+  ],
+  "flows": [
+    {
+      "id": "chat_elena_via_ai_gateway",
+      "title": "Chat with Elena: Navigation UI → FastAPI → Context Engine → Zep (best-effort) → AI Gateway → GPT-5 Chat",
+      "primary_actor": "ui.browser",
+      "start_trigger": "User selects Elena and sends a message from the chat input (bottom center).",
+      "end_state": "Assistant response rendered in UI (and optionally persisted to memory asynchronously).",
+      "config_inputs": {
+        "frontend": {
+          "VITE_API_URL": "API base URL (e.g., https://api.engram.work or ACA FQDN)",
+          "localStorage.auth_token": "Optional bearer token; if absent and backend ENVIRONMENT=development, request still succeeds with default dev user."
+        },
+        "backend": {
+          "ENVIRONMENT": "development|staging|uat|prod (behavior changes in auth middleware)",
+          "AUTH_REQUIRED": "true|false (POC toggle; if false, intended to bypass user auth)",
+          "ZEP_API_URL": "internal Zep URL",
+          "ZEP_API_KEY": "Zep key",
+          "AZURE_AI_ENDPOINT": "AI gateway base URL (OpenAI-compatible), ends with /openai/v1",
+          "AZURE_AI_DEPLOYMENT": "gpt-5-chat",
+          "AZURE_AI_KEY": "APIM subscription key (Key Vault secret)"
+        },
+        "azure_ai_project_name_note": {
+          "value": "zimax",
+          "meaning": "Used as the APIM API path segment (/zimax/...) and also used as the Azure AI Foundry project name when calling services.ai.azure.com directly."
+        }
+      },
+      "sequence": [
+        {
+          "step": 1,
+          "from": "ui.browser",
+          "to": "frontend.swa",
+          "protocol": "UI event",
+          "details": {
+            "ui_action": "Select Elena and type message; press Enter or click Send →",
+            "code": {
+              "component": "frontend/src/components/ChatPanel/ChatPanel.tsx",
+              "function": "handleSubmit"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "from": "frontend.swa",
+          "to": "backend.ingress",
+          "protocol": "HTTPS",
+          "http": {
+            "method": "POST",
+            "url": "${API_BASE_URL}/api/v1/chat",
+            "headers": {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer ${AUTH_BEARER_TOKEN} (optional in dev; required in uat/prod)"
+            },
+            "body_json": {
+              "content": "<user text>",
+              "agent_id": "elena",
+              "session_id": "session-<timestamp>-<random>"
+            }
+          },
+          "details": {
+            "frontend_api_client": {
+              "file": "frontend/src/services/api.ts",
+              "class": "ApiClient",
+              "method": "sendMessage()",
+              "auth_token_source": "localStorage['auth_token']"
+            },
+            "cors": "Browser enforces CORS; API must allow frontend origin"
+          }
+        },
+        {
+          "step": 3,
+          "from": "backend.ingress",
+          "to": "backend.fastapi",
+          "protocol": "HTTP (ingress→container)",
+          "details": {
+            "router": "backend/api/main.py",
+            "mounted_prefix": "/api/v1/chat",
+            "handler": "backend/api/routers/chat.py:send_message"
+          }
+        },
+        {
+          "step": 4,
+          "from": "backend.fastapi",
+          "to": "backend.auth",
+          "protocol": "in-process",
+          "details": {
+            "dependency": "Depends(get_current_user)",
+            "file": "backend/api/middleware/auth.py",
+            "dev_behavior": "If ENVIRONMENT=development and no Authorization header, returns a default dev SecurityContext",
+            "prod_behavior": "If no bearer token, returns 401 {detail: 'Missing authentication token'}"
+          }
+        },
+        {
+          "step": 5,
+          "from": "backend.fastapi",
+          "to": "backend.context_engine",
+          "protocol": "in-process",
+          "details": {
+            "session_cache": "backend/api/routers/chat.py stores EnterpriseContext in a process-local dict keyed by session_id",
+            "context_object": "backend/core/EnterpriseContext(security=SecurityContext)"
+          }
+        },
+        {
+          "step": 6,
+          "from": "backend.context_engine",
+          "to": "zep.service",
+          "protocol": "HTTP (internal)",
+          "details": {
+            "operation": "Memory enrichment (best-effort)",
+            "timeout_seconds": 2.0,
+            "auth": "ZEP_API_KEY",
+            "data": [
+              "Retrieve relevant facts/episodes for user_id",
+              "Augment EnterpriseContext prior to LLM call"
+            ],
+            "failure_behavior": "If timed out or errors, continue without memory (log warning)"
+          }
+        },
+        {
+          "step": 7,
+          "from": "backend.context_engine",
+          "to": "backend.context_engine",
+          "protocol": "in-process",
+          "details": {
+            "agent_execution": {
+              "call": "backend.agents.chat(query, context, agent_id='elena')",
+              "framework": "LangGraph/LangChain",
+              "prompt_build": "BaseAgent._build_full_prompt(context) → system prompt + context.to_llm_context()"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "from": "backend.context_engine",
+          "to": "ai_gw.apim",
+          "protocol": "HTTPS",
+          "http": {
+            "method": "POST",
+            "url": "${AI_GW_BASE_URL}/chat/completions",
+            "headers": {
+              "Content-Type": "application/json",
+              "api-key": "${AI_GW_SUBSCRIPTION_KEY}",
+              "Ocp-Apim-Subscription-Key": "${AI_GW_SUBSCRIPTION_KEY}"
+            },
+            "body_json": {
+              "model": "${AI_GW_MODEL}",
+              "messages": [
+                {
+                  "role": "system",
+                  "content": "<Elena system prompt + EnterpriseContext summary + retrieved memory snippets>"
+                },
+                {
+                  "role": "user",
+                  "content": "<user text>"
+                }
+              ]
+            }
+          },
+          "details": {
+            "client": {
+              "file": "backend/agents/base.py",
+              "class": "FoundryChatClient",
+              "openai_compat_detection": "endpoint contains '/openai/v1' or endswith '/v1' → url = base + '/chat/completions', payload.model = deployment"
+            },
+            "why_ai_gateway": [
+              "Separates API→Model auth from user auth",
+              "Centralizes model access policies/rate limits",
+              "Works with the same API key style as your OpenAI SDK snippet"
+            ]
+          }
+        },
+        {
+          "step": 9,
+          "from": "ai_gw.apim",
+          "to": "model.gpt5chat",
+          "protocol": "internal (gateway routing)",
+          "details": {
+            "model": "gpt-5-chat",
+            "response_shape": "OpenAI-compatible chat.completions JSON (choices[0].message.content)"
+          }
+        },
+        {
+          "step": 10,
+          "from": "backend.context_engine",
+          "to": "zep.service",
+          "protocol": "HTTP (internal)",
+          "details": {
+            "operation": "Persist conversation (fire-and-forget background task)",
+            "timeout_seconds": 10.0,
+            "data": [
+              "User turn + assistant turn",
+              "Metadata (agent_id, timestamps, provenance)"
+            ],
+            "failure_behavior": "If persist fails, log warning; do not fail the chat response"
+          }
+        },
+        {
+          "step": 11,
+          "from": "backend.fastapi",
+          "to": "frontend.swa",
+          "protocol": "HTTPS response",
+          "http": {
+            "status": 200,
+            "headers": {
+              "x-request-id": "<uuid>",
+              "x-response-time-ms": "<float>"
+            },
+            "body_json": {
+              "message_id": "<uuid>",
+              "content": "<assistant response text>",
+              "agent_id": "elena",
+              "agent_name": "Dr. Elena Vasquez",
+              "timestamp": "<iso8601>",
+              "tokens_used": "<optional>",
+              "latency_ms": "<float>",
+              "session_id": "<same session id>"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "from": "frontend.swa",
+          "to": "ui.browser",
+          "protocol": "UI render",
+          "details": {
+            "ui_result": "Assistant message appears in chat transcript with Elena avatar + timestamp.",
+            "metrics": "UI updates latency/tokens/turns in the right-side panel."
+          }
+        }
+      ],
+      "observability": [
+        {
+          "signal": "structured_logs",
+          "examples": [
+            "Request started / Request completed (middleware)",
+            "Memory enrichment timed out after 2.0s",
+            "FoundryChatClient: Calling <AI_GW>/chat/completions",
+            "FoundryChatClient: Response status=200"
+          ]
+        }
+      ],
+      "failure_modes": [
+        {
+          "id": "chat_401_user_auth_missing",
+          "symptom": "HTTP 401 {detail: 'Missing authentication token'} from /api/v1/chat",
+          "likely_causes": [
+            "ENVIRONMENT != development AND no Authorization header from UI",
+            "AUTH_REQUIRED is effectively true and token not supplied"
+          ],
+          "fix": [
+            "POC: run backend in development mode or implement AUTH_REQUIRED=false bypass",
+            "Strong auth: obtain Entra token for API and store in localStorage['auth_token'] or integrate login"
+          ]
+        },
+        {
+          "id": "chat_memory_timeout",
+          "symptom": "Chat works but logs show 'Memory enrichment timed out after 2.0s'",
+          "likely_causes": ["Zep cold start", "network latency", "Zep unhealthy"],
+          "fix": ["Increase MEMORY_TIMEOUT if desired", "scale Zep min replicas", "validate Zep internal DNS/ingress"]
+        },
+        {
+          "id": "chat_ai_gateway_401",
+          "symptom": "LLM call returns 401 from AI gateway",
+          "likely_causes": [
+            "Invalid/expired APIM subscription key",
+            "Wrong header name expected by gateway policy"
+          ],
+          "fix": [
+            "Verify AZURE_AI_KEY in Key Vault is the correct subscription key",
+            "Confirm gateway policy accepts 'api-key' or 'Ocp-Apim-Subscription-Key'"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "voicelive_elena_realtime",
+      "title": "VoiceLive with Elena: Navigation UI → Voice WebSocket → Backend Voice Router → Azure VoiceLive SDK → Realtime Audio + Transcript",
+      "primary_actor": "ui.browser",
+      "start_trigger": "User opens Voice Interaction and holds the voice button to speak.",
+      "end_state": "User audio is streamed to server; server streams back transcription + assistant audio deltas.",
+      "config_inputs": {
+        "frontend": {
+          "VITE_WS_URL": "Optional. If missing, derived from VITE_API_URL by converting https→wss",
+          "microphone_permission": "User must grant mic access"
+        },
+        "backend": {
+          "AZURE_VOICELIVE_ENDPOINT": "Azure AI VoiceLive endpoint",
+          "AZURE_VOICELIVE_KEY": "API key for VoiceLive (current backend router implementation)",
+          "AZURE_VOICELIVE_MODEL": "Realtime model (e.g., gpt-realtime)",
+          "ENVIRONMENT": "affects logging/telemetry; router currently uses API key regardless"
+        }
+      },
+      "sequence": [
+        {
+          "step": 1,
+          "from": "ui.browser",
+          "to": "frontend.swa",
+          "protocol": "UI navigation",
+          "details": {
+            "ui_action": "Click Navigation → Chat & Voice → Voice Interaction",
+            "route": "/voice",
+            "code": "frontend/src/pages/Voice/VoiceInteractionPage.tsx"
+          }
+        },
+        {
+          "step": 2,
+          "from": "frontend.swa",
+          "to": "backend.ingress",
+          "protocol": "WSS (WebSocket over TLS)",
+          "ws": {
+            "url": "wss://${API_BASE_URL_HOST}/api/v1/voice/voicelive/voicelive-<timestamp>",
+            "subprotocols": [],
+            "message_format": "JSON text frames"
+          },
+          "details": {
+            "client_code": {
+              "file": "frontend/src/components/VoiceChat/VoiceChat.tsx",
+              "behavior": [
+                "Derive base WS URL from VITE_WS_URL or VITE_API_URL; convert http→ws, https→wss",
+                "On open, send {type:'agent', agent_id:'elena'}"
+              ]
+            }
+          }
+        },
+        {
+          "step": 3,
+          "from": "backend.fastapi",
+          "to": "backend.context_engine",
+          "protocol": "in-process",
+          "details": {
+            "handler": "backend/api/routers/voice.py:voicelive_websocket",
+            "session_manager": "Tracks per-session agent voice config and connection state"
+          }
+        },
+        {
+          "step": 4,
+          "from": "backend.context_engine",
+          "to": "voicelive.azure",
+          "protocol": "SDK-managed (server→Azure realtime)",
+          "details": {
+            "sdk": "azure.ai.voicelive.aio.connect",
+            "credential": "AzureKeyCredential(AZURE_VOICELIVE_KEY) (current router implementation)",
+            "session_config": {
+              "modalities": ["TEXT", "AUDIO"],
+              "instructions": "Agent-specific VoiceLive instructions (Elena persona)",
+              "input_audio_format": "PCM16",
+              "output_audio_format": "PCM16",
+              "turn_detection": {
+                "mode": "ServerVad",
+                "threshold": 0.5,
+                "prefix_padding_ms": 300,
+                "silence_duration_ms": 500
+              }
+            }
+          }
+        },
+        {
+          "step": 5,
+          "from": "ui.browser",
+          "to": "frontend.swa",
+          "protocol": "Web Audio API",
+          "details": {
+            "microphone": "navigator.mediaDevices.getUserMedia(audio)",
+            "audio_processing": {
+              "sample_rate_hz": 16000,
+              "channels": 1,
+              "capture": "ScriptProcessorNode(4096)",
+              "conversion": "Float32 [-1..1] → Int16 PCM → base64"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "from": "frontend.swa",
+          "to": "backend.fastapi",
+          "protocol": "WSS JSON frames",
+          "ws_messages": [
+            {
+              "direction": "client→server",
+              "type": "audio",
+              "schema": {
+                "type": "audio",
+                "data": "<base64 PCM16 bytes>"
+              }
+            },
+            {
+              "direction": "client→server",
+              "type": "agent",
+              "schema": {
+                "type": "agent",
+                "agent_id": "elena|marcus"
+              }
+            },
+            {
+              "direction": "client→server",
+              "type": "cancel",
+              "schema": { "type": "cancel" }
+            }
+          ],
+          "details": {
+            "server_action": "Forward decoded PCM16 audio to VoiceLive input_audio_buffer.append(audio=<bytes>)"
+          }
+        },
+        {
+          "step": 7,
+          "from": "voicelive.azure",
+          "to": "backend.fastapi",
+          "protocol": "SDK event stream",
+          "details": {
+            "events_forwarded_to_client": [
+              {
+                "event": "INPUT_AUDIO_BUFFER_SPEECH_STARTED",
+                "client_message": { "type": "transcription", "status": "listening" }
+              },
+              {
+                "event": "INPUT_AUDIO_BUFFER_SPEECH_STOPPED",
+                "client_message": { "type": "transcription", "status": "processing" }
+              },
+              {
+                "event": "RESPONSE_AUDIO_DELTA",
+                "client_message": {
+                  "type": "audio",
+                  "data": "<base64 PCM16 delta>",
+                  "format": "audio/pcm16"
+                }
+              },
+              {
+                "event": "RESPONSE_AUDIO_TRANSCRIPT_DELTA",
+                "client_message": {
+                  "type": "transcription",
+                  "status": "complete",
+                  "text": "<partial transcript>"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "step": 8,
+          "from": "frontend.swa",
+          "to": "ui.browser",
+          "protocol": "UI render + audio playback",
+          "details": {
+            "playback": "Decode base64 → Blob → <audio> element plays returned assistant audio",
+            "ui_state": [
+              "isListening",
+              "isProcessing",
+              "isSpeaking",
+              "transcription text"
+            ]
+          }
+        }
+      ],
+      "failure_modes": [
+        {
+          "id": "voice_ws_url_wrong_scheme",
+          "symptom": "Voice never connects; WS errors in console",
+          "likely_causes": [
+            "Frontend built WS URL with https:// instead of wss://",
+            "VITE_WS_URL misconfigured"
+          ],
+          "fix": [
+            "Ensure VITE_WS_URL is ws:// or wss:// (or let UI derive it from VITE_API_URL)",
+            "Redeploy frontend build after config changes"
+          ]
+        },
+        {
+          "id": "voicelive_not_configured",
+          "symptom": "Server immediately sends {type:'error', message:'VoiceLive not configured...'} and closes socket",
+          "likely_causes": ["AZURE_VOICELIVE_ENDPOINT missing", "AZURE_VOICELIVE_KEY missing"],
+          "fix": ["Set AZURE_VOICELIVE_ENDPOINT and AZURE_VOICELIVE_KEY (Key Vault recommended)"]
+        },
+        {
+          "id": "mic_permission_denied",
+          "symptom": "UI shows microphone error; no audio frames sent",
+          "likely_causes": ["User denied mic permission", "browser policy blocks mic"],
+          "fix": ["Grant microphone permission", "use https origin", "verify OS browser permissions"]
+        }
+      ]
+    }
+  ],
+  "nano_banana_pro_prompt": {
+    "prompt": "Create a highly detailed swimlane diagram with two main flows: (A) Chat with Elena and (B) VoiceLive realtime. Use nine swimlanes: User/Browser, Engram Navigation UI (SWA), Engram API (FastAPI in ACA), Context Engine (LangGraph/LangChain), Zep Memory (internal), AI Gateway (APIM OpenAI-compatible), GPT-5 Chat model, VoiceLive (Realtime), Observability.\\n\\nFlow A (Chat): Show UI ChatPanel -> ApiClient -> POST /api/v1/chat -> Auth dependency get_current_user -> session context -> Zep enrich (2s timeout) -> LangGraph agent -> FoundryChatClient -> POST <AI_GW_BASE_URL>/chat/completions with headers api-key + Ocp-Apim-Subscription-Key and JSON body {model:'gpt-5-chat', messages:[system,user]} -> GPT-5 -> response content -> persist to Zep (async, 10s timeout) -> return ChatResponse JSON -> render in UI. Annotate where Entra bearer token would be validated in UAT/Prod, but for POC show dev behavior.\\n\\nFlow B (Voice): Show VoiceInteractionPage -> VoiceChat component -> WebSocket wss://.../api/v1/voice/voicelive/{session_id} -> backend voice router -> azure.ai.voicelive SDK connect -> session.update(RequestSession) -> client sends base64 PCM16 audio frames -> server forwards to VoiceLive -> server receives events (speech started/stopped, audio deltas, transcript deltas) -> server forwards JSON frames back -> client plays audio and renders transcription.\\n\\nAdd callouts for: CORS boundary, platform auth vs app auth, memory timeout behavior, and the separation of user auth (Bearer) vs service auth (API key to AI gateway).",
+    "output_requirements": {
+      "diagram_type": "swimlane + sequence",
+      "detail_level": "high",
+      "include_sample_json_payloads": true,
+      "include_headers": true,
+      "include_timeout_and_retry_annotations": true
+    }
+  }
+}
+
