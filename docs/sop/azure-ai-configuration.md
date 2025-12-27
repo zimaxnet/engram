@@ -102,7 +102,10 @@ AZURE_AI_DEPLOYMENT=gpt-5-chat
 
 ### 2. GPT Real-Time (VoiceLive)
 
-For real-time audio interaction, use the **Direct Cognitive Services endpoint** (not APIM).
+> [!IMPORTANT]
+> **VoiceLive uses completely separate configuration from chat.** The Model Router and chat endpoint settings do NOT affect VoiceLive.
+
+For real-time audio interaction, use the **Direct Cognitive Services endpoint** (not APIM, not Model Router).
 
 > [!IMPORTANT]
 > After extensive debugging (December 2025), we determined that VoiceLive works reliably with the Direct Endpoint and API Key, NOT the APIM gateway. APIM returns 404 for the realtime model.
