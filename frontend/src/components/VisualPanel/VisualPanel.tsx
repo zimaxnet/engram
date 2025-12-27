@@ -183,7 +183,7 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
               onChange={(e) => onModelChange(e.target.value)}
               className="config-select"
             >
-              <option value="gpt-5-chat">gpt-5-chat</option>
+              <option value="gpt-5-chat">Model Router</option>
             </select>
           </div>
           <div className="config-row">
