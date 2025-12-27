@@ -15,6 +15,14 @@ on:
         options:
           - staging
           - production
+      authRequired:
+        description: "Enable authentication requirement"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
 
 env:
   AZURE_RESOURCE_GROUP: engram-rg
@@ -70,6 +78,7 @@ jobs:
             registryUsername=${{ github.actor }}
             registryPassword=${{ secrets.CR_PAT }}
             zepApiKey=${{ secrets.ZEP_API_KEY || '' }}
+            authRequired=${{ github.event.inputs.authRequired || 'false' }}
           deploymentName: engram-infra-${{ github.sha }}
           failOnStdErr: false
       
