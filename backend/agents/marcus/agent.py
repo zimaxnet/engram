@@ -216,6 +216,48 @@ def create_status_report(project_name: str, progress_summary: str, blockers: str
 
 
 @tool
+async def delegate_to_sage(topic: str, context: Optional[str] = None) -> str:
+    """
+    Delegate a storytelling or visualization task to Sage Meridian.
+    Use this when you need to create project documentation, visual timelines, 
+    architecture diagrams, or narrative summaries for stakeholders.
+    
+    Args:
+        topic: The topic of the story/visual
+        context: Optional context or requirements
+    """
+    try:
+        from backend.workflows.client import execute_story
+        
+        # Determine diagram type from context if possible, default to architecture
+        diagram_type = "architecture"
+        if context:
+            context_lower = context.lower()
+            if "sequence" in context_lower or "flow" in context_lower:
+                diagram_type = "sequence"
+            elif "timeline" in context_lower or "gantt" in context_lower:
+                diagram_type = "timeline"
+            
+        result = await execute_story(
+            user_id="marcus-delegate",
+            tenant_id="default",
+            topic=topic,
+            context=context,
+            include_diagram=True,
+            include_image=True,
+            diagram_type=diagram_type
+        )
+        
+        if result.success:
+            return f"Delegated to Sage. He has created:\n\n**Story ID**: {result.story_id}\n\n{result.story_content[:200]}...\n\n[View Full Story & Visual](/stories/{result.story_id})"
+        else:
+            return f"Failed to delegate to Sage: {result.error}"
+            
+    except Exception as e:
+        return f"Error delegating to Sage: {e}"
+
+
+@tool
 def estimate_effort(task_description: str, complexity: str = "medium") -> str:
     """
     Provide effort estimation for a task or feature.
@@ -350,7 +392,7 @@ You are an AI agent operating within the **Engram** platform, built on a "Brain 
             assess_project_risks,
             create_status_report,
             estimate_effort,
-            estimate_effort,
+            delegate_to_sage,
             start_bau_flow_tool,
             check_workflow_status_tool,
             search_memory_tool,
@@ -399,6 +441,19 @@ You are an AI agent operating within the **Engram** platform, built on a "Brain 
 
     def _select_tool(self, content: str) -> tuple[str | None, dict]:
         text = content.lower()
+        
+        # Delegation to Sage (Check first to avoid shadowing by other keywords)
+        if any(k in text for k in ["story", "narrative", "visual", "diagram", "draw", "paint", "image", "picture", "documentation", "visualization"]):
+            # If user asks for story/visual creation, delegate to Sage
+            if "create" in text or "generate" in text or "make" in text or "show" in text or "document" in text:
+                # Extract topic crudely
+                topic = content
+                for prefix in ["create a story about", "generate a visual for", "show me a picture of", "create documentation for", "visualize"]:
+                    if prefix in text:
+                        topic = content[text.index(prefix)+len(prefix):].strip()
+                        break
+                return "delegate_to_sage", {"topic": topic, "context": content}
+        text = content.lower()
         if "timeline" in text or "schedule" in text:
             return "create_project_timeline", {
                 "project_name": "Project",
@@ -442,7 +497,11 @@ You are an AI agent operating within the **Engram** platform, built on a "Brain 
             return state
 
         try:
-            result = tool.invoke(tool_args)
+            # Handle async tools (like delegate_to_sage)
+            if hasattr(tool, 'ainvoke'):
+                result = await tool.ainvoke(tool_args)
+            else:
+                result = tool.invoke(tool_args)
             state["tool_results"].append({"tool": tool_name, "result": result})
             state["messages"].append(
                 type(

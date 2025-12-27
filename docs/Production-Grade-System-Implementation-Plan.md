@@ -31,7 +31,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 **Current State:** ⭐☆☆☆☆ (0.8/5.0) - **MUST FIX BEFORE PRODUCTION**
 
 #### Task 6.1: Input Guardrails Implementation
-**Priority:** Critical | **Effort:** 1.5 weeks | **Dependencies:** None
+**Priority:** Critical | **Effort:** 1.5 weeks | **Dependencies:** None | **Owner:** Elena (Business Analyst) | **Reviewer:** Marcus (Project Manager) | **Owner:** Elena (Business Analyst) | **Reviewer:** Marcus (Project Manager)
 
 **Sub-tasks:**
 - [ ] **6.1.1** Create `backend/guardrails/input_guard.py` module
@@ -68,7 +68,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ---
 
 #### Task 6.2: Execution Guardrails
-**Priority:** High | **Effort:** 1 week | **Dependencies:** 6.1
+**Priority:** High | **Effort:** 1 week | **Dependencies:** 6.1 | **Owner:** Marcus (Project Manager) | **Reviewer:** Elena (Business Analyst) | **Owner:** Marcus (Project Manager) | **Reviewer:** Elena (Business Analyst)
 
 **Sub-tasks:**
 - [ ] **6.2.1** Rate Limiting Implementation
@@ -110,7 +110,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ---
 
 #### Task 6.3: Output Guardrails
-**Priority:** High | **Effort:** 1 week | **Dependencies:** 6.1
+**Priority:** High | **Effort:** 1 week | **Dependencies:** 6.1 | **Owner:** Elena (Business Analyst) | **Reviewer:** Marcus (Project Manager) | **Owner:** Elena (Business Analyst) | **Reviewer:** Marcus (Project Manager)
 
 **Sub-tasks:**
 - [ ] **6.3.1** Hallucination Detection
@@ -146,7 +146,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ---
 
 #### Task 6.4: Circuit Breaker Pattern
-**Priority:** Medium | **Effort:** 0.5 weeks | **Dependencies:** 6.2, 6.3
+**Priority:** Medium | **Effort:** 0.5 weeks | **Dependencies:** 6.2, 6.3 | **Owner:** Marcus (Project Manager) | **Reviewer:** Elena (Business Analyst) | **Owner:** Marcus (Project Manager) | **Reviewer:** Elena (Business Analyst)
 
 **Sub-tasks:**
 - [ ] **6.4.1** Circuit Breaker Implementation
@@ -175,7 +175,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ---
 
 #### Task 6.5: Compliance Mapping
-**Priority:** Medium | **Effort:** 1 week | **Dependencies:** 6.1-6.4
+**Priority:** Medium | **Effort:** 1 week | **Dependencies:** 6.1-6.4 | **Owner:** Elena (Business Analyst) | **Reviewer:** Marcus (Project Manager) | **Owner:** Elena (Business Analyst) | **Reviewer:** Marcus (Project Manager)
 
 **Sub-tasks:**
 - [ ] **6.5.1** NIST AI RMF Mapping
@@ -205,7 +205,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ### Layer 3: Cognition - LLM Gateway & Reasoning
 
 #### Task 3.1: LLM Gateway Implementation
-**Priority:** High | **Effort:** 2 weeks | **Dependencies:** None
+**Priority:** High | **Effort:** 2 weeks | **Dependencies:** None | **Owner:** Marcus (Project Manager) | **Reviewer:** Elena (Business Analyst)
 
 **Sub-tasks:**
 - [ ] **3.1.1** Deploy LiteLLM Gateway
@@ -241,7 +241,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ---
 
 #### Task 3.2: Structured Output Enforcement
-**Priority:** High | **Effort:** 1 week | **Dependencies:** 3.1
+**Priority:** High | **Effort:** 1 week | **Dependencies:** 3.1 | **Owner:** Elena (Business Analyst) | **Reviewer:** Marcus (Project Manager)
 
 **Sub-tasks:**
 - [ ] **3.2.1** PydanticAI Integration
@@ -269,7 +269,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ---
 
 #### Task 3.3: Advanced Reasoning Patterns
-**Priority:** Medium | **Effort:** 1 week | **Dependencies:** 3.2
+**Priority:** Medium | **Effort:** 1 week | **Dependencies:** 3.2 | **Owner:** Elena (Business Analyst) | **Reviewer:** Marcus (Project Manager)
 
 **Sub-tasks:**
 - [ ] **3.3.1** ReAct Loop Implementation
@@ -297,7 +297,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ### Layer 7: Observability - Evaluation & LLMOps
 
 #### Task 7.1: LLMOps Platform Integration
-**Priority:** High | **Effort:** 1.5 weeks | **Dependencies:** None
+**Priority:** High | **Effort:** 1.5 weeks | **Dependencies:** None | **Owner:** Marcus (Project Manager) | **Reviewer:** Elena (Business Analyst)
 
 **Sub-tasks:**
 - [ ] **7.1.1** Arize Phoenix Deployment
@@ -324,7 +324,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ---
 
 #### Task 7.2: Evaluation Framework
-**Priority:** High | **Effort:** 1.5 weeks | **Dependencies:** 7.1
+**Priority:** High | **Effort:** 1.5 weeks | **Dependencies:** 7.1 | **Owner:** Elena (Business Analyst) | **Reviewer:** Marcus (Project Manager)
 
 **Sub-tasks:**
 - [ ] **7.2.1** DeepEval Integration
@@ -364,7 +364,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ---
 
 #### Task 7.3: Cost Governance
-**Priority:** Medium | **Effort:** 1 week | **Dependencies:** 3.1
+**Priority:** Medium | **Effort:** 1 week | **Dependencies:** 3.1 | **Owner:** Marcus (Project Manager) | **Reviewer:** Elena (Business Analyst)
 
 **Sub-tasks:**
 - [ ] **7.3.1** Per-Session Cost Tracking
@@ -400,7 +400,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ### Layer 1: Interaction - Generative UI & HITL
 
 #### Task 1.1: Generative UI Component System
-**Priority:** High | **Effort:** 2 weeks | **Dependencies:** None
+**Priority:** High | **Effort:** 2 weeks | **Dependencies:** None | **Owner:** Elena (Business Analyst) | **Reviewer:** Marcus (Project Manager)
 
 **Sub-tasks:**
 - [ ] **1.1.1** Component Schema System
@@ -440,7 +440,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ---
 
 #### Task 1.2: Advanced Streaming
-**Priority:** Medium | **Effort:** 1 week | **Dependencies:** 1.1
+**Priority:** Medium | **Effort:** 1 week | **Dependencies:** 1.1 | **Owner:** Marcus (Project Manager) | **Reviewer:** Elena (Business Analyst)
 
 **Sub-tasks:**
 - [ ] **1.2.1** Separate Streams for Text vs Structure
@@ -472,7 +472,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ---
 
 #### Task 1.3: Complete HITL UI
-**Priority:** High | **Effort:** 1 week | **Dependencies:** 1.1
+**Priority:** High | **Effort:** 1 week | **Dependencies:** 1.1 | **Owner:** Elena (Business Analyst) | **Reviewer:** Marcus (Project Manager)
 
 **Sub-tasks:**
 - [ ] **1.3.1** Pending Approvals Component
@@ -508,7 +508,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ### Layer 4: Memory - GraphRAG & Context Optimization
 
 #### Task 4.1: GraphRAG Implementation
-**Priority:** High | **Effort:** 2 weeks | **Dependencies:** None
+**Priority:** High | **Effort:** 2 weeks | **Dependencies:** None | **Owner:** Elena (Business Analyst) | **Reviewer:** Marcus (Project Manager)
 
 **Sub-tasks:**
 - [ ] **4.1.1** Knowledge Graph Setup
@@ -543,7 +543,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ---
 
 #### Task 4.2: Context Optimization
-**Priority:** Medium | **Effort:** 1 week | **Dependencies:** 4.1
+**Priority:** Medium | **Effort:** 1 week | **Dependencies:** 4.1 | **Owner:** Elena (Business Analyst) | **Reviewer:** Marcus (Project Manager)
 
 **Sub-tasks:**
 - [ ] **4.2.1** Automatic Summarization
@@ -581,7 +581,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ### Layer 2: Orchestration - Advanced Patterns
 
 #### Task 2.1: Enhanced Self-Correction
-**Priority:** Medium | **Effort:** 1 week | **Dependencies:** 3.3
+**Priority:** Medium | **Effort:** 1 week | **Dependencies:** 3.3 | **Owner:** Marcus (Project Manager) | **Reviewer:** Elena (Business Analyst)
 
 **Sub-tasks:**
 - [ ] **2.1.1** Explicit ReAct Loop
@@ -608,7 +608,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ---
 
 #### Task 2.2: Hierarchical Agent Planning
-**Priority:** Medium | **Effort:** 1.5 weeks | **Dependencies:** 2.1
+**Priority:** Medium | **Effort:** 1.5 weeks | **Dependencies:** 2.1 | **Owner:** Marcus (Project Manager) | **Reviewer:** Elena (Business Analyst)
 
 **Sub-tasks:**
 - [ ] **2.2.1** Planner Agent
@@ -636,7 +636,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ---
 
 #### Task 2.3: State Persistence & Branching
-**Priority:** High | **Effort:** 1.5 weeks | **Dependencies:** None
+**Priority:** High | **Effort:** 1.5 weeks | **Dependencies:** None | **Owner:** Marcus (Project Manager) | **Reviewer:** Elena (Business Analyst)
 
 **Sub-tasks:**
 - [ ] **2.3.1** State Persistence
@@ -674,7 +674,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ### Layer 5: Tools - Sandboxing & Validation
 
 #### Task 5.1: Sandboxed Code Execution
-**Priority:** Medium | **Effort:** 2 weeks | **Dependencies:** 6.2 (policy engine)
+**Priority:** Medium | **Effort:** 2 weeks | **Dependencies:** 6.2 (policy engine) | **Owner:** Marcus (Project Manager) | **Reviewer:** Elena (Business Analyst)
 
 **Sub-tasks:**
 - [ ] **5.1.1** E2B Integration
@@ -708,7 +708,7 @@ This document provides a comprehensive work breakdown structure (WBS) for implem
 ---
 
 #### Task 5.2: Tool Validation Middleware
-**Priority:** High | **Effort:** 1 week | **Dependencies:** 5.1
+**Priority:** High | **Effort:** 1 week | **Dependencies:** 5.1 | **Owner:** Marcus (Project Manager) | **Reviewer:** Elena (Business Analyst)
 
 **Sub-tasks:**
 - [ ] **5.2.1** Pre-Execution Validation
