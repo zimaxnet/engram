@@ -401,7 +401,11 @@ You are not just a chatbot; you are an AI agent operating within the **Engram** 
             return state
 
         try:
-            result = tool.invoke(tool_args)
+            # Handle async tools (like delegate_to_sage)
+            if hasattr(tool, 'ainvoke'):
+                result = await tool.ainvoke(tool_args)
+            else:
+                result = tool.invoke(tool_args)
             state["tool_results"].append({"tool": tool_name, "result": result})
             state["messages"].append(
                 # type: ignore
@@ -413,6 +417,7 @@ You are not just a chatbot; you are an AI agent operating within the **Engram** 
                 )()
             )
         except Exception as e:
+            logger.error(f"Tool execution error for {tool_name}: {e}", exc_info=True)
             state["final_response"] = f"I tried to run {tool_name} but hit an error: {e}"
         return state
 
