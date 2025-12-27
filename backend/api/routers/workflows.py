@@ -61,20 +61,66 @@ async def list_workflows(
     List workflow executions.
 
     Workflows represent durable agent task executions
-    managed by Temporal.
+    managed by Temporal, including:
+    - Agent workflows (Elena, Marcus, Sage)
+    - Story workflows (Elena → Sage delegations)
+    - Approval workflows
+    - Conversation workflows
     """
     try:
-        # TODO: Implement real listing via workflow_service
-        workflows = []
-        return WorkflowListResponse(workflows=workflows, total_count=len(workflows))
-    except Exception as e:
-        logger.warning(f"Failed to list workflows: {e}")
-        # Return mock data for development
-        # Return mock data for development - Populated with Real Project History
+        # Try to get real workflows from Temporal
+        workflow_data = await workflow_service.list_workflows(
+            status=status.value if status else None,
+            limit=limit,
+            offset=offset
+        )
+        
+        if workflow_data:
+            # Convert to WorkflowSummary objects
+            workflows = []
+            for wf in workflow_data:
+                # Try to get additional details for story workflows
+                if wf.get("workflow_type") == "StoryWorkflow":
+                    try:
+                        from backend.workflows.client import get_story_progress
+                        progress = await get_story_progress(wf["workflow_id"])
+                        wf["current_step"] = progress.get("status", "in_progress")
+                        wf["step_count"] = 5  # Story workflow has 5 steps
+                        if progress.get("progress"):
+                            wf["task_summary"] = f"Story creation: {progress['progress']}% complete"
+                    except:
+                        pass
+                
+                workflows.append(WorkflowSummary(
+                    workflow_id=wf["workflow_id"],
+                    workflow_type=wf.get("workflow_type", "AgentWorkflow"),
+                    status=WorkflowStatus(wf.get("status", "running")),
+                    agent_id=wf.get("agent_id"),
+                    started_at=datetime.fromisoformat(wf["started_at"]) if isinstance(wf["started_at"], str) else wf["started_at"],
+                    completed_at=datetime.fromisoformat(wf["completed_at"]) if wf.get("completed_at") and isinstance(wf["completed_at"], str) else wf.get("completed_at"),
+                    task_summary=wf.get("task_summary", "Workflow execution"),
+                    step_count=wf.get("step_count"),
+                    current_step=wf.get("current_step"),
+                ))
+            
+            return WorkflowListResponse(workflows=workflows, total_count=len(workflows))
+        
+        # Fallback to mock data if Temporal visibility is not available
+        logger.warning("Temporal visibility not available, returning mock data")
         start_time = datetime.now(timezone.utc)
         return WorkflowListResponse(
             workflows=[
-                # Active Workflows
+                # Example story workflow (Elena → Sage delegation)
+                WorkflowSummary(
+                    workflow_id="story-abc123def456",
+                    workflow_type="StoryWorkflow",
+                    status=WorkflowStatus.RUNNING,
+                    agent_id="sage",
+                    started_at=start_time,
+                    task_summary="Creating story and visual: generating_story",
+                    step_count=5,
+                    current_step="generating_story",
+                ),
                 WorkflowSummary(
                     workflow_id="wf-sys-ver-001",
                     workflow_type="ValidationWorkflow",
@@ -85,54 +131,13 @@ async def list_workflows(
                     step_count=12,
                     current_step="Verifying Zep Mock client response",
                 ),
-                WorkflowSummary(
-                    workflow_id="wf-uat-prep-001",
-                    workflow_type="UATWorkflow",
-                    status=WorkflowStatus.RUNNING,
-                    agent_id="marcus",
-                    started_at=start_time,
-                    task_summary="Preparing User Acceptance Testing scripts and environment",
-                    step_count=8,
-                    current_step="Generating test accounts",
-                ),
-                # Historical Workflows
-                WorkflowSummary(
-                    workflow_id="wf-ci-fix-001",
-                    workflow_type="DevOpsWorkflow",
-                    status=WorkflowStatus.COMPLETED,
-                    agent_id="elena",
-                    started_at="2024-12-15T11:20:00Z",
-                    completed_at="2024-12-15T11:45:00Z",
-                    task_summary="CI/CD Pipeline Repair - Fixed backend service health checks and updated ETL tests.",
-                    step_count=5,
-                    current_step="Completed",
-                    context_snapshot={"result": "Success", "fixes": "docker-compose.yml, test_etl_router.py"}
-                ),
-                WorkflowSummary(
-                    workflow_id="wf-fe-vis-001",
-                    workflow_type="FrontendWorkflow",
-                    status=WorkflowStatus.COMPLETED,
-                    agent_id="marcus",
-                    started_at="2024-12-12T14:00:00Z",
-                    completed_at="2024-12-12T16:15:00Z",
-                    task_summary="Visual Access Interface - Implemented glassmorphism UI and TreeNav component.",
-                    step_count=15,
-                    current_step="Completed",
-                ),
-                WorkflowSummary(
-                    workflow_id="wf-arch-def-001",
-                    workflow_type="ArchitectureWorkflow",
-                    status=WorkflowStatus.COMPLETED,
-                    agent_id="elena",
-                    started_at="2024-12-10T09:00:00Z",
-                    completed_at="2024-12-10T10:30:00Z",
-                    task_summary="Initial Architecture Definition - Defined 4-layer context schema and selected Zep.",
-                    step_count=1,
-                    current_step="Completed",
-                ),
             ],
-            total_count=5,
+            total_count=2,
         )
+    except Exception as e:
+        logger.warning(f"Failed to list workflows: {e}")
+        # Return minimal mock data on error
+        return WorkflowListResponse(workflows=[], total_count=0)
 
 
 class WorkflowDetail(BaseModel):
@@ -152,17 +157,74 @@ class WorkflowDetail(BaseModel):
 async def get_workflow(workflow_id: str, user: SecurityContext = Depends(get_current_user)):
     """
     Get details for a specific workflow.
+    
+    Supports both AgentWorkflow and StoryWorkflow types.
+    For StoryWorkflow, includes progress and story preview.
     """
     try:
+        # Check if this is a story workflow
+        if workflow_id.startswith("story-"):
+            try:
+                from backend.workflows.client import get_story_progress
+                progress = await get_story_progress(workflow_id)
+                
+                # Map story workflow status to steps
+                status_str = progress.get("status", "unknown")
+                progress_pct = progress.get("progress", 0)
+                preview = progress.get("preview", "")
+                
+                # Define story workflow steps
+                steps = [
+                    {"name": "generating_story", "status": "completed" if progress_pct >= 40 else ("running" if status_str == "generating_story" else "pending")},
+                    {"name": "generating_diagram", "status": "completed" if progress_pct >= 70 else ("running" if status_str == "generating_diagram" else "pending")},
+                    {"name": "generating_image", "status": "completed" if progress_pct >= 85 else ("running" if status_str == "generating_image" else "pending")},
+                    {"name": "saving_artifacts", "status": "completed" if progress_pct >= 95 else ("running" if status_str == "saving_artifacts" else "pending")},
+                    {"name": "enriching_memory", "status": "completed" if progress_pct >= 100 else ("running" if status_str == "enriching_memory" else "pending")},
+                ]
+                
+                # Determine overall status
+                if progress_pct >= 100:
+                    workflow_status = WorkflowStatus.COMPLETED
+                elif progress.get("error"):
+                    workflow_status = WorkflowStatus.FAILED
+                else:
+                    workflow_status = WorkflowStatus.RUNNING
+                
+                # Get workflow description for timestamps
+                try:
+                    status_info = await workflow_service.get_status(workflow_id)
+                    started_at = datetime.fromisoformat(status_info["start_time"]) if status_info.get("start_time") else datetime.now(timezone.utc)
+                    completed_at = datetime.fromisoformat(status_info["close_time"]) if status_info.get("close_time") else None
+                except:
+                    started_at = datetime.now(timezone.utc)
+                    completed_at = None
+                
+                return WorkflowDetail(
+                    workflow_id=workflow_id,
+                    workflow_type="StoryWorkflow",
+                    status=workflow_status,
+                    agent_id="sage",
+                    started_at=started_at,
+                    completed_at=completed_at,
+                    task_summary=f"Story creation: {status_str} ({progress_pct}% complete)",
+                    steps=steps,
+                    context_snapshot={"preview": preview[:200] + "..." if preview and len(preview) > 200 else preview} if preview else None,
+                    error=progress.get("error"),
+                )
+            except Exception as e:
+                logger.warning(f"Failed to get story workflow progress: {e}")
+                # Fall through to generic workflow status
+        
+        # Generic workflow status
         status = await workflow_service.get_status(workflow_id)
 
         return WorkflowDetail(
             workflow_id=workflow_id,
-            workflow_type="AgentWorkflow",
+            workflow_type="AgentWorkflow" if not workflow_id.startswith("story-") else "StoryWorkflow",
             status=(WorkflowStatus.RUNNING if status.get("status") == "RUNNING" else WorkflowStatus.COMPLETED),
             started_at=(datetime.fromisoformat(status["start_time"]) if status.get("start_time") else None),
             completed_at=(datetime.fromisoformat(status["close_time"]) if status.get("close_time") else None),
-            task_summary="Agent execution workflow",
+            task_summary="Agent execution workflow" if not workflow_id.startswith("story-") else "Story creation workflow",
             steps=[],
         )
 
@@ -171,11 +233,11 @@ async def get_workflow(workflow_id: str, user: SecurityContext = Depends(get_cur
         # Return mock detail for development
         return WorkflowDetail(
             workflow_id=workflow_id,
-            workflow_type="AgentWorkflow",
+            workflow_type="StoryWorkflow" if workflow_id.startswith("story-") else "AgentWorkflow",
             status=WorkflowStatus.RUNNING,
-            agent_id="elena",
-            started_at=datetime.utcnow(),
-            task_summary="Mock workflow detail",
+            agent_id="sage" if workflow_id.startswith("story-") else "elena",
+            started_at=datetime.now(timezone.utc),
+            task_summary="Story creation workflow" if workflow_id.startswith("story-") else "Mock workflow detail",
             context_snapshot={"recent_message": "Processing data..."},
         )
 
