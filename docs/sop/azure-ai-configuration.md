@@ -239,6 +239,23 @@ completion = client.chat.completions.create(
 print(completion.choices[0].message)
 ```
 
+## Enterprise Deployment Validation
+
+Before deploying to production or presenting to customers, run the enterprise validation script:
+
+```bash
+./scripts/validate-chat-enterprise-deployment.sh
+```
+
+This validates:
+- ✅ Environment variables are set correctly
+- ✅ Endpoint format is correct (APIM Gateway)
+- ✅ Model Router is configured
+- ✅ API connectivity works
+- ✅ Configuration is consistent
+
+**See [Chat Model Router Enterprise Deployment Guide](./chat-model-router-enterprise-deployment.md) for complete deployment instructions.**
+
 ## Troubleshooting Chat Issues
 
 ### Common Error: "I apologize, but I encountered an issue processing your request"
