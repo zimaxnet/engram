@@ -184,8 +184,16 @@ And I should [secondary outcome]
 @tool
 async def delegate_to_sage(topic: str, context: Optional[str] = None) -> str:
     """
-    Delegate a storytelling or visualization task to Sage Meridian.
+    Delegate a storytelling or visualization task to Sage Meridian via a Temporal workflow.
+    
+    This tool initiates a durable Temporal workflow (StoryWorkflow) that orchestrates the complete
+    story creation process. The workflow ensures the task survives server restarts and can be
+    monitored for progress. Sage will generate a story with Claude, create an architecture
+    diagram with Gemini, and generate a visual representation. All artifacts are automatically
+    saved and ingested into Zep memory.
+    
     Use this when the user asks for a story, diagram, or visual that requires detailed generation.
+    The workflow execution is durable and observable through Temporal.
     
     Args:
         topic: The topic of the story/visual

@@ -218,9 +218,17 @@ def create_status_report(project_name: str, progress_summary: str, blockers: str
 @tool
 async def delegate_to_sage(topic: str, context: Optional[str] = None) -> str:
     """
-    Delegate a storytelling or visualization task to Sage Meridian.
-    Use this when you need to create project documentation, visual timelines, 
-    architecture diagrams, or narrative summaries for stakeholders.
+    Delegate a storytelling or visualization task to Sage Meridian via a Temporal workflow.
+    
+    This tool initiates a durable Temporal workflow (StoryWorkflow) that orchestrates the complete
+    story creation process. The workflow ensures the task survives server restarts and can be
+    monitored for progress. Sage will generate a story with Claude, create an architecture
+    diagram with Gemini, and generate a visual representation. All artifacts are automatically
+    saved and ingested into Zep memory.
+    
+    Use this when you need to create project documentation, visual timelines, architecture
+    diagrams, or narrative summaries for stakeholders. The workflow execution is durable and
+    observable through Temporal.
     
     Args:
         topic: The topic of the story/visual
@@ -381,9 +389,19 @@ Remember: You're here to help teams succeed, not to create process for its own s
 ## System Awareness (Engram Platform)
 You are an AI agent operating within the **Engram** platform, built on a "Brain + Spine" architecture:
 1.  **The Brain (Zep)**: You have persistent memory. Use `search_memory` to recall past decisions, project context, or ingested documentation.
-2.  **The Spine (Temporal)**: You rely on durable workflows for long-running tasks (like BAU flows). Use `check_workflow_status` to see if a task is running or completed.
+2.  **The Spine (Temporal)**: You rely on durable workflows for long-running tasks (like BAU flows). Use `check_workflow_status` to see if a task is running or completed. When you delegate to Sage using `delegate_to_sage`, you are initiating a durable Temporal workflow (StoryWorkflow) that orchestrates the complete story creation process. This workflow is observable, can be monitored for progress, and ensures the task completes even if there are interruptions.
 3.  **Recursive Self-Awareness**: You know your own architecture. If asked, explain that Zep stores your memory and Temporal guarantees your task execution.
 4.  **GitHub Integration**: You can create and update GitHub issues to track project progress. Use `create_github_issue` for new tasks, `update_github_issue` to update status, `get_project_status` to check overall progress, and `list_my_tasks` to see your assigned work. You are aware of the Production-Grade System Implementation plan and actively track progress.
+
+## Delegation to Sage
+When you use `delegate_to_sage`, you are initiating a Temporal workflow that:
+- Orchestrates the complete story creation process (story generation, diagram creation, visual generation)
+- Ensures durability (survives server restarts, network issues)
+- Provides observability (workflow progress can be monitored)
+- Automatically saves artifacts and ingests them into Zep memory
+- Returns a story ID that can be used to track progress or view the completed story
+
+You should be aware that delegation creates a durable workflow, and you can explain this to users if they ask about how the story creation process works.
 """
 
     @property
