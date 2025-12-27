@@ -77,13 +77,17 @@ The backend requires these environment variables for VoiceLive:
 | `AZURE_VOICELIVE_ENDPOINT` | Azure OpenAI Resource Endpoint (unified or direct) | `https://zimax.services.ai.azure.com` or `https://zimax.openai.azure.com` |
 | `AZURE_VOICELIVE_KEY` | Cognitive Services API key | (from Key Vault) |
 | `AZURE_VOICELIVE_MODEL` | Model deployment name | `gpt-realtime` |
+| `AZURE_VOICELIVE_PROJECT_NAME` | Project name for unified endpoints (optional) | `zimax` (if using Azure AI Foundry projects) |
+| `AZURE_VOICELIVE_API_VERSION` | API version for Realtime API | `2024-10-01-preview` or `2025-10-01` |
 
 > [!TIP]
 > **Endpoint Types**:
-> - **Unified endpoint** (`services.ai.azure.com`): Recommended for most scenarios. Token URL: `/openai/realtime/client_secrets`
-> - **Direct endpoint** (`openai.azure.com`): Use if unified endpoint has issues. Token URL: `/openai/deployments/{model}/realtime/client_secrets`
+> - **Unified endpoint** (`services.ai.azure.com`): 
+>   - **Standard**: Token URL: `/openai/realtime/client_secrets`
+>   - **Project-based**: Token URL: `/api/projects/{project}/openai/realtime/client_secrets` (set `AZURE_VOICELIVE_PROJECT_NAME`)
+> - **Direct endpoint** (`openai.azure.com`): Token URL: `/openai/deployments/{model}/realtime/client_secrets`
 > 
-> The backend automatically detects the endpoint type and constructs the correct URL.
+> The backend automatically detects the endpoint type and constructs the correct URL. If you're using Azure AI Foundry projects, set `AZURE_VOICELIVE_PROJECT_NAME` to enable project-based endpoints.
 
 ### 2. Key Vault Configuration
 
@@ -125,6 +129,14 @@ The `backend-aca.bicep` file must inject the key from Key Vault:
 {
   name: 'AZURE_VOICELIVE_MODEL'
   value: 'gpt-realtime'
+}
+{
+  name: 'AZURE_VOICELIVE_PROJECT_NAME'
+  value: 'zimax'  // Optional: only if using Azure AI Foundry projects
+}
+{
+  name: 'AZURE_VOICELIVE_API_VERSION'
+  value: '2024-10-01-preview'  // Use '2025-10-01' for project-based endpoints
 }
 ```
 
@@ -258,19 +270,23 @@ az containerapp auth update -n <app-name> -g <rg> --action AllowAnonymous --enab
 
 **Symptom**: Backend returns 502 with message "Failed to get ephemeral token: 400" or Azure returns 400 Bad Request.
 
-**Root Cause**: Incorrect endpoint URL construction or request format for Azure OpenAI Realtime API.
+**Root Cause**: Incorrect endpoint URL construction, request format, or API version for Azure OpenAI Realtime API.
 
 **Common Causes**:
 
 1. **Wrong endpoint path for unified endpoints**: Using `/openai/v1/realtime/client_secrets` instead of `/openai/realtime/client_secrets`
-2. **Missing or incorrect deployment in path**: Direct endpoints require deployment in URL path
-3. **Invalid request body format**: Missing required fields or incorrect structure
-4. **Wrong API version**: Using unsupported API version
+2. **Project-based endpoints**: The `/client_secrets` REST endpoint may not be available for project-based unified endpoints (Azure AI Foundry projects). The SDK's `connect()` function uses direct WebSocket connections instead.
+3. **Missing or incorrect deployment in path**: Direct endpoints require deployment in URL path
+4. **Invalid request body format**: Missing required fields or incorrect structure
+5. **Wrong API version**: Using unsupported API version
+6. **Authentication header**: Project-based endpoints may require `Ocp-Apim-Subscription-Key` header in addition to `api-key`
 
 **Solution**:
 
 1. **Verify endpoint format**:
-   - **Unified endpoint** (`services.ai.azure.com`): Use `/openai/realtime/client_secrets` (no `/v1`)
+   - **Standard unified endpoint** (`services.ai.azure.com`): Use `/openai/realtime/client_secrets` (no `/v1`)
+   - **Project-based unified endpoint** (`services.ai.azure.com` with project): Use `/api/projects/{project}/openai/realtime/client_secrets`
+     - **Note**: Project-based endpoints may not support the `/client_secrets` REST endpoint. If you get 400/404, consider using the SDK's direct WebSocket connection instead of browser-direct tokens.
    - **Direct endpoint** (`openai.azure.com`): Use `/openai/deployments/{deployment}/realtime/client_secrets`
 
 2. **Check endpoint configuration**:
@@ -312,8 +328,20 @@ az containerapp auth update -n <app-name> -g <rg> --action AllowAnonymous --enab
 
 5. **Test endpoint directly** with curl:
    ```bash
-   # For unified endpoint
+   # For standard unified endpoint
    curl -X POST "https://<resource>.services.ai.azure.com/openai/realtime/client_secrets?api-version=2024-10-01-preview" \
+     -H "api-key: <your-key>" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "model": "gpt-realtime",
+       "modalities": ["audio", "text"],
+       "instructions": "You are a helpful assistant.",
+       "voice": "en-US-Ava:DragonHDLatestNeural"
+     }'
+   
+   # For project-based unified endpoint (Azure AI Foundry)
+   curl -X POST "https://<resource>.services.ai.azure.com/api/projects/<project>/openai/realtime/client_secrets?api-version=2025-10-01" \
+     -H "Ocp-Apim-Subscription-Key: <your-key>" \
      -H "api-key: <your-key>" \
      -H "Content-Type: application/json" \
      -d '{
@@ -334,7 +362,18 @@ az containerapp auth update -n <app-name> -g <rg> --action AllowAnonymous --enab
      }'
    ```
 
-6. **Verify API version**: Use `2024-10-01-preview` or `2025-08-28` (check Azure documentation for latest supported version)
+6. **Verify API version**: 
+   - Standard endpoints: Use `2024-10-01-preview`
+   - Project-based endpoints: The `/client_secrets` REST endpoint may not be available. The SDK uses `2025-10-01` for direct WebSocket connections, but REST token endpoints may require different versions or may not be supported.
+   - Check Azure documentation for latest supported version
+
+7. **Project-based endpoint limitations**:
+   - If using Azure AI Foundry projects, the ephemeral token REST endpoint (`/client_secrets`) may not be available
+   - The SDK's `connect()` function works with project-based endpoints via direct WebSocket
+   - For browser-direct connections with projects, you may need to:
+     - Use the SDK connection approach (backend WebSocket proxy) instead of browser-direct tokens
+     - Or use a standard unified endpoint without projects
+     - Or use a direct OpenAI endpoint (`openai.azure.com`)
 
 **Expected Response**:
 ```json
@@ -480,9 +519,12 @@ The current architecture routes all audio through the backend, creating:
 | Date | Change |
 |------|--------|
 | 2025-12-27 | Fixed 400 Bad Request error: corrected endpoint URL construction for unified vs direct endpoints |
+| 2025-12-27 | Added support for project-based unified endpoints (`/api/projects/{project}/openai/realtime/client_secrets`) |
+| 2025-12-27 | Added `AZURE_VOICELIVE_PROJECT_NAME` and `AZURE_VOICELIVE_API_VERSION` configuration options |
 | 2025-12-27 | Added endpoint validation and improved error logging with Azure error details |
 | 2025-12-27 | Updated troubleshooting section with comprehensive 400 error resolution steps |
 | 2025-12-27 | Added request body validation and endpoint type detection |
+| 2025-12-27 | Documented project-based endpoint limitations and SDK connection alternatives |
 | 2025-12-22 | Documented VoiceLive v2 decoupled architecture approach |
 | 2025-12-21 | Fixed connection hang by adding 10s timeout |
 | 2025-12-21 | Switched to API Key auth (bypassing Managed Identity issues) |

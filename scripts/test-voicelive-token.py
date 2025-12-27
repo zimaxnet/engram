@@ -40,20 +40,34 @@ def detect_endpoint_type(endpoint: str) -> str:
         return "unknown"
 
 
-def build_token_url(endpoint: str, model: str, endpoint_type: str) -> str:
-    """Build the correct token URL based on endpoint type."""
+def build_token_url(endpoint: str, model: str, endpoint_type: str, project_name: Optional[str] = None) -> str:
+    """
+    Build the correct token URL based on endpoint type.
+    
+    For unified endpoints:
+    - With project: /api/projects/{project}/openai/realtime/client_secrets
+    - Without project: /openai/realtime/client_secrets
+    
+    For direct endpoints:
+    - /openai/deployments/{model}/realtime/client_secrets
+    """
     endpoint = endpoint.rstrip('/')
     if endpoint_type == "direct":
         return f"{endpoint}/openai/deployments/{model}/realtime/client_secrets"
     else:
-        return f"{endpoint}/openai/realtime/client_secrets"
+        if project_name:
+            return f"{endpoint}/api/projects/{project_name}/openai/realtime/client_secrets"
+        else:
+            return f"{endpoint}/openai/realtime/client_secrets"
 
 
 async def test_token_endpoint(
     endpoint: str,
     api_key: str,
     model: str,
-    agent_id: str = "elena"
+    agent_id: str = "elena",
+    project_name: Optional[str] = None,
+    api_version: str = "2024-10-01-preview"
 ) -> tuple[bool, dict]:
     """
     Test the Azure OpenAI Realtime API token endpoint.
@@ -69,7 +83,7 @@ async def test_token_endpoint(
             "expected": "services.ai.azure.com or openai.azure.com"
         }
     
-    token_url = build_token_url(endpoint, model, endpoint_type)
+    token_url = build_token_url(endpoint, model, endpoint_type, project_name)
     
     # Build session configuration (flattened format)
     session_config = {
@@ -93,17 +107,27 @@ async def test_token_endpoint(
     print(f"  URL: {token_url}")
     print(f"  Model: {model}")
     print(f"  Agent: {agent_id}")
+    if project_name:
+        print(f"  Project: {project_name}")
+    print(f"  API version: {api_version}")
     print()
     
     try:
+        # For project-based endpoints, use both headers
+        headers = {
+            "Content-Type": "application/json",
+        }
+        if project_name and endpoint_type == "unified":
+            headers["Ocp-Apim-Subscription-Key"] = api_key
+            headers["api-key"] = api_key
+        else:
+            headers["api-key"] = api_key
+        
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
                 token_url,
-                headers={
-                    "api-key": api_key,
-                    "Content-Type": "application/json",
-                },
-                params={"api-version": "2024-10-01-preview"},
+                headers=headers,
+                params={"api-version": api_version},
                 json=session_config,
             )
             
@@ -170,6 +194,8 @@ async def main():
     endpoint = os.getenv("AZURE_VOICELIVE_ENDPOINT", "").strip()
     api_key = os.getenv("AZURE_VOICELIVE_KEY", "").strip()
     model = os.getenv("AZURE_VOICELIVE_MODEL", "gpt-realtime").strip()
+    project_name = os.getenv("AZURE_VOICELIVE_PROJECT_NAME", "").strip() or None
+    api_version = os.getenv("AZURE_VOICELIVE_API_VERSION", "2024-10-01-preview").strip()
     
     if not endpoint:
         print("❌ AZURE_VOICELIVE_ENDPOINT not set")
@@ -188,11 +214,14 @@ async def main():
     print("Configuration:")
     print(f"  Endpoint: {endpoint}")
     print(f"  Model: {model}")
+    if project_name:
+        print(f"  Project: {project_name}")
+    print(f"  API Version: {api_version}")
     print(f"  API Key: {'*' * min(len(api_key), 8)}...")
     print()
     
     # Test token endpoint
-    success, result = await test_token_endpoint(endpoint, api_key, model)
+    success, result = await test_token_endpoint(endpoint, api_key, model, project_name=project_name, api_version=api_version)
     
     print("=" * 60)
     print("Test Results")

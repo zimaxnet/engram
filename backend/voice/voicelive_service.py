@@ -50,6 +50,8 @@ class VoiceLiveService:
         self._endpoint = self.settings.azure_voicelive_endpoint
         self._key = self.settings.azure_voicelive_key
         self._model = self.settings.azure_voicelive_model
+        self._project_name = self.settings.azure_voicelive_project_name
+        self._api_version = self.settings.azure_voicelive_api_version
         
         # Voice configurations per agent
         self._agent_voices = {
@@ -79,6 +81,16 @@ class VoiceLiveService:
     def model(self) -> str:
         """Get the VoiceLive model"""
         return self._model
+    
+    @property
+    def project_name(self) -> Optional[str]:
+        """Get the VoiceLive project name (for unified endpoints)"""
+        return self._project_name
+    
+    @property
+    def api_version(self) -> str:
+        """Get the VoiceLive API version"""
+        return self._api_version
     
     @property
     def is_configured(self) -> bool:

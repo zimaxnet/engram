@@ -710,22 +710,38 @@ async def get_realtime_token(request: TokenRequest):
         )
     
     # Determine endpoint type and construct token URL
-    def build_token_url(endpoint: str, model: str, endpoint_type: str) -> str:
+    def build_token_url(endpoint: str, model: str, endpoint_type: str, project_name: Optional[str] = None) -> str:
         """
         Build the correct token URL based on endpoint type.
         
-        For unified endpoints (services.ai.azure.com): /openai/realtime/client_secrets
-        For direct endpoints (openai.azure.com): /openai/deployments/{model}/realtime/client_secrets
+        For unified endpoints (services.ai.azure.com):
+        - With project: /api/projects/{project}/openai/realtime/client_secrets
+        - Without project: /openai/realtime/client_secrets
+        
+        For direct endpoints (openai.azure.com): 
+        - /openai/deployments/{model}/realtime/client_secrets
         """
         if endpoint_type == "direct":
             # Direct OpenAI resource - Azure OpenAI requires deployment in path
             return f"{endpoint}/openai/deployments/{model}/realtime/client_secrets"
         else:
-            # Unified endpoint (services.ai.azure.com) - no /v1, deployment in body/query
-            return f"{endpoint}/openai/realtime/client_secrets"
+            # Unified endpoint (services.ai.azure.com)
+            if project_name:
+                # Project-based unified endpoint
+                return f"{endpoint}/api/projects/{project_name}/openai/realtime/client_secrets"
+            else:
+                # Standard unified endpoint (no project)
+                return f"{endpoint}/openai/realtime/client_secrets"
     
-    token_url = build_token_url(endpoint, voicelive_service.model, endpoint_type)
+    # Get project name if configured (for project-based unified endpoints)
+    project_name = voicelive_service.project_name
+    api_version = voicelive_service.api_version
+    
+    token_url = build_token_url(endpoint, voicelive_service.model, endpoint_type, project_name)
     logger.info(f"Requesting ephemeral token from: {token_url}")
+    logger.info(f"Using API version: {api_version}")
+    if project_name:
+        logger.info(f"Using project: {project_name}")
     logger.debug(f"Session config: {json.dumps(session_config, indent=2)}")
     
     try:
@@ -735,13 +751,24 @@ async def get_realtime_token(request: TokenRequest):
             raise HTTPException(status_code=503, detail="AZURE_VOICELIVE_KEY not configured")
         
         async with httpx.AsyncClient(timeout=30.0) as client:
+            # For project-based unified endpoints, try both api-key and Ocp-Apim-Subscription-Key headers
+            # The SDK uses api-key, but some endpoints may require Ocp-Apim-Subscription-Key
+            headers = {
+                "Content-Type": "application/json",
+            }
+            
+            # Add authentication header(s)
+            if project_name and endpoint_type == "unified":
+                # Project-based endpoints may require Ocp-Apim-Subscription-Key
+                headers["Ocp-Apim-Subscription-Key"] = api_key
+                headers["api-key"] = api_key  # Also include api-key for compatibility
+            else:
+                headers["api-key"] = api_key
+            
             response = await client.post(
                 token_url,
-                headers={
-                    "api-key": api_key,
-                    "Content-Type": "application/json",
-                },
-                params={"api-version": "2024-10-01-preview"},
+                headers=headers,
+                params={"api-version": api_version},
                 json=session_config,
             )
             

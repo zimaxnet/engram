@@ -84,6 +84,12 @@ class Settings(BaseSettings):
     azure_voicelive_voice: str = Field("en-US-Ava:DragonHDLatestNeural", alias="AZURE_VOICELIVE_VOICE")
     # Marcus voice configuration for VoiceLive
     marcus_voicelive_voice: str = Field("en-US-GuyNeural", alias="MARCUS_VOICELIVE_VOICE")
+    # Project name for unified endpoints (optional, used for project-based endpoints)
+    # When using Azure AI Foundry projects, set this to the project name (e.g., "zimax")
+    azure_voicelive_project_name: Optional[str] = Field(None, alias="AZURE_VOICELIVE_PROJECT_NAME")
+    # API version for Realtime API
+    # Use "2024-10-01-preview" for standard endpoints, "2025-10-01" for project-based endpoints
+    azure_voicelive_api_version: str = Field("2024-10-01-preview", alias="AZURE_VOICELIVE_API_VERSION")
 
     # ==========================================================================
     # Multi-Model LLM Integration (Sage Agent)
