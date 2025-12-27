@@ -654,7 +654,12 @@ async def get_realtime_token(request: TokenRequest):
     endpoint = voicelive_service.endpoint.rstrip('/')
     
     # Token URL for Azure OpenAI Realtime
-    token_url = f"{endpoint}/openai/v1/realtime/client_secrets"
+    if "openai.azure.com" not in endpoint:
+        token_url = f"{endpoint}/openai/v1/realtime/client_secrets"
+    else:
+        # Direct OpenAI resource - Azure OpenAI requires deployment in path
+        deployment = voicelive_service.model
+        token_url = f"{endpoint}/openai/deployments/{deployment}/realtime/client_secrets"
     
     try:
         # Get API key
