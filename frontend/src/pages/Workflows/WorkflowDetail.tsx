@@ -154,7 +154,7 @@ export function WorkflowDetail() {
               )}
 
               <div className="timeline">
-                {detail.steps.map((s, idx) => {
+                {detail.steps.map((s) => {
                   // Format step names for story workflows
                   const stepName = detail.workflowType === 'StoryWorkflow' 
                     ? s.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
