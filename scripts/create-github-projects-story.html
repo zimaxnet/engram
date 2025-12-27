@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create GitHub Projects Story - Sage Delegation Script</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .content {
+            padding: 2rem;
+        }
+        
+        .section {
+            margin-bottom: 2rem;
+        }
+        
+        .section h2 {
+            color: #667eea;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 4px;
+        }
+        
+        .info-box strong {
+            color: #667eea;
+        }
+        
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            position: relative;
+        }
+        
+        .code-block::before {
+            content: 'Python';
+            position: absolute;
+            top: 0.5rem;
+            right: 1rem;
+            color: #888;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .code-block code {
+            display: block;
+            white-space: pre;
+        }
+        
+        .command-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+            font-size: 0.9rem;
+            margin: 1rem 0;
+            border-left: 4px solid #50fa7b;
+        }
+        
+        .command-block::before {
+            content: '$';
+            color: #50fa7b;
+            margin-right: 0.5rem;
+        }
+        
+        .steps {
+            list-style: none;
+            counter-reset: step-counter;
+        }
+        
+        .steps li {
+            counter-increment: step-counter;
+            margin-bottom: 1rem;
+            padding-left: 3rem;
+            position: relative;
+        }
+        
+        .steps li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #667eea;
+            color: white;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin: 0.25rem;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .copy-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+            transition: background 0.3s;
+        }
+        
+        .copy-button:hover {
+            background: #5568d3;
+        }
+        
+        .copy-button:active {
+            transform: scale(0.98);
+        }
+        
+        .success-message {
+            display: none;
+            background: #d4edda;
+            color: #155724;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📖 Create GitHub Projects Story</h1>
+            <p>Sage Delegation Script for Story & Visual Creation</p>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <h2>📋 Overview</h2>
+                <div class="info-box">
+                    <p><strong>Purpose:</strong> This script delegates to Sage Meridian to create a comprehensive story and visual about GitHub Projects integration with the Engram Context Engine.</p>
+                    <p><strong>What it does:</strong> Generates a story with Claude, creates an architecture diagram with Gemini, saves artifacts to the docs folder, and automatically ingests everything into Zep memory.</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>🚀 Quick Start</h2>
+                <ol class="steps">
+                    <li>
+                        <strong>Ensure Temporal worker is running:</strong>
+                        <div class="command-block">python -m backend.workflows.worker</div>
+                    </li>
+                    <li>
+                        <strong>Run the script:</strong>
+                        <div class="command-block">cd /Users/derek/Library/CloudStorage/OneDrive-zimaxnet/code/engram && python3 scripts/create-github-projects-story.py</div>
+                    </li>
+                    <li>
+                        <strong>Wait for completion:</strong> The script will delegate to Sage via Temporal workflow and return a story ID.
+                    </li>
+                    <li>
+                        <strong>Verify artifacts:</strong> Check the docs/stories/ folder for the generated story, diagram, and visual.
+                    </li>
+                </ol>
+            </div>
+            
+            <div class="section">
+                <h2>💻 Script Code</h2>
+                <p>Copy and run this script, or use the provided Python file:</p>
+                <div class="code-block">
+                    <code id="script-code">"""
+Delegate to Sage to create a story about GitHub Projects integration
+"""
+import asyncio
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+
+from backend.workflows.client import execute_story
+
+async def create_github_projects_story():
+    """Create a story about GitHub Projects integration"""
+    
+    topic = "GitHub Projects Integration for Engram Context Engine"
+    context = """
+    The Engram Context Engine has integrated GitHub Projects to enable comprehensive tracking 
+    of the Production-Grade Agentic System implementation across all seven layers. This integration 
+    allows Elena (Business Analyst) and Marcus (Project Manager) agents to actively manage tasks, 
+    track progress, and maintain visibility. The story should cover:
+    
+    1. How GitHub Projects applies to each of the seven layers of agentic AI systems
+    2. The progress tracking mechanism and task lifecycle
+    3. Agent capabilities and workflows
+    4. System awareness of progress
+    5. Benefits for agents, system, and users
+    
+    The story should be engaging, technical but accessible, and highlight the recursive self-awareness 
+    of the agents tracking their own work.
+    """
+    
+    result = await execute_story(
+        user_id="system-delegate",
+        tenant_id="default",
+        topic=topic,
+        context=context,
+        include_diagram=True,
+        include_image=True,
+        diagram_type="architecture"
+    )
+    
+    if result.success:
+        print(f"✅ Story created successfully!")
+        print(f"   Story ID: {result.story_id}")
+        print(f"   Story URL: /stories/{result.story_id}")
+        print(f"\n   Preview: {result.story_content[:200]}...")
+        return result.story_id
+    else:
+        print(f"❌ Failed to create story: {result.error}")
+        return None
+
+if __name__ == "__main__":
+    story_id = asyncio.run(create_github_projects_story())
+    if story_id:
+        print(f"\n📝 Story ID for memory ingestion: {story_id}")
+</code>
+                </div>
+                <button class="copy-button" onclick="copyScript()">📋 Copy Script</button>
+                <div class="success-message" id="success-msg">✅ Script copied to clipboard!</div>
+            </div>
+            
+            <div class="section">
+                <h2>📝 Command Line Version</h2>
+                <p>Or run directly from command line:</p>
+                <div class="command-block">cd /Users/derek/Library/CloudStorage/OneDrive-zimaxnet/code/engram && python3 << 'EOF'
+"""
+Delegate to Sage to create a story about GitHub Projects integration
+"""
+import asyncio
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+
+from backend.workflows.client import execute_story
+
+async def create_github_projects_story():
+    """Create a story about GitHub Projects integration"""
+    
+    topic = "GitHub Projects Integration for Engram Context Engine"
+    context = """
+    The Engram Context Engine has integrated GitHub Projects to enable comprehensive tracking 
+    of the Production-Grade Agentic System implementation across all seven layers. This integration 
+    allows Elena (Business Analyst) and Marcus (Project Manager) agents to actively manage tasks, 
+    track progress, and maintain visibility. The story should cover:
+    
+    1. How GitHub Projects applies to each of the seven layers of agentic AI systems
+    2. The progress tracking mechanism and task lifecycle
+    3. Agent capabilities and workflows
+    4. System awareness of progress
+    5. Benefits for agents, system, and users
+    
+    The story should be engaging, technical but accessible, and highlight the recursive self-awareness 
+    of the agents tracking their own work.
+    """
+    
+    result = await execute_story(
+        user_id="system-delegate",
+        tenant_id="default",
+        topic=topic,
+        context=context,
+        include_diagram=True,
+        include_image=True,
+        diagram_type="architecture"
+    )
+    
+    if result.success:
+        print(f"✅ Story created successfully!")
+        print(f"   Story ID: {result.story_id}")
+        print(f"   Story URL: /stories/{result.story_id}")
+        print(f"\n   Preview: {result.story_content[:200]}...")
+        return result.story_id
+    else:
+        print(f"❌ Failed to create story: {result.error}")
+        return None
+
+if __name__ == "__main__":
+    story_id = asyncio.run(create_github_projects_story())
+    if story_id:
+        print(f"\n📝 Story ID for memory ingestion: {story_id}")
+EOF</div>
+            </div>
+            
+            <div class="section">
+                <h2>✨ What Happens Next</h2>
+                <div class="info-box">
+                    <p><strong>1. Story Generation:</strong> Sage uses Claude to generate an engaging, technical story about GitHub Projects integration.</p>
+                    <p><strong>2. Diagram Creation:</strong> Gemini creates an architecture diagram showing the integration across seven layers.</p>
+                    <p><strong>3. Visual Generation:</strong> A visual representation is created to accompany the story.</p>
+                    <p><strong>4. Artifact Storage:</strong> All files are saved to <code>docs/stories/</code> folder (OneDrive sync).</p>
+                    <p><strong>5. Memory Ingestion:</strong> Story and visual are automatically ingested into Zep memory for agent awareness.</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>📊 Expected Output</h2>
+                <p>When successful, you'll see:</p>
+                <div class="code-block" style="background: #1e3a1e; color: #90ee90;">
+                    <code>✅ Story created successfully!
+   Story ID: story-abc123def456
+   Story URL: /stories/story-abc123def456
+   Story Path: docs/stories/story-abc123def456.md
+   Diagram Path: docs/stories/story-abc123def456-diagram.json
+   Image Path: docs/stories/story-abc123def456-visual.png
+   Memory Session ID: sess-story-abc123def456
+
+   Preview: The Engram Context Engine has integrated GitHub Projects...
+
+📝 Story and visual have been:
+   ✅ Saved to docs folder (OneDrive sync)
+   ✅ Ingested into Zep memory (session: sess-story-abc123def456)
+
+🎉 Story creation complete!
+   Story ID: story-abc123def456
+   View at: /stories/story-abc123def456</code>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>🔗 Related Documentation</h2>
+                <ul style="list-style: none; padding-left: 0;">
+                    <li style="margin-bottom: 0.5rem;">
+                        <span class="badge badge-info">📄</span>
+                        <a href="../docs/GitHub-Projects-Integration.md" style="color: #667eea; text-decoration: none;">GitHub Projects Integration Guide</a>
+                    </li>
+                    <li style="margin-bottom: 0.5rem;">
+                        <span class="badge badge-info">📄</span>
+                        <a href="../docs/GitHub-Integration-Authorization.md" style="color: #667eea; text-decoration: none;">GitHub Integration Authorization</a>
+                    </li>
+                    <li style="margin-bottom: 0.5rem;">
+                        <span class="badge badge-info">📄</span>
+                        <a href="../docs/Production-Grade-System-Implementation-Plan.md" style="color: #667eea; text-decoration: none;">Production-Grade System Implementation Plan</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Engram Context Engine • GitHub Projects Integration • Sage Story Creation</p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem;">Last Updated: December 20, 2024</p>
+        </div>
+    </div>
+    
+    <script>
+        function copyScript() {
+            const code = document.getElementById('script-code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const msg = document.getElementById('success-msg');
+                msg.style.display = 'block';
+                setTimeout(() => {
+                    msg.style.display = 'none';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy script. Please copy manually.');
+            });
+        }
+    </script>
+</body>
+</html>
+
