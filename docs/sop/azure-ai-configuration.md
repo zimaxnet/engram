@@ -13,6 +13,23 @@ Engram uses a dual-path approach for Azure AI integration:
 
 For standard agent chat, the backend can use **Azure AI Foundry Model Router** for intelligent model selection and cost optimization.
 
+**Option A: Model Router via APIM Gateway (Recommended)**
+
+* **Endpoint**: `https://zimax-gw.azure-api.net/zimax/openai/v1`
+* **Model Router**: Deployed Model Router deployment name (e.g., `model-router`)
+* **Key Source**: Azure Key Vault Secret `azure-ai-key` (APIM Subscription Key)
+
+**Environment Variable Mapping (`backend/.env`):**
+
+```bash
+# Model Router via APIM Gateway (Recommended)
+AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax/openai/v1
+AZURE_AI_MODEL_ROUTER=model-router  # Model Router deployment name
+AZURE_AI_KEY=<APIM_SUBSCRIPTION_KEY>
+```
+
+**Option B: Model Router via Foundry Direct**
+
 * **Endpoint**: `https://zimax.services.ai.azure.com/` (Direct Cognitive Services)
 * **Project**: Set if using project-based endpoints
 * **Model Router**: Deployed Model Router deployment name (e.g., `model-router-prod`)
@@ -21,7 +38,7 @@ For standard agent chat, the backend can use **Azure AI Foundry Model Router** f
 **Environment Variable Mapping (`backend/.env`):**
 
 ```bash
-# Model Router Configuration (Recommended)
+# Model Router via Foundry Direct
 AZURE_AI_ENDPOINT=https://zimax.services.ai.azure.com/
 AZURE_AI_PROJECT_NAME=zimax  # Optional, if using project-based endpoints
 AZURE_AI_MODEL_ROUTER=model-router-prod  # Model Router deployment name
@@ -34,6 +51,7 @@ AZURE_AI_API_VERSION=2024-10-01-preview
 - Cost optimization (routes simple queries to cheaper models)
 - Automatic fallback and load balancing
 - Single endpoint for multiple models
+- Works with APIM Gateway for unified access control and monitoring
 
 ### 1a. Azure APIM Gateway (Alternative for Chat)
 
