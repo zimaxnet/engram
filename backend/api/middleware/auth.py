@@ -276,7 +276,9 @@ async def _no_auth_dependency() -> None:
 
 async def get_current_user(
     request: Request,
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_optional),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(
+        security if _AUTH_REQUIRED else _no_auth_dependency
+    ),
 ) -> SecurityContext:
     """
     FastAPI dependency to get the current authenticated user.
@@ -352,7 +354,9 @@ async def get_current_user(
 
 async def get_optional_user(
     request: Request,
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(
+        security if _AUTH_REQUIRED else _no_auth_dependency
+    ),
 ) -> Optional[SecurityContext]:
     """
     FastAPI dependency for optional authentication.

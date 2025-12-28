@@ -2,11 +2,12 @@
 
 ## Problem
 
-Multiple commits within seconds cause:
-- Multiple GitHub Actions workflows to trigger
-- Resource waste and deployment conflicts
-- Difficulty tracking changes
-- Deployment failures harder to diagnose
+**Deployments take ~14 minutes.** Multiple commits within this time cause:
+- Multiple concurrent GitHub Actions workflows (waste resources)
+- Deployment conflicts and failures
+- Difficulty tracking which commit caused issues
+- Inability to debug deployment problems
+- Resource exhaustion from parallel builds
 
 ## Solution: Batch Commits
 
@@ -54,11 +55,13 @@ git diff            # Review all changes
 - Not one commit per file
 - Descriptive commit message covering all changes
 
-### 4. Wait Between Commits
+### 4. Wait For Deployment To Complete
 If you MUST make multiple commits:
-- Wait at least 2 minutes between commits
+- **WAIT FOR DEPLOYMENT TO COMPLETE** (~14 minutes)
 - Check deployment status: `gh run list --limit 1`
-- Only commit if previous deployment is complete or clearly failed
+- Verify conclusion: `gh run list --limit 1 --json conclusion --jq '.[0].conclusion'`
+- Only commit if deployment is "success" or "failure" (NOT "in_progress")
+- Never commit while deployment is running
 
 ### 5. Don't Commit During Deployment
 - ⏸️ DO NOT commit while deployment is in progress
@@ -68,9 +71,10 @@ If you MUST make multiple commits:
 ## Pre-Commit Hook
 
 A git pre-commit hook is installed that:
-- Warns if committing within 30 seconds of last commit
+- Warns if committing within 14 minutes of last commit (deployment time)
+- Checks if deployment is still in progress
 - Prompts for confirmation
-- Can be bypassed with 'y' if truly necessary
+- Can be bypassed with 'y' if truly necessary (but strongly discouraged)
 
 ## Emergency Fixes
 
