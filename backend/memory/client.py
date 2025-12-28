@@ -36,6 +36,7 @@ class ZepMemoryClient:
     def __init__(self):
         self.settings = get_settings()
         self.zep_url = self.settings.zep_api_url
+        self.zep_api_key = self.settings.zep_api_key
         self._http_client = None
         logger.info(f"ZepMemoryClient initialized: {self.zep_url}")
 
@@ -46,9 +47,21 @@ class ZepMemoryClient:
             self._http_client = httpx.AsyncClient(timeout=30.0)
         return self._http_client
 
+    def _get_headers(self) -> dict:
+        """Get headers for Zep API requests, including API key if configured."""
+        headers = {"Content-Type": "application/json"}
+        if self.zep_api_key:
+            headers["Authorization"] = f"Bearer {self.zep_api_key}"
+        return headers
+
     async def _request(self, method: str, endpoint: str, **kwargs) -> dict:
         """Make a request to the Zep API."""
         url = f"{self.zep_url}{endpoint}"
+        # Add authentication headers if API key is configured
+        headers = self._get_headers()
+        if "headers" in kwargs:
+            headers.update(kwargs["headers"])
+        kwargs["headers"] = headers
         try:
             response = await self.http_client.request(method, url, **kwargs)
             if response.status_code == 404:
