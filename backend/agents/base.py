@@ -264,10 +264,46 @@ class BaseAgent(ABC):
     async def _reason_node(self, state: AgentState) -> AgentState:
         """
         The reasoning node - processes input and decides next action.
+        
+        Includes automatic memory retrieval (RAG pattern):
+        1. Extract query from user message
+        2. Search memory for relevant episodes
+        3. Inject retrieved context into prompt
+        4. Call LLM with enriched context
         """
-        # Build messages with system prompt and context
+        # Extract user query for memory search
+        user_messages = [m for m in state["messages"] if m.type == "human"]
+        query = user_messages[-1].content if user_messages else ""
+        
+        # Automatic memory retrieval (RAG)
+        memory_context = ""
+        if query:
+            try:
+                from backend.memory.client import memory_client
+                results = await memory_client.search_memory(
+                    session_id="global-search",
+                    query=query,
+                    limit=5
+                )
+                if results:
+                    memory_items = []
+                    for r in results[:5]:
+                        content = r.get("content", "")[:500]  # Truncate long content
+                        session_id = r.get("session_id", "unknown")
+                        score = r.get("score", 0)
+                        memory_items.append(f"[{session_id}] (relevance: {score:.2f}) {content}")
+                    memory_context = "\n\n## Retrieved Knowledge\n" + "\n\n".join(memory_items)
+                    logger.info(f"RAG: Injected {len(results)} memory items into context")
+            except Exception as e:
+                logger.warning(f"Memory retrieval failed (non-blocking): {e}")
+        
+        # Build messages with system prompt, memory context, and user messages
+        full_prompt = self._build_full_prompt(state["context"])
+        if memory_context:
+            full_prompt = full_prompt + memory_context
+        
         messages = [
-            SystemMessage(content=self._build_full_prompt(state["context"])),
+            SystemMessage(content=full_prompt),
             *state["messages"],
         ]
 
