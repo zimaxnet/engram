@@ -336,7 +336,8 @@ class ZepMemoryClient:
                 sessions = result
 
                 if user_id:
-                    sessions = [s for s in sessions if s.get("user_id") == user_id]
+                    # Include sessions that match user_id OR have no user_id (legacy/ingested docs)
+                    sessions = [s for s in sessions if s.get("user_id") == user_id or s.get("user_id") is None]
 
                 # Apply pagination
                 sessions = sessions[offset:offset + limit]
