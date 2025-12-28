@@ -16,7 +16,11 @@ import httpx
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langgraph.graph import END, StateGraph
 
+import logging
+
 from backend.core import EnterpriseContext, MessageRole, Turn, get_settings
+
+logger = logging.getLogger(__name__)
 
 
 class AgentState(TypedDict):

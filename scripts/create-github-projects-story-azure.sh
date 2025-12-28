@@ -21,25 +21,18 @@ echo ""
 
 # Story creation request
 TOPIC="GitHub Projects Integration for Engram Context Engine"
-CONTEXT="The Engram Context Engine has integrated GitHub Projects to enable comprehensive tracking of the Production-Grade Agentic System implementation across all seven layers. This integration allows Elena (Business Analyst) and Marcus (Project Manager) agents to actively manage tasks, track progress, and maintain visibility. The story should cover:
-1. How GitHub Projects applies to each of the seven layers of agentic AI systems
-2. The progress tracking mechanism and task lifecycle
-3. Agent capabilities and workflows
-4. System awareness of progress
-5. Benefits for agents, system, and users
+CONTEXT="The Engram Context Engine has integrated GitHub Projects to enable comprehensive tracking of the Production-Grade Agentic System implementation across all seven layers. This integration allows Elena (Business Analyst) and Marcus (Project Manager) agents to actively manage tasks, track progress, and maintain visibility. The story should cover: 1. How GitHub Projects applies to each of the seven layers of agentic AI systems 2. The progress tracking mechanism and task lifecycle 3. Agent capabilities and workflows 4. System awareness of progress 5. Benefits for agents, system, and users. The story should be engaging, technical but accessible, and highlight the recursive self-awareness of the agents tracking their own work."
 
-The story should be engaging, technical but accessible, and highlight the recursive self-awareness of the agents tracking their own work."
-
-# Prepare JSON payload
-JSON_PAYLOAD=$(cat <<EOF
-{
-  "topic": "$TOPIC",
-  "context": "$CONTEXT",
-  "include_diagram": true,
-  "diagram_type": "architecture"
-}
-EOF
-)
+# Prepare JSON payload using jq for proper escaping
+JSON_PAYLOAD=$(jq -n \
+  --arg topic "$TOPIC" \
+  --arg context "$CONTEXT" \
+  '{
+    "topic": $topic,
+    "context": $context,
+    "include_diagram": true,
+    "diagram_type": "architecture"
+  }')
 
 echo "📝 Request payload:"
 echo "$JSON_PAYLOAD" | jq '.'
