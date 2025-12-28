@@ -162,13 +162,6 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
         {
           name: 'api'
           image: containerImage
-          // Conditional Model Router environment variable
-          var modelRouterEnv = !empty(azureAiModelRouter) ? [
-            {
-              name: 'AZURE_AI_MODEL_ROUTER'
-              value: azureAiModelRouter
-            }
-          ] : []
           env: [
             {
               name: 'ENVIRONMENT'
