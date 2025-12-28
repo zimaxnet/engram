@@ -199,25 +199,42 @@ class ZepMemoryClient:
         search_type: str = "similarity",
     ) -> list[dict]:
         """
-        Search memory for relevant content GLOBALLY across all sessions.
-
-        This enables agents to access canonical episodic memories (like the vision
-        statement in sess-vision-001) regardless of the current conversation session.
+        Search memory for relevant content using HYBRID SEARCH.
+        
+        Combines three search methods with Reciprocal Rank Fusion (RRF):
+        1. **Semantic Search** (pgvector) - Embedding cosine similarity
+        2. **Keyword Search** (Zep) - Full-text matching in session content
+        3. **Metadata Match** - Title, topics, summary matching
         
         Enhanced to prioritize:
-        1. Wiki pages (doc-wiki-*)
-        2. Canonical knowledge (doc-*, sess-*)
-        3. Metadata matches (title, topics, summary)
-        4. Content keyword matches
+        - Wiki pages (doc-wiki-*)
+        - Canonical knowledge (doc-*, sess-*)
+        - High semantic similarity scores
         """
         results = []
+        semantic_results = []
 
         try:
+            # ---------- PHASE 1: Semantic Search via pgvector ----------
+            try:
+                from backend.memory.vector_store import semantic_search
+                semantic_results = await semantic_search(
+                    query=query,
+                    limit=limit * 2,  # Get more for fusion
+                    min_score=0.3,  # Lower threshold, RRF will rank
+                )
+                logger.info(f"Semantic search returned {len(semantic_results)} results")
+            except Exception as e:
+                # Vector store may not be initialized or table doesn't exist
+                logger.debug(f"Semantic search unavailable (will use keyword only): {e}")
+            
+            # ---------- PHASE 2: Keyword Search via Zep ----------
             # First, get all sessions to search globally
             sessions_data = await self._request("GET", "/api/v1/sessions")
             if not sessions_data:
                 logger.warning("No sessions found for memory search")
-                return []
+                # Return semantic results if we have them
+                return semantic_results[:limit] if semantic_results else []
 
             # Try Zep's native search endpoint first (may not exist in OSS)
             try:
@@ -340,20 +357,63 @@ class ZepMemoryClient:
                                 "source_type": "wiki_content" if is_wiki else "content",
                             })
             
-            # Deduplicate by session_id, keeping highest score
-            seen_sessions = {}
-            for r in results:
+            # ---------- PHASE 3: Reciprocal Rank Fusion (RRF) ----------
+            # Combine semantic and keyword results using RRF scoring
+            # RRF formula: score = sum(1 / (k + rank)) where k = 60 (standard constant)
+            
+            rrf_scores = {}  # session_id -> {score: float, result: dict}
+            k = 60  # RRF constant
+            
+            # Score semantic results (ranked by embedding similarity)
+            for rank, r in enumerate(semantic_results, start=1):
                 sid = r.get("session_id", "")
-                if sid not in seen_sessions or r["score"] > seen_sessions[sid]["score"]:
-                    seen_sessions[sid] = r
+                if sid:
+                    rrf_score = 1.0 / (k + rank)
+                    if sid not in rrf_scores or r.get("score", 0) > rrf_scores[sid].get("semantic_score", 0):
+                        rrf_scores[sid] = {
+                            "semantic_rank": rank,
+                            "semantic_score": r.get("score", 0),
+                            "rrf_score": rrf_score,
+                            "result": r,
+                        }
             
-            results = list(seen_sessions.values())
+            # Score keyword results (ranked by keyword matching)
+            keyword_results = results  # Results from keyword search above
+            for rank, r in enumerate(keyword_results, start=1):
+                sid = r.get("session_id", "")
+                if sid:
+                    rrf_score = 1.0 / (k + rank)
+                    if sid in rrf_scores:
+                        # Fusion: add scores from both sources
+                        rrf_scores[sid]["keyword_rank"] = rank
+                        rrf_scores[sid]["keyword_score"] = r.get("score", 0)
+                        rrf_scores[sid]["rrf_score"] += rrf_score
+                        # Prefer keyword result if it has more content
+                        if len(r.get("content", "")) > len(rrf_scores[sid]["result"].get("content", "")):
+                            rrf_scores[sid]["result"] = r
+                    else:
+                        rrf_scores[sid] = {
+                            "keyword_rank": rank,
+                            "keyword_score": r.get("score", 0),
+                            "rrf_score": rrf_score,
+                            "result": r,
+                        }
             
-            # Sort by score descending
-            results.sort(key=lambda x: x["score"], reverse=True)
+            # Build final results with RRF scores
+            final_results = []
+            for sid, data in rrf_scores.items():
+                result = data["result"].copy()
+                result["score"] = data["rrf_score"]
+                result["fusion_source"] = "hybrid" if "semantic_rank" in data and "keyword_rank" in data else (
+                    "semantic" if "semantic_rank" in data else "keyword"
+                )
+                final_results.append(result)
             
-            logger.info(f"Memory search (fallback) found {len(results)} results for: {query[:50]}...")
-            return results[:limit]
+            # Sort by RRF score descending
+            final_results.sort(key=lambda x: x["score"], reverse=True)
+            
+            logger.info(f"Hybrid search found {len(final_results)} results ({len(semantic_results)} semantic, {len(keyword_results)} keyword) for: {query[:50]}...")
+            return final_results[:limit]
 
         except Exception as e:
             logger.error(f"Memory search failed: {e}")
