@@ -220,24 +220,28 @@ class ZepMemoryClient:
                 return []
 
             # Try Zep's native search endpoint first (may not exist in OSS)
-            search_payload = {
-                "text": query,
-                "limit": limit,
-                "search_type": search_type,
-            }
+            try:
+                search_payload = {
+                    "text": query,
+                    "limit": limit,
+                    "search_type": search_type,
+                }
 
-            search_result = await self._request("POST", "/api/v1/sessions/search", json=search_payload)
-            if search_result and "results" in search_result and search_result["results"]:
-                for result in search_result["results"]:
-                    message = result.get("message", {})
-                    results.append({
-                        "content": message.get("content", ""),
-                        "score": result.get("score", 0.5),
-                        "metadata": message.get("metadata", {}),
-                        "session_id": result.get("session_id", ""),
-                    })
-                logger.info(f"Memory search found {len(results)} results via Zep search for: {query[:50]}...")
-                return results
+                search_result = await self._request("POST", "/api/v1/sessions/search", json=search_payload)
+                if search_result and "results" in search_result and search_result["results"]:
+                    for result in search_result["results"]:
+                        message = result.get("message", {})
+                        results.append({
+                            "content": message.get("content", ""),
+                            "score": result.get("score", 0.5),
+                            "metadata": message.get("metadata", {}),
+                            "session_id": result.get("session_id", ""),
+                        })
+                    logger.info(f"Memory search found {len(results)} results via Zep search for: {query[:50]}...")
+                    return results
+            except Exception as e:
+                # Zep OSS doesn't support /sessions/search (405) - fall back to keyword search
+                logger.debug(f"Zep semantic search not available, using keyword fallback: {e}")
 
             # Fallback: Enhanced keyword-based search with Wiki prioritization
             query_lower = query.lower()
