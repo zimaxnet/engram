@@ -254,9 +254,29 @@ def get_auth() -> EntraIDAuth:
     return _auth
 
 
+def _get_auth_required() -> bool:
+    """Helper to check AUTH_REQUIRED setting - called at module load time"""
+    try:
+        settings = get_settings()
+        auth_required_value = settings.auth_required
+        # Check both bool False and string "false"
+        return bool(auth_required_value) and str(auth_required_value).lower() != "false"
+    except Exception as e:
+        logger.warning(f"Failed to read AUTH_REQUIRED setting: {e}, defaulting to False (bypass)")
+        return False
+
+# Check auth requirement at module load time
+_AUTH_REQUIRED = _get_auth_required()
+logger.info(f"🔐 Auth module loaded: AUTH_REQUIRED={_AUTH_REQUIRED}")
+
+# Create a no-op dependency for when auth is disabled
+async def _no_auth_dependency() -> None:
+    """No-op dependency when auth is disabled"""
+    return None
+
 async def get_current_user(
     request: Request,
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security if _AUTH_REQUIRED else _no_auth_dependency),
 ) -> SecurityContext:
     """
     FastAPI dependency to get the current authenticated user.
@@ -267,7 +287,7 @@ async def get_current_user(
             return {"user": user.user_id}
     """
     # CRITICAL: Check AUTH_REQUIRED FIRST, before any other logic
-    # This must happen before any security scheme validation
+    # Re-check at runtime in case settings changed (though they're cached)
     settings = get_settings()
     auth_required_value = settings.auth_required
     
@@ -289,8 +309,6 @@ async def get_current_user(
     
     logger.info(f"Auth required: {auth_required_value}, proceeding with authentication")
     auth = get_auth()
-    
-    logger.info(f"Auth required: {auth_required_value}, proceeding with authentication")
 
     # In development without token, return mock user
     if settings.environment == "development":
