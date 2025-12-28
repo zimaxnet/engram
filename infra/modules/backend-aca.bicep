@@ -62,8 +62,16 @@ param tags object = {
   Component: 'Backend'
 }
 
+// Conditional Model Router environment variable
+var modelRouterEnv = !empty(azureAiModelRouter) ? [
+  {
+    name: 'AZURE_AI_MODEL_ROUTER'
+    value: azureAiModelRouter
+  }
+] : []
+
 // Get reference to existing ACA environment for parenting the cert
- resource acaEnv 'Microsoft.App/managedEnvironments@2022-03-01' existing = {
+resource acaEnv 'Microsoft.App/managedEnvironments@2022-03-01' existing = {
   name: acaEnvName
 }
 
