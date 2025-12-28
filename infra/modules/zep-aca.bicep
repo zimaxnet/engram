@@ -243,8 +243,7 @@ resource zepApp 'Microsoft.App/containerApps@2023-05-01' = {
 }
 
 // Outputs
-// For internal-only ingress (external: false), Container Apps still provides an FQDN
-// The FQDN works from within the same Container Apps Environment
-// Format: http://{fqdn}:{port}
+// For external ingress with custom domain, use HTTPS custom domain
+// For internal/default, use internal FQDN with port 8000
 output zepFqdn string = zepApp.properties.configuration.ingress.fqdn
-output zepApiUrl string = 'http://${zepApp.properties.configuration.ingress.fqdn}:8000'  // Internal ACA networking (accessible from backend/worker in same env)
+output zepApiUrl string = enableCustomDomain ? 'https://${customDomainName}' : 'https://${zepApp.properties.configuration.ingress.fqdn}'
