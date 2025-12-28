@@ -19,8 +19,8 @@ param temporalHost string
 @description('Zep API URL.')
 param zepApiUrl string
 
-@description('Azure AI Services APIM Gateway endpoint (OpenAI-compatible).')
-param azureAiEndpoint string = 'https://zimax-gw.azure-api.net/zimax/openai/v1'
+@description('Azure AI Services APIM Gateway endpoint (Azure OpenAI format).')
+param azureAiEndpoint string = 'https://zimax-gw.azure-api.net/zimax'
 
 @description('Azure AI Services project name (not used with APIM gateway).')
 param azureAiProjectName string = ''  // Empty for APIM gateway endpoints

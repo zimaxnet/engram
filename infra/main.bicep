@@ -56,8 +56,8 @@ param enableAksPrivateCluster bool = true
 // param azureOpenAiKey removed
 // param azureSpeechKey removed
 
-@description('Azure AI Services APIM Gateway endpoint for Chat (OpenAI-compatible).')
-param azureAiEndpoint string = 'https://zimax-gw.azure-api.net/zimax/openai/v1'
+@description('Azure AI Services APIM Gateway endpoint for Chat (Azure OpenAI format).')
+param azureAiEndpoint string = 'https://zimax-gw.azure-api.net/zimax'
 
 
 
