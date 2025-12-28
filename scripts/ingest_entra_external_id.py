@@ -143,6 +143,20 @@ async def main():
     )
     print(f"✅ Episode ingested ({len(EPISODE_CONTENT)} chars)")
     
+    # Also add to vector store for semantic search
+    try:
+        from backend.memory.vector_store import store_with_embedding
+        await store_with_embedding(
+            session_id=SESSION_ID,
+            content=EPISODE_CONTENT,
+            title="Entra External ID Authentication Capability",
+            topics=METADATA["topics"],
+            source_type="capability",
+        )
+        print("✅ Embedding stored in vector_store")
+    except Exception as e:
+        print(f"⚠️  Vector store: {e}")
+    
     print("-" * 50)
     print("✅ Memory enrichment complete!")
 
