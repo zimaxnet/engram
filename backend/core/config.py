@@ -86,7 +86,7 @@ class Settings(BaseSettings):
     azure_voicelive_endpoint: Optional[str] = Field(None, alias="AZURE_VOICELIVE_ENDPOINT")
     azure_voicelive_key: Optional[str] = Field(None, alias="AZURE_VOICELIVE_KEY")  # Optional for POC
     azure_voicelive_model: str = Field("gpt-realtime", alias="AZURE_VOICELIVE_MODEL")
-    azure_voicelive_voice: str = Field("en-US-Seraphina:DragonHDLatestNeural", alias="AZURE_VOICELIVE_VOICE")
+    azure_voicelive_voice: str = Field("en-US-Ava:DragonHDLatestNeural", alias="AZURE_VOICELIVE_VOICE")
     # Marcus voice configuration for VoiceLive
     marcus_voicelive_voice: str = Field("en-US-Ollie:DragonHDLatestNeural", alias="MARCUS_VOICELIVE_VOICE")
     # Sage voice configuration for VoiceLive

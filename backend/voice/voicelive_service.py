@@ -56,7 +56,7 @@ class VoiceLiveService:
         # Voice configurations per agent
         self._agent_voices = {
             "elena": AgentVoiceConfig(
-                voice_name=self.settings.azure_voicelive_voice,  # en-US-Seraphina:DragonHDLatestNeural
+                voice_name=self.settings.azure_voicelive_voice,  # en-US-Ava:DragonHDLatestNeural
                 instructions=self._get_elena_instructions(),
                 personality="warm, measured, professional with Miami accent"
             ),
