@@ -15,20 +15,21 @@ For standard agent chat, the backend can use **Azure AI Foundry Model Router** f
 
 **Option A: Model Router via APIM Gateway (Recommended)**
 
-* **Endpoint**: `https://zimax-gw.azure-api.net/zimax/openai/v1`
-* **Model Router**: Deployed Model Router deployment name (e.g., `model-router`)
+* **Endpoint**: `https://zimax-gw.azure-api.net/zimax/openai/v1/` (with trailing slash)
+* **Model Router**: `model-router` (deployment name)
 * **Key Source**: Azure Key Vault Secret `azure-ai-key` (APIM Subscription Key)
 * **Available APIs**: 
   - Chat Completions API (`/chat/completions`) - Used by Engram agents
   - Responses API (`/responses`) - Simpler input/output format
 
-**Environment Variable Mapping (`backend/.env`):**
+**Environment Variable Mapping (from foundry.env):**
 
 ```bash
 # Model Router via APIM Gateway (Recommended)
-AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax/openai/v1
-AZURE_AI_MODEL_ROUTER=model-router  # Model Router deployment name
-AZURE_AI_KEY=<APIM_SUBSCRIPTION_KEY>
+AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax/openai/v1/
+AZURE_AI_MODEL_ROUTER=model-router
+AZURE_AI_KEY=<APIM_SUBSCRIPTION_KEY>  # Stored in Key Vault as azure-ai-key
+AZURE_AI_API_VERSION=2024-10-01-preview
 ```
 
 **API Examples:**
@@ -37,18 +38,27 @@ AZURE_AI_KEY=<APIM_SUBSCRIPTION_KEY>
 # Chat Completions API (used by Engram agents)
 from openai import OpenAI
 
+endpoint = "https://zimax-gw.azure-api.net/zimax/openai/v1/"
+deployment_name = "model-router"
+api_key = "<your-api-key>"
+
 client = OpenAI(
-    base_url="https://zimax-gw.azure-api.net/zimax/openai/v1/",
-    api_key="<your-api-key>"
+    base_url=endpoint,
+    api_key=api_key
 )
 
 completion = client.chat.completions.create(
-    model="model-router",
+    model=deployment_name,
     messages=[
-        {"role": "user", "content": "What is the capital of France?"}
+        {
+            "role": "user",
+            "content": "What is the capital of France?",
+        }
     ],
     temperature=0.7,
 )
+
+print(completion.choices[0].message)
 
 # Responses API (simpler format)
 response = client.responses.create(
