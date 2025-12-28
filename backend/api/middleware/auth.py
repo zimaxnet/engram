@@ -273,12 +273,12 @@ async def get_current_user(
     # Check both the boolean value and string representation for robustness
     auth_required_value = settings.auth_required
     
-    # Log auth configuration for debugging (only in non-production)
-    if settings.environment != "production" or settings.debug:
-        logger.debug(f"Auth check: auth_required={auth_required_value} (type={type(auth_required_value).__name__}), env={settings.environment}")
+    # ALWAYS log auth configuration for debugging (critical for POC)
+    logger.info(f"Auth check: auth_required={auth_required_value} (type={type(auth_required_value).__name__}), env={settings.environment}, value={repr(auth_required_value)}")
     
     # Explicitly check for False (handles both bool False and string "false" converted by Pydantic)
-    if not auth_required_value:
+    # Also check string "false" explicitly as a fallback
+    if not auth_required_value or str(auth_required_value).lower() == "false":
         logger.info("Auth bypass enabled (AUTH_REQUIRED=false) - returning POC user")
         return SecurityContext(
             user_id="poc-user",
@@ -287,6 +287,8 @@ async def get_current_user(
             scopes=["*"],
             session_id=request.headers.get("X-Session-ID", "poc-session"),
         )
+    
+    logger.info(f"Auth required: {auth_required_value}, proceeding with authentication")
 
     # In development without token, return mock user
     if settings.environment == "development":
