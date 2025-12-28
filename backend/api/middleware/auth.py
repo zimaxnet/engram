@@ -51,6 +51,7 @@ class EntraIDAuth:
     Microsoft Entra ID authentication handler.
 
     Validates JWT tokens and extracts user identity.
+    Supports both Workforce (login.microsoftonline.com) and External ID (ciamlogin.com).
     """
 
     def __init__(self):
@@ -58,10 +59,20 @@ class EntraIDAuth:
         self._jwks_cache: Optional[dict] = None
         self._jwks_cache_time: Optional[datetime] = None
         self._jwks_cache_ttl = 3600  # 1 hour
+        
+        # Check if using External ID (CIAM)
+        # External ID tenants use *.ciamlogin.com or *.b2clogin.com
+        self._is_external_id = os.environ.get("AZURE_AD_EXTERNAL_ID", "").lower() == "true"
+        self._external_id_domain = os.environ.get("AZURE_AD_EXTERNAL_DOMAIN", "")  # e.g., engramai
 
     @property
     def tenant_id(self) -> str:
         return self.settings.azure_tenant_id or "common"
+    
+    @property
+    def tenant_domain(self) -> str:
+        """Get tenant domain for External ID (e.g., 'engramai' from 'engramai.onmicrosoft.com')"""
+        return self._external_id_domain or self.tenant_id.split(".")[0]
 
     @property
     def client_id(self) -> str:
@@ -69,14 +80,23 @@ class EntraIDAuth:
 
     @property
     def authority(self) -> str:
+        if self._is_external_id:
+            # External ID uses CIAM login endpoint
+            return f"https://{self.tenant_domain}.ciamlogin.com/{self.tenant_id}"
         return f"https://login.microsoftonline.com/{self.tenant_id}"
 
     @property
     def jwks_uri(self) -> str:
+        if self._is_external_id:
+            # External ID JWKS endpoint
+            return f"https://{self.tenant_domain}.ciamlogin.com/{self.tenant_id}/discovery/v2.0/keys"
         return f"{self.authority}/discovery/v2.0/keys"
 
     @property
     def issuer(self) -> str:
+        if self._is_external_id:
+            # External ID issuer format
+            return f"https://{self.tenant_domain}.ciamlogin.com/{self.tenant_id}/v2.0"
         return f"https://login.microsoftonline.com/{self.tenant_id}/v2.0"
 
     async def get_jwks(self) -> dict:
