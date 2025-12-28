@@ -289,14 +289,16 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
 
       {/* Input Area */}
       <form className="chat-input-area" onSubmit={handleSubmit}>
-        <button
-          type="button"
-          className={`voice-button ${isVoiceOpen ? 'recording' : ''}`}
-          onClick={toggleVoiceMode}
-          title={'Tap to talk (Voice Live)'}
-        >
-          🎤
-        </button>
+        {agent.voiceEnabled && (
+          <button
+            type="button"
+            className={`voice-button ${isVoiceOpen ? 'recording' : ''}`}
+            onClick={toggleVoiceMode}
+            title={'Tap to talk (Voice Live)'}
+          >
+            🎤
+          </button>
+        )}
         <button
           type="button"
           onClick={handleClearSession}

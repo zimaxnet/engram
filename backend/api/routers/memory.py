@@ -65,11 +65,9 @@ class MemoryGraphResponse(BaseModel):
 async def _build_graph(user_id: str, query: str) -> MemoryGraphResponse:
     from backend.memory.client import memory_client
 
-    facts = await memory_client.get_facts(user_id=user_id, query=query or "", limit=50)
-
     nodes: dict[str, GraphNodeView] = {}
     edges: list[GraphEdgeView] = []
-
+    
     def ensure_node(node_id: str, content: str, node_type: str, metadata: dict | None = None) -> None:
         if node_id not in nodes:
             nodes[node_id] = GraphNodeView(
@@ -79,22 +77,82 @@ async def _build_graph(user_id: str, query: str) -> MemoryGraphResponse:
                 metadata=metadata or {},
             )
 
-    for fact in facts:
-        ensure_node(
-            fact.id,
-            fact.content,
-            getattr(fact, "node_type", "fact") or "fact",
-            getattr(fact, "metadata", {}) or {},
-        )
+    # 1. Try to get Semantic Facts (Zep Cloud feature)
+    try:
+        facts = await memory_client.get_facts(user_id=user_id, query=query or "", limit=50)
+        for fact in facts:
+            ensure_node(
+                fact.id,
+                fact.content,
+                getattr(fact, "node_type", "fact") or "fact",
+                getattr(fact, "metadata", {}) or {},
+            )
+    except Exception:
+        # Ignore errors from Zep Cloud endpoints if getting facts fails
+        pass
 
-    if not nodes:
-        sample_id = "fact-sample"
-        ensure_node(sample_id, "No facts returned yet", "fact", {})
+    # 2. Build Graph from Episodic Memory (Sessions & Topics)
+    # This works with Zep OSS v0.x and provides an "Episode Graph"
+    try:
+        # Get recent sessions
+        sessions = await memory_client.list_sessions(user_id=user_id, limit=20)
+        
+        for sess in sessions:
+            sess_id = sess.get("session_id")
+            meta = sess.get("metadata", {})
+            summary = meta.get("summary", "Conversation")
+            topics = meta.get("topics", [])
+            
+            # Create Episode Node
+            # Use a short label for the node, full summary in metadata
+            label = f"Ep: {sess_id[:8]}..."
+            if summary and len(summary) > 20: 
+                 label = summary[:30] + "..."
+            elif summary:
+                 label = summary
+                 
+            ensure_node(
+                node_id=sess_id,
+                content=label,
+                node_type="memory", # Valid types: fact, memory, entity
+                metadata={"full_content": summary, "timestamp": sess.get("created_at")},
+            )
+            
+            # Create Topic Nodes and Edges
+            for topic in topics:
+                topic_id = f"topic-{topic.lower().replace(' ', '-')}"
+                ensure_node(
+                    node_id=topic_id,
+                    content=topic,
+                    node_type="entity", 
+                    metadata={"kind": "topic"},
+                )
+                
+                # Link Episode to Topic
+                edge_id = f"edge-{sess_id}-{topic_id}"
+                edges.append(
+                    GraphEdgeView(
+                        id=edge_id,
+                        source=sess_id,
+                        target=topic_id,
+                        label="concerns",
+                        weight=1.0,
+                    )
+                )
+                
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Failed to build episode graph: {e}")
 
+    # 3. Create Fact-Metadata Edges (for existing facts)
     meta_keys = {"source", "filename", "etl_source", "tenant_id", "topic", "kind", "role"}
-
-    for fact_node in nodes.values():
-        metadata = fact_node.metadata or {}
+    
+    # We iterate over a copy of values because we might add new nodes
+    existing_nodes = list(nodes.values()) 
+    for node in existing_nodes:
+        if node.node_type != "fact": continue
+        
+        metadata = node.metadata or {}
         for key, raw_value in metadata.items():
             if raw_value is None or key not in meta_keys:
                 continue
@@ -103,17 +161,22 @@ async def _build_graph(user_id: str, query: str) -> MemoryGraphResponse:
                 value_str = str(value)
                 meta_id = f"meta-{key}-{value_str}".replace(" ", "-")
                 ensure_node(meta_id, f"{key}: {value_str}", "entity", {"source": key})
-                edge_id = f"edge-{fact_node.id}-{meta_id}-{idx}"
+                edge_id = f"edge-{node.id}-{meta_id}-{idx}"
                 edges.append(
                     GraphEdgeView(
                         id=edge_id,
-                        source=fact_node.id,
+                        source=node.id,
                         target=meta_id,
                         label=key,
                         weight=1.0,
                     )
                 )
 
+    if not nodes:
+        sample_id = "fact-sample"
+        ensure_node(sample_id, "No data available. Start chatting to generate memory.", "fact", {})
+
+    # Calculate degrees
     for edge in edges:
         if edge.source in nodes:
             nodes[edge.source].degree += 1

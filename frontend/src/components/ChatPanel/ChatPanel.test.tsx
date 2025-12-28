@@ -26,7 +26,8 @@ const mockAgent = {
     role: 'BA',
     title: 'Business Analyst',
     avatarUrl: 'elena.png',
-    accentColor: 'blue'
+    accentColor: 'blue',
+    voiceEnabled: true
 }
 
 describe('ChatPanel', () => {
@@ -38,7 +39,6 @@ describe('ChatPanel', () => {
             />
         )
 
-        // Verify mic button exists (using the mic icon text or title)
         // Verify mic button exists (using title because role match failed)
         const micButton = screen.getByTitle('Tap to talk (Voice Live)')
         expect(micButton).toBeInTheDocument()
@@ -59,5 +59,19 @@ describe('ChatPanel', () => {
 
         // Overlay should be gone
         expect(screen.queryByTestId('voice-chat-mock')).not.toBeInTheDocument()
+    })
+
+    it('does not show VoiceLive button when agent voice is disabled', () => {
+        const quietAgent = { ...mockAgent, voiceEnabled: false }
+        render(
+            <ChatPanel
+                agent={quietAgent}
+                onMetricsUpdate={() => { }}
+            />
+        )
+
+        // Verify mic button does NOT exist
+        const micButton = screen.queryByTitle('Tap to talk (Voice Live)')
+        expect(micButton).not.toBeInTheDocument()
     })
 })
