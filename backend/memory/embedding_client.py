@@ -20,7 +20,7 @@ EMBEDDING_DIMENSIONS = {
     "text-embedding-3-large": 3072,
 }
 
-DEFAULT_MODEL = "text-embedding-ada-002"
+DEFAULT_MODEL = "text-embedding-3-small"  # Available on zimax-gw (ada-002 not deployed)
 
 
 class EmbeddingClient:
