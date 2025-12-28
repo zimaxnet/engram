@@ -1,56 +1,57 @@
 # Azure Foundry Chat (Model Router) SOP
 
-> **Last Updated**: December 2025  
-> **Status**: Enterprise POC  
+> **Last Updated**: December 27, 2025  
+> **Status**: Enterprise POC - Verified Working  
 > **Maintainer**: Engram Platform Team
 
 ## Overview
 
-This SOP establishes the OpenAI-compatible chat flow for Azure AI Foundry Model Router using the APIM gateway and key authentication. It is the reference path for enterprise POC chat reliability.
+This SOP establishes the chat flow for Azure AI Foundry Model Router using the APIM gateway. It documents the **Azure OpenAI SDK format** (not OpenAI SDK format) which is the verified working configuration.
 
 ## Scope
 
-- Chat Completions API for Engram agents and validation
+- Chat Completions API for Engram agents (Elena, Marcus, Sage)
 - Azure AI Foundry Model Router (deployment name: `model-router`)
-- APIM gateway front door (`/openai/v1`) with subscription key auth
+- APIM gateway front door with subscription key auth
 - Does not cover VoiceLive (see `docs/sop/voicelive-configuration.md`)
+
+## Key Distinction: Azure OpenAI vs OpenAI SDK Format
+
+> [!IMPORTANT]
+> The APIM gateway uses **Azure OpenAI SDK format**, NOT OpenAI SDK format.
+>
+> | Format | Endpoint Pattern | Model in Body? |
+> |--------|------------------|----------------|
+> | **Azure OpenAI** (correct) | `/openai/deployments/{model}/chat/completions?api-version=...` | No |
+> | OpenAI SDK (wrong) | `/chat/completions` with `model` param | Yes |
 
 ## Prerequisites
 
 - Azure AI Foundry project with a deployed Model Router named `model-router`
-- APIM Gateway routing to the Foundry OpenAI-compatible endpoint
-- APIM subscription key stored in Azure Key Vault (do not hardcode)
-- If using direct Foundry endpoint, a project name (e.g., `zimax`)
+- APIM Gateway routing to the Azure OpenAI endpoint
+- APIM subscription key stored in Azure Key Vault (secret name: `azure-ai-key`)
 
 ## Required Environment Variables
 
 ### Runtime (Chat)
 
 ```bash
-# Required for chat via APIM (recommended)
-AZURE_AI_ENDPOINT="https://zimax-gw.azure-api.net/zimax/openai/v1/"
+# Required for chat via APIM (Azure OpenAI format)
+AZURE_AI_ENDPOINT="https://zimax-gw.azure-api.net/zimax"
+AZURE_AI_DEPLOYMENT="model-router"
 AZURE_AI_MODEL_ROUTER="model-router"
 AZURE_AI_KEY="<APIM_SUBSCRIPTION_KEY>"
-AZURE_AI_API_VERSION="2024-10-01-preview"
+AZURE_AI_API_VERSION="2024-05-01-preview"
 
-# Optional (only for direct Foundry endpoints)
-AZURE_AI_PROJECT_NAME="zimax"
+# NOT USED for APIM gateway (leave empty)
+AZURE_AI_PROJECT_NAME=""
 ```
 
 > [!IMPORTANT]
-> Use the APIM subscription key for `AZURE_AI_KEY` when routing via APIM. Do not use the Foundry resource key here.
-
-### Provisioning (AZD / Environment)
-
-```bash
-AZURE_ENV_NAME="models-playground-5303"
-AZURE_LOCATION="eastus2"
-AZURE_SUBSCRIPTION_ID="<SUBSCRIPTION_ID>"
-AZURE_EXISTING_AIPROJECT_ENDPOINT="https://zimax-gw.azure-api.net/zimax/openai/v1/"
-AZURE_EXISTING_AIPROJECT_RESOURCE_ID="<RESOURCE_ID>"
-AZURE_EXISTING_RESOURCE_ID="<RESOURCE_ID>"
-AZD_ALLOW_NON_EMPTY_FOLDER=true
-```
+>
+> - `AZURE_AI_ENDPOINT` is the **base URL only** (no `/openai/v1`)
+> - The backend constructs: `{endpoint}/openai/deployments/{model}/chat/completions?api-version=...`
+> - Use the APIM subscription key, not the Foundry resource key
 
 ## Key Vault Setup
 
@@ -63,89 +64,142 @@ az keyvault secret set \
 
 ## API Validation (curl)
 
+### Azure OpenAI Format (Correct)
+
 ```bash
-curl -X POST "https://zimax-gw.azure-api.net/zimax/openai/v1/chat/completions" \
+curl -X POST "https://zimax-gw.azure-api.net/zimax/openai/deployments/model-router/chat/completions?api-version=2024-05-01-preview" \
   -H "Content-Type: application/json" \
-  -H "Ocp-Apim-Subscription-Key: <APIM_SUBSCRIPTION_KEY>" \
+  -H "api-key: <APIM_SUBSCRIPTION_KEY>" \
   -d '{
-    "model": "model-router",
     "messages": [{"role": "user", "content": "What is the capital of France?"}]
   }'
 ```
 
 Expected: HTTP 200 with a JSON response containing `choices[0].message`.
 
-## Python Validation (OpenAI SDK)
+## Python Validation (Azure OpenAI SDK)
 
 ```python
-from openai import OpenAI
+from openai import AzureOpenAI
 
-endpoint = "https://zimax-gw.azure-api.net/zimax/openai/v1/"
-deployment_name = "model-router"
+endpoint = "https://zimax-gw.azure-api.net/zimax"
+deployment = "model-router"
 api_key = "<APIM_SUBSCRIPTION_KEY>"
 
-client = OpenAI(
-    base_url=endpoint,
+client = AzureOpenAI(
+    azure_endpoint=endpoint,
     api_key=api_key,
+    api_version="2024-05-01-preview",
 )
 
 completion = client.chat.completions.create(
-    model=deployment_name,
+    model=deployment,
     messages=[
         {"role": "user", "content": "What is the capital of France?"},
     ],
-    temperature=0.7,
 )
 
 print(completion.choices[0].message)
 ```
 
-### If APIM requires a subscription key header
+## Engram Backend Configuration
 
-Some APIM policies require `Ocp-Apim-Subscription-Key` or `api-key`. Use default headers:
+The backend `FoundryChatClient` automatically detects endpoint format:
 
-```python
-client = OpenAI(
-    base_url=endpoint,
-    api_key="unused",
-    default_headers={"Ocp-Apim-Subscription-Key": api_key},
-)
+1. If endpoint contains `/openai/v1` → OpenAI SDK format (model in body)
+2. Otherwise → Azure OpenAI format (model in URL path)
+
+### Correct Configuration
+
+```bash
+# In Azure Container Apps or .env
+AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax
+AZURE_AI_DEPLOYMENT=model-router
+AZURE_AI_MODEL_ROUTER=model-router
+AZURE_AI_API_VERSION=2024-05-01-preview
+AZURE_AI_PROJECT_NAME=  # Empty
 ```
 
-## Engram Backend Verification
+### Verification
 
-1. Set the chat variables in `backend/.env` (or Key Vault).
-2. Ensure `AZURE_AI_MODEL_ROUTER` is set; this forces Model Router usage.
-3. For APIM endpoints, do not set `AZURE_AI_PROJECT_NAME`.
-4. Start the API and check logs for:
-   - `Using Model Router via APIM Gateway: model-router`
-   - `FoundryChatClient: Response status=200`
+Check logs for:
+
+```
+FoundryChatClient: Calling https://zimax-gw.azure-api.net/zimax/openai/deployments/model-router/chat/completions?api-version=2024-05-01-preview
+FoundryChatClient: is_openai_compat=False, model=None
+FoundryChatClient: Response status=200
+```
 
 ## Troubleshooting
 
-### 401 Unauthorized
+### 401 Unauthorized (API)
 
-- Ensure the key is the APIM subscription key, not the Foundry resource key.
-- If using SDK, confirm APIM accepts `Authorization` or use `default_headers`.
+- Ensure using APIM subscription key, not Foundry resource key
+- Check `api-key` header is set correctly
+
+### 401 Unauthorized (Platform Auth)
+
+Azure Container Apps Platform Authentication may block requests. Disable with:
+
+```bash
+az containerapp auth update \
+  --name staging-env-api \
+  --resource-group engram-rg \
+  --unauthenticated-client-action AllowAnonymous \
+  --enabled false
+```
 
 ### 404 Not Found
 
-- Verify endpoint includes `/openai/v1/` and the route exists in APIM.
-- Confirm deployment name is exactly `model-router`.
+- Verify endpoint is base URL only (no `/openai/v1`)
+- Confirm deployment name is exactly `model-router`
 
 ### 400 Bad Request
 
-- Ensure the `model` field is present in the request body.
-- Confirm payload matches OpenAI chat format (roles: `system`, `user`, `assistant`).
+- For Azure OpenAI format, `model` should NOT be in request body
+- Confirm payload uses correct message format
 
-### 429 Too Many Requests
+## Infrastructure (Bicep)
 
-- APIM rate limiting is triggered. Request higher limits or reduce concurrency.
+```bicep
+// In backend-aca.bicep
+param azureAiEndpoint string = 'https://zimax-gw.azure-api.net/zimax'
+param azureAiModelRouter string = 'model-router'
+
+// Environment variables
+{
+  name: 'AZURE_AI_ENDPOINT'
+  value: azureAiEndpoint
+}
+{
+  name: 'AZURE_AI_DEPLOYMENT'
+  value: 'model-router'
+}
+{
+  name: 'AZURE_AI_MODEL_ROUTER'
+  value: azureAiModelRouter
+}
+{
+  name: 'AZURE_AI_PROJECT_NAME'
+  value: ''  // Empty for APIM gateway
+}
+```
 
 ## Enterprise POC Readiness Checklist
 
-- [ ] Model Router deployment exists and is accessible
-- [ ] APIM gateway routes `/openai/v1/chat/completions`
-- [ ] APIM subscription key stored in Key Vault
-- [ ] `.env` / container env vars updated with Model Router values
-- [ ] curl and Python SDK validations return HTTP 200
+- [x] Model Router deployment exists (`model-router`)
+- [x] APIM gateway routes `/openai/deployments/model-router/chat/completions`
+- [x] APIM subscription key stored in Key Vault
+- [x] Container env vars use Azure OpenAI format
+- [x] Platform Auth disabled (AllowAnonymous)
+- [x] curl validation returns HTTP 200
+- [x] Chat verified working (December 27, 2025)
+
+## Changelog
+
+| Date | Change |
+|------|--------|
+| 2025-12-27 | **Fixed endpoint format**: Changed from OpenAI SDK format (`/openai/v1`) to Azure OpenAI format (base URL only) |
+| 2025-12-27 | **Fixed 401 Platform Auth**: Disabled Azure EasyAuth that was blocking API requests |
+| 2025-12-27 | **Verified working**: Chat successfully tested with model-router |
+| 2025-12-27 | Initial SOP creation |
