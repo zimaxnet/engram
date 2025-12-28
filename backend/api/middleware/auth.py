@@ -22,10 +22,10 @@ from backend.core import Role, SecurityContext, get_settings
 
 logger = logging.getLogger(__name__)
 
-# Security scheme - only used when auth is required
-# When AUTH_REQUIRED=false, we bypass this entirely
+# Security scheme - with auto_error=False, returns None if no credentials
+# This allows us to check AUTH_REQUIRED first before raising 401
 security = HTTPBearer(auto_error=False)
-security_optional = HTTPBearer(auto_error=False)
+security_optional = HTTPBearer(auto_error=False)  # Alias for clarity
 
 
 class TokenPayload(BaseModel):
@@ -276,29 +276,29 @@ async def _no_auth_dependency() -> None:
 
 async def get_current_user(
     request: Request,
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security if _AUTH_REQUIRED else _no_auth_dependency),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_optional),
 ) -> SecurityContext:
     """
     FastAPI dependency to get the current authenticated user.
+    
+    CRITICAL: Checks AUTH_REQUIRED FIRST before any security validation.
+    When AUTH_REQUIRED=false, returns POC user immediately.
 
     Usage:
         @router.get("/protected")
         async def protected_route(user: SecurityContext = Depends(get_current_user)):
             return {"user": user.user_id}
     """
-    # CRITICAL: Check AUTH_REQUIRED FIRST, before any other logic
-    # Re-check at runtime in case settings changed (though they're cached)
+    # CRITICAL: Check AUTH_REQUIRED FIRST - before any security scheme logic
     settings = get_settings()
     auth_required_value = settings.auth_required
     
-    # ALWAYS log auth configuration for debugging (critical for POC)
-    logger.info(f"Auth check: auth_required={auth_required_value} (type={type(auth_required_value).__name__}), env={settings.environment}, value={repr(auth_required_value)}")
+    # ALWAYS log for debugging
+    logger.info(f"🔐 Auth check: auth_required={auth_required_value} (type={type(auth_required_value).__name__}), env={settings.environment}")
     
-    # Explicitly check for False (handles both bool False and string "false" converted by Pydantic)
-    # Also check string "false" explicitly as a fallback
-    # This MUST be the first check to bypass all auth logic
+    # If auth is disabled, return POC user IMMEDIATELY (bypasses all security)
     if not auth_required_value or str(auth_required_value).lower() == "false":
-        logger.info("✅ Auth bypass enabled (AUTH_REQUIRED=false) - returning POC user")
+        logger.info("✅✅✅ Auth bypass enabled (AUTH_REQUIRED=false) - returning POC user")
         return SecurityContext(
             user_id="poc-user",
             tenant_id=settings.azure_tenant_id or "poc-tenant",
@@ -307,6 +307,7 @@ async def get_current_user(
             session_id=request.headers.get("X-Session-ID", "poc-session"),
         )
     
+    # Auth is required - proceed with validation
     logger.info(f"Auth required: {auth_required_value}, proceeding with authentication")
     auth = get_auth()
 
