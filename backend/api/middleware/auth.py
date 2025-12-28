@@ -270,7 +270,17 @@ async def get_current_user(
     # POC/validation mode: bypass Entra auth (DO NOT use in production).
     # This keeps friction low for demos while allowing a single switch to
     # re-enable strong authentication later.
-    if not settings.auth_required:
+    # Check both the boolean value and string representation for robustness
+    auth_required_value = settings.auth_required
+    auth_required_env = getattr(settings, 'auth_required', True)
+    
+    # Log auth configuration for debugging (only in non-production)
+    if settings.environment != "production" or settings.debug:
+        logger.debug(f"Auth check: auth_required={auth_required_value} (type={type(auth_required_value).__name__}), env={settings.environment}")
+    
+    # Explicitly check for False (handles both bool False and string "false" converted by Pydantic)
+    if not auth_required_value:
+        logger.info("Auth bypass enabled (AUTH_REQUIRED=false) - returning POC user")
         return SecurityContext(
             user_id="poc-user",
             tenant_id=settings.azure_tenant_id or "poc-tenant",
