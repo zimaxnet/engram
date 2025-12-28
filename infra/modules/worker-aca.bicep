@@ -19,11 +19,11 @@ param temporalHost string
 @description('Zep API URL.')
 param zepApiUrl string
 
-@description('Azure AI Services unified endpoint (base URL).')
-param azureAiEndpoint string = ''
+@description('Azure AI Services APIM Gateway endpoint (OpenAI-compatible).')
+param azureAiEndpoint string = 'https://zimax-gw.azure-api.net/zimax/openai/v1'
 
-@description('Azure AI Services project name.')
-param azureAiProjectName string = ''
+@description('Azure AI Services project name (not used with APIM gateway).')
+param azureAiProjectName string = ''  // Empty for APIM gateway endpoints
 
 @description('Key Vault URI.')
 param keyVaultUri string

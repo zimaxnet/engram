@@ -25,14 +25,14 @@ param temporalHost string
 @description('Zep API URL.')
 param zepApiUrl string
 
-@description('Azure AI Services unified endpoint for Chat (APIM Gateway).')
-param azureAiEndpoint string = ''
+@description('Azure AI Services APIM Gateway endpoint for Chat (OpenAI-compatible).')
+param azureAiEndpoint string = 'https://zimax-gw.azure-api.net/zimax/openai/v1'
 
-@description('Azure AI Services project name.')
-param azureAiProjectName string = ''
+@description('Azure AI Services project name (not used with APIM gateway).')
+param azureAiProjectName string = ''  // Empty for APIM gateway endpoints
 
-@description('Azure AI Model Router deployment name (optional, for intelligent routing).')
-param azureAiModelRouter string = ''
+@description('Azure AI Model Router deployment name (recommended for intelligent routing).')
+param azureAiModelRouter string = 'model-router'
 
 @description('Azure VoiceLive endpoint (Azure AI Services direct).')
 param azureVoiceLiveEndpoint string = 'https://zimax.services.ai.azure.com'
@@ -225,7 +225,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             }
             {
               name: 'AZURE_AI_DEPLOYMENT'
-              value: 'gpt-4o'
+              value: 'model-router'  // Use Model Router for intelligent routing via APIM
             }
             {
               name: 'AZURE_AI_API_VERSION'

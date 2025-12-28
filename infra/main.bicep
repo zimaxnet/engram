@@ -56,16 +56,16 @@ param enableAksPrivateCluster bool = true
 // param azureOpenAiKey removed
 // param azureSpeechKey removed
 
-@description('Azure AI Services unified endpoint (base URL).')
-param azureAiEndpoint string = ''
+@description('Azure AI Services APIM Gateway endpoint for Chat (OpenAI-compatible).')
+param azureAiEndpoint string = 'https://zimax-gw.azure-api.net/zimax/openai/v1'
 
 
 
 @description('Azure AI Services project name.')
 param azureAiProjectName string = ''
 
-@description('Azure AI Model Router deployment name (optional, for intelligent routing).')
-param azureAiModelRouter string = ''
+@description('Azure AI Model Router deployment name (recommended for intelligent routing).')
+param azureAiModelRouter string = 'model-router'
 
 @description('Azure AI Services API key for Foundry.')
 @secure()
