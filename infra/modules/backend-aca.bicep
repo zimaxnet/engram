@@ -223,6 +223,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
               name: 'AZURE_AI_API_VERSION'
               value: '2024-10-01-preview'
             }
+            ...modelRouterEnv
             {
               name: 'AZURE_AI_KEY'
               secretRef: 'azure-ai-key'
