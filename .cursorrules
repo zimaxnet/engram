@@ -1,0 +1,133 @@
+# Cursor Rules for Engram Project
+
+## Critical: Commit and Push Behavior
+
+### ⚠️ NEVER Make Multiple Commits Within Seconds
+
+**STRICT RULE**: When making code changes:
+1. **BATCH ALL CHANGES** - Make ALL related changes before committing
+2. **SINGLE COMMIT PER TASK** - One commit per logical change, not per file
+3. **WAIT BETWEEN COMMITS** - If multiple commits are needed, wait at least 2 minutes between them
+4. **REVIEW BEFORE COMMIT** - Use `git status` and `git diff` to review ALL changes before committing
+
+### Commit Guidelines
+
+**DO:**
+- ✅ Make all related changes across multiple files
+- ✅ Review all changes with `git status` and `git diff`
+- ✅ Commit everything together: `git add -A && git commit -m "..." && git push`
+- ✅ Wait for deployment to complete before making new changes
+- ✅ Use descriptive commit messages that explain the complete change
+
+**DON'T:**
+- ❌ Commit file by file
+- ❌ Commit immediately after each small change
+- ❌ Push multiple commits within seconds
+- ❌ Commit without reviewing all changes first
+- ❌ Commit while a deployment is in progress
+
+### Example Workflow
+
+```bash
+# ✅ CORRECT: Batch all changes
+# 1. Make all code changes
+# 2. Review all changes
+git status
+git diff
+# 3. Commit everything at once
+git add -A
+git commit -m "fix: Complete auth bypass implementation with logging"
+git push
+
+# ❌ WRONG: Multiple rapid commits
+git add file1.py && git commit -m "fix: part 1" && git push
+git add file2.py && git commit -m "fix: part 2" && git push  # TOO SOON!
+```
+
+### Deployment Impact
+
+**Why This Matters:**
+- Multiple commits trigger multiple GitHub Actions workflows
+- Each workflow consumes resources and can cause deployment conflicts
+- Rapid commits make it impossible to track what changed
+- Deployment failures become harder to diagnose
+
+### When Multiple Commits Are Needed
+
+If you MUST make multiple commits (e.g., separate logical changes):
+1. Make first commit
+2. Wait for GitHub Actions to start (check `gh run list`)
+3. Wait at least 2 minutes
+4. Make second commit only if first deployment is complete or clearly failed
+
+### Code Review Before Commit
+
+**Always run before committing:**
+```bash
+# Check what will be committed
+git status
+
+# Review all changes
+git diff
+
+# Check for syntax errors
+python3 -m py_compile backend/api/middleware/auth.py  # or relevant files
+
+# Only then commit
+git add -A
+git commit -m "descriptive message"
+git push
+```
+
+## General Development Rules
+
+### File Changes
+- Always read files before editing
+- Make complete, logical changes
+- Fix all related issues in one go
+- Test locally when possible before committing
+
+### Error Handling
+- Fix all linter errors before committing
+- Ensure syntax is correct (run `py_compile` or equivalent)
+- Don't commit broken code
+
+### Documentation
+- Update documentation when making significant changes
+- Include context in commit messages
+- Document troubleshooting steps when fixing issues
+
+## Azure Deployment Rules
+
+### Before Triggering Deployment
+1. ✅ All code changes are complete
+2. ✅ All tests pass (if applicable)
+3. ✅ No syntax errors
+4. ✅ All related files are included in commit
+5. ✅ Commit message is descriptive
+
+### During Deployment
+- ⏸️ DO NOT make new commits while deployment is in progress
+- ⏸️ Wait for deployment to complete before making changes
+- ⏸️ Monitor deployment status: `gh run list --limit 1`
+
+### After Deployment
+- ✅ Test endpoints to verify changes
+- ✅ Check logs for expected behavior
+- ✅ Document any issues found
+
+## Emergency Fixes
+
+For urgent/critical fixes:
+1. Still batch all related changes
+2. Make ONE comprehensive commit
+3. Push once
+4. Monitor deployment closely
+5. Only make follow-up commits if absolutely necessary AND after waiting
+
+## Reminder
+
+**Every commit triggers a deployment. Multiple rapid commits = multiple deployments = wasted resources and potential conflicts.**
+
+**When in doubt: Batch, Review, Commit Once, Wait.**
+
