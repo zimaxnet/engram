@@ -102,6 +102,20 @@ az containerapp list --resource-group engram-rg --query "[].{name:name, running:
 az containerapp logs show --name staging-env-zep --resource-group engram-rg --type console --tail 5
 ```
 
+### 9. Verify Public Access (Critical)
+
+// turbo
+
+This confirms the API is reachable and authentication is correctly configured (bypassed).
+
+```bash
+curl -v https://staging-env-api--0000095.gentleriver-dd0de193.eastus2.azurecontainerapps.io/health
+```
+
+Expected output: `HTTP/2 200` and `{"status":"healthy"...}`.
+If you get `401 Unauthorized`, Platform Auth may have been re-enabled. Disable it with:
+`az containerapp auth update --name staging-env-api --resource-group engram-rg --enabled false`
+
 ## Startup Order Summary
 
 ```

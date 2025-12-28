@@ -83,7 +83,12 @@ class ZepMemoryClient:
             response.raise_for_status()
             
             if response.content:
-                return response.json()
+                try:
+                    return response.json()
+                except ValueError:
+                    # Handle case where content is not JSON (e.g. "OK")
+                    logger.debug(f"Zep response not JSON: {response.text}")
+                    return {"message": response.text}
             return {}
             
         except httpx.HTTPStatusError as e:
