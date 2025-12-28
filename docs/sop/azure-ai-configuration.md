@@ -277,10 +277,10 @@ This generic error message indicates the chat endpoint caught an exception. Chec
 Verify all required environment variables are set in Azure Container Apps:
 
 ```bash
-# Required for Model Router via APIM Gateway
-AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax/openai/v1
-AZURE_AI_MODEL_ROUTER=model-router  # If using Model Router
-AZURE_AI_KEY=<APIM_SUBSCRIPTION_KEY>  # Must be APIM key, not Foundry key
+# Required for Model Router via APIM Gateway (from foundry.env)
+AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax/openai/v1/  # Trailing slash required
+AZURE_AI_MODEL_ROUTER=model-router
+AZURE_AI_KEY=<APIM_SUBSCRIPTION_KEY>  # Must be APIM key, stored in Key Vault as azure-ai-key
 AZURE_AI_API_VERSION=2024-10-01-preview
 ```
 
@@ -321,11 +321,14 @@ If using Model Router, verify the deployment name matches exactly:
 For APIM Gateway, the endpoint must include `/openai/v1`:
 
 ```bash
-# Correct
-AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax/openai/v1
+# Correct (from foundry.env - trailing slash required)
+AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax/openai/v1/
 
 # Incorrect (missing /openai/v1)
 AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax
+
+# Incorrect (missing trailing slash)
+AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax/openai/v1
 ```
 
 #### 6. Check Backend Logs
@@ -359,13 +362,69 @@ curl -X POST "https://zimax-gw.azure-api.net/zimax/openai/v1/chat/completions" \
   }'
 ```
 
+Or using Python (from foundry.env example):
+
+```python
+from openai import OpenAI
+
+endpoint = "https://zimax-gw.azure-api.net/zimax/openai/v1/"
+deployment_name = "model-router"
+api_key = "<your-api-key>"
+
+client = OpenAI(
+    base_url=endpoint,
+    api_key=api_key
+)
+
+completion = client.chat.completions.create(
+    model=deployment_name,
+    messages=[
+        {
+            "role": "user",
+            "content": "Hello",
+        }
+    ],
+    temperature=0.7,
+)
+
+print(completion.choices[0].message)
+```
+
 ### Troubleshooting 401 Unauthorized
 
 If an agent returns `401 PermissionDenied`:
 
-1. **Check the Endpoint**: Ensure `AZURE_AI_ENDPOINT` matches `AZURE_EXISTING_AIPROJECT_ENDPOINT` (`https://zimax-gw.azure-api.net/zimax/openai/v1/`).
-2. **Check the Key**: Ensure `AZURE_AI_KEY` matches the APIM Subscription Key (`cf23...`), NOT the backend Foundry resource key.
-3. **Verify Deployment**: The deployment name must match exactly (e.g., `model-router` for Model Router, or `gpt-5-chat` for direct deployment).
+1. **Check the Endpoint**: Ensure `AZURE_AI_ENDPOINT` matches `AZURE_EXISTING_AIPROJECT_ENDPOINT` from foundry.env:
+   ```bash
+   AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax/openai/v1/
+   ```
+   Note: The trailing slash is required.
+
+2. **Check the Key**: Ensure `AZURE_AI_KEY` (stored in Key Vault as `azure-ai-key`) is the correct APIM Subscription Key. The key must be valid for the APIM Gateway subscription.
+
+3. **Verify Deployment**: The deployment name must match exactly:
+   ```bash
+   AZURE_AI_MODEL_ROUTER=model-router
+   ```
+
+4. **Test Direct API Call**: Verify the configuration works using the foundry.env format:
+   ```python
+   from openai import OpenAI
+   
+   endpoint = "https://zimax-gw.azure-api.net/zimax/openai/v1/"
+   deployment_name = "model-router"
+   api_key = "<your-apim-subscription-key>"
+   
+   client = OpenAI(
+       base_url=endpoint,
+       api_key=api_key
+   )
+   
+   completion = client.chat.completions.create(
+       model=deployment_name,
+       messages=[{"role": "user", "content": "Hello"}]
+   )
+   ```
 
 ## Zep Memory: Sessions vs. Episodes
 
