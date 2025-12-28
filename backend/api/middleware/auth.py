@@ -272,7 +272,6 @@ async def get_current_user(
     # re-enable strong authentication later.
     # Check both the boolean value and string representation for robustness
     auth_required_value = settings.auth_required
-    auth_required_env = getattr(settings, 'auth_required', True)
     
     # Log auth configuration for debugging (only in non-production)
     if settings.environment != "production" or settings.debug:
