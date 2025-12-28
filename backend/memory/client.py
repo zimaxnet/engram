@@ -102,6 +102,15 @@ class ZepMemoryClient:
             try:
                 existing = await self._request("GET", f"/api/v1/sessions/{session_id}")
                 if existing:
+                    # Update metadata if provided
+                    if metadata:
+                        try:
+                            updated = await self._request("PATCH", f"/api/v1/sessions/{session_id}", json={"metadata": metadata})
+                            if updated:
+                                logger.info(f"Updated metadata for session: {session_id}")
+                                return updated
+                        except Exception as e:
+                            logger.warning(f"Failed to update metadata for existing session {session_id}: {e}")
                     return existing
             except Exception:
                 # Ignore fetch error, try create
@@ -373,6 +382,9 @@ class ZepMemoryClient:
                     # Include sessions that match user_id OR have no user_id (legacy/ingested docs)
                     sessions = [s for s in sessions if s.get("user_id") == user_id or s.get("user_id") is None]
                     logger.info(f"After user filter: {len(sessions)} sessions remain")
+
+                # Sort by created_at descending (newest first)
+                sessions.sort(key=lambda x: x.get("created_at", ""), reverse=True)
 
                 # Apply pagination
                 sessions = sessions[offset:offset + limit]
