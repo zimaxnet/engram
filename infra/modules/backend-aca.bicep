@@ -148,6 +148,11 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
           keyVaultUrl: '${keyVaultUri}secrets/voicelive-api-key'
           identity: identityResourceId
         }
+        {
+          name: 'github-token'
+          keyVaultUrl: '${keyVaultUri}secrets/github-token'
+          identity: identityResourceId
+        }
       ]
       registries: [
         {
@@ -276,6 +281,11 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'ONEDRIVE_DOCS_PATH'
               value: 'docs'
+            }
+            // GitHub integration for agents
+            {
+              name: 'GITHUB_TOKEN'
+              secretRef: 'github-token'
             }
           ]
           resources: {

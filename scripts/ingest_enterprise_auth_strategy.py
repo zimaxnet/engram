@@ -67,7 +67,23 @@ async def ingest_strategy():
     """Ingest the enterprise auth strategy as a memory session"""
     
     settings = get_settings()
+    # AZURE ZEP URL
+    zep_url = "https://staging-env-zep.gentleriver-dd0de193.eastus2.azurecontainerapps.io"
     
+    # settings.zep_api_url = zep_url # This doesn't work on the object directly for client init often
+    
+    # We need to monkeypatch or pass it to client? 
+    # ZepMemoryClient usually reads from settings singleton.
+    # Let's override the env var for the process or just init client carefully.
+    os.environ["ZEP_API_URL"] = zep_url
+    
+    # Re-get settings to ensure it picks up env var if pydantic reloads, 
+    # or just trust the client will read os.environ if settings not frozen.
+    # actually ZepMemoryClient uses settings.zep_api_url.
+    
+    # Better approach: Just set it on the settings object if it's mutable
+    settings.zep_api_url = zep_url
+
     if not settings.zep_api_url:
         print("❌ ZEP_API_URL not configured. Cannot ingest memory.")
         return

@@ -203,20 +203,23 @@ class ZepMemoryClient:
 
         This enables agents to access canonical episodic memories (like the vision
         statement in sess-vision-001) regardless of the current conversation session.
+        
+        Enhanced to prioritize:
+        1. Wiki pages (doc-wiki-*)
+        2. Canonical knowledge (doc-*, sess-*)
+        3. Metadata matches (title, topics, summary)
+        4. Content keyword matches
         """
         results = []
 
         try:
             # First, get all sessions to search globally
             sessions_data = await self._request("GET", "/api/v1/sessions")
-            if sessions_data:
-                all_session_ids = [s.get("session_id") for s in sessions_data if s.get("session_id")]
+            if not sessions_data:
+                logger.warning("No sessions found for memory search")
+                return []
 
-                # Include current session if not in list
-                if session_id not in all_session_ids:
-                    all_session_ids.append(session_id)
-
-            # Search across sessions using Zep's search endpoint
+            # Try Zep's native search endpoint first (may not exist in OSS)
             search_payload = {
                 "text": query,
                 "limit": limit,
@@ -224,7 +227,7 @@ class ZepMemoryClient:
             }
 
             search_result = await self._request("POST", "/api/v1/sessions/search", json=search_payload)
-            if search_result and "results" in search_result:
+            if search_result and "results" in search_result and search_result["results"]:
                 for result in search_result["results"]:
                     message = result.get("message", {})
                     results.append({
@@ -233,56 +236,119 @@ class ZepMemoryClient:
                         "metadata": message.get("metadata", {}),
                         "session_id": result.get("session_id", ""),
                     })
-                logger.info(f"Memory search found {len(results)} results for: {query[:50]}...")
+                logger.info(f"Memory search found {len(results)} results via Zep search for: {query[:50]}...")
                 return results
 
-            # Fallback: search individual sessions with word-based matching
-            query_words = set(query.lower().split())
-            if sessions_data:
-                # Prioritize sessions that look like canonical knowledge (sess-* or doc-*)
-                prioritized_sessions = [s for s in sessions_data if s.get("session_id", "").startswith(("sess-", "doc-"))]
-                other_sessions = [s for s in sessions_data if not s.get("session_id", "").startswith(("sess-", "doc-"))]
+            # Fallback: Enhanced keyword-based search with Wiki prioritization
+            query_lower = query.lower()
+            query_words = set(query_lower.split())
+            
+            # Remove common stop words for better matching
+            stop_words = {"the", "a", "an", "is", "are", "was", "were", "what", "how", "why", "when", "where", "which", "who", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by", "from", "as", "about", "into", "does", "do", "can", "could", "would", "should", "currently", "your", "my", "our"}
+            query_words = query_words - stop_words
+            
+            if not query_words:
+                query_words = set(query_lower.split())  # Fall back to all words
+            
+            # Categorize sessions by priority
+            wiki_sessions = [s for s in sessions_data if s.get("session_id", "").startswith("doc-wiki-")]
+            doc_sessions = [s for s in sessions_data if s.get("session_id", "").startswith("doc-") and not s.get("session_id", "").startswith("doc-wiki-")]
+            canonical_sessions = [s for s in sessions_data if s.get("session_id", "").startswith("sess-")]
+            other_sessions = [s for s in sessions_data if not s.get("session_id", "").startswith(("doc-", "sess-"))]
+            
+            # Process in priority order: Wiki first, then docs, then canonical, then others
+            all_sessions = wiki_sessions + doc_sessions + canonical_sessions + other_sessions
+            sessions_to_search = all_sessions[:50]  # Limit for performance
+            
+            for sess in sessions_to_search:
+                sess_id = sess.get("session_id", "")
+                if not sess_id:
+                    continue
                 
-                # Search up to 100 sessions, prioritizing canonical ones
-                sessions_to_search = (prioritized_sessions + other_sessions)[:100]
+                metadata = sess.get("metadata", {}) or {}
+                is_wiki = sess_id.startswith("doc-wiki-")
                 
-                for sess in sessions_to_search:
-                    sess_id = sess.get("session_id")
-                    if not sess_id:
-                        continue
-                        
-                    # 1. Match against session metadata (High relevance)
-                    metadata = sess.get("metadata", {}) or {}
-                    summary = metadata.get("summary", "").lower()
-                    topics = [str(t).lower() for t in metadata.get("topics", [])]
-                    
-                    meta_matches = sum(1 for w in query_words if w in summary or any(w in t for t in topics))
-                    if meta_matches >= 1:
-                        results.append({
-                            "content": f"[Session Summary: {metadata.get('summary', '')}]",
-                            "score": min(0.95, 0.6 + (meta_matches * 0.15)),
-                            "metadata": metadata,
-                            "session_id": sess_id,
-                        })
-
-                    # 2. Match against messages
-                    messages = await self.get_session_messages(sess_id, limit=20)
+                # Extract searchable fields from metadata
+                title = metadata.get("title", "").lower()
+                summary = metadata.get("summary", "").lower()
+                source = metadata.get("source", "").lower()
+                topics = [str(t).lower() for t in metadata.get("topics", [])]
+                all_topics_str = " ".join(topics)
+                
+                # Calculate match score
+                title_matches = sum(1 for w in query_words if w in title)
+                summary_matches = sum(1 for w in query_words if w in summary)
+                topic_matches = sum(1 for w in query_words if w in all_topics_str)
+                
+                meta_score = 0
+                
+                # Title match is highest signal
+                if title_matches > 0:
+                    meta_score = min(0.95, 0.7 + (title_matches * 0.1))
+                # Topic match is strong signal  
+                elif topic_matches > 0:
+                    meta_score = min(0.9, 0.6 + (topic_matches * 0.1))
+                # Summary match is good signal
+                elif summary_matches >= 2:
+                    meta_score = min(0.85, 0.5 + (summary_matches * 0.08))
+                elif summary_matches == 1:
+                    meta_score = 0.5
+                
+                # Boost wiki content
+                if is_wiki and meta_score > 0:
+                    meta_score = min(0.98, meta_score + 0.1)
+                
+                if meta_score > 0:
+                    display_content = metadata.get("summary", title) or f"Session: {sess_id}"
+                    results.append({
+                        "content": f"[{title or sess_id}] {display_content}",
+                        "score": meta_score,
+                        "metadata": metadata,
+                        "session_id": sess_id,
+                        "source_type": "wiki" if is_wiki else "document",
+                    })
+                
+                # Also search message content for wiki pages (high value content)
+                if is_wiki or meta_score < 0.5:
+                    messages = await self.get_session_messages(sess_id, limit=5)
                     for msg in messages:
                         content = msg.get("content", "")
                         content_lower = content.lower()
-                        # Score based on how many query words appear
+                        
+                        # Check for query word matches
                         matches = sum(1 for w in query_words if w in content_lower)
-                        if matches >= 2 or (len(query_words) == 1 and matches == 1):
-                            score = min(0.9, 0.5 + (matches * 0.1))
+                        
+                        if matches >= 2 or (len(query_words) <= 2 and matches >= 1):
+                            content_score = min(0.85, 0.4 + (matches * 0.1))
+                            
+                            # Boost wiki content
+                            if is_wiki:
+                                content_score = min(0.95, content_score + 0.15)
+                            
+                            # Truncate content for display
+                            display_content = content[:500] + "..." if len(content) > 500 else content
+                            
                             results.append({
-                                "content": content,
-                                "score": score,
+                                "content": display_content,
+                                "score": content_score,
                                 "metadata": msg.get("metadata", {}),
                                 "session_id": sess_id,
+                                "source_type": "wiki_content" if is_wiki else "content",
                             })
+            
+            # Deduplicate by session_id, keeping highest score
+            seen_sessions = {}
+            for r in results:
+                sid = r.get("session_id", "")
+                if sid not in seen_sessions or r["score"] > seen_sessions[sid]["score"]:
+                    seen_sessions[sid] = r
+            
+            results = list(seen_sessions.values())
             
             # Sort by score descending
             results.sort(key=lambda x: x["score"], reverse=True)
+            
+            logger.info(f"Memory search (fallback) found {len(results)} results for: {query[:50]}...")
             return results[:limit]
 
         except Exception as e:
