@@ -324,7 +324,12 @@ async def list_episodes(
             episodes=episodes,
             total_count=len(episodes),
         )
-    except Exception:
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Failed to list episodes: {e}")
+        # In test, raise to avoid masking issues
+        if get_settings().environment == "test":
+            raise
         # Fallback return empty
         return EpisodeListResponse(episodes=[], total_count=0)
 

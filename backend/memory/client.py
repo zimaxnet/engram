@@ -35,7 +35,8 @@ class ZepMemoryClient:
 
     def __init__(self):
         self.settings = get_settings()
-        self.zep_url = self.settings.zep_api_url
+        # Strip trailing slash to ensure clean URL construction
+        self.zep_url = self.settings.zep_api_url.rstrip("/") if self.settings.zep_api_url else ""
         self.zep_api_key = self.settings.zep_api_key
         self._http_client = None
         logger.info(f"ZepMemoryClient initialized: {self.zep_url}")
@@ -56,46 +57,77 @@ class ZepMemoryClient:
 
     async def _request(self, method: str, endpoint: str, **kwargs) -> dict:
         """Make a request to the Zep API."""
+        if not self.zep_url:
+            logger.warning("ZEP_API_URL not configured; skipping request")
+            return None
+
+        # Ensure endpoint has leading slash
+        if not endpoint.startswith("/"):
+            endpoint = f"/{endpoint}"
+
         url = f"{self.zep_url}{endpoint}"
+        
         # Add authentication headers if API key is configured
         headers = self._get_headers()
         if "headers" in kwargs:
             headers.update(kwargs["headers"])
         kwargs["headers"] = headers
+        
         try:
+            logger.debug(f"Zep Request: {method} {url}")
             response = await self.http_client.request(method, url, **kwargs)
+            
             if response.status_code == 404:
                 return None
+                
             response.raise_for_status()
+            
             if response.content:
                 return response.json()
             return {}
+            
         except httpx.HTTPStatusError as e:
-            logger.warning(f"Zep API error: {e.response.status_code} - {endpoint}")
-            return None
+            logger.error(f"Zep API error: {e.response.status_code} - {method} {url} - {e.response.text}")
+            raise  # Re-raise to surface error to caller
         except Exception as e:
-            logger.error(f"Zep request failed: {e}")
-            return None
+            logger.error(f"Zep request failed: {method} {url} - {e}")
+            raise  # Re-raise to surface connection errors
 
     async def get_or_create_session(self, session_id: str, user_id: str, metadata: dict = None) -> dict:
         """
         Get or create a session (conversation) in Zep.
         """
-        # Try to get existing session
-        existing = await self._request("GET", f"/api/v1/sessions/{session_id}")
-        if existing:
-            return existing
+        try:
+            # Try to get existing session
+            try:
+                existing = await self._request("GET", f"/api/v1/sessions/{session_id}")
+                if existing:
+                    return existing
+            except Exception:
+                # Ignore fetch error, try create
+                pass
 
-        # Create new session
-        payload = {
-            "session_id": session_id,
-            "user_id": user_id,
-            "metadata": metadata or {}
-        }
-        result = await self._request("POST", "/api/v1/sessions", json=payload)
-        if result:
-            logger.info(f"Created Zep session: {session_id}")
-        return result or payload
+            # Create new session
+            payload = {
+                "session_id": session_id,
+                "user_id": user_id,
+                "metadata": metadata or {}
+            }
+            result = await self._request("POST", "/api/v1/sessions", json=payload)
+            if result:
+                logger.info(f"Created Zep session: {session_id}")
+            return result or payload
+        except Exception as e:
+            logger.error(f"Failed to get/create session {session_id}: {e}")
+            # Fallback to payload so app doesn't crash, but memory interactions will fail
+            return {
+                "session_id": session_id,
+                "user_id": user_id,
+                "metadata": metadata or {},
+                "created_at": datetime.utcnow().isoformat(), 
+                # Flag as offline/mock
+                "_offline": True 
+            }
 
     async def add_memory(self, session_id: str, messages: list[dict], metadata: dict = None) -> None:
         """
@@ -334,10 +366,13 @@ class ZepMemoryClient:
             result = await self._request("GET", "/api/v1/sessions")
             if result and isinstance(result, list):
                 sessions = result
+                
+                logger.info(f"Fetched {len(sessions)} sessions from Zep. Filtering for user: {user_id}")
 
                 if user_id:
                     # Include sessions that match user_id OR have no user_id (legacy/ingested docs)
                     sessions = [s for s in sessions if s.get("user_id") == user_id or s.get("user_id") is None]
+                    logger.info(f"After user filter: {len(sessions)} sessions remain")
 
                 # Apply pagination
                 sessions = sessions[offset:offset + limit]
