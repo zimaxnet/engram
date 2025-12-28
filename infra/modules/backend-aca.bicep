@@ -49,6 +49,18 @@ param identityClientId string
 @description('Whether API requests require user auth (Entra JWT). Set false for POC/staging to reduce friction.')
 param authRequired bool = false  // POC default: false (set true for production)
 
+@description('Azure AD tenant ID for authentication.')
+param azureAdTenantId string = ''
+
+@description('Azure AD client ID for frontend app.')
+param azureAdClientId string = ''
+
+@description('Whether using Entra External ID (CIAM) vs Workforce identity.')
+param azureAdExternalId bool = false
+
+@description('Entra External ID tenant domain (e.g., engramai for engramai.ciamlogin.com).')
+param azureAdExternalDomain string = ''
+
 @description('Registry username.')
 param registryUsername string
 
@@ -282,10 +294,26 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
               name: 'ONEDRIVE_DOCS_PATH'
               value: 'docs'
             }
-            // GitHub integration for agents
             {
               name: 'GITHUB_TOKEN'
               secretRef: 'github-token'
+            }
+            // Entra External ID (CIAM) configuration
+            {
+              name: 'AZURE_AD_TENANT_ID'
+              value: azureAdTenantId
+            }
+            {
+              name: 'AZURE_AD_CLIENT_ID'
+              value: azureAdClientId
+            }
+            {
+              name: 'AZURE_AD_EXTERNAL_ID'
+              value: azureAdExternalId ? 'true' : 'false'
+            }
+            {
+              name: 'AZURE_AD_EXTERNAL_DOMAIN'
+              value: azureAdExternalDomain
             }
           ]
           resources: {

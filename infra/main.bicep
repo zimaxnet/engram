@@ -12,6 +12,18 @@ var isProd = environment == 'prod'
 @description('Enable authentication requirement for API endpoints.')
 param authRequired bool = false  // Disabled for POC testing - enable for UAT/prod later
 
+@description('Azure AD tenant ID for Entra External ID authentication.')
+param azureAdTenantId string = ''
+
+@description('Azure AD client ID for frontend app (from Entra External ID app registration).')
+param azureAdClientId string = ''
+
+@description('Whether using Entra External ID (CIAM) vs Workforce identity.')
+param azureAdExternalId bool = false
+
+@description('Entra External ID tenant domain (e.g., engramai for engramai.ciamlogin.com).')
+param azureAdExternalDomain string = ''
+
 @description('Enable Azure AD authentication for Postgres (recommended for uat/prod).')
 param enablePostgresAad bool = false
 
@@ -472,6 +484,10 @@ module backendModule 'modules/backend-aca.bicep' = {
     identityResourceId: backendIdentity.id
     identityClientId: backendIdentity.properties.clientId
     authRequired: authRequired
+    azureAdTenantId: azureAdTenantId
+    azureAdClientId: azureAdClientId
+    azureAdExternalId: azureAdExternalId
+    azureAdExternalDomain: azureAdExternalDomain
     tags: union(mergedTags, { Component: 'BackendAPI' })
   }
 }

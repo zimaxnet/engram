@@ -80,6 +80,10 @@ jobs:
             registryPassword=${{ secrets.CR_PAT }}
             zepApiKey=${{ secrets.ZEP_API_KEY || '' }}
             authRequired=${{ github.event.inputs.authRequired || 'false' }}
+            azureAdTenantId=${{ secrets.AZURE_AD_TENANT_ID || '' }}
+            azureAdClientId=${{ secrets.AZURE_AD_CLIENT_ID || '' }}
+            azureAdExternalId=${{ secrets.AZURE_AD_EXTERNAL_ID == 'true' }}
+            azureAdExternalDomain=${{ secrets.AZURE_AD_EXTERNAL_DOMAIN || '' }}
           deploymentName: engram-infra-${{ github.sha }}
           failOnStdErr: false
       
@@ -126,6 +130,10 @@ jobs:
         env:
           VITE_API_URL: ${{ needs.deploy-infra.outputs.backend_url }}
           VITE_WS_URL: ${{ needs.deploy-infra.outputs.backend_url }}
+          VITE_AZURE_AD_TENANT_ID: ${{ secrets.AZURE_AD_TENANT_ID }}
+          VITE_AZURE_AD_CLIENT_ID: ${{ secrets.AZURE_AD_CLIENT_ID }}
+          VITE_AZURE_AD_TENANT_DOMAIN: ${{ secrets.AZURE_AD_EXTERNAL_DOMAIN }}
+          VITE_REDIRECT_URI: https://engram.work
         run: |
           cd frontend
           npm run build
