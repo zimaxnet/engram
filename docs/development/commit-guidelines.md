@@ -70,11 +70,20 @@ If you MUST make multiple commits:
 
 ## Pre-Commit Hook
 
-A git pre-commit hook is installed that:
+A git pre-commit hook prevents rapid commits:
 - Warns if committing within 14 minutes of last commit (deployment time)
-- Checks if deployment is still in progress
+- Checks if deployment is still in progress via GitHub CLI
 - Prompts for confirmation
 - Can be bypassed with 'y' if truly necessary (but strongly discouraged)
+
+### Installation
+
+Install the hook for all team members:
+```bash
+./scripts/install-pre-commit-hook.sh
+```
+
+The hook is automatically installed when you clone the repo, but can be reinstalled with the script above.
 
 ## Emergency Fixes
 
