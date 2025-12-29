@@ -181,6 +181,35 @@
     {
       "type": "entity",
       "id": "visual development"
+    },
+    {
+      "type": "entity",
+      "source": "local",
+      "id": "Knowledge Graph Implementation"
+    },
+    {
+      "type": "entity",
+      "id": "Knowledge Graph"
+    },
+    {
+      "type": "entity",
+      "id": "NetworkX"
+    },
+    {
+      "type": "entity",
+      "id": "Graphiti"
+    },
+    {
+      "type": "entity",
+      "id": "React"
+    },
+    {
+      "type": "entity",
+      "id": "Frontend"
+    },
+    {
+      "type": "entity",
+      "id": "Backend"
     }
   ],
   "edges": [
@@ -639,6 +668,102 @@
       "source": "Visual Development",
       "target": "visual development",
       "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:36.715262",
+      "source": "Knowledge Graph Implementation",
+      "target": "Knowledge Graph",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:51.406796",
+      "source": "Knowledge Graph Implementation",
+      "target": "Knowledge Graph",
+      "key": 1
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:36.716427",
+      "source": "Knowledge Graph Implementation",
+      "target": "NetworkX",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:51.407708",
+      "source": "Knowledge Graph Implementation",
+      "target": "NetworkX",
+      "key": 1
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:36.717135",
+      "source": "Knowledge Graph Implementation",
+      "target": "Graphiti",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:51.408352",
+      "source": "Knowledge Graph Implementation",
+      "target": "Graphiti",
+      "key": 1
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:36.717794",
+      "source": "Knowledge Graph Implementation",
+      "target": "React",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:51.408941",
+      "source": "Knowledge Graph Implementation",
+      "target": "React",
+      "key": 1
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:36.718470",
+      "source": "Knowledge Graph Implementation",
+      "target": "Frontend",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:51.409539",
+      "source": "Knowledge Graph Implementation",
+      "target": "Frontend",
+      "key": 1
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:36.719106",
+      "source": "Knowledge Graph Implementation",
+      "target": "Backend",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:51.410139",
+      "source": "Knowledge Graph Implementation",
+      "target": "Backend",
+      "key": 1
     }
   ]
 }
