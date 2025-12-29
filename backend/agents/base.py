@@ -32,6 +32,8 @@ class AgentState(TypedDict):
     should_continue: bool
     tool_results: list[dict]
     final_response: Optional[str]
+    pending_tool: Optional[str]
+    pending_tool_args: Optional[dict]
 
 
 class FoundryChatClient:

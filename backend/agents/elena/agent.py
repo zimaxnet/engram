@@ -181,7 +181,6 @@ And I should [secondary outcome]
 """
 
 
-@tool
 async def delegate_to_sage(topic: str, context: Optional[str] = None) -> str:
     """
     Delegate a storytelling or visualization task to Sage Meridian via a Temporal workflow.
@@ -229,6 +228,7 @@ async def delegate_to_sage(topic: str, context: Optional[str] = None) -> str:
 # =============================================================================
 # Elena Agent Implementation
 # =============================================================================
+
 
 
 class ElenaAgent(BaseAgent):
@@ -362,14 +362,29 @@ You should be aware that delegation creates a durable workflow, and you can expl
 
         return workflow.compile()
 
-    def _decide_next(self, state: AgentState) -> str:
-        """Decide whether to invoke a tool based on the last user message."""
+    async def _reason_node(self, state: AgentState) -> AgentState:
+        """
+        Custom reasoning node for Elena.
+        Calls base reasoning (LLM) then performs tool selection.
+        """
+        # Call base reasoning logic (RAG + LLM)
+        state = await super()._reason_node(state)
+        
+        # Perform tool selection based on User input
         last_user = next((m for m in reversed(state["messages"]) if m.type == "human"), None)
         content = last_user.content if last_user else ""
+        
         tool_name, tool_args = self._select_tool(content)
         if tool_name:
             state["pending_tool"] = tool_name
             state["pending_tool_args"] = tool_args
+            
+        return state
+
+    def _decide_next(self, state: AgentState) -> str:
+        """Decide whether to invoke a tool based on pending_tool state."""
+        tool_name = state.get("pending_tool")
+        if tool_name:
             return "tool"
         return "respond"
 
@@ -380,12 +395,18 @@ You should be aware that delegation creates a durable workflow, and you can expl
         if any(k in text for k in ["story", "narrative", "visual", "diagram", "draw", "paint", "image", "picture"]):
             # Simple heuristic: if she's asked to create these things, she delegates
             if "create" in text or "generate" in text or "make" in text or "show" in text:
-                # Extract topic crudely
                 topic = content
-                for prefix in ["create a story about", "generate a visual for", "show me a picture of"]:
-                    if prefix in text:
-                        topic = content[text.index(prefix)+len(prefix):].strip()
-                        break
+                # Try more flexible extraction
+                lower_content = content.lower()
+                for key_phrase in ["about", "for", "of"]:
+                    if f" {key_phrase} " in lower_content:
+                        # Split by the last occurrence of the preposition to get the most specific topic
+                        parts = lower_content.rsplit(f" {key_phrase} ", 1)
+                        if len(parts) > 1:
+                            # Use original content length to slice strictly
+                            start_index = len(parts[0]) + len(key_phrase) + 2
+                            topic = content[start_index:].strip().strip(".")
+                            break
                 return "delegate_to_sage", {"topic": topic, "context": content}
 
         if "acceptance" in text or "user story" in text or "story" in text:
@@ -409,11 +430,24 @@ You should be aware that delegation creates a durable workflow, and you can expl
     async def _maybe_use_tool(self, state: AgentState) -> AgentState:
         """Invoke a selected tool and append its result to messages."""
         tool_name: str | None = state.get("pending_tool")
+        print(f"DEBUG: _maybe_use_tool entered. pending_tool={tool_name}")
+        
         tool_args: dict = state.get("pending_tool_args", {}) or {}
         if not tool_name:
             return state
 
-        tool_registry = {t.name: t for t in self.tools}
+        tool_registry = {}
+        for t in self.tools:
+            try:
+                tool_registry[t.name] = t
+            except AttributeError:
+                print(f"DEBUG: tool {t} has no name. Type: {type(t)}")
+                # If it's a function, it might be that the decorator failed or wasn't applied?
+                # Try getting name from function
+                if hasattr(t, 'name'):
+                    tool_registry[t.name] = t
+                elif hasattr(t, '__name__'):
+                    tool_registry[t.__name__] = t
         tool = tool_registry.get(tool_name)
         if not tool:
             state["final_response"] = state.get("final_response") or "I couldn't run the requested analysis."
@@ -423,8 +457,18 @@ You should be aware that delegation creates a durable workflow, and you can expl
             # Handle async tools (like delegate_to_sage)
             if hasattr(tool, 'ainvoke'):
                 result = await tool.ainvoke(tool_args)
-            else:
+            elif hasattr(tool, 'invoke'):
                 result = tool.invoke(tool_args)
+            elif callable(tool):
+                # Fallback for raw functions
+                import inspect
+                if inspect.iscoroutinefunction(tool):
+                     result = await tool(**tool_args)
+                else:
+                     result = tool(**tool_args)
+            else:
+                 raise ValueError(f"Tool {tool_name} is not callable or invokable")
+            
             state["tool_results"].append({"tool": tool_name, "result": result})
             state["messages"].append(
                 # type: ignore
@@ -436,6 +480,9 @@ You should be aware that delegation creates a durable workflow, and you can expl
                 )()
             )
         except Exception as e:
+            if 'logger' not in locals() and 'logger' not in globals():
+                 import logging
+                 logger = logging.getLogger(__name__)
             logger.error(f"Tool execution error for {tool_name}: {e}", exc_info=True)
             state["final_response"] = f"I tried to run {tool_name} but hit an error: {e}"
         return state
