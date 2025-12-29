@@ -1,0 +1,30 @@
+{
+    "session_id": "episode-debug-google-genai-import-20251229",
+    "user_id": "derek",
+    "metadata": {
+        "summary": "Debugged Azure Container App startup failure caused by missing google-genai package in requirements.txt. The backend crashed with 'cannot import name genai from google' at gemini_client.py:13. Fixed by adding google-genai>=0.1.0 to requirements.txt. Also documented the CI/CD pipeline flow showing how requirements.txt is baked into Docker images during GitHub Actions build, pushed to ghcr.io, then pulled by Azure Container Apps.",
+        "agent_id": "sage",
+        "topics": [
+            "Debugging",
+            "CI/CD",
+            "Docker",
+            "Azure Container Apps",
+            "GitHub Actions",
+            "Nano Banana",
+            "Requirements"
+        ],
+        "turn_count": 2,
+        "channel": "debugging",
+        "resolution": "Added google-genai>=0.1.0 to backend/requirements.txt"
+    },
+    "messages": [
+        {
+            "role": "user",
+            "content": "The database and containers were just turned on. We have startup issues - often authentication problems. Please look into it."
+        },
+        {
+            "role": "assistant",
+            "content": "I investigated the Azure Container App logs and found the root cause:\n\n**Error:**\n```\ncannot import name 'genai' from 'google' (unknown location)\n```\nat `/app/backend/llm/gemini_client.py:13`\n\n**Root Cause:**\nThe `GeminiClient` imports `from google import genai` for Nano Banana Pro (Gemini 3) image generation, but the `google-genai` package was missing from `requirements.txt`.\n\n**Services Status:**\n- Zep: ✅ Healthy (200s on /healthz)\n- Temporal Server: ✅ Running\n- Backend API: ❌ Crash loop (import error)\n\n**Fix Applied:**\nAdded `google-genai>=0.1.0` to `backend/requirements.txt`\n\n**CI/CD Flow Explained:**\n1. You edit `requirements.txt` locally\n2. `git push` to `main`\n3. GitHub Actions `ci.yml` runs\n4. Docker builds image using `backend/Dockerfile` which runs `pip install -r requirements.txt`\n5. Image pushed to `ghcr.io/zimaxnet/engram/backend:latest`\n6. Azure Container Apps pulls the new image on deployment\n\nThe image is NOT built locally - it's built on GitHub's servers, stored at ghcr.io, then pulled by Azure."
+        }
+    ]
+}
