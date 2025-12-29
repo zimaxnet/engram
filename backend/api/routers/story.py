@@ -66,7 +66,10 @@ def _get_stories_dir() -> Path:
     settings = get_settings()
     docs_path = Path(settings.onedrive_docs_path or "docs")
     stories_dir = docs_path / "stories"
-    stories_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        stories_dir.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        logger.error(f"Failed to create stories directory: {e}")
     return stories_dir
 
 
@@ -75,7 +78,10 @@ def _get_diagrams_dir() -> Path:
     settings = get_settings()
     docs_path = Path(settings.onedrive_docs_path or "docs")
     diagrams_dir = docs_path / "diagrams"
-    diagrams_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        diagrams_dir.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        logger.error(f"Failed to create diagrams directory: {e}")
     return diagrams_dir
 
 
@@ -283,7 +289,7 @@ async def get_latest_story(user: SecurityContext = Depends(get_current_user)):
         diagram_spec=diagram_spec,
         diagram_path=str(diagram_path) if diagram_path.exists() else None,
         image_path=image_path_str,
-        created_at=latest.stat().st_mtime.__str__(),
+        created_at=datetime.fromtimestamp(latest.stat().st_mtime).isoformat(),
     )
 
 
@@ -316,7 +322,7 @@ async def get_story(story_id: str, user: SecurityContext = Depends(get_current_u
         diagram_spec=diagram_spec,
         diagram_path=str(diagram_path) if diagram_path.exists() else None,
         image_path=image_path_str,
-        created_at=story_path.stat().st_mtime.__str__(),
+        created_at=datetime.fromtimestamp(story_path.stat().st_mtime).isoformat(),
     )
 
 
@@ -337,7 +343,7 @@ async def list_stories(user: SecurityContext = Depends(get_current_user)):
         stories.append(StoryListItem(
             story_id=story_id,
             topic=story_id.split("-", 2)[-1].replace("-", " ") if "-" in story_id else story_id,
-            created_at=story_file.stat().st_mtime.__str__(),
+            created_at=datetime.fromtimestamp(story_file.stat().st_mtime).isoformat(),
             story_path=str(story_file),
             image_path=image_path_str
         ))
