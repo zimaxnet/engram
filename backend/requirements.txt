@@ -23,6 +23,9 @@ azure-ai-voicelive[aiohttp]>=1.0.0
 langchain>=0.1.0
 langgraph>=0.0.20
 
+# Google AI (Nano Banana Pro / Gemini 3)
+google-genai>=0.1.0
+
 # ETL
 unstructured[all-docs]>=0.12.0
 python-magic>=0.4.27
