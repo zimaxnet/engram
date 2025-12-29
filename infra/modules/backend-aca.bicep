@@ -316,6 +316,12 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
               value: azureAdExternalDomain
             }
           ]
+          volumeMounts: [
+            {
+              volumeName: 'docs-volume'
+              mountPath: '/app/docs'
+            }
+          ]
           resources: {
             cpu: json('0.5')
             memory: '1Gi'
@@ -371,6 +377,13 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
           }
         ]
       }
+      volumes: [
+        {
+          name: 'docs-volume'
+          storageName: 'engram-docs'
+          storageType: 'AzureFile'
+        }
+      ]
     }
   }
 }

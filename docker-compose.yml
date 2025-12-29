@@ -195,6 +195,7 @@ services:
       AZURE_AI_KEY: ${AZURE_AI_KEY:-}
     volumes:
       - ./backend:/app/backend
+      - ./docs:/app/docs
     healthcheck:
       test: [ "CMD", "python", "-c", "import sys" ]
       interval: 30s

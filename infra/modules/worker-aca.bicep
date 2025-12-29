@@ -177,6 +177,16 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
               name: 'GEMINI_API_KEY'
               secretRef: 'gemini-api-key'
             }
+            {
+              name: 'ONEDRIVE_DOCS_PATH' # Ensure app uses the mounted path
+              value: 'docs'
+            }
+          ]
+          volumeMounts: [
+            {
+              volumeName: 'docs-volume'
+              mountPath: '/app/docs'
+            }
           ]
           resources: {
             cpu: json('0.5')
@@ -190,6 +200,13 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
         minReplicas: 1
         maxReplicas: 1
       }
+      volumes: [
+        {
+          name: 'docs-volume'
+          storageName: 'engram-docs'
+          storageType: 'AzureFile'
+        }
+      ]
     }
   }
 }
