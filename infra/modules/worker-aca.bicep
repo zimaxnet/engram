@@ -178,7 +178,7 @@ resource workerApp 'Microsoft.App/containerApps@2023-05-01' = {
               secretRef: 'gemini-api-key'
             }
             {
-              name: 'ONEDRIVE_DOCS_PATH' # Ensure app uses the mounted path
+              name: 'ONEDRIVE_DOCS_PATH' // Ensure app uses the mounted path
               value: 'docs'
             }
           ]
