@@ -7,14 +7,14 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useMsal, useIsAuthenticated, useAccount } from '@azure/msal-react';
 import type { AccountInfo } from '@azure/msal-browser';
-import { InteractionStatus } from '@azure/msal-browser';
+import { InteractionStatus, type PopupRequest } from '@azure/msal-browser';
 import { loginRequest, getAccessToken } from './authConfig';
 
 interface AuthContextType {
     isAuthenticated: boolean;
     isLoading: boolean;
     user: AccountInfo | null;
-    login: () => Promise<void>;
+    login: (provider?: 'google' | 'microsoft') => Promise<void>;
     logout: () => Promise<void>;
     getToken: () => Promise<string | null>;
 }
@@ -49,10 +49,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
     }, [inProgress]);
 
-    const login = useCallback(async () => {
+    const login = useCallback(async (provider?: 'google' | 'microsoft') => {
         try {
+            const request: PopupRequest = { ...loginRequest };
+
+            // Add domain hint for Google if requested
+            if (provider === 'google') {
+                // specific syntax depends on Entra configuration, but domain_hint is standard for OIDC federation
+                request.extraQueryParameters = {
+                    ...request.extraQueryParameters,
+                    domain_hint: 'google'
+                };
+            }
+
             // Use popup for better UX (redirect also works)
-            await instance.loginPopup(loginRequest);
+            await instance.loginPopup(request);
         } catch (error) {
             console.error('[Auth] Login failed:', error);
             throw error;

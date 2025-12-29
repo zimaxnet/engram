@@ -89,3 +89,22 @@
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+
+.login-button.google {
+    background: white;
+    padding: 0;
+    width: 34px;
+    height: 34px;
+    min-width: 34px; /* prevent shrinking */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-right: -0.5rem; /* slight overlap or closer spacing */
+}
+
+.login-button.google:hover {
+    background: #f8f9fa;
+    transform: scale(1.05); /* override translate */
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
