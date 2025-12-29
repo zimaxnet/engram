@@ -133,11 +133,27 @@ async def ingest_wiki_page(memory_client: ZepMemoryClient, slug: str, url: str) 
         )
         
         print(f"  ✅ Ingested {len(content)} characters")
-        return True
-        
+
     except Exception as e:
         print(f"  ❌ Failed to ingest: {e}")
         return False
+
+    # --- Knowledge Graph Ingestion ---
+    try:
+        from backend.core.graph_client import graph_client
+        
+        # Add Page Node
+        graph_client.graph.add_node(title, type="wiki_page", url=url)
+        
+        # Add Topic Edges
+        for topic in ["wiki", "documentation", slug.replace("-", " ")]:
+            graph_client.add_triplet(title, "has_topic", topic)
+            
+        print(f"  🕸️  Added to Knowledge Graph: {title}")
+    except Exception as e:
+        print(f"  ❌ Graph ingestion failed: {e}")
+        
+    return True
 
 
 async def main():

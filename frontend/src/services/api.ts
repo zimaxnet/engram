@@ -204,6 +204,17 @@ export class ApiClient {
     }>(`/memory/graph${params.toString() ? `?${params.toString()}` : ''}`)
   }
 
+  async getGraphDump() {
+    return this.request<{
+      directed: boolean
+      multigraph: boolean
+      graph: Record<string, unknown>
+      nodes: Array<{ id: string;[key: string]: unknown }>
+      edges: Array<{ source: string; target: string;[key: string]: unknown }> // Using 'edges' instead of 'links' for now, checking behavior
+      links: Array<{ source: string; target: string;[key: string]: unknown }> // NetworkX usually returns "links"
+    }>('/graph/dump')
+  }
+
   async getEpisode(episodeId: string) {
     return this.request<{
       id: string
@@ -577,6 +588,7 @@ export const getEpisode = (episodeId: string) => apiClient.getEpisode(episodeId)
 
 export const addFact = (content: string, metadata?: Record<string, unknown>) => apiClient.addFact(content, metadata)
 export const getMemoryGraph = (query?: string) => apiClient.getMemoryGraph(query)
+export const getGraphDump = () => apiClient.getGraphDump()
 
 export const listWorkflows = (status?: string, limit?: number, offset?: number) => apiClient.listWorkflows(status, limit, offset);
 export const getWorkflow = (workflowId: string) => apiClient.getWorkflow(workflowId);
