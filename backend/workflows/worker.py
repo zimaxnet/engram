@@ -26,6 +26,7 @@ from backend.workflows.activities import (
 from backend.workflows.story_activities import (
     generate_story_activity,
     generate_diagram_activity,
+    generate_image_activity,
     save_artifacts_activity,
     enrich_story_memory_activity,
 )
@@ -100,6 +101,7 @@ async def run_worker():
             # Story activities
             generate_story_activity,
             generate_diagram_activity,
+            generate_image_activity,
             save_artifacts_activity,
             enrich_story_memory_activity,
         ],

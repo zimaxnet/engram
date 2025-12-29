@@ -53,6 +53,7 @@ class StoryListItem(BaseModel):
     topic: str
     created_at: str
     story_path: str
+    image_path: Optional[str] = None
 
 
 # =============================================================================
@@ -327,11 +328,18 @@ async def list_stories(user: SecurityContext = Depends(get_current_user)):
     stories = []
     for story_file in sorted(stories_dir.glob("*.md"), reverse=True):
         story_id = story_file.stem
+        
+        # Check for image
+        image_path_str = None
+        if (stories_dir.parent / "images" / f"{story_id}.png").exists():
+            image_path_str = f"/api/v1/images/{story_id}.png"
+            
         stories.append(StoryListItem(
             story_id=story_id,
             topic=story_id.split("-", 2)[-1].replace("-", " ") if "-" in story_id else story_id,
             created_at=story_file.stat().st_mtime.__str__(),
             story_path=str(story_file),
+            image_path=image_path_str
         ))
     
     return stories

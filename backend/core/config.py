@@ -112,7 +112,7 @@ class Settings(BaseSettings):
     # ==========================================================================
     # Microsoft Entra ID (Authentication)
     # ==========================================================================
-    azure_tenant_id: Optional[str] = Field(None, alias="AZURE_TENANT_ID")
+    azure_tenant_id: Optional[str] = Field(None, alias="AZURE_AD_TENANT_ID")
     # Entra/App Registration client ID (audience validation for API tokens)
     # NOTE: This is intentionally NOT AZURE_CLIENT_ID, because that env var is
     # used by Azure SDKs (DefaultAzureCredential) to select a user-assigned

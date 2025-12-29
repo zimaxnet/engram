@@ -11,4 +11,12 @@ export default defineConfig({
     globals: true,
     css: true,
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8082',
+        changeOrigin: true,
+      },
+    },
+  },
 })

@@ -8,6 +8,7 @@ interface StoryItem {
     topic: string;
     created_at: string;
     story_path: string;
+    image_path?: string;
 }
 
 export function StoriesPage() {
@@ -48,7 +49,13 @@ export function StoriesPage() {
                         className="story-card"
                         onClick={() => navigate(`/stories/${story.story_id}`)}
                     >
-                        <div className="story-icon">📜</div>
+                        <div className="story-icon">
+                            {story.image_path ? (
+                                <img src={story.image_path} alt="" className="story-thumbnail-mini" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />
+                            ) : (
+                                "📜"
+                            )}
+                        </div>
                         <div className="story-content">
                             <h3>{story.topic}</h3>
                             <span className="story-date">

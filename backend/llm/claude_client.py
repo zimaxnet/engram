@@ -126,10 +126,12 @@ class ClaudeClient:
         if not endpoint or not api_key:
             raise ValueError("APIM fallback not configured. Set AZURE_AI_ENDPOINT and AZURE_AI_KEY.")
         
-        # Build URL - handle trailing slash
-        # Note: OpenAI-compatible v1 endpoints don't need api-version
-        base = endpoint.rstrip("/")
-        url = f"{base}/chat/completions"
+        # Build URL using standard Azure OpenAI pattern
+        # Remove any existing /openai/v1 suffix to get the raw base
+        base = endpoint.rstrip("/").replace("/openai/v1", "")
+        
+        # Construct standard URL: https://{base}/openai/deployments/{deployment}/chat/completions?api-version={api_version}
+        url = f"{base}/openai/deployments/{deployment}/chat/completions?api-version={api_version}"
         
         # Convert Claude messages to OpenAI format
         openai_messages = []
@@ -139,6 +141,7 @@ class ClaudeClient:
             openai_messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
         
         payload = {
+            # In standard Azure OpenAI, model is ignored in body, but we keep it for compatibility
             "model": deployment,
             "messages": openai_messages,
             "max_tokens": self.max_tokens,
@@ -153,19 +156,26 @@ class ClaudeClient:
         logger.info(f"ClaudeClient: Fallback to APIM gateway at {url}")
         
         async with httpx.AsyncClient(timeout=self.timeout) as client:
-            response = await client.post(url, headers=headers, json=payload)
-            response.raise_for_status()
-            data = response.json()
-            
-            # Extract from OpenAI format
-            choices = data.get("choices", [])
-            if choices:
-                result = choices[0].get("message", {}).get("content", "")
-            else:
-                result = ""
-            
-            logger.info(f"ClaudeClient: APIM fallback response received, length={len(result)}")
-            return result
+            try:
+                response = await client.post(url, headers=headers, json=payload)
+                response.raise_for_status()
+                data = response.json()
+                
+                # Extract from OpenAI format
+                choices = data.get("choices", [])
+                if choices:
+                    result = choices[0].get("message", {}).get("content", "")
+                else:
+                    result = ""
+                
+                logger.info(f"ClaudeClient: APIM fallback response received, length={len(result)}")
+                return result
+            except httpx.HTTPStatusError as e:
+                logger.error(f"ClaudeClient: APIM error {e.response.status_code}: {e.response.text}")
+                raise
+            except Exception as e:
+                logger.error(f"ClaudeClient: APIM fallback error: {e}")
+                raise
 
     async def generate_story(
         self,
