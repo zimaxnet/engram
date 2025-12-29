@@ -279,7 +279,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             }
             {
               name: 'AUTH_REQUIRED'
-              value: authRequired ? 'true' : 'false'
+              value: authRequired ? 'true' : 'true' // Enterprise POC Requirement: Force Auth
             }
             // Sage Agent LLM keys
             {

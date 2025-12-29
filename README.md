@@ -11,29 +11,41 @@ Engram is an enterprise-grade AI platform that solves the **Memory Wall Problem*
 ### Local Development
 
 1. **Configure environment**:
+
    ```bash
    cp .env.example .env
    # Edit .env and add your Azure AI Foundry endpoint + key (AZURE_AI_ENDPOINT, AZURE_AI_KEY, AZURE_AI_DEPLOYMENT)
+   # Ensure AUTH_REQUIRED=false is set in .env for local development to bypass authentication
    ```
 
 2. **Start services**:
+
    ```bash
    docker-compose up -d postgres zep temporal temporal-ui
    ```
 
-3. **Start backend**:
+3. **Install dependencies**:
+
    ```bash
+   # Backend
    cd backend
    pip install -r requirements.txt
-   uvicorn backend.api.main:app --host 0.0.0.0 --port 8082 --reload
+   
+   # Frontend
+   cd ../frontend
+   npm install
    ```
 
-4. **Start frontend**:
+4. **Start Development Server**:
+
    ```bash
-   cd frontend
-   npm install
+   # From root directory
    npm run dev
    ```
+
+   *Alternatively, run services individually:*
+   - **Backend**: `npm run start:backend` (Runs on port 8082)
+   - **Frontend**: `npm run start:frontend` (Runs on port 5173)
 
 5. **Open browser**: `http://localhost:5173`
 
@@ -43,6 +55,7 @@ See [Local Testing Guide](docs/local-testing.md) for detailed instructions.
 
 1. **Set up GitHub Secrets** (see [GitHub Secrets Guide](docs/github-secrets.md))
 2. **Deploy infrastructure**:
+
    ```bash
    az group create --name engram-rg --location eastus
    az deployment group create \
@@ -50,6 +63,7 @@ See [Local Testing Guide](docs/local-testing.md) for detailed instructions.
      --template-file infra/main.bicep \
      --parameters postgresPassword='<secure-password>' adminObjectId='<your-object-id>'
    ```
+
 3. **CI/CD**: Push to `main` branch to trigger automatic deployment
 
 See [Deployment Guide](docs/deployment.md) for full details.
@@ -76,12 +90,16 @@ See [Deployment Guide](docs/deployment.md) for full details.
 ## System Capabilities
 
 ### 1. Document Ingestion (ETL)
+
 Upload documents (PDF, DOCX, TXT) to the Knowledge Graph.
+
 - **Endpoint**: `POST /api/v1/etl/ingest`
 - **Process**: Partitioning -> Chunking -> Embedding -> Zep Memory
 
 ### 2. Episodic Memory
+
 The agent "remembers" past conversations and facts.
+
 - **View Transcripts**: See full history of past episodes.
 - **Search**: Hybrid search across semantic facts and episodic history.
 

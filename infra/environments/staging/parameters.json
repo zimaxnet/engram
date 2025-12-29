@@ -11,6 +11,21 @@
     "location": {
       "value": "[resourceGroup().location]"
     },
+    "azureAdTenantId": {
+      "value": "engramai.onmicrosoft.com"
+    },
+    "azureAdClientId": {
+      "value": "94d50189-d4de-4b80-8804-2f3bf2e2d14f"
+    },
+    "azureAdExternalId": {
+      "value": true
+    },
+    "azureAdExternalDomain": {
+      "value": "engramai"
+    },
+    "authRequired": {
+      "value": true
+    },
     "postgresSku": {
       "value": "B1ms"
     },
@@ -58,4 +73,3 @@
     }
   }
 }
-
