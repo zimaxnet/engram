@@ -274,6 +274,37 @@ resource storage 'Microsoft.Storage/storageAccounts@2021-09-01' = {
   }
 }
 
+// =============================================================================
+// File Share for Persistence (Docs/Graph)
+// =============================================================================
+resource fileService 'Microsoft.Storage/storageAccounts/fileServices@2021-09-01' = {
+  parent: storage
+  name: 'default'
+}
+
+resource docsShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2021-09-01' = {
+  parent: fileService
+  name: 'docs'
+  properties: {
+    accessTier: 'TransactionOptimized'
+    shareQuota: 5120
+  }
+}
+
+// Link File Share to ACA Environment
+resource acaDocsStorage 'Microsoft.App/managedEnvironments/storages@2022-03-01' = {
+  parent: acaEnv
+  name: 'engram-docs'
+  properties: {
+    azureFile: {
+      accountName: storage.name
+      accountKey: storage.listKeys().keys[0].value
+      shareName: 'docs'
+      accessMode: 'ReadWrite'
+    }
+  }
+}
+
 // RBAC: grant blob contributor to backend/worker identities
 // RBAC: grant blob contributor to backend/worker identities
 resource storageBlobContributorBackend 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
@@ -462,6 +493,9 @@ var zepApiUrl = zepModule.outputs.zepApiUrl
 // =============================================================================
 module backendModule 'modules/backend-aca.bicep' = {
   name: 'backend'
+  dependsOn: [
+    acaDocsStorage
+  ]
   params: {
     location: location
     acaEnvName: acaEnv.name
@@ -497,6 +531,9 @@ module backendModule 'modules/backend-aca.bicep' = {
 // =============================================================================
 module workerModule 'modules/worker-aca.bicep' = {
   name: 'worker'
+  dependsOn: [
+    acaDocsStorage
+  ]
   params: {
     location: location
     acaEnvId: acaEnv.id
