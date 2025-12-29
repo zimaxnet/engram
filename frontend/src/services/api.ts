@@ -5,6 +5,8 @@
  * Handles authentication, error handling, and request/response transformation
  */
 
+import { getAccessToken } from '../auth/authConfig'
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8082'
 const API_VERSION = '/api/v1'
 
@@ -50,8 +52,8 @@ export class ApiClient {
       headers['Content-Type'] = 'application/json'
     }
 
-    // Add auth token if available
-    const token = this.getAuthToken()
+    // Add auth token if available (from MSAL)
+    const token = await this.getAuthToken()
     if (token) {
       headers['Authorization'] = `Bearer ${token}`
     }
@@ -85,16 +87,14 @@ export class ApiClient {
     }
   }
 
-  private getAuthToken(): string | null {
-    // In production, get from auth context or localStorage
+  private async getAuthToken(): Promise<string | null> {
+    // Get token from MSAL (Entra External ID)
     try {
-      if (typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function') {
-        return localStorage.getItem('auth_token')
-      }
-    } catch (e) {
-      // ignore in test environments without localStorage
+      return await getAccessToken()
+    } catch (error) {
+      console.warn('[API] Failed to get access token:', error)
+      return null
     }
-    return null
   }
 
   // Chat API

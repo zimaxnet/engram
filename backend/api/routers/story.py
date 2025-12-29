@@ -13,7 +13,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from backend.api.middleware.rbac import get_current_user
+from backend.api.middleware.auth import get_current_user
 from backend.core import SecurityContext, EnterpriseContext, get_settings
 from backend.agents.sage import sage
 
