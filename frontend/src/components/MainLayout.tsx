@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { TreeNav } from './TreeNav/TreeNav';
 import { AGENTS, type AgentId } from '../types';
 import { ConceptExplainer } from './ConceptExplainer/ConceptExplainer';
+import { UserMenu } from './UserMenu/UserMenu';
 import '../App.css';
 
 interface MainLayoutProps {
@@ -49,8 +50,8 @@ export function MainLayout({
                             <option value="model-router">Model Router</option>
                         </select>
                     </div>
-                    <div className="user-avatar">
-                        <span>👤</span>
+                    <div className="user-menu-wrapper">
+                        <UserMenu />
                     </div>
                 </div>
             </header>
