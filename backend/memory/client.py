@@ -127,10 +127,25 @@ class ZepMemoryClient:
                 "user_id": user_id,
                 "metadata": metadata or {}
             }
-            result = await self._request("POST", "/api/v1/sessions", json=payload)
-            if result:
-                logger.info(f"Created Zep session: {session_id}")
-            return result or payload
+            try:
+                result = await self._request("POST", "/api/v1/sessions", json=payload)
+                if result:
+                    logger.info(f"Created Zep session: {session_id}")
+                return result or payload
+            except Exception as e:
+                # Handle missing user error automatically
+                if "user does not exist" in str(e).lower():
+                    logger.warning(f"Zep user {user_id} not found. Retrying session creation without user_id.")
+                    payload["user_id"] = None
+                    # Keep original user_id in metadata for reference
+                    payload["metadata"]["original_user_id"] = user_id
+                    
+                    result = await self._request("POST", "/api/v1/sessions", json=payload)
+                    if result:
+                        logger.info(f"Created Zep session (anonymous): {session_id}")
+                    return result or payload
+                raise e
+
         except Exception as e:
             logger.error(f"Failed to get/create session {session_id}: {e}")
             # Fallback to payload so app doesn't crash, but memory interactions will fail

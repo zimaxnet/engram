@@ -217,7 +217,13 @@ async def delegate_to_sage(topic: str, context: Optional[str] = None) -> str:
         )
         
         if result.success:
-            return f"Delegated to Sage. He has created:\n\n**Story ID**: {result.story_id}\n\n{result.story_content[:200]}...\n\n[View Full Story & Visual](/stories/{result.story_id})"
+            response = f"Delegated to Sage. He has created:\n\n**Story ID**: {result.story_id}\n\n{result.story_content[:200]}...\n\n[View Full Story & Visual](/stories/{result.story_id})"
+            
+            # Add image display if requested
+            if context and ("image" in context.lower() or "visual" in context.lower()):
+                 response += f"\n\n![Visual](/api/v1/images/{result.story_id}.png)"
+                 
+            return response
         else:
             return f"Failed to delegate to Sage: {result.error}"
             
