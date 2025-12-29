@@ -81,3 +81,26 @@ async def readiness_check():
 @router.get("/api/v1/ready", response_model=ReadinessResponse, include_in_schema=False)
 async def readiness_check_v1():
     return await readiness_check()
+
+
+@router.get("/auth-status")
+async def auth_status():
+    """Check authentication status and configuration - no auth required for diagnostics"""
+    import os
+    from backend.api.middleware.auth import _AUTH_REQUIRED
+    from backend.core import get_settings
+    
+    settings = get_settings()
+    env_auth_required = os.environ.get("AUTH_REQUIRED", "").strip().lower()
+    
+    return {
+        "status": "ok",
+        "auth_config": {
+            "auth_required_env": env_auth_required,
+            "auth_required_setting": str(settings.auth_required),
+            "auth_required_module": _AUTH_REQUIRED,
+            "environment": settings.environment,
+            "bypass_active": env_auth_required in ("false", "0", "no", "off") or 
+                           (not settings.auth_required or str(settings.auth_required).lower() == "false"),
+        }
+    }

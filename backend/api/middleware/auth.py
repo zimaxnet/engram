@@ -278,21 +278,35 @@ def get_auth() -> EntraIDAuth:
 def _get_auth_required() -> bool:
     """Helper to check AUTH_REQUIRED setting - called at module load time"""
     try:
+        # Check environment variable directly first (most reliable)
+        env_value = os.environ.get("AUTH_REQUIRED", "").strip().lower()
+        if env_value in ("false", "0", "no", "off"):
+            logger.info("🔐 AUTH_REQUIRED=false detected from environment variable - auth bypass enabled")
+            return False
+        
+        # Fallback to settings
         settings = get_settings()
         auth_required_value = settings.auth_required
+        
         # Check both bool False and string "false"
-        return bool(auth_required_value) and str(auth_required_value).lower() != "false"
+        is_required = bool(auth_required_value) and str(auth_required_value).lower() != "false"
+        
+        if not is_required:
+            logger.info(f"🔐 AUTH_REQUIRED=false detected from settings (value={auth_required_value}) - auth bypass enabled")
+        
+        return is_required
     except Exception as e:
         logger.warning(f"Failed to read AUTH_REQUIRED setting: {e}, defaulting to False (bypass)")
         return False
 
 # Check auth requirement at module load time
 _AUTH_REQUIRED = _get_auth_required()
-logger.info(f"🔐 Auth module loaded: AUTH_REQUIRED={_AUTH_REQUIRED}")
+logger.info(f"🔐 Auth module loaded: AUTH_REQUIRED={_AUTH_REQUIRED} (module-level check)")
 
 # Create a no-op dependency for when auth is disabled
-async def _no_auth_dependency() -> None:
-    """No-op dependency when auth is disabled"""
+# This completely bypasses HTTPBearer evaluation
+async def _no_auth_dependency() -> Optional[HTTPAuthorizationCredentials]:
+    """No-op dependency when auth is disabled - returns None to bypass HTTPBearer"""
     return None
 
 async def get_current_user(
@@ -313,15 +327,26 @@ async def get_current_user(
             return {"user": user.user_id}
     """
     # CRITICAL: Check AUTH_REQUIRED FIRST - before any security scheme logic
+    # Check both environment variable and settings for maximum reliability
+    env_auth_required = os.environ.get("AUTH_REQUIRED", "").strip().lower()
     settings = get_settings()
     auth_required_value = settings.auth_required
     
+    # Determine if auth is required (check both sources)
+    is_auth_required = True
+    if env_auth_required in ("false", "0", "no", "off"):
+        is_auth_required = False
+        logger.info("🔐 AUTH_REQUIRED=false from environment variable - bypassing auth")
+    elif not auth_required_value or str(auth_required_value).lower() == "false":
+        is_auth_required = False
+        logger.info(f"🔐 AUTH_REQUIRED=false from settings (value={auth_required_value}) - bypassing auth")
+    
     # ALWAYS log for debugging
-    logger.info(f"🔐 Auth check: auth_required={auth_required_value} (type={type(auth_required_value).__name__}), env={settings.environment}")
+    logger.info(f"🔐 Auth check: env={env_auth_required}, settings={auth_required_value}, required={is_auth_required}, environment={settings.environment}")
     
     # If auth is disabled, return POC user IMMEDIATELY (bypasses all security)
-    if not auth_required_value or str(auth_required_value).lower() == "false":
-        logger.info("✅✅✅ Auth bypass enabled (AUTH_REQUIRED=false) - returning POC user")
+    if not is_auth_required:
+        logger.info("✅✅✅ Auth bypass enabled - returning POC user")
         return SecurityContext(
             user_id="poc-user",
             tenant_id=settings.azure_tenant_id or "poc-tenant",
