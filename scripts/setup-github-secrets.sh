@@ -191,6 +191,44 @@ if [ -n "$OPENAI_KEY" ]; then
     fi
 fi
 
+# =============================================================================
+# Entra ID Secrets (Required for Frontend Auth)
+# =============================================================================
+echo ""
+echo "Entra ID Configuration (Required for Enterprise POC)"
+echo "----------------------------------------------------"
+
+read -p "Enter Azure AD Tenant ID [engramai.onmicrosoft.com]: " AAD_TENANT_ID
+AAD_TENANT_ID=${AAD_TENANT_ID:-engramai.onmicrosoft.com}
+
+read -p "Enter Azure AD Client ID (Frontend App ID): " AAD_CLIENT_ID
+
+read -p "Enter External Domain (e.g., engramai) [engramai]: " AAD_DOMAIN
+AAD_DOMAIN=${AAD_DOMAIN:-engramai}
+
+if [ "$USE_GH_CLI" = true ]; then
+    echo "$AAD_TENANT_ID" | gh secret set AZURE_AD_TENANT_ID
+    echo -e "${GREEN}✓ Set AZURE_AD_TENANT_ID${NC}"
+    
+    if [ -n "$AAD_CLIENT_ID" ]; then
+        echo "$AAD_CLIENT_ID" | gh secret set AZURE_AD_CLIENT_ID
+        echo -e "${GREEN}✓ Set AZURE_AD_CLIENT_ID${NC}"
+    else
+        echo -e "${RED}Warning: AZURE_AD_CLIENT_ID not set! Frontend auth will fail.${NC}"
+    fi
+    
+    echo "$AAD_DOMAIN" | gh secret set AZURE_AD_EXTERNAL_DOMAIN
+    echo -e "${GREEN}✓ Set AZURE_AD_EXTERNAL_DOMAIN${NC}"
+    
+    echo "true" | gh secret set AZURE_AD_EXTERNAL_ID
+    echo -e "${GREEN}✓ Set AZURE_AD_EXTERNAL_ID=true${NC}"
+else
+    echo -e "${YELLOW}→ AZURE_AD_TENANT_ID: ${AAD_TENANT_ID}${NC}"
+    echo -e "${YELLOW}→ AZURE_AD_CLIENT_ID: ${AAD_CLIENT_ID}${NC}"
+    echo -e "${YELLOW}→ AZURE_AD_EXTERNAL_DOMAIN: ${AAD_DOMAIN}${NC}"
+    echo -e "${YELLOW}→ AZURE_AD_EXTERNAL_ID: true${NC}"
+fi
+
 # Static Web Apps token (optional, will be set after first deployment)
 echo ""
 echo -e "${YELLOW}Note: AZURE_STATIC_WEB_APPS_API_TOKEN will be set after first deployment${NC}"
