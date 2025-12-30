@@ -7,7 +7,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useMsal, useIsAuthenticated, useAccount } from '@azure/msal-react';
 import type { AccountInfo } from '@azure/msal-browser';
-import { InteractionStatus, type PopupRequest } from '@azure/msal-browser';
+import { InteractionStatus, type RedirectRequest } from '@azure/msal-browser';
 import { loginRequest, getAccessToken } from './authConfig';
 
 interface AuthContextType {
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const login = useCallback(async (provider?: 'google' | 'microsoft') => {
         try {
-            const request: PopupRequest = { ...loginRequest };
+            const request: RedirectRequest = { ...loginRequest };
 
             // Add domain hint for Google if requested
             // For CIAM federation, 'google.com' is often the correct hint
@@ -64,8 +64,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 };
             }
 
-            // Use popup for better UX
-            await instance.loginPopup(request);
+            // Use redirect to avoid COOP/Popup blocking issues
+            await instance.loginRedirect(request);
         } catch (error) {
             console.error('[Auth] Login failed:', error);
             throw error;
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const logout = useCallback(async () => {
         try {
-            await instance.logoutPopup({
+            await instance.logoutRedirect({
                 postLogoutRedirectUri: window.location.origin,
             });
         } catch (error) {
@@ -89,12 +89,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const signUp = useCallback(async () => {
         try {
-            const request: PopupRequest = {
+            const request: RedirectRequest = {
                 ...loginRequest,
                 // Use the sign-up/sign-in user flow prompt
                 prompt: 'create',
             };
-            await instance.loginPopup(request);
+            await instance.loginRedirect(request);
         } catch (error) {
             console.error('[Auth] Sign up failed:', error);
             throw error;
