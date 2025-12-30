@@ -3,6 +3,9 @@
   max-width: 1200px;
   margin: 0 auto;
   color: var(--color-text);
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .stories-header {

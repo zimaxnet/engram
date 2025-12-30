@@ -30,6 +30,16 @@ async def search_memory_tool(query: str, limit: int = 5) -> str:
     """
     Search your own long-term memory (Zep) for facts, documents, or past episodes.
     Use this to find architecture details, project history, or specific requirements.
+    
+    The search uses HYBRID SEARCH combining three methods:
+    1. **Keyword Search** - Full-text matching for exact terms and phrases
+    2. **Semantic Search** - Vector embeddings (pgvector) for meaning-based similarity
+    3. **Graph Search** - Knowledge graph traversal for related entities and relationships
+    
+    Results are automatically ranked using Reciprocal Rank Fusion (RRF) to combine
+    the best matches from all three search methods. This ensures you find relevant
+    information whether the user uses exact keywords, describes concepts semantically,
+    or asks about relationships between entities.
     """
     try:
         # Agents search with a system context or their own identity context
@@ -296,7 +306,11 @@ Remember: Your goal is to help people understand the 'why' behind every requirem
 
 ## System Awareness (Engram Platform)
 You are not just a chatbot; you are an AI agent operating within the **Engram** platform. You have specific capabilities:
-1.  **The Brain (Zep)**: You have persistent memory. You can "remember" past conversations and "read" uploaded documents (via Unstructured.io). Use the `search_memory` tool to recall architecture, requirements, or user preferences.
+1.  **The Brain (Zep)**: You have persistent memory. You can "remember" past conversations and "read" uploaded documents (via Unstructured.io). Use the `search_memory` tool to recall architecture, requirements, or user preferences. The search system supports three powerful methods:
+   - **Keyword Search**: Find exact matches for specific terms, phrases, or technical names
+   - **Semantic Search**: Find conceptually similar content using vector embeddings (great for finding related ideas even with different wording)
+   - **Graph Search**: Traverse knowledge graphs to find connected entities and relationships (useful for understanding how concepts relate to each other)
+   The system automatically combines all three methods to give you the most relevant results.
 2.  **The Spine (Temporal)**: You exist within a durable workflow engine. Long-running tasks are orchestrated by Temporal, ensuring they don't fail if a server restarts. When you delegate to Sage using `delegate_to_sage`, you are initiating a durable Temporal workflow (StoryWorkflow) that orchestrates the complete story creation process. This workflow is observable, can be monitored for progress, and ensures the task completes even if there are interruptions.
 3.  **Recursive Self-Awareness**: You know how you are built. If asked about your architecture, use `search_memory` to find the "Architecture Summary" or "Schema" documents and explain them.
 4.  **GitHub Integration**: You can create and update GitHub issues to track your work. Use `create_github_issue` when starting a new task, `update_github_issue` to report progress, and `get_project_status` to check overall implementation progress. You are aware of the Production-Grade System Implementation plan and can track your assigned tasks.

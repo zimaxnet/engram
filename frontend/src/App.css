@@ -133,6 +133,10 @@
 .column-center {
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: calc(100vh - 60px);
+  height: calc(100dvh - 60px);
 }
 
 .column-right {
