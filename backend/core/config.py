@@ -9,8 +9,9 @@ Centralizes all configuration with support for:
 
 from functools import lru_cache
 from typing import Optional
+import json
 
-from pydantic import Field, ConfigDict
+from pydantic import Field, ConfigDict, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -138,6 +139,22 @@ class Settings(BaseSettings):
     # ==========================================================================
     cors_origins: list[str] = Field(default=["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"], alias="CORS_ORIGINS")
     api_key_header: str = "X-API-Key"
+    
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v):
+        """Parse CORS_ORIGINS from JSON string or comma-separated list"""
+        if isinstance(v, str):
+            # Try parsing as JSON first
+            try:
+                parsed = json.loads(v)
+                if isinstance(parsed, list):
+                    return parsed
+            except (json.JSONDecodeError, ValueError):
+                pass
+            # Fall back to comma-separated
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
 
     # ==========================================================================
     # Observability
