@@ -130,9 +130,9 @@ jobs:
         env:
           VITE_API_URL: ${{ needs.deploy-infra.outputs.backend_url }}
           VITE_WS_URL: ${{ needs.deploy-infra.outputs.backend_url }}
-          VITE_AZURE_AD_TENANT_ID: ${{ secrets.AZURE_AD_TENANT_ID }}
-          VITE_AZURE_AD_CLIENT_ID: ${{ secrets.AZURE_AD_CLIENT_ID }}
-          VITE_AZURE_AD_TENANT_DOMAIN: ${{ secrets.AZURE_AD_EXTERNAL_DOMAIN }}
+          VITE_AZURE_AD_TENANT_ID: "6684288a-b805-4161-bf41-ba2121e51c90"
+          VITE_AZURE_AD_CLIENT_ID: "e32c6c40-615e-4a25-bc9e-944169e99697"
+          VITE_AZURE_AD_TENANT_DOMAIN: "6684288a-b805-4161-bf41-ba2121e51c90"
           VITE_REDIRECT_URI: https://engram.work
         run: |
           cd frontend
