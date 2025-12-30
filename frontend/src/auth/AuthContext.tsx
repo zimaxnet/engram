@@ -16,6 +16,7 @@ interface AuthContextType {
     user: AccountInfo | null;
     login: (provider?: 'google' | 'microsoft') => Promise<void>;
     logout: () => Promise<void>;
+    signUp: () => Promise<void>;
     getToken: () => Promise<string | null>;
 }
 
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
     user: null,
     login: async () => { },
     logout: async () => { },
+    signUp: async () => { },
     getToken: async () => null,
 });
 
@@ -54,15 +56,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
             const request: PopupRequest = { ...loginRequest };
 
             // Add domain hint for Google if requested
+            // For CIAM federation, 'google.com' is often the correct hint
             if (provider === 'google') {
-                // specific syntax depends on Entra configuration, but domain_hint is standard for OIDC federation
                 request.extraQueryParameters = {
                     ...request.extraQueryParameters,
-                    domain_hint: 'google'
+                    domain_hint: 'google.com'
                 };
             }
 
-            // Use popup for better UX (redirect also works)
+            // Use popup for better UX
             await instance.loginPopup(request);
         } catch (error) {
             console.error('[Auth] Login failed:', error);
@@ -85,12 +87,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return getAccessToken();
     }, []);
 
+    const signUp = useCallback(async () => {
+        try {
+            const request: PopupRequest = {
+                ...loginRequest,
+                // Use the sign-up/sign-in user flow prompt
+                prompt: 'create',
+            };
+            await instance.loginPopup(request);
+        } catch (error) {
+            console.error('[Auth] Sign up failed:', error);
+            throw error;
+        }
+    }, [instance]);
+
     const value: AuthContextType = {
         isAuthenticated,
         isLoading,
         user: account,
         login,
         logout,
+        signUp,
         getToken,
     };
 

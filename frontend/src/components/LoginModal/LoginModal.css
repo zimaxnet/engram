@@ -1,0 +1,210 @@
+/* Login Modal Styles */
+
+.login-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.login-modal {
+    background: linear-gradient(145deg, rgba(30, 35, 50, 0.95), rgba(20, 25, 35, 0.98));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 2.5rem;
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+    box-shadow:
+        0 25px 50px -12px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+    animation: slideUp 0.3s ease;
+    /* Center self if parent flex fails for some reason */
+    margin: auto;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.login-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary, #9ca3af);
+    font-size: 1.5rem;
+    line-height: 1;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-modal-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.login-modal-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.login-modal-logo {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.login-modal-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-color, #f3f4f6);
+    margin: 0 0 0.5rem;
+}
+
+.login-modal-header p {
+    font-size: 0.9rem;
+    color: var(--text-secondary, #9ca3af);
+    margin: 0;
+}
+
+.login-modal-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.login-provider-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.login-provider-button svg {
+    flex-shrink: 0;
+}
+
+.login-provider-button.google {
+    background: white;
+    color: #1f2937;
+}
+
+.login-provider-button.google:hover {
+    background: #f3f4f6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
+}
+
+.login-provider-button.microsoft {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-color, #f3f4f6);
+}
+
+.login-provider-button.microsoft:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.login-modal-divider {
+    display: flex;
+    align-items: center;
+    margin: 1.5rem 0;
+    color: var(--text-secondary, #6b7280);
+    font-size: 0.8rem;
+}
+
+.login-modal-divider::before,
+.login-modal-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.login-modal-divider span {
+    padding: 0 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.login-modal-signup {
+    text-align: center;
+}
+
+.login-modal-signup p {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #9ca3af);
+    margin: 0 0 0.5rem;
+}
+
+.signup-link {
+    background: none;
+    border: none;
+    color: var(--accent-color, #00c8ff);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.signup-link:hover {
+    background: rgba(0, 200, 255, 0.1);
+    text-decoration: underline;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+    .login-modal {
+        margin: 1rem;
+        padding: 2rem 1.5rem;
+    }
+
+    .login-modal-header h2 {
+        font-size: 1.25rem;
+    }
+}
