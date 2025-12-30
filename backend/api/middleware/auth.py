@@ -94,11 +94,22 @@ class EntraIDAuth:
         return f"{self.authority}/discovery/v2.0/keys"
 
     @property
+    def valid_issuers(self) -> list[str]:
+        """Get list of valid issuers (both named and GUID-based)"""
+        issuers = []
+        # Named domain issuer (standard expectation)
+        issuers.append(f"https://{self.tenant_domain}.ciamlogin.com/{self.tenant_id}/v2.0")
+        
+        # GUID-based issuer (what Azure actually sends)
+        # Construct assuming tenant_id IS the GUID (which it currently is in .env)
+        issuers.append(f"https://{self.tenant_id}.ciamlogin.com/{self.tenant_id}/v2.0")
+        
+        return issuers
+
+    @property
     def issuer(self) -> str:
-        if self._is_external_id:
-            # External ID issuer format
-            return f"https://{self.tenant_domain}.ciamlogin.com/{self.tenant_id}/v2.0"
-        return f"https://login.microsoftonline.com/{self.tenant_id}/v2.0"
+        # Keep for backward compatibility if needed, but validation handles lists
+        return self.valid_issuers[0]
 
     async def get_jwks(self) -> dict:
         """Fetch and cache JWKS (JSON Web Key Set) from Entra ID"""
@@ -205,15 +216,28 @@ class EntraIDAuth:
             token_audience = unverified_payload.get("aud")
             
             # Validate with the token's actual audience if it's in our valid list
-            if token_audience in valid_audiences:
+                # Validate with the token's actual audience if it's in our valid list
+                # Verify issuer manually to support multiple valid issuers (Name vs GUID)
                 payload = jwt.decode(
                     token,
                     signing_key,
                     algorithms=["RS256"],
                     audience=token_audience,
-                    issuer=self.issuer,
-                    options={"verify_at_hash": False},
+                    options={"verify_at_hash": False, "verify_iss": False},
                 )
+                
+                # Manual Issuer Check
+                token_issuer = payload.get("iss")
+                if token_issuer not in self.valid_issuers:
+                     logger.warning(
+                        f"Token issuer mismatch: token_iss={token_issuer}, "
+                        f"expected one of: {self.valid_issuers}"
+                    )
+                     raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail=f"Invalid token issuer: {token_issuer}",
+                        headers={"WWW-Authenticate": "Bearer"},
+                    )
             else:
                 # Log for debugging
                 logger.warning(
