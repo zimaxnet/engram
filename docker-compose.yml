@@ -139,7 +139,7 @@ services:
       TEMPORAL_TASK_QUEUE: engram-agents
 
       # Zep (Self-hosted)
-      ZEP_API_URL: http://zep:8000
+      ZEP_API_URL: ${ZEP_API_URL:-http://zep:8000}
       ZEP_API_KEY: ${ZEP_API_KEY:-}
       ZEP_MODE: selfhost
 
@@ -191,7 +191,7 @@ services:
       TEMPORAL_TASK_QUEUE: engram-agents
 
       # Zep (Self-hosted)
-      ZEP_API_URL: http://zep:8000
+      ZEP_API_URL: ${ZEP_API_URL:-http://zep:8000}
       ZEP_API_KEY: ${ZEP_API_KEY:-}
       ZEP_MODE: selfhost
 
