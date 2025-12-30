@@ -139,7 +139,7 @@ services:
       TEMPORAL_TASK_QUEUE: engram-agents
 
       # Zep (Self-hosted)
-      ZEP_API_URL: ${ZEP_API_URL:-http://zep:8000}
+      ZEP_API_URL: http://zep:8000
       ZEP_API_KEY: ${ZEP_API_KEY:-}
       ZEP_MODE: selfhost
 
@@ -147,6 +147,12 @@ services:
       AZURE_AI_ENDPOINT: ${AZURE_AI_ENDPOINT:-}
       AZURE_AI_PROJECT_NAME: ${AZURE_AI_PROJECT_NAME:-}
       AZURE_AI_KEY: ${AZURE_AI_KEY:-}
+
+      # VoiceLive
+      AZURE_VOICELIVE_ENDPOINT: ${AZURE_VOICELIVE_ENDPOINT}
+      AZURE_VOICELIVE_MODEL: ${AZURE_VOICELIVE_MODEL}
+      AZURE_VOICELIVE_VOICE: ${AZURE_VOICELIVE_VOICE}
+      MARCUS_VOICELIVE_VOICE: ${MARCUS_VOICELIVE_VOICE}
 
       # CORS
       CORS_ORIGINS: '["http://localhost:5173", "http://localhost:3000", "http://localhost:8080"]'
@@ -185,7 +191,7 @@ services:
       TEMPORAL_TASK_QUEUE: engram-agents
 
       # Zep (Self-hosted)
-      ZEP_API_URL: ${ZEP_API_URL:-http://zep:8000}
+      ZEP_API_URL: http://zep:8000
       ZEP_API_KEY: ${ZEP_API_KEY:-}
       ZEP_MODE: selfhost
 
