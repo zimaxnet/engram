@@ -103,11 +103,67 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Auto-scroll to bottom
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  // Track if we've loaded history for this sessionId to avoid reloading
+  const [loadedSessionId, setLoadedSessionId] = useState<string | null>(null)
 
+  // Reset loadedSessionId and messages when sessionId changes
+  useEffect(() => {
+    if (sessionIdProp && sessionIdProp !== loadedSessionId) {
+      // If we had a different session loaded, reset
+      if (loadedSessionId && sessionIdProp !== loadedSessionId) {
+        setLoadedSessionId(null)
+        // Reset to welcome message when switching sessions
+        setMessages([initialMessage])
+      }
+    }
+  }, [sessionIdProp, loadedSessionId, initialMessage])
+
+  // Load existing messages when sessionId is provided (e.g., from Episodes page)
+  useEffect(() => {
+    const loadSessionHistory = async () => {
+      // Only load if:
+      // 1. We have a sessionId prop (not a local one)
+      // 2. We haven't loaded history for this sessionId yet
+      // 3. We only have the welcome message
+      if (sessionIdProp && 
+          sessionIdProp !== loadedSessionId && 
+          messages.length === 1 && 
+          messages[0].role === 'assistant' &&
+          messages[0].id === initialMessage.id) {
+        try {
+          const { getEpisode } = await import('../../services/api')
+          const episodeData = await getEpisode(sessionIdProp)
+          
+          if (episodeData?.transcript && episodeData.transcript.length > 0) {
+            // Convert transcript to Message format
+            const loadedMessages: Message[] = episodeData.transcript.map((msg: { role: string; content: string }, index: number) => ({
+              id: `loaded-${sessionIdProp}-${index}`,
+              role: msg.role === 'user' ? 'user' : 'assistant',
+              content: msg.content,
+              agentId: msg.role === 'assistant' ? agent.id : undefined,
+              agentName: msg.role === 'assistant' ? agent.name : undefined,
+              timestamp: new Date(), // Transcript doesn't include timestamps, use current time
+            }))
+            
+            // Replace welcome message with loaded history
+            setMessages(loadedMessages)
+            setLoadedSessionId(sessionIdProp)
+          } else {
+            // No history found, mark as loaded to avoid retrying
+            setLoadedSessionId(sessionIdProp)
+          }
+        } catch (err) {
+          console.warn('Failed to load session history:', err)
+          // Mark as attempted to avoid retrying on every render
+          setLoadedSessionId(sessionIdProp)
+        }
+      }
+    }
+    
+    loadSessionHistory()
+  }, [sessionIdProp, agent.id, agent.name, loadedSessionId, messages, initialMessage.id])
+
+  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])

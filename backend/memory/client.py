@@ -608,9 +608,11 @@ class ZepMemoryClient:
         Called after each turn to update episodic memory.
         """
         session_id = context.episodic.conversation_id
+        user_id = context.security.user_id
 
         # Convert recent turns to Zep format
         messages = []
+        agent_id = None
         for turn in context.episodic.recent_turns[-2:]:  # Last 2 turns (user + assistant)
             messages.append(
                 {
@@ -622,6 +624,37 @@ class ZepMemoryClient:
                     },
                 }
             )
+            # Track the most recent agent_id from assistant turns
+            if turn.role.value == "assistant" and turn.agent_id:
+                agent_id = turn.agent_id
+
+        # Update session metadata with agent_id, summary, and turn_count
+        # This ensures episodes show correct agent and summary
+        session_metadata = {
+            "turn_count": context.episodic.total_turns,
+        }
+        
+        # Set agent_id if we have one
+        if agent_id:
+            session_metadata["agent_id"] = agent_id
+        
+        # Set summary if available, otherwise generate a simple one
+        if context.episodic.summary:
+            session_metadata["summary"] = context.episodic.summary
+        elif context.episodic.recent_turns:
+            # Generate a simple summary from recent turns
+            recent_content = " ".join([turn.content[:100] for turn in context.episodic.recent_turns[-3:]])
+            session_metadata["summary"] = recent_content[:200] + ("..." if len(recent_content) > 200 else "")
+        
+        # Ensure session exists and update metadata
+        try:
+            await self.get_or_create_session(
+                session_id=session_id,
+                user_id=user_id,
+                metadata=session_metadata
+            )
+        except Exception as e:
+            logger.warning(f"Failed to update session metadata for {session_id}: {e}")
 
         if messages:
             await self.add_memory(

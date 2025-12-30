@@ -60,9 +60,11 @@ export const loginRequest = {
     scopes: ['openid', 'profile', 'email', 'offline_access'],
 };
 
-// API scopes (if backend requires specific scopes)
+// API scopes for backend authentication
+// Based on app registration, the scope is: api://{CLIENT_ID}/user_impersonation
+// This matches the oauth2PermissionScopes defined in the Entra app registration
 export const apiRequest = {
-    scopes: [`api://${CLIENT_ID}/access_as_user`],
+    scopes: CLIENT_ID ? [`api://${CLIENT_ID}/user_impersonation`] : ['openid', 'profile', 'email'],
 };
 
 // Create MSAL instance
@@ -97,15 +99,23 @@ export async function getAccessToken(): Promise<string | null> {
     if (!account) return null;
 
     try {
-        const response = await msalInstance.acquireTokenSilent({
+        // Request token with API scope for backend authentication
+        // Use apiRequest if CLIENT_ID is set, otherwise fall back to loginRequest
+        const request = CLIENT_ID ? {
+            ...apiRequest,
+            account,
+        } : {
             ...loginRequest,
             account,
-        });
+        };
+        
+        const response = await msalInstance.acquireTokenSilent(request);
         return response.accessToken;
     } catch (error) {
         console.warn('[MSAL] Silent token acquisition failed, will redirect');
         // Fallback to interactive if silent fails
-        await msalInstance.acquireTokenRedirect(loginRequest);
+        const request = CLIENT_ID ? apiRequest : loginRequest;
+        await msalInstance.acquireTokenRedirect(request);
         return null;
     }
 }

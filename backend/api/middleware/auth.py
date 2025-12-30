@@ -183,14 +183,48 @@ class EntraIDAuth:
                 )
 
             # Decode and validate token
-            payload = jwt.decode(
+            # When requesting scope api://{CLIENT_ID}/user_impersonation, the token audience
+            # will be api://{CLIENT_ID}, not just the CLIENT_ID
+            # Accept both formats for flexibility
+            valid_audiences = []
+            if self.client_id:
+                # Client ID itself (for .default scope tokens)
+                valid_audiences.append(self.client_id)
+                # App ID URI format (for api://{CLIENT_ID}/user_impersonation scope tokens)
+                valid_audiences.append(f"api://{self.client_id}")
+            
+            # Decode without audience validation first to check the actual audience
+            unverified_payload = jwt.decode(
                 token,
                 signing_key,
                 algorithms=["RS256"],
-                audience=self.client_id,
-                issuer=self.issuer,
-                options={"verify_at_hash": False},
+                options={"verify_signature": True, "verify_aud": False, "verify_at_hash": False},
             )
+            
+            # Get the token's actual audience
+            token_audience = unverified_payload.get("aud")
+            
+            # Validate with the token's actual audience if it's in our valid list
+            if token_audience in valid_audiences:
+                payload = jwt.decode(
+                    token,
+                    signing_key,
+                    algorithms=["RS256"],
+                    audience=token_audience,
+                    issuer=self.issuer,
+                    options={"verify_at_hash": False},
+                )
+            else:
+                # Log for debugging
+                logger.warning(
+                    f"Token audience mismatch: token_aud={token_audience}, "
+                    f"expected one of: {valid_audiences}, client_id={self.client_id}"
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=f"Invalid token audience: {token_audience}. Expected one of: {valid_audiences}",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
 
             return TokenPayload(**payload)
 
