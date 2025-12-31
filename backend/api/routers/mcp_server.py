@@ -384,10 +384,14 @@ async def ingest_document(
     Args:
         content: The full document content (markdown, text, or HTML).
         title: Document title for identification.
+        user_id: User ID to attribute the document to (from SecurityContext.user_id).
+                 If not provided, uses system user (not recommended for production).
         doc_type: Type of document ('markdown', 'html', 'text').
         topics: Comma-separated topics (e.g., 'Architecture,Deployment').
         agent_id: Agent that primarily owns this knowledge ('elena', 'marcus').
         metadata: Optional JSON string with additional metadata.
+    
+    Note: When called from agents, user_id should be extracted from EnterpriseContext.security.user_id.
     """
     import json
     from backend.memory.client import ZepMemoryClient

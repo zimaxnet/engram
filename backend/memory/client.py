@@ -324,8 +324,11 @@ class ZepMemoryClient:
                 logger.debug(f"Semantic search unavailable (will use keyword only): {e}")
             
             # ---------- PHASE 2: Keyword Search via Zep ----------
-            # First, get all sessions to search globally
-            sessions_data = await self._request("GET", "/api/v1/sessions")
+            # Get sessions filtered by user_id if provided (CRITICAL for user isolation)
+            params = {}
+            if user_id:
+                params["user_id"] = user_id
+            sessions_data = await self._request("GET", "/api/v1/sessions", params=params)
             if not sessions_data:
                 logger.warning("No sessions found for memory search")
                 # Return semantic results if we have them
