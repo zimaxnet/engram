@@ -86,8 +86,13 @@ async def send_message(message: ChatMessage, user: SecurityContext = Depends(get
 
     # Route to agent and get response
     try:
+        # Handle legacy or frontend-specific 'model-router' ID
+        agent_id_param = message.agent_id
+        if agent_id_param == "model-router":
+            agent_id_param = None
+            
         response_text, updated_context, agent_id = await agent_chat(
-            query=message.content, context=context, agent_id=message.agent_id
+            query=message.content, context=context, agent_id=agent_id_param
         )
 
         # Update session

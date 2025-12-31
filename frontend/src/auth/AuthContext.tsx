@@ -91,8 +91,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         try {
             const request: RedirectRequest = {
                 ...loginRequest,
-                // Use the sign-up/sign-in user flow prompt
-                prompt: 'create',
+                // Use select_account to avoid issues with Google Federation parameters
+                prompt: 'select_account',
             };
             await instance.loginRedirect(request);
         } catch (error) {
