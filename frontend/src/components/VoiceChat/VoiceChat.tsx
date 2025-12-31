@@ -283,18 +283,28 @@ export default function VoiceChat({
         };
 
         ws.onerror = (e) => {
-          console.error('WebSocket error', e);
+          console.error('Voice WebSocket error', e);
           if (mounted) {
-            setError('Connection error');
+            setError('Voice connection error. Check console for details.');
             setConnectionStatus('error');
             onStatusChangeRef.current?.('error');
           }
         };
 
         ws.onclose = (event) => {
-          console.log('WebSocket closed', event.code, event.reason);
+          console.log('Voice WebSocket closed', event.code, event.reason);
           if (mounted) {
             setConnectionStatus('error');
+            if (event.code === 1008) {
+              const reason = event.reason || 'Invalid or missing token';
+              console.error(`Voice WebSocket authentication failed: ${reason}`);
+              setError(`Authentication failed: ${reason}. Please refresh and try again.`);
+            } else if (event.code !== 1000) {
+              // 1000 is normal closure, others are errors
+              const reason = event.reason || 'Unknown reason';
+              console.error(`Voice WebSocket closed with error: ${reason} (code: ${event.code})`);
+              setError(`Connection closed: ${reason}`);
+            }
             onStatusChangeRef.current?.('error');
           }
         };
