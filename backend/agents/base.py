@@ -65,6 +65,7 @@ class FoundryChatClient:
             self.url = f"{base}/openai/deployments/{deployment}/chat/completions?api-version={api_version}"
             self.model = None
             self.is_openai_compat = False
+        self.deployment = deployment  # Store deployment name for model-specific handling
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.timeout = timeout
@@ -114,11 +115,17 @@ class FoundryChatClient:
         if self.is_openai_compat and self.model:
             payload["model"] = self.model
         
-        # Only add temperature and max_tokens for non-OpenAI-compat endpoints
-        # (some models like gpt-5.1-chat don't support custom temperature)
+        # Only add temperature and max_tokens/max_completion_tokens for non-OpenAI-compat endpoints
+        # Note: gpt-5.1-chat and newer models:
+        #   - Use max_completion_tokens instead of max_tokens
+        #   - Do NOT support custom temperature (only default value 1)
         if not self.is_openai_compat:
-            payload["temperature"] = self.temperature
-            payload["max_tokens"] = self.max_tokens
+            # gpt-5.1-chat doesn't support custom temperature, so don't send it
+            # For older models, temperature is supported
+            if self.deployment and "gpt-5.1" not in self.deployment.lower():
+                payload["temperature"] = self.temperature
+            # Use max_completion_tokens for newer models (gpt-5.1-chat, etc.)
+            payload["max_completion_tokens"] = self.max_tokens
 
         logger.info(f"FoundryChatClient: Calling {self.url}")
         logger.info(f"FoundryChatClient: is_openai_compat={self.is_openai_compat}, model={self.model}")
