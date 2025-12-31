@@ -1,0 +1,200 @@
+{
+    "title": "Engram Authentication Flow - Post-Google Login Challenge",
+    "description": "Diagram showing why services fail AFTER successful Google login. The core issue is a 'Split Brain' between infrastructure configuration (Named Domain) and Azure token issuance (GUID Domain).",
+    "style": {
+        "theme": "enterprise-dark",
+        "palette": [
+            "#10B981",
+            "#3B82F6",
+            "#F59E0B",
+            "#EF4444",
+            "#8B5CF6"
+        ],
+        "annotations": "highlight-failures"
+    },
+    "actors": [
+        {
+            "id": "user",
+            "label": "User",
+            "icon": "person",
+            "position": "left"
+        },
+        {
+            "id": "frontend",
+            "label": "Engram Frontend",
+            "sublabel": "React + MSAL.js",
+            "icon": "browser",
+            "position": "left-center"
+        },
+        {
+            "id": "azure_ciam",
+            "label": "Azure CIAM",
+            "sublabel": "engramai.ciamlogin.com",
+            "icon": "cloud-identity",
+            "position": "center"
+        },
+        {
+            "id": "google",
+            "label": "Google IDP",
+            "sublabel": "accounts.google.com",
+            "icon": "google",
+            "position": "center-right"
+        },
+        {
+            "id": "backend",
+            "label": "Engram Backend",
+            "sublabel": "FastAPI + JWT Validation",
+            "icon": "server",
+            "position": "right"
+        }
+    ],
+    "flow": [
+        {
+            "step": 1,
+            "from": "user",
+            "to": "frontend",
+            "action": "Click 'Continue with Google'",
+            "status": "success",
+            "color": "#10B981"
+        },
+        {
+            "step": 2,
+            "from": "frontend",
+            "to": "azure_ciam",
+            "action": "Redirect to Azure CIAM",
+            "detail": "Authority: https://engramai.ciamlogin.com/{tenant_id}",
+            "status": "success",
+            "color": "#10B981"
+        },
+        {
+            "step": 3,
+            "from": "azure_ciam",
+            "to": "google",
+            "action": "Federated OAuth Redirect",
+            "detail": "Callback: https://engramai.ciamlogin.com/.../oauth2",
+            "status": "success",
+            "color": "#10B981",
+            "note": "Google REQUIRES 'engramai' in callback URI"
+        },
+        {
+            "step": 4,
+            "from": "google",
+            "to": "azure_ciam",
+            "action": "Return Authorization Code",
+            "status": "success",
+            "color": "#10B981"
+        },
+        {
+            "step": 5,
+            "from": "azure_ciam",
+            "to": "frontend",
+            "action": "Issue JWT Token",
+            "status": "success",
+            "color": "#10B981",
+            "challenge": {
+                "highlight": true,
+                "title": "TOKEN ISSUER MISMATCH",
+                "description": "Azure issues token with GUID-based issuer",
+                "expected": "https://engramai.ciamlogin.com/.../v2.0",
+                "actual": "https://6684288a-b805-4161-bf41-ba2121e51c90.ciamlogin.com/.../v2.0",
+                "color": "#F59E0B"
+            }
+        },
+        {
+            "step": 6,
+            "from": "frontend",
+            "to": "backend",
+            "action": "API Request (Chat, Stories, Episodes)",
+            "detail": "Authorization: Bearer {token with GUID issuer}",
+            "status": "in-progress",
+            "color": "#3B82F6"
+        },
+        {
+            "step": 7,
+            "from": "backend",
+            "to": "backend",
+            "action": "Validate Token Issuer",
+            "status": "failure",
+            "color": "#EF4444",
+            "challenge": {
+                "highlight": true,
+                "title": "VALIDATION FAILS",
+                "description": "Backend config expects Named issuer, receives GUID issuer",
+                "configured_issuers": [
+                    "https://engramai.ciamlogin.com/{tenant_id}/v2.0"
+                ],
+                "received_issuer": "https://6684288a-....ciamlogin.com/{tenant_id}/v2.0",
+                "result": "401 Unauthorized",
+                "color": "#EF4444"
+            }
+        }
+    ],
+    "solution": {
+        "title": "Hybrid Validation Strategy",
+        "description": "Backend dynamically adds GUID-based issuer from token's 'tid' claim to allowed list",
+        "steps": [
+            {
+                "step": 1,
+                "action": "Decode token WITHOUT issuer validation",
+                "detail": "Extract 'tid' (Tenant ID) from token claims"
+            },
+            {
+                "step": 2,
+                "action": "Build dynamic issuer list",
+                "detail": "Add https://{tid}.ciamlogin.com/{tid}/v2.0 to allowed issuers"
+            },
+            {
+                "step": 3,
+                "action": "Validate issuer against expanded list",
+                "detail": "Token's actual issuer is now in the allowed list"
+            },
+            {
+                "step": 4,
+                "action": "Return 200 OK",
+                "detail": "Chat, Stories, Episodes now work"
+            }
+        ],
+        "code_location": "backend/api/middleware/auth.py",
+        "key_insight": "Infrastructure uses Named Domain (for Google), Backend accepts GUID (for Azure)"
+    },
+    "environments": {
+        "development": {
+            "auth_required": false,
+            "behavior": "Bypass validation, return POC user"
+        },
+        "staging": {
+            "auth_required": false,
+            "behavior": "Bypass validation, return POC user"
+        },
+        "uat": {
+            "auth_required": true,
+            "behavior": "Full validation with Hybrid Strategy"
+        },
+        "production": {
+            "auth_required": true,
+            "behavior": "Full validation with Hybrid Strategy"
+        }
+    },
+    "legend": [
+        {
+            "color": "#10B981",
+            "label": "Success"
+        },
+        {
+            "color": "#3B82F6",
+            "label": "In Progress"
+        },
+        {
+            "color": "#F59E0B",
+            "label": "Warning/Challenge"
+        },
+        {
+            "color": "#EF4444",
+            "label": "Failure (Before Fix)"
+        },
+        {
+            "color": "#8B5CF6",
+            "label": "Solution Applied"
+        }
+    ]
+}
