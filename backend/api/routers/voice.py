@@ -26,7 +26,8 @@ from backend.voice.voicelive_service import voicelive_service
 from backend.core import get_settings, EnterpriseContext, SecurityContext, Role, MessageRole, Turn
 from backend.agents import chat as agent_chat, get_agent
 from backend.memory import memory_client, persist_conversation
-from backend.api.middleware.auth import get_auth
+from backend.api.middleware.auth import get_auth, get_current_user
+from fastapi import Depends
 
 logger = logging.getLogger(__name__)
 
@@ -211,23 +212,35 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
     session["context"] = voice_context
 
     async def _ensure_memory_session():
+        user_id_log = security.user_id  # Capture user_id for logging
+        logger.info(f"Background task started: ensuring memory session for user: {user_id_log}")
         try:
+            # Build session metadata with full user identity information
+            # This ensures consistent user identity and project/department boundaries
+            session_metadata = {
+                "tenant_id": security.tenant_id,
+                "channel": "voice",
+                "agent_id": session.get("agent_id", "elena"),
+            }
+            # Include user identity metadata for proper attribution
+            if security.email:
+                session_metadata["email"] = security.email
+            if security.display_name:
+                session_metadata["display_name"] = security.display_name
+            
             await asyncio.wait_for(
                 memory_client.get_or_create_session(
                     session_id=session_id,
-                    user_id=security.user_id,
-                    metadata={
-                        "tenant_id": security.tenant_id,
-                        "channel": "voice",
-                        "agent_id": session.get("agent_id", "elena"),
-                    },
+                    user_id=user_id_log,
+                    metadata=session_metadata,
                 ),
                 timeout=VOICE_MEMORY_TIMEOUT,
             )
+            logger.info(f"Background task completed: memory session ensured for user: {user_id_log}")
         except asyncio.TimeoutError:
-            logger.warning("Voice memory session init timed out")
+            logger.warning(f"Voice memory session init timed out for user: {user_id_log}")
         except Exception as e:
-            logger.warning(f"Voice memory session init failed: {e}")
+            logger.warning(f"Voice memory session init failed for user: {user_id_log}: {e}")
 
     asyncio.create_task(_ensure_memory_session())
     
@@ -864,53 +877,50 @@ class ConversationTurn(BaseModel):
 
 
 @router.post("/conversation/turn")
-async def persist_conversation_turn(turn: ConversationTurn):
+async def persist_conversation_turn(turn: ConversationTurn, user: SecurityContext = Depends(get_current_user)):
     """
     Persist a completed conversation turn to Zep memory.
     
     Used by the frontend in VoiceLive v2 (Direct) mode, where the browser
     handles the audio connection and reports the final transcripts back here.
+    
+    CRITICAL: Uses authenticated user from SecurityContext to ensure proper
+    user attribution and project/department boundaries.
     """
     try:
-        # Reconstruct the security context (simplified for this endpoint)
-        # In a real scenario, we'd validate the session/user match
-        settings = get_settings()
-        if not settings.auth_required:
-            security = SecurityContext(
-                user_id="poc-user",
-                tenant_id=settings.azure_tenant_id or "poc-tenant",
-                roles=[Role.ADMIN],
-                scopes=["*"],
-                session_id=turn.session_id,
-                token_expiry=None,
-                email=None,
-                display_name=None,
-            )
-        else:
-            security = SecurityContext(
-                user_id="voice-user",
-                tenant_id=settings.azure_tenant_id or "unknown-tenant",
-                roles=[Role.ANALYST],
-                scopes=["*"],
-                session_id=turn.session_id,
-                token_expiry=None,
-                email=None,
-                display_name=None,
-            )
+        # Use authenticated user from SecurityContext
+        # This ensures consistent user identity across all systems
+        security = SecurityContext(
+            user_id=user.user_id,
+            tenant_id=user.tenant_id,
+            roles=user.roles,
+            scopes=user.scopes,
+            session_id=turn.session_id,
+            email=user.email,
+            display_name=user.display_name,
+        )
             
         # Create context
         voice_context = EnterpriseContext(security=security, context_version="1.0.0")
         voice_context.episodic.conversation_id = turn.session_id
         
-        # Ensure session exists
+        # Ensure session exists with full user metadata
+        # This ensures consistent user identity and project/department boundaries
+        session_metadata = {
+            "tenant_id": security.tenant_id,
+            "channel": "voice-direct",
+            "agent_id": turn.agent_id,
+        }
+        # Include user identity metadata for proper attribution
+        if security.email:
+            session_metadata["email"] = security.email
+        if security.display_name:
+            session_metadata["display_name"] = security.display_name
+        
         await memory_client.get_or_create_session(
             session_id=turn.session_id,
             user_id=security.user_id,
-            metadata={
-                "tenant_id": security.tenant_id,
-                "channel": "voice-direct",
-                "agent_id": turn.agent_id,
-            },
+            metadata=session_metadata,
         )
         
         # Add turn

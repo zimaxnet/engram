@@ -727,11 +727,19 @@ class ZepMemoryClient:
             if turn.role.value == "assistant" and turn.agent_id:
                 agent_id = turn.agent_id
 
-        # Update session metadata with agent_id, summary, and turn_count
-        # This ensures episodes show correct agent and summary
+        # Update session metadata with agent_id, summary, turn_count, and user identity
+        # This ensures episodes show correct agent, summary, and user attribution
+        # CRITICAL: Include user identity metadata for proper project/department boundaries
         session_metadata = {
             "turn_count": context.episodic.total_turns,
+            "tenant_id": context.security.tenant_id,
         }
+        
+        # Include user identity metadata for proper attribution
+        if context.security.email:
+            session_metadata["email"] = context.security.email
+        if context.security.display_name:
+            session_metadata["display_name"] = context.security.display_name
         
         # Set agent_id if we have one
         if agent_id:

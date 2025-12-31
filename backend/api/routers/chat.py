@@ -214,14 +214,63 @@ async def websocket_chat(websocket: WebSocket, session_id: str):
     - Server sends: {"type": "chunk", "content": "..."} (streaming)
     - Server sends: {"type": "complete", "message_id": "...", "tokens_used": ...}
     - Server sends: {"type": "error", "message": "..."}
+    
+    Authentication: Extract JWT token from query parameter since WebSockets
+    cannot send Authorization headers. Validate token and extract user identity.
     """
-    # For WebSocket, create a dev security context
-    # In production, validate token from query params or first message
-    from backend.core import Role
+    await websocket.accept()
+    logger.info(f"Chat WebSocket connected: {session_id}")
+    
+    # Extract token from query parameter
+    token_param = websocket.query_params.get("token")
+    settings = get_settings()
+    
+    # Determine user_id based on auth requirements
+    if settings.auth_required:
+        if not token_param:
+            logger.warning(f"Chat WebSocket: Authentication required but no token provided for session {session_id}")
+            await websocket.close(code=1008, reason="Authentication required")
+            return
+        
+        # Validate token
+        try:
+            from backend.api.middleware.auth import get_auth
+            auth = get_auth()
+            token = await auth.validate_token(token_param)
+            user_id = token.oid
+            tenant_id = token.tid
+            email = token.email
+            display_name = token.name
+            roles = auth.map_roles(token.roles)
+            scopes = auth.extract_scopes(token)
+            logger.info(f"Chat WebSocket: Authenticated user {user_id} for session {session_id}")
+        except Exception as e:
+            logger.warning(f"Chat WebSocket: Token validation failed for session {session_id}: {e}")
+            await websocket.close(code=1008, reason="Invalid token")
+            return
+    else:
+        # POC mode: use default user when auth not required
+        from backend.core import Role
+        user_id = "poc-user"
+        tenant_id = settings.azure_tenant_id or "poc-tenant"
+        email = None
+        display_name = None
+        roles = [Role.ADMIN]
+        scopes = ["*"]
+        logger.info(f"Chat WebSocket: Using POC user for session {session_id} (AUTH_REQUIRED=false)")
 
-    dev_security = SecurityContext(user_id="ws-user", tenant_id="ws-tenant", roles=[Role.ANALYST], scopes=["*"])
+    # Create SecurityContext with authenticated user
+    security = SecurityContext(
+        user_id=user_id,
+        tenant_id=tenant_id,
+        roles=roles,
+        scopes=scopes,
+        session_id=session_id,
+        email=email,
+        display_name=display_name,
+    )
 
-    await manager.connect(websocket, session_id, dev_security)
+    await manager.connect(websocket, session_id, security)
 
     try:
         while True:
