@@ -85,15 +85,21 @@ async def send_message(message: ChatMessage, user: SecurityContext = Depends(get
         logger.warning(f"Memory enrichment failed: {e}")
 
     # Route to agent and get response
+    response_text = None
+    updated_context = context  # Default to original context
+    agent_id = message.agent_id or "elena"
+    
     try:
         # Handle legacy or frontend-specific 'model-router' ID
         agent_id_param = message.agent_id
         if agent_id_param == "model-router":
             agent_id_param = None
             
+        logger.info(f"Calling agent_chat for user {user.user_id}, session {session_id}, agent {agent_id_param}")
         response_text, updated_context, agent_id = await agent_chat(
             query=message.content, context=context, agent_id=agent_id_param
         )
+        logger.info(f"Agent chat succeeded: agent={agent_id}, response_length={len(response_text) if response_text else 0}")
 
         # Update session
         _sessions[session_id] = updated_context
@@ -116,11 +122,6 @@ async def send_message(message: ChatMessage, user: SecurityContext = Depends(get
 
         asyncio.create_task(_persist_with_timeout())
 
-        # Get agent info
-        agent = get_agent(agent_id)
-        
-        # Note: response_text, updated_context, and agent_id are set above in the try block
-
     except Exception as e:
         logger.error(f"Agent execution failed: {e}", exc_info=True)
         # Log detailed error information for debugging
@@ -133,28 +134,35 @@ async def send_message(message: ChatMessage, user: SecurityContext = Depends(get
         import traceback
         logger.error(f"Full traceback: {traceback.format_exc()}")
         
+        # Log context information for debugging
+        logger.error(f"Context state: session_id={session_id}, user_id={user.user_id}, context_exists={context is not None}")
+        if context:
+            logger.error(f"Context security: user_id={context.security.user_id}, tenant_id={context.security.tenant_id}")
+        
         # Fallback response
-        agent_id = message.agent_id or "elena"
+        if not response_text:
+            response_text = (
+                "I apologize, but I encountered an issue processing your request. "
+                "Could you please try again? If the problem persists, "
+                "the team can check the logs for more details."
+            )
+    
+    # Get agent info (always needed for response)
+    try:
+        agent = get_agent(agent_id)
+    except Exception as agent_error:
+        logger.error(f"Failed to get agent {agent_id}: {agent_error}")
+        agent_id = "elena"
         try:
             agent = get_agent(agent_id)
-        except Exception as agent_error:
-            logger.error(f"Failed to get agent {agent_id}: {agent_error}")
-            agent_id = "elena"
-            try:
-                agent = get_agent(agent_id)
-            except Exception:
-                # Last resort - create a minimal agent info
-                from backend.agents.base import BaseAgent
-                agent = type('FallbackAgent', (BaseAgent,), {
-                    'agent_id': 'elena',
-                    'agent_name': 'Elena',
-                    'agent_title': 'Business Analyst'
-                })()
-        response_text = (
-            "I apologize, but I encountered an issue processing your request. "
-            "Could you please try again? If the problem persists, "
-            "the team can check the logs for more details."
-        )
+        except Exception:
+            # Last resort - create a minimal agent info
+            from backend.agents.base import BaseAgent
+            agent = type('FallbackAgent', (BaseAgent,), {
+                'agent_id': 'elena',
+                'agent_name': 'Elena',
+                'agent_title': 'Business Analyst'
+            })()
 
     latency_ms = (time.time() - start_time) * 1000
 
