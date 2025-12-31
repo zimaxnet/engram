@@ -25,6 +25,7 @@ from backend.observability import (
 
 from .routers import admin, agents, bau, chat, health, memory, metrics, story, validation, voice, workflows, etl, images, graph
 from .middleware.logging import RequestLoggingMiddleware
+from .middleware.cors_preflight import CORSPreflightMiddleware
 
 # Configure structured logging
 configure_logging()
@@ -70,7 +71,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # CORS middleware
+    # CORS middleware (must be first to handle preflight)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
@@ -78,6 +79,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    
+    # CORS preflight handler (handles OPTIONS before auth)
+    app.add_middleware(CORSPreflightMiddleware)
 
     # Custom middleware
     app.add_middleware(RequestLoggingMiddleware)
