@@ -199,8 +199,10 @@ class BaseAgent(ABC):
                 endpoint = f"{endpoint.rstrip('/')}/api/projects/{self.settings.azure_ai_project_name}"
 
             # Use Model Router if configured (works with both APIM Gateway and Foundry)
+            # If AZURE_AI_MODEL_ROUTER is set and not empty, use Model Router
+            # Otherwise, use direct model deployment
             deployment = self.settings.azure_ai_deployment
-            if self.settings.azure_ai_model_router:
+            if self.settings.azure_ai_model_router and self.settings.azure_ai_model_router.strip():
                 # Model Router can be deployed via APIM Gateway or Foundry
                 # Use the Model Router deployment name instead of the direct model
                 deployment = self.settings.azure_ai_model_router
@@ -208,6 +210,9 @@ class BaseAgent(ABC):
                     logger.info(f"Using Model Router via APIM Gateway: {deployment}")
                 else:
                     logger.info(f"Using Azure AI Foundry Model Router: {deployment}")
+            else:
+                # Using direct model deployment (Model Router disabled)
+                logger.info(f"Using direct model deployment: {deployment} (Model Router disabled)")
 
             # Prefer managed identity (DefaultAzureCredential) when no API key is supplied
             credential: Optional[TokenCredential] = None
