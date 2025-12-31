@@ -274,9 +274,9 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
               value: '2025-10-01'  // Latest version with 140+ languages, Neural HD voices, improved VAD, 4K avatars
             }
             {
-              name: 'CORS_ORIGINS'
-              value: '["https://engram.work", "https://*.azurestaticapps.net", "http://localhost:5173", "*"]'
-            }
+    name: 'CORS_ORIGINS'
+    value: 'https://engram.work,http://localhost:5173,http://localhost:5174'
+},
             {
               name: 'AUTH_REQUIRED'
               value: authRequired ? 'true' : 'false'  // Respect the authRequired parameter
