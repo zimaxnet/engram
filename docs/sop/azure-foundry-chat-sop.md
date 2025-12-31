@@ -37,16 +37,24 @@ This SOP establishes the chat flow for Azure AI Foundry Model Router using the A
 ### Runtime (Chat)
 
 ```bash
-# Required for chat via APIM (Azure OpenAI format)
-AZURE_AI_ENDPOINT="https://zimax-gw.azure-api.net/zimax"
-AZURE_AI_DEPLOYMENT="model-router"
-AZURE_AI_MODEL_ROUTER="model-router"
+# Required for chat via APIM (OpenAI SDK format)
+# IMPORTANT: Endpoint MUST include /openai/v1/ for OpenAI SDK compatibility
+AZURE_AI_ENDPOINT="https://zimax-gw.azure-api.net/zimax/openai/v1/"
+AZURE_AI_DEPLOYMENT="gpt-5.1-chat"
+AZURE_AI_MODEL_ROUTER=""  # Empty = use direct model (bypass Model Router)
 AZURE_AI_KEY="<APIM_SUBSCRIPTION_KEY>"
-AZURE_AI_API_VERSION="2024-12-01-preview"
+AZURE_AI_API_VERSION="2024-10-01-preview"
 
 # NOT USED for APIM gateway (leave empty)
 AZURE_AI_PROJECT_NAME=""
 ```
+
+> [!IMPORTANT]
+> **Endpoint Format**: The endpoint **MUST include `/openai/v1/`** for OpenAI SDK format compatibility.
+> - ✅ Correct: `https://zimax-gw.azure-api.net/zimax/openai/v1/`
+> - ❌ Wrong: `https://zimax-gw.azure-api.net/zimax`
+>
+> **Model Router**: Set `AZURE_AI_MODEL_ROUTER` to empty string `""` or delete it to use direct model deployment.
 
 > [!IMPORTANT]
 >
