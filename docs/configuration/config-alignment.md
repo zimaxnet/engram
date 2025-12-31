@@ -25,7 +25,7 @@ This document ensures alignment between all configuration sources:
 | `AZURE_AI_ENDPOINT` | `https://zimax-gw.azure-api.net/zimax/openai/v1/` | All | **Must include `/openai/v1/`** for OpenAI SDK format |
 | `AZURE_AI_DEPLOYMENT` | `gpt-5.1-chat` | All | Direct model deployment name |
 | `AZURE_AI_KEY` | `cf23c3ed0f9d420dbd02c1e95a5b5bb3` | Key Vault / GitHub Secrets | APIM subscription key |
-| `AZURE_AI_API_VERSION` | `2024-10-01-preview` | All | API version (can be older for direct models) |
+| `AZURE_AI_API_VERSION` | `2024-12-01-preview` | All | API version (required for gpt-5.1-chat model version 2025-11-13) |
 | `AZURE_AI_MODEL_ROUTER` | *(empty or not set)* | All | **Leave empty to use direct model** |
 
 ### Important Notes
@@ -66,7 +66,7 @@ AZURE_AI_MODEL_ROUTER=""  # Empty = use direct model
 | `AZURE_AI_ENDPOINT` | `https://zimax-gw.azure-api.net/zimax/openai/v1/` |
 | `AZURE_AI_DEPLOYMENT` | `gpt-5.1-chat` |
 | `AZURE_AI_KEY` | *(from Key Vault reference)* |
-| `AZURE_AI_API_VERSION` | `2024-10-01-preview` |
+| `AZURE_AI_API_VERSION` | `2024-12-01-preview` |
 | `AZURE_AI_MODEL_ROUTER` | *(empty or deleted)* |
 
 **Key Vault Reference:**
