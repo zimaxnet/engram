@@ -27,7 +27,7 @@ import { StoryDetail } from './pages/Stories/StoryDetail';
 function AppContent() {
   const location = useLocation();
   const [activeAgent, setActiveAgent] = useState<AgentId>('elena');
-  const [selectedModel, setSelectedModel] = useState('gpt-5-chat');
+  const [selectedModel, setSelectedModel] = useState('gpt-5.1-chat');
   
   // Single conversation/session ID shared across Chat + Voice so both persist into the same Zep session.
   // Can be overridden via navigation state (e.g., from Episodes page)
