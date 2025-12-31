@@ -112,57 +112,6 @@ class ZepMemoryClient:
         - Graph knowledge
         
         This is required for enterprise boundaries (projects, departments).
-        
-        Args:
-            user_id: Unique user identifier (must match SecurityContext.user_id)
-            metadata: Optional user metadata (name, email, tenant_id, etc.)
-            
-        Returns:
-            User object from Zep
-        """
-        if not self.zep_url:
-            logger.warning("ZEP_API_URL not configured; cannot create user")
-            return {"user_id": user_id, "metadata": metadata or {}}
-        
-        # Try to get existing user first
-        try:
-            result = await self._request("GET", f"/api/v1/users/{user_id}")
-            if result:
-                logger.debug(f"User {user_id} already exists in Zep")
-                return result
-        except Exception as e:
-            # User doesn't exist, will create below
-            logger.debug(f"User {user_id} not found, will create: {e}")
-        
-        # Create new user
-        payload = {
-            "user_id": user_id,
-            "metadata": metadata or {}
-        }
-        try:
-            result = await self._request("POST", "/api/v1/users", json=payload)
-            if result:
-                logger.info(f"Created Zep user: {user_id}")
-            return result or payload
-        except Exception as e:
-            logger.error(f"Failed to create user {user_id}: {e}")
-            # Return payload anyway so system can continue
-            return payload
-
-    async def get_or_create_user(self, user_id: str, metadata: dict = None) -> dict:
-        """
-        Get or create a user in Zep.
-        
-        CRITICAL: Users must exist in Zep before creating sessions.
-        This ensures consistent user identity across:
-        - Chat sessions
-        - Voice sessions
-        - Episodes
-        - Semantic search
-        - Keyword search
-        - Graph knowledge
-        
-        This is required for enterprise boundaries (projects, departments).
         See: docs/4-layer-context-schema-story.md
         
         Args:
