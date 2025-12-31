@@ -31,8 +31,8 @@ test_chat() {
     RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "$API_URL/api/v1/chat" \
         -H "Content-Type: application/json" \
         -d "{
-            \"model\": \"model-router\",
-            \"messages\": [{\"role\": \"user\", \"content\": \"Hello, this is a verification test. Please respond briefly.\"}],
+            \"agent_id\": \"model-router\",
+            \"content\": \"Hello, this is a verification test. Please respond briefly.\",
             \"session_id\": \"$SESSION_ID\"
         }")
     
@@ -97,9 +97,9 @@ test_episodes() {
 test_voicelive_health() {
     echo ""
     echo "3️⃣ Testing VoiceLive Health Check..."
-    echo "   GET $API_URL/api/v1/voice/health"
+    echo "   GET $API_URL/api/v1/voice/status"
     
-    RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" "$API_URL/api/v1/voice/health" \
+    RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" "$API_URL/api/v1/voice/status" \
         -H "Content-Type: application/json")
     
     HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
@@ -164,6 +164,34 @@ test_chat
 test_episodes
 test_voicelive_health
 test_memory_ingestion
+
+test_stories() {
+    echo ""
+    echo "5️⃣ Testing Stories API..."
+    echo "   GET $API_URL/api/v1/story/"
+    
+    RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" "$API_URL/api/v1/story/" \
+        -H "Content-Type: application/json")
+    
+    HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d: -f2)
+    BODY=$(echo "$RESPONSE" | sed '/HTTP_STATUS/d')
+    
+    if [ "$HTTP_STATUS" = "200" ]; then
+        STORY_COUNT=$(echo "$BODY" | jq '. | length' 2>/dev/null || echo "0")
+        echo -e "   ${GREEN}✅ Stories API working${NC}"
+        echo "   Found $STORY_COUNT stories"
+        TESTS_PASSED=$((TESTS_PASSED + 1))
+        return 0
+    else
+        echo -e "   ${RED}❌ Stories API failed${NC}"
+        echo "   HTTP Status: $HTTP_STATUS"
+        echo "   Response: $BODY"
+        TESTS_FAILED=$((TESTS_FAILED + 1))
+        return 1
+    fi
+}
+
+test_stories
 
 # Summary
 echo ""

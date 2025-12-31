@@ -212,9 +212,19 @@ class EntraIDAuth:
                 options={"verify_signature": True, "verify_aud": False, "verify_at_hash": False},
             )
             
-            # Get the token's actual audience
+            # Get the token's actual audience and tenant
             token_audience = unverified_payload.get("aud")
+            token_tid = unverified_payload.get("tid")
             
+            # Dynamic Issuer Validation:
+            # Azure often issues tokens with GUID-based issuers (https://{guid}.ciamlogin.com/{guid}/v2.0)
+            # even if we configured the app with a domain name. To avoid mismatches, we trust the 
+            # issuer corresponding to the token's OWN Tenant ID, provided the signature is valid.
+            allowed_issuers = self.valid_issuers.copy()
+            if token_tid:
+                allowed_issuers.append(f"https://{token_tid}.ciamlogin.com/{token_tid}/v2.0")
+                allowed_issuers.append(f"https://login.microsoftonline.com/{token_tid}/v2.0")
+
             # Validate with the token's actual audience if it's in our valid list
             if token_audience in valid_audiences:
                 # Verify issuer manually to support multiple valid issuers (Name vs GUID)
@@ -228,10 +238,10 @@ class EntraIDAuth:
                 
                 # Manual Issuer Check
                 token_issuer = payload.get("iss")
-                if token_issuer not in self.valid_issuers:
+                if token_issuer not in allowed_issuers:
                      logger.warning(
                         f"Token issuer mismatch: token_iss={token_issuer}, "
-                        f"expected one of: {self.valid_issuers}"
+                        f"expected one of: {allowed_issuers}"
                     )
                      raise HTTPException(
                         status_code=status.HTTP_401_UNAUTHORIZED,
