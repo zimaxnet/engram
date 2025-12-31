@@ -77,21 +77,45 @@ Meet our AI agents:
 
 ![Voice Interaction Flow](/assets/images/voice-interaction-flow.png)
 
-## Quick Links (wiki)
+## Documentation Structure
 
-- [Architecture Deep Dive](architecture.md)
-- [System Navigator Guide](system-navigator.md)
-- [Agent Personas](agents.md)
-- [**Voice & Chat Integration**](voice-chat-integration.md) ⭐ NEW
-- [Connectors & Ingestion](connectors-plan.md)
-- [Testing & Golden Thread](TESTING-GUIDE.md)
-- [Telemetry (App Insights)](app-insights-guide.md)
-- [FinOps Strategy](finops.md)
-- [Deployment Guide](deployment.md)
-- [Enterprise Environment Model](enterprise-env-model.html)
-- [POC vs Enterprise](poc-vs-enterprise.html)
-- [Next Steps](next-steps.md)
-- [Visual Development Guide](visual-development.md)
+### 🚀 Getting Started
+- [Getting Started Guide](getting-started/) - Quick start and setup
+- [Local Development](getting-started/setup/local-setup.md) - Local environment setup
+
+### 🏗️ Architecture
+- [Architecture Overview](architecture/) - Brain + Spine pattern
+- [4-Layer Context Schema](architecture/context-schema/) - Context engineering
+- [Security Context](architecture/context-schema/security-context-enterprise-architecture.md) - Enterprise security
+- [Authentication](architecture/authentication/) - Auth & security architecture
+
+### 🤖 Agents
+- [Agent Personas](agents/) - Elena, Marcus, and Sage
+- [Elena - Business Analyst](agents/elena/persona.md)
+- [Marcus - Project Manager](agents/marcus/persona.md)
+
+### ⚡ Features
+- [Voice & Chat](features/voice/) - Voice interaction features
+- [Memory & Knowledge](features/memory/) - Memory architecture
+- [Connectors](features/connectors/) - Data ingestion
+
+### 💻 Development
+- [Development Guide](development/) - Contributing to Engram
+- [Testing Guide](development/testing/TESTING-GUIDE.md) - Testing documentation
+- [Visual Development](development/guides/visual-development.md) - Creating visuals
+
+### 🚀 Deployment
+- [Deployment Guide](deployment/) - Production deployment
+- [Enterprise Deployment](deployment/enterprise/) - Enterprise setup
+- [FinOps Strategy](deployment/finops/) - Cost optimization
+
+### 🔧 Operations
+- [Operations Guide](operations/) - Monitoring and maintenance
+- [Troubleshooting](operations/troubleshooting/) - Common issues and solutions
+
+### 📚 Reference
+- [Standard Operating Procedures](reference/sop/) - Configuration SOPs
+- [API Reference](reference/api/) - API documentation
 
 ## Getting Started
 

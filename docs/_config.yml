@@ -22,16 +22,22 @@ plugins:
 nav:
   - title: Home
     url: /
+  - title: Getting Started
+    url: /getting-started
   - title: Architecture
     url: /architecture
   - title: Agents
     url: /agents
-  - title: Visual Development
-    url: /visual-development
-  - title: FinOps
-    url: /finops
+  - title: Features
+    url: /features
+  - title: Development
+    url: /development
   - title: Deployment
     url: /deployment
+  - title: Operations
+    url: /operations
+  - title: Reference
+    url: /reference
 
 # Social
 github:
