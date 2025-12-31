@@ -41,7 +41,7 @@ AZURE_AI_ENDPOINT="https://zimax-gw.azure-api.net/zimax"
 AZURE_AI_DEPLOYMENT="model-router"
 AZURE_AI_MODEL_ROUTER="model-router"
 AZURE_AI_KEY="<APIM_SUBSCRIPTION_KEY>"
-AZURE_AI_API_VERSION="2024-05-01-preview"
+AZURE_AI_API_VERSION="2024-10-01-preview"
 
 # NOT USED for APIM gateway (leave empty)
 AZURE_AI_PROJECT_NAME=""
@@ -67,7 +67,7 @@ az keyvault secret set \
 ### Azure OpenAI Format (Correct)
 
 ```bash
-curl -X POST "https://zimax-gw.azure-api.net/zimax/openai/deployments/model-router/chat/completions?api-version=2024-05-01-preview" \
+curl -X POST "https://zimax-gw.azure-api.net/zimax/openai/deployments/model-router/chat/completions?api-version=2024-10-01-preview" \
   -H "Content-Type: application/json" \
   -H "api-key: <APIM_SUBSCRIPTION_KEY>" \
   -d '{
@@ -89,7 +89,7 @@ api_key = "<APIM_SUBSCRIPTION_KEY>"
 client = AzureOpenAI(
     azure_endpoint=endpoint,
     api_key=api_key,
-    api_version="2024-05-01-preview",
+    api_version="2024-10-01-preview",
 )
 
 completion = client.chat.completions.create(
@@ -116,7 +116,7 @@ The backend `FoundryChatClient` automatically detects endpoint format:
 AZURE_AI_ENDPOINT=https://zimax-gw.azure-api.net/zimax
 AZURE_AI_DEPLOYMENT=model-router
 AZURE_AI_MODEL_ROUTER=model-router
-AZURE_AI_API_VERSION=2024-05-01-preview
+AZURE_AI_API_VERSION=2024-10-01-preview
 AZURE_AI_PROJECT_NAME=  # Empty
 ```
 
@@ -125,7 +125,7 @@ AZURE_AI_PROJECT_NAME=  # Empty
 Check logs for:
 
 ```
-FoundryChatClient: Calling https://zimax-gw.azure-api.net/zimax/openai/deployments/model-router/chat/completions?api-version=2024-05-01-preview
+FoundryChatClient: Calling https://zimax-gw.azure-api.net/zimax/openai/deployments/model-router/chat/completions?api-version=2024-10-01-preview
 FoundryChatClient: is_openai_compat=False, model=None
 FoundryChatClient: Response status=200
 ```
@@ -199,6 +199,7 @@ param azureAiModelRouter string = 'model-router'
 
 | Date | Change |
 |------|--------|
+| 2025-12-31 | **Updated API version**: Changed from `2024-05-01-preview` to `2024-10-01-preview` (newer API version) |
 | 2025-12-27 | **Fixed endpoint format**: Changed from OpenAI SDK format (`/openai/v1`) to Azure OpenAI format (base URL only) |
 | 2025-12-27 | **Fixed 401 Platform Auth**: Disabled Azure EasyAuth that was blocking API requests |
 | 2025-12-27 | **Verified working**: Chat successfully tested with model-router |
