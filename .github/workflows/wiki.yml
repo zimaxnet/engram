@@ -45,5 +45,7 @@ jobs:
           publish_dir: ./_site
           destination_dir: docs
           publish_branch: gh-pages
-          force_orphan: true
+          force_orphan: false
+          enable_jekyll: false
+          keep_files: false
 
