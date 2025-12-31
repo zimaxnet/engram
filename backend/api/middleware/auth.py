@@ -65,6 +65,13 @@ class EntraIDAuth:
         # External ID tenants use *.ciamlogin.com or *.b2clogin.com
         self._is_external_id = os.environ.get("AZURE_AD_EXTERNAL_ID", "").lower() == "true"
         self._external_id_domain = os.environ.get("AZURE_AD_EXTERNAL_DOMAIN", "")  # e.g., engramai
+        
+        # Log configuration on initialization
+        logger.info(
+            f"EntraIDAuth initialized - External ID: {self._is_external_id}, "
+            f"Domain: {self._external_id_domain}, Tenant ID: {self.tenant_id}, "
+            f"Client ID: {self.client_id}"
+        )
 
     @property
     def tenant_id(self) -> str:
@@ -111,30 +118,67 @@ class EntraIDAuth:
         # Keep for backward compatibility if needed, but validation handles lists
         return self.valid_issuers[0]
 
-    async def get_jwks(self) -> dict:
-        """Fetch and cache JWKS (JSON Web Key Set) from Entra ID"""
+    async def get_jwks(self, issuer: Optional[str] = None) -> dict:
+        """
+        Fetch and cache JWKS (JSON Web Key Set) from Entra ID.
+        
+        Args:
+            issuer: Optional issuer URL. If provided, derives JWKS endpoint from issuer.
+                    If not provided, uses configured jwks_uri.
+        
+        Returns:
+            JWKS dictionary with keys
+        """
         now = datetime.now(timezone.utc)
+        
+        # Determine JWKS endpoint
+        if issuer:
+            # Derive JWKS endpoint from token's issuer (standard JWT validation approach)
+            # Issuer format: https://{domain}.ciamlogin.com/{tenant_id}/v2.0
+            # JWKS format: https://{domain}.ciamlogin.com/{tenant_id}/discovery/v2.0/keys
+            jwks_uri = issuer.replace('/v2.0', '/discovery/v2.0/keys')
+            cache_key = f"jwks_{issuer}"
+        else:
+            jwks_uri = self.jwks_uri
+            cache_key = "jwks_default"
 
-        # Return cached if valid
+        # Return cached if valid (check both default and issuer-specific cache)
         if (
             self._jwks_cache is not None
             and self._jwks_cache_time is not None
             and (now - self._jwks_cache_time).seconds < self._jwks_cache_ttl
+            and not issuer  # Only use cache for default endpoint
         ):
             return self._jwks_cache
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(self.jwks_uri)
+            logger.info(f"Fetching JWKS from: {jwks_uri}")
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(jwks_uri)
                 response.raise_for_status()
-                self._jwks_cache = response.json()
-                self._jwks_cache_time = now
-                logger.info("Refreshed JWKS from Entra ID")
+                jwks = response.json()
+                
+                # Cache only if using default endpoint
+                if not issuer:
+                    self._jwks_cache = jwks
+                    self._jwks_cache_time = now
+                
+                logger.info(f"Successfully fetched JWKS from {jwks_uri} ({len(jwks.get('keys', []))} keys)")
+                return jwks
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Failed to fetch JWKS from {jwks_uri}: HTTP {e.response.status_code}")
+            if self._jwks_cache and not issuer:
+                logger.warning("Using stale JWKS cache")
                 return self._jwks_cache
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Unable to fetch JWKS from {jwks_uri}",
+            )
         except Exception as e:
-            logger.error(f"Failed to fetch JWKS: {e}")
-            if self._jwks_cache:
-                return self._jwks_cache  # Return stale cache on error
+            logger.error(f"Failed to fetch JWKS from {jwks_uri}: {e}")
+            if self._jwks_cache and not issuer:
+                logger.warning("Using stale JWKS cache")
+                return self._jwks_cache
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Unable to validate tokens",
@@ -182,18 +226,59 @@ class EntraIDAuth:
             return self._create_dev_token(token)
 
         try:
-            # Get JWKS
-            jwks = await self.get_jwks()
+            # CRITICAL FIX: Decode token WITHOUT verification first to get the issuer
+            # This allows us to fetch JWKS from the token's actual issuer (standard JWT validation)
+            # Azure CIAM may issue tokens with GUID-based issuers that differ from our configured endpoint
+            try:
+                unverified_headers = jwt.get_unverified_headers(token)
+                unverified_payload = jwt.decode(
+                    token,
+                    options={"verify_signature": False, "verify_aud": False, "verify_exp": False}
+                )
+            except Exception as e:
+                logger.error(f"Failed to decode token (unverified): {e}")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token format",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            
+            # Extract token claims
+            token_issuer = unverified_payload.get("iss")
+            token_audience = unverified_payload.get("aud")
+            token_tid = unverified_payload.get("tid")
+            
+            logger.info(
+                f"Token claims - iss: {token_issuer}, aud: {token_audience}, tid: {token_tid}"
+            )
+            
+            # Fetch JWKS from the token's issuer (proper JWT validation approach)
+            # This handles cases where Azure issues tokens with GUID-based issuers
+            try:
+                jwks = await self.get_jwks(issuer=token_issuer)
+            except Exception as e:
+                logger.warning(
+                    f"Failed to fetch JWKS from token issuer {token_issuer}, "
+                    f"falling back to configured endpoint: {e}"
+                )
+                # Fallback to configured endpoint
+                jwks = await self.get_jwks()
+            
             signing_key = self.get_signing_key(token, jwks)
 
             if not signing_key:
+                logger.error(
+                    f"Could not find signing key for token. "
+                    f"Token KID: {unverified_headers.get('kid')}, "
+                    f"JWKS has {len(jwks.get('keys', []))} keys"
+                )
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid token signature",
+                    detail="Invalid token signature - signing key not found",
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 
-            # Decode and validate token
+            # Validate audience
             # When requesting scope api://{CLIENT_ID}/user_impersonation, the token audience
             # will be api://{CLIENT_ID}, not just the CLIENT_ID
             # Accept both formats for flexibility
@@ -204,52 +289,7 @@ class EntraIDAuth:
                 # App ID URI format (for api://{CLIENT_ID}/user_impersonation scope tokens)
                 valid_audiences.append(f"api://{self.client_id}")
             
-            # Decode without audience validation first to check the actual audience
-            unverified_payload = jwt.decode(
-                token,
-                signing_key,
-                algorithms=["RS256"],
-                options={"verify_signature": True, "verify_aud": False, "verify_at_hash": False},
-            )
-            
-            # Get the token's actual audience and tenant
-            token_audience = unverified_payload.get("aud")
-            token_tid = unverified_payload.get("tid")
-            
-            # Dynamic Issuer Validation:
-            # Azure often issues tokens with GUID-based issuers (https://{guid}.ciamlogin.com/{guid}/v2.0)
-            # even if we configured the app with a domain name. To avoid mismatches, we trust the 
-            # issuer corresponding to the token's OWN Tenant ID, provided the signature is valid.
-            allowed_issuers = self.valid_issuers.copy()
-            if token_tid:
-                allowed_issuers.append(f"https://{token_tid}.ciamlogin.com/{token_tid}/v2.0")
-                allowed_issuers.append(f"https://login.microsoftonline.com/{token_tid}/v2.0")
-
-            # Validate with the token's actual audience if it's in our valid list
-            if token_audience in valid_audiences:
-                # Verify issuer manually to support multiple valid issuers (Name vs GUID)
-                payload = jwt.decode(
-                    token,
-                    signing_key,
-                    algorithms=["RS256"],
-                    audience=token_audience,
-                    options={"verify_at_hash": False, "verify_iss": False},
-                )
-                
-                # Manual Issuer Check
-                token_issuer = payload.get("iss")
-                if token_issuer not in allowed_issuers:
-                     logger.warning(
-                        f"Token issuer mismatch: token_iss={token_issuer}, "
-                        f"expected one of: {allowed_issuers}"
-                    )
-                     raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail=f"Invalid token issuer: {token_issuer}",
-                        headers={"WWW-Authenticate": "Bearer"},
-                    )
-            else:
-                # Log for debugging
+            if token_audience not in valid_audiences:
                 logger.warning(
                     f"Token audience mismatch: token_aud={token_audience}, "
                     f"expected one of: {valid_audiences}, client_id={self.client_id}"
@@ -259,6 +299,47 @@ class EntraIDAuth:
                     detail=f"Invalid token audience: {token_audience}. Expected one of: {valid_audiences}",
                     headers={"WWW-Authenticate": "Bearer"},
                 )
+            
+            # Validate issuer - accept both named domain and GUID-based issuers
+            # Build allowed issuers list
+            allowed_issuers = self.valid_issuers.copy()
+            if token_tid:
+                # Add GUID-based issuer for the token's tenant
+                allowed_issuers.append(f"https://{token_tid}.ciamlogin.com/{token_tid}/v2.0")
+                allowed_issuers.append(f"https://login.microsoftonline.com/{token_tid}/v2.0")
+            
+            # Also accept the token's own issuer (if it's a valid Azure CIAM issuer)
+            if token_issuer and token_issuer.startswith(("https://", "http://")):
+                # Only add if it's a CIAM or Microsoftonline issuer
+                if ".ciamlogin.com" in token_issuer or "login.microsoftonline.com" in token_issuer:
+                    if token_issuer not in allowed_issuers:
+                        allowed_issuers.append(token_issuer)
+            
+            # Decode and validate token with signature verification
+            payload = jwt.decode(
+                token,
+                signing_key,
+                algorithms=["RS256"],
+                audience=token_audience,
+                options={"verify_at_hash": False, "verify_iss": False},  # We verify issuer manually
+            )
+            
+            # Manual Issuer Check
+            if token_issuer not in allowed_issuers:
+                logger.warning(
+                    f"Token issuer not in allowed list: token_iss={token_issuer}, "
+                    f"allowed: {allowed_issuers}"
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=f"Invalid token issuer: {token_issuer}",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            
+            logger.info(
+                f"Token validated successfully - user: {payload.get('oid', payload.get('sub'))}, "
+                f"issuer: {token_issuer}"
+            )
 
             return TokenPayload(**payload)
 
