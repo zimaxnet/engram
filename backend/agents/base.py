@@ -133,9 +133,26 @@ class FoundryChatClient:
             try:
                 response = await client.post(self.url, headers=headers, json=payload)
                 logger.info(f"FoundryChatClient: Response status={response.status_code}")
+                if response.status_code != 200:
+                    # Log the error response body for debugging
+                    try:
+                        error_body = response.text
+                        logger.error(f"FoundryChatClient: Error response body: {error_body}")
+                    except Exception:
+                        pass
                 response.raise_for_status()
             except Exception as e:
                 logger.error(f"FoundryChatClient: Error calling LLM: {e}")
+                # Log request details for debugging
+                logger.error(f"FoundryChatClient: Request URL: {self.url}")
+                logger.error(f"FoundryChatClient: Request payload keys: {list(payload.keys())}")
+                logger.error(f"FoundryChatClient: Payload messages count: {len(payload.get('messages', []))}")
+                if hasattr(e, 'response') and e.response:
+                    try:
+                        error_body = e.response.text
+                        logger.error(f"FoundryChatClient: Error response body: {error_body}")
+                    except Exception:
+                        pass
                 raise
             data = response.json()
 

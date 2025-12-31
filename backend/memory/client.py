@@ -98,11 +98,140 @@ class ZepMemoryClient:
             logger.error(f"Zep request failed: {method} {url} - {e}")
             raise  # Re-raise to surface connection errors
 
+    async def get_or_create_user(self, user_id: str, metadata: dict = None) -> dict:
+        """
+        Get or create a user in Zep.
+        
+        CRITICAL: Users must exist in Zep before creating sessions.
+        This ensures consistent user identity across:
+        - Chat sessions
+        - Voice sessions
+        - Episodes
+        - Semantic search
+        - Keyword search
+        - Graph knowledge
+        
+        This is required for enterprise boundaries (projects, departments).
+        
+        Args:
+            user_id: Unique user identifier (must match SecurityContext.user_id)
+            metadata: Optional user metadata (name, email, tenant_id, etc.)
+            
+        Returns:
+            User object from Zep
+        """
+        if not self.zep_url:
+            logger.warning("ZEP_API_URL not configured; cannot create user")
+            return {"user_id": user_id, "metadata": metadata or {}}
+        
+        # Try to get existing user first
+        try:
+            result = await self._request("GET", f"/api/v1/users/{user_id}")
+            if result:
+                logger.debug(f"User {user_id} already exists in Zep")
+                return result
+        except Exception as e:
+            # User doesn't exist, will create below
+            logger.debug(f"User {user_id} not found, will create: {e}")
+        
+        # Create new user
+        payload = {
+            "user_id": user_id,
+            "metadata": metadata or {}
+        }
+        try:
+            result = await self._request("POST", "/api/v1/users", json=payload)
+            if result:
+                logger.info(f"Created Zep user: {user_id}")
+            return result or payload
+        except Exception as e:
+            logger.error(f"Failed to create user {user_id}: {e}")
+            # Return payload anyway so system can continue
+            return payload
+
+    async def get_or_create_user(self, user_id: str, metadata: dict = None) -> dict:
+        """
+        Get or create a user in Zep.
+        
+        CRITICAL: Users must exist in Zep before creating sessions.
+        This ensures consistent user identity across:
+        - Chat sessions
+        - Voice sessions
+        - Episodes
+        - Semantic search
+        - Keyword search
+        - Graph knowledge
+        
+        This is required for enterprise boundaries (projects, departments).
+        See: docs/4-layer-context-schema-story.md
+        
+        Args:
+            user_id: Unique user identifier (must match SecurityContext.user_id)
+            metadata: Optional user metadata (name, email, tenant_id, etc.)
+            
+        Returns:
+            User object from Zep
+        """
+        if not self.zep_url:
+            logger.warning("ZEP_API_URL not configured; cannot create user")
+            return {"user_id": user_id, "metadata": metadata or {}}
+        
+        # Try to get existing user first
+        try:
+            result = await self._request("GET", f"/api/v1/users/{user_id}")
+            if result:
+                logger.debug(f"User {user_id} already exists in Zep")
+                return result
+        except Exception as e:
+            # User doesn't exist, will create below
+            logger.debug(f"User {user_id} not found, will create: {e}")
+        
+        # Create new user
+        payload = {
+            "user_id": user_id,
+            "metadata": metadata or {}
+        }
+        try:
+            result = await self._request("POST", "/api/v1/users", json=payload)
+            if result:
+                logger.info(f"Created Zep user: {user_id}")
+            return result or payload
+        except Exception as e:
+            logger.error(f"Failed to create user {user_id}: {e}")
+            # Return payload anyway so system can continue
+            return payload
+
     async def get_or_create_session(self, session_id: str, user_id: str, metadata: dict = None) -> dict:
         """
         Get or create a session (conversation) in Zep.
+        
+        CRITICAL: Ensures user exists in Zep before creating session.
+        This maintains consistent user identity across all systems:
+        - Chat, Voice, Episodes, Sessions
+        - Semantic search, Keyword search, Graph knowledge
+        
+        Required for enterprise boundaries (projects, departments).
+        See: docs/4-layer-context-schema-story.md
         """
         try:
+            # CRITICAL: Ensure user exists in Zep first
+            # This ensures consistent user identity across all systems
+            user_metadata = {}
+            if metadata:
+                # Extract user-level metadata from session metadata
+                user_metadata = {
+                    "tenant_id": metadata.get("tenant_id"),
+                    "email": metadata.get("email"),
+                    "display_name": metadata.get("display_name"),
+                }
+                # Remove None values
+                user_metadata = {k: v for k, v in user_metadata.items() if v is not None}
+            
+            try:
+                await self.get_or_create_user(user_id, metadata=user_metadata)
+            except Exception as e:
+                logger.warning(f"Failed to ensure user {user_id} exists in Zep: {e}. Continuing with session creation anyway.")
+
             # Try to get existing session
             try:
                 existing = await self._request("GET", f"/api/v1/sessions/{session_id}")
@@ -121,7 +250,7 @@ class ZepMemoryClient:
                 # Ignore fetch error, try create
                 pass
 
-            # Create new session
+            # Create new session (user should exist now)
             payload = {
                 "session_id": session_id,
                 "user_id": user_id,
@@ -130,20 +259,21 @@ class ZepMemoryClient:
             try:
                 result = await self._request("POST", "/api/v1/sessions", json=payload)
                 if result:
-                    logger.info(f"Created Zep session: {session_id}")
+                    logger.info(f"Created Zep session: {session_id} for user: {user_id}")
                 return result or payload
             except Exception as e:
-                # Handle missing user error automatically
+                # If user still doesn't exist, log error but don't create anonymous session
+                # This ensures user identity consistency
                 if "user does not exist" in str(e).lower():
-                    logger.warning(f"Zep user {user_id} not found. Retrying session creation without user_id.")
-                    payload["user_id"] = None
-                    # Keep original user_id in metadata for reference
-                    payload["metadata"]["original_user_id"] = user_id
-                    
-                    result = await self._request("POST", "/api/v1/sessions", json=payload)
-                    if result:
-                        logger.info(f"Created Zep session (anonymous): {session_id}")
-                    return result or payload
+                    logger.error(
+                        f"CRITICAL: Zep user {user_id} does not exist even after creation attempt. "
+                        f"This breaks user identity consistency. Error: {e}"
+                    )
+                    # Re-raise to surface the issue - don't silently create anonymous sessions
+                    raise ValueError(
+                        f"User {user_id} must exist in Zep for consistent identity across systems. "
+                        f"User creation failed: {e}"
+                    ) from e
                 raise e
 
         except Exception as e:
@@ -564,11 +694,21 @@ class ZepMemoryClient:
         user_id = context.security.user_id
         session_id = context.episodic.conversation_id
 
-        # Ensure session exists
+        # Ensure session exists with full user metadata
+        # This ensures consistent user identity across all systems
+        session_metadata = {
+            "tenant_id": context.security.tenant_id,
+        }
+        # Include user identity metadata for proper user creation
+        if context.security.email:
+            session_metadata["email"] = context.security.email
+        if context.security.display_name:
+            session_metadata["display_name"] = context.security.display_name
+        
         await self.get_or_create_session(
             session_id=session_id,
             user_id=user_id,
-            metadata={"tenant_id": context.security.tenant_id},
+            metadata=session_metadata,
         )
 
         # Search for relevant memory across ALL sessions
