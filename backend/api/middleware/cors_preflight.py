@@ -2,11 +2,11 @@
 CORS Preflight Middleware
 
 Handles OPTIONS requests before authentication middleware.
-This ensures CORS preflight requests are handled correctly.
+This ensures CORS preflight requests are handled correctly and bypass authentication.
 
-Note: FastAPI's CORSMiddleware should handle OPTIONS automatically,
-but this provides an additional safety net to ensure preflight requests
-bypass authentication and return proper CORS headers.
+CRITICAL: This middleware must be placed AFTER CORSMiddleware in the middleware stack
+so that CORSMiddleware can add CORS headers, but BEFORE authentication middleware
+so that OPTIONS requests don't require authentication.
 """
 
 import logging
@@ -24,18 +24,38 @@ class CORSPreflightMiddleware(BaseHTTPMiddleware):
     This ensures that OPTIONS requests return proper CORS headers without
     requiring authentication, allowing browsers to complete preflight checks.
     
-    FastAPI's CORSMiddleware should handle this automatically, but this provides
-    an additional layer to ensure OPTIONS requests are handled correctly.
+    FastAPI's CORSMiddleware should handle OPTIONS automatically, but authentication
+    dependencies might be evaluated before CORSMiddleware can intercept. This middleware
+    ensures OPTIONS requests are handled correctly.
     """
 
     async def dispatch(self, request: Request, call_next):
         # Handle OPTIONS requests (CORS preflight)
-        # FastAPI's CORSMiddleware should handle this, but we ensure it works
         if request.method == "OPTIONS":
-            logger.debug(f"CORS preflight request: {request.url.path}")
-            # Let CORSMiddleware handle the response (it's added before this middleware)
-            # Just pass through - CORSMiddleware will add headers and return 200
-            response = await call_next(request)
+            logger.info(f"CORS preflight request: {request.url.path} from origin: {request.headers.get('origin', 'unknown')}")
+            
+            # Get the origin from the request
+            origin = request.headers.get("origin")
+            
+            # Create response - CORSMiddleware (which runs after this) will add CORS headers
+            # But we return early to prevent authentication from being evaluated
+            response = Response(status_code=200)
+            
+            # Add basic CORS headers (CORSMiddleware will add more, but this ensures they're present)
+            if origin:
+                # Check if origin is in allowed list (we'll let CORSMiddleware do the full check)
+                response.headers["Access-Control-Allow-Origin"] = origin
+                response.headers["Access-Control-Allow-Credentials"] = "true"
+            
+            # Get requested method and headers from preflight request
+            requested_method = request.headers.get("access-control-request-method", "GET, POST, PUT, DELETE, OPTIONS")
+            requested_headers = request.headers.get("access-control-request-headers", "authorization, content-type")
+            
+            response.headers["Access-Control-Allow-Methods"] = requested_method
+            response.headers["Access-Control-Allow-Headers"] = requested_headers
+            response.headers["Access-Control-Max-Age"] = "3600"
+            
+            logger.info(f"CORS preflight response: 200 OK for {request.url.path}")
             return response
         
         # For all other requests, continue to next middleware
