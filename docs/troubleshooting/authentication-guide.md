@@ -60,18 +60,19 @@ This document captures the troubleshooting steps and resolutions encountered dur
 
 - Start the backend stack: `docker-compose up -d api worker postgres zep`.
 
-### 7. Token Validation Failed (401) - Issuer Mismatch
+### 7. Token Validation Failed (401) - Issuer Mismatch (The "Split Brain" Fix)
 
-**Symptom:** Login seems successful, but API calls return 401. Decoding token shows `iss` with GUID subdomain, Backend expects Name subdomain.
-**Cause:** Azure CIAM tokens use the Tenant GUID in the Issuer URL (e.g., `https://6684....ciamlogin.com/...`), but `auth.py` defaulted to constructing it from the Domain Name (`engramai`).
-**Fix:**
+**Symptom:** Login works, but API returns 401. Token `iss` has GUID (`6684...`), but Backend expected Name (`engramai`).
+**Constraint:** We cannot simply change the specific Backend config to GUID, because that would require changing the Frontend config/Redirect URI to GUID too, which breaks the Google Whitelist.
+**Solution (Hybrid):**
 
-- Update `AZURE_AD_EXTERNAL_DOMAIN` and `AZURE_AD_TENANT_ID` in `.env` (and Azure Parameters) to use the **Tenant GUID** (`6684...`) instead of the domain name.
+1. **Infrastructure**: Keep `AZURE_AD_EXTERNAL_DOMAIN=engramai` (Named) to satisfy Google's Redirect URI.
+2. **Backend Code**: Patched `auth.py` to accept **BOTH** named and GUID-based issuers.
+    - *Logic*: `valid_issuers = [named_url, guid_url]`.
+**Fix Applied:** Reverted infra to `engramai`, updated `auth.py` middleware.
 
 ### 8. Token Validation Failed (401) - Missing Container Env Vars
 
 **Symptom:** Token is valid, but Backend rejects it. Logs show "Request completed" (401 internally).
-**Cause:** `docker-compose.yml` was not passing `AZURE_AD_*` variables to the `api` container. The container used default (empty/wrong) values, causing validation to fail.
-**Fix:**
 
 - Add `AZURE_AD_TENANT_ID`, `AZURE_AD_CLIENT_ID`, `AZURE_AD_EXTERNAL_DOMAIN`, etc., to the `environment:` section of the `api` service in `docker-compose.yml`.

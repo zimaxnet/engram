@@ -65,6 +65,34 @@ async def ingest_troubleshooting():
             metadata={"source": "local_file", "file_path": str(DOC_PATH)}
         )
         print("  ✅ Zep Ingestion Complete")
+
+        # Ingest JSON Artifact
+        JSON_PATH = Path("docs/architecture/auth-flow.json")
+        if JSON_PATH.exists():
+            print(f"📄 Ingesting Architecture JSON: {JSON_PATH}")
+            json_content = JSON_PATH.read_text()
+            json_session_id = f"doc-architecture-auth-flow"
+            
+            await client.get_or_create_session(
+                session_id=json_session_id,
+                user_id="system",
+                metadata={
+                    "type": "architecture_diagram",
+                    "title": "Authentication Architecture Flow",
+                    "category": "architecture",
+                    "tags": ["auth", "json", "diagram", "hybrid"],
+                    "ingested_at": datetime.now(timezone.utc).isoformat()
+                }
+            )
+            
+            await client.add_memory(
+                session_id=json_session_id,
+                messages=[{"role": "system", "content": json_content}],
+                metadata={"source": "local_file", "file_path": str(JSON_PATH)}
+            )
+            print("  ✅ JSON Ingestion Complete")
+
+        # 2. Ingest to Graphlete
         
     except Exception as e:
         print(f"  ❌ Zep Ingestion Failed: {e}")
