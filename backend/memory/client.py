@@ -290,6 +290,7 @@ class ZepMemoryClient:
         session_id: str,
         query: str,
         limit: int = 10,
+        user_id: Optional[str] = None,
         search_type: str = "similarity",
     ) -> list[dict]:
         """
@@ -660,8 +661,14 @@ class ZepMemoryClient:
             metadata=session_metadata,
         )
 
-        # Search for relevant memory across ALL sessions
-        memory_results = await self.search_memory(session_id=session_id, query=query, limit=5)
+        # Search for relevant memory filtered by user_id
+        # CRITICAL: Filter by user_id to ensure user data isolation
+        memory_results = await self.search_memory(
+            session_id=session_id,
+            query=query,
+            limit=5,
+            user_id=user_id,  # Filter by authenticated user
+        )
 
         # Get relevant facts from knowledge graph
         facts = await self.get_facts(user_id=user_id, query=query, limit=10)

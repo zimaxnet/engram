@@ -369,6 +369,7 @@ async def get_voice_config(agent_id: str) -> str:
 async def ingest_document(
     content: str,
     title: str,
+    user_id: Optional[str] = None,
     doc_type: str = "markdown",
     topics: Optional[str] = None,
     agent_id: str = "elena",
@@ -418,10 +419,18 @@ async def ingest_document(
             })
         
         # Create session and add to Zep
+        # CRITICAL: Use provided user_id or fallback to system user (with warning)
+        actual_user_id = user_id or "system-ingestion"
+        if not user_id:
+            logger.warning(
+                f"ingest_document called without user_id for '{title}' - "
+                f"using system user. Documents should be attributed to authenticated users."
+            )
+        
         client = ZepMemoryClient()
         await client.get_or_create_session(
             session_id=doc_session_id,
-            user_id="system-ingestion",
+            user_id=actual_user_id,  # Use provided user_id or system fallback
             metadata={
                 "summary": f"Document ingestion: {title}",
                 "topics": topic_list,
