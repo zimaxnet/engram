@@ -26,6 +26,7 @@ from backend.voice.voicelive_service import voicelive_service
 from backend.core import get_settings, EnterpriseContext, SecurityContext, Role, MessageRole, Turn
 from backend.agents import chat as agent_chat, get_agent
 from backend.memory import memory_client, persist_conversation
+from backend.api.middleware.auth import get_auth
 
 logger = logging.getLogger(__name__)
 
@@ -154,35 +155,56 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
     # Memory: create an EnterpriseContext for this VoiceLive session so that
     # user/assistant transcripts can be persisted into Zep as episodic memory.
     #
-    # Note: WebSockets from browsers cannot set custom Authorization headers.
-    # For now we use a POC identity when AUTH_REQUIRED=false. When AUTH_REQUIRED=true,
-    # you should enforce Entra auth for WebSockets (e.g., token in query param or cookie).
+    # Authentication: Extract JWT token from query parameter since WebSockets
+    # cannot send Authorization headers. Validate token and extract user identity.
     # ---------------------------------------------------------------------
     settings = get_settings()
-    if not settings.auth_required:
-        security = SecurityContext(
-            user_id="poc-user",
-            tenant_id=settings.azure_tenant_id or "poc-tenant",
-            roles=[Role.ADMIN],
-            scopes=["*"],
-            session_id=session_id,
-            token_expiry=None,
-            email=None,
-            display_name=None,
-        )
+    
+    # Extract token from query parameter
+    token_param = websocket.query_params.get("token")
+    
+    # Determine user_id based on auth requirements
+    if settings.auth_required:
+        if not token_param:
+            logger.warning(f"VoiceLive WebSocket: Authentication required but no token provided for session {session_id}")
+            await websocket.close(code=1008, reason="Authentication required")
+            return
+        
+        # Validate token
+        try:
+            auth = get_auth()
+            token = await auth.validate_token(token_param)
+            user_id = token.oid
+            tenant_id = token.tid
+            email = token.email
+            display_name = token.name
+            roles = auth.map_roles(token.roles)
+            scopes = auth.extract_scopes(token)
+            logger.info(f"VoiceLive WebSocket: Authenticated user {user_id} for session {session_id}")
+        except Exception as e:
+            logger.warning(f"VoiceLive WebSocket: Token validation failed for session {session_id}: {e}")
+            await websocket.close(code=1008, reason="Invalid token")
+            return
     else:
-        # Future: validate Entra token for WS and map to SecurityContext.
-        # Keeping a safe default here avoids silently writing cross-tenant memory.
-        security = SecurityContext(
-            user_id="voice-user",
-            tenant_id=settings.azure_tenant_id or "unknown-tenant",
-            roles=[Role.ANALYST],
-            scopes=["*"],
-            session_id=session_id,
-            token_expiry=None,
-            email=None,
-            display_name=None,
-        )
+        # POC mode: use default user when auth not required
+        user_id = "poc-user"
+        tenant_id = settings.azure_tenant_id or "poc-tenant"
+        email = None
+        display_name = None
+        roles = [Role.ADMIN]
+        scopes = ["*"]
+        logger.info(f"VoiceLive WebSocket: Using POC user for session {session_id} (AUTH_REQUIRED=false)")
+    
+    # Create SecurityContext with authenticated user
+    security = SecurityContext(
+        user_id=user_id,
+        tenant_id=tenant_id,
+        roles=roles,
+        scopes=scopes,
+        session_id=session_id,
+        email=email,
+        display_name=display_name,
+    )
 
     voice_context = EnterpriseContext(security=security, context_version="1.0.0")
     voice_context.episodic.conversation_id = session_id
@@ -306,15 +328,19 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
 
                 async def _persist_latest_turns():
                     """Best-effort persistence of the latest user+assistant turns into Zep."""
+                    # Extract user_id explicitly for logging and validation
+                    user_id = voice_context.security.user_id
+                    logger.info(f"Background task started: persisting voice conversation for user: {user_id}")
                     try:
                         await asyncio.wait_for(
                             persist_conversation(voice_context),
                             timeout=VOICE_PERSIST_TIMEOUT,
                         )
+                        logger.info(f"Background task completed: voice conversation persisted for user: {user_id}")
                     except asyncio.TimeoutError:
-                        logger.warning("Voice memory persistence timed out (background)")
+                        logger.warning(f"Voice memory persistence timed out (background) for user: {user_id}")
                     except Exception as e:
-                        logger.warning(f"Voice memory persistence failed (background): {e}")
+                        logger.warning(f"Voice memory persistence failed (background) for user: {user_id}: {e}")
 
                 try:
                     async for event in voicelive_connection:

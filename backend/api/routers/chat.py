@@ -100,20 +100,26 @@ async def send_message(message: ChatMessage, user: SecurityContext = Depends(get
 
         # Persist to memory (fire-and-forget - don't block response)
         async def _persist_with_timeout():
+            # Extract user_id explicitly for logging and validation
+            user_id = updated_context.security.user_id
+            logger.info(f"Background task started: persisting conversation for user: {user_id}")
             try:
                 await asyncio.wait_for(
                     persist_conversation(updated_context),
                     timeout=10.0  # Longer timeout for background task
                 )
+                logger.info(f"Background task completed: conversation persisted for user: {user_id}")
             except asyncio.TimeoutError:
-                logger.warning("Memory persistence timed out (background)")
+                logger.warning(f"Memory persistence timed out (background) for user: {user_id}")
             except Exception as e:
-                logger.warning(f"Memory persistence failed (background): {e}")
+                logger.warning(f"Memory persistence failed (background) for user: {user_id}: {e}")
 
         asyncio.create_task(_persist_with_timeout())
 
         # Get agent info
         agent = get_agent(agent_id)
+        
+        # Note: response_text, updated_context, and agent_id are set above in the try block
 
     except Exception as e:
         logger.error(f"Agent execution failed: {e}", exc_info=True)
@@ -123,13 +129,27 @@ async def send_message(message: ChatMessage, user: SecurityContext = Depends(get
             error_details += f" (caused by: {e.__cause__})"
         logger.error(f"Error details: {error_details}")
         
+        # Log the full traceback for debugging
+        import traceback
+        logger.error(f"Full traceback: {traceback.format_exc()}")
+        
         # Fallback response
         agent_id = message.agent_id or "elena"
         try:
             agent = get_agent(agent_id)
-        except Exception:
+        except Exception as agent_error:
+            logger.error(f"Failed to get agent {agent_id}: {agent_error}")
             agent_id = "elena"
-            agent = get_agent(agent_id)
+            try:
+                agent = get_agent(agent_id)
+            except Exception:
+                # Last resort - create a minimal agent info
+                from backend.agents.base import BaseAgent
+                agent = type('FallbackAgent', (BaseAgent,), {
+                    'agent_id': 'elena',
+                    'agent_name': 'Elena',
+                    'agent_title': 'Business Analyst'
+                })()
         response_text = (
             "I apologize, but I encountered an issue processing your request. "
             "Could you please try again? If the problem persists, "

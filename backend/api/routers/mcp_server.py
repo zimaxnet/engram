@@ -109,7 +109,8 @@ async def get_current_context() -> str:
 
 @mcp_server.tool()
 async def chat_with_agent(
-    message: str, 
+    message: str,
+    user_id: Optional[str] = None,
     session_id: Optional[str] = None, 
     agent_id: Optional[str] = "elena",
     ctx: Context = None
@@ -119,13 +120,21 @@ async def chat_with_agent(
     
     Args:
         message: The user's message.
+        user_id: User ID to attribute the conversation to (from SecurityContext.user_id).
+                 If not provided, uses fallback user (not recommended for production).
         session_id: Optional session ID. If not provided, a new one is generated.
         agent_id: The ID of the agent to chat with (default: "elena").
+    
+    Note: When called from agents, user_id should be extracted from EnterpriseContext.security.user_id.
     """
+    # Use provided user_id or fallback with warning
+    actual_user_id = user_id or "mcp-user"
+    if not user_id:
+        logger.warning("chat_with_agent called without user_id - using fallback")
+    
     # 1. Setup Security Context
-    # In a real scenario, we might extract this from ctx.request_context or similar if available/authenticated
     security = SecurityContext(
-        user_id="mcp-user", 
+        user_id=actual_user_id,  # Use provided user_id
         tenant_id="mcp-tenant", 
         roles=[Role.ANALYST], 
         scopes=["*"]
@@ -180,18 +189,31 @@ async def chat_with_agent(
 
 
 @mcp_server.tool()
-async def enrich_memory(text: str, session_id: Optional[str] = None) -> str:
+async def enrich_memory(
+    text: str,
+    user_id: Optional[str] = None,
+    session_id: Optional[str] = None
+) -> str:
     """
     Enrich the context memory with new information.
     
     Args:
         text: The text to be processed and added to memory.
+        user_id: User ID to attribute the memory to (from SecurityContext.user_id).
+                 If not provided, uses fallback user (not recommended for production).
         session_id: Optional session ID to associate with the memory.
+    
+    Note: When called from agents, user_id should be extracted from EnterpriseContext.security.user_id.
     """
     try:
+        # Use provided user_id or fallback with warning
+        actual_user_id = user_id or "mcp-user"
+        if not user_id:
+            logger.warning("enrich_memory called without user_id - using fallback")
+        
         # Create temporary security/session context
         security = SecurityContext(
-            user_id="mcp-user", 
+            user_id=actual_user_id,  # Use provided user_id
             tenant_id="mcp-tenant", 
             roles=[Role.ANALYST], 
             scopes=["*"]
@@ -207,22 +229,39 @@ async def enrich_memory(text: str, session_id: Optional[str] = None) -> str:
 
 
 @mcp_server.tool()
-async def search_memory(query: str, session_id: Optional[str] = None) -> str:
+async def search_memory(
+    query: str,
+    user_id: Optional[str] = None,
+    session_id: Optional[str] = None
+) -> str:
     """
     Search the semantic memory (RAG) for relevant facts and episodes.
     
     Args:
         query: The search query.
+        user_id: User ID to filter search results (from SecurityContext.user_id).
+                 If not provided, searches across all users (not recommended for production).
         session_id: Optional session ID context.
+    
+    Note: When called from agents, user_id should be extracted from EnterpriseContext.security.user_id.
     """
     from backend.memory.client import memory_client
     
     try:
+        # Use provided user_id or fallback with warning
+        if not user_id:
+            logger.warning("search_memory called without user_id - searching across all users")
+        
         # Use session_id or default to a search session
         search_session = session_id or "global-search"
         
-        # Direct search via production Zep REST API
-        results = await memory_client.search_memory(search_session, query, limit=10)
+        # Direct search via production Zep REST API (with user_id filtering)
+        results = await memory_client.search_memory(
+            search_session,
+            query,
+            limit=10,
+            user_id=user_id  # Filter by user_id if provided
+        )
         
         # Format Results
         if not results:
@@ -300,18 +339,37 @@ async def start_bau_flow(flow_id: str, initial_message: Optional[str] = None) ->
 
 
 @mcp_server.tool()
-async def trigger_ingestion(source_name: str, kind: str = "Upload", url: Optional[str] = None) -> str:
+async def trigger_ingestion(
+    source_name: str,
+    user_id: Optional[str] = None,
+    kind: str = "Upload",
+    url: Optional[str] = None
+) -> str:
     """
     Trigger a new data ingestion/ETL source.
     
     Args:
         source_name: Name for the source.
+        user_id: User ID to attribute the ingestion to (from SecurityContext.user_id).
+                 If not provided, uses fallback user (not recommended for production).
         kind: Type of source ('Upload', 'S3', 'SharePoint', 'Web').
         url: URL or path for the source (optional for Upload).
+    
+    Note: When called from agents, user_id should be extracted from EnterpriseContext.security.user_id.
     """
     try:
-        # Security stub
-        security = SecurityContext(user_id="mcp-user", tenant_id="mcp-tenant", roles=[Role.ADMIN], scopes=["*"])
+        # Use provided user_id or fallback with warning
+        actual_user_id = user_id or "mcp-user"
+        if not user_id:
+            logger.warning("trigger_ingestion called without user_id - using fallback")
+        
+        # Security context
+        security = SecurityContext(
+            user_id=actual_user_id,  # Use provided user_id
+            tenant_id="mcp-tenant",
+            roles=[Role.ADMIN],
+            scopes=["*"]
+        )
         
         source = await ingestion_service.create_source({
             "name": source_name,

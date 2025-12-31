@@ -200,6 +200,8 @@ class IngestionService:
 
         # Background Task Function
         async def index_chunks(chunks_to_index: list, uid: str, fname: str):
+            # Log user_id explicitly for tracking
+            logger.info(f"Background task started: indexing {len(chunks_to_index)} chunks for user: {uid}, file: {fname}")
             count = 0
             for chunk in chunks_to_index:
                 try:
@@ -208,7 +210,7 @@ class IngestionService:
                     etl_filename = chunk_metadata.pop("filename", None)
 
                     await memory_client.add_fact(
-                        user_id=uid,
+                        user_id=uid,  # Explicitly use provided user_id
                         fact=chunk["text"],
                         metadata={
                             "source": "document_upload",
@@ -220,8 +222,8 @@ class IngestionService:
                     )
                     count += 1
                 except Exception as e:
-                    logger.error(f"Failed to index chunk: {e}")
-            logger.info(f"Indexed {count} chunks for {fname}")
+                    logger.error(f"Failed to index chunk for user {uid}: {e}")
+            logger.info(f"Background task completed: indexed {count} chunks for user: {uid}, file: {fname}")
 
         background_tasks.add_task(index_chunks, chunks, user_id, filename)
 

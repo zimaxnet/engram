@@ -56,7 +56,8 @@ async def get_current_context() -> str:
 
 @mcp_server.tool()
 async def chat_with_agent(
-    message: str, 
+    message: str,
+    user_id: Optional[str] = None,
     session_id: Optional[str] = None, 
     agent_id: Optional[str] = "elena",
     ctx: Context = None
@@ -66,13 +67,21 @@ async def chat_with_agent(
     
     Args:
         message: The user's message.
+        user_id: User ID to attribute the conversation to (from SecurityContext.user_id).
+                 If not provided, uses fallback user (not recommended for production).
         session_id: Optional session ID. If not provided, a new one is generated.
         agent_id: The ID of the agent to chat with (default: "elena").
+    
+    Note: When called from agents, user_id should be extracted from EnterpriseContext.security.user_id.
     """
+    # Use provided user_id or fallback with warning
+    actual_user_id = user_id or "mcp-user"
+    if not user_id:
+        logger.warning("chat_with_agent called without user_id - using fallback")
+    
     # 1. Setup Security Context
-    # In a real scenario, we might extract this from ctx.request_context or similar if available/authenticated
     security = SecurityContext(
-        user_id="mcp-user", 
+        user_id=actual_user_id,  # Use provided user_id
         tenant_id="mcp-tenant", 
         roles=[Role.ANALYST], 
         scopes=["*"]
@@ -127,18 +136,31 @@ async def chat_with_agent(
 
 
 @mcp_server.tool()
-async def enrich_memory(text: str, session_id: Optional[str] = None) -> str:
+async def enrich_memory(
+    text: str,
+    user_id: Optional[str] = None,
+    session_id: Optional[str] = None
+) -> str:
     """
     Enrich the context memory with new information.
     
     Args:
         text: The text to be processed and added to memory.
+        user_id: User ID to attribute the memory to (from SecurityContext.user_id).
+                 If not provided, uses fallback user (not recommended for production).
         session_id: Optional session ID to associate with the memory.
+    
+    Note: When called from agents, user_id should be extracted from EnterpriseContext.security.user_id.
     """
     try:
+        # Use provided user_id or fallback with warning
+        actual_user_id = user_id or "mcp-user"
+        if not user_id:
+            logger.warning("enrich_memory called without user_id - using fallback")
+        
         # Create temporary security/session context
         security = SecurityContext(
-            user_id="mcp-user", 
+            user_id=actual_user_id,  # Use provided user_id
             tenant_id="mcp-tenant", 
             roles=[Role.ANALYST], 
             scopes=["*"]
@@ -154,24 +176,36 @@ async def enrich_memory(text: str, session_id: Optional[str] = None) -> str:
 
 
 @mcp_server.tool()
-async def search_memory(query: str, session_id: Optional[str] = None) -> str:
+async def search_memory(
+    query: str,
+    user_id: Optional[str] = None,
+    session_id: Optional[str] = None
+) -> str:
     """
     Search the semantic memory (RAG) for relevant facts and episodes.
     
     Args:
         query: The search query.
+        user_id: User ID to filter search results (from SecurityContext.user_id).
+                 If not provided, searches across all users (not recommended for production).
         session_id: Optional session ID context.
+    
+    Note: When called from agents, user_id should be extracted from EnterpriseContext.security.user_id.
     """
     try:
-        # 1. Security Context (Simulated for MCP)
+        # Use provided user_id or fallback with warning
+        if not user_id:
+            logger.warning("search_memory called without user_id - searching across all users")
+        
+        # 1. Security Context
         security = SecurityContext(
-            user_id="mcp-user", 
+            user_id=user_id or "mcp-user",  # Use provided user_id or fallback
             tenant_id="mcp-tenant", 
             roles=[Role.ANALYST], 
             scopes=["*"]
         )
         
-        # 2. Perform Search
+        # 2. Perform Search (mem_search should use security.user_id for filtering)
         results = await mem_search(query, security)
         
         # 3. Format Results

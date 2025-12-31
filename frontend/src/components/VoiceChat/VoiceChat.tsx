@@ -10,6 +10,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import './VoiceChat.css';
+import { getAccessToken } from '../../auth/authConfig';
 
 interface VoiceMessage {
   id: string;
@@ -156,14 +157,30 @@ export default function VoiceChat({
   useEffect(() => {
     let mounted = true;
 
-    const connectToBackend = () => {
+    const connectToBackend = async () => {
       try {
         setConnectionStatus('connecting');
         setError(null);
 
+        // Get JWT token for authentication
+        let token: string | null = null;
+        try {
+          token = await getAccessToken();
+        } catch (error) {
+          console.warn('Failed to get access token for voice WebSocket:', error);
+          // Continue without token - backend will handle authentication
+        }
+        
         // Connect to backend WebSocket proxy endpoint
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8082';
-        const wsUrl = apiUrl.replace(/^http/, 'ws') + `/api/v1/voice/voicelive/${activeSessionId}`;
+        let wsUrl = apiUrl.replace(/^http/, 'ws') + `/api/v1/voice/voicelive/${activeSessionId}`;
+        
+        // Append token as query parameter if available
+        if (token) {
+          wsUrl += `?token=${encodeURIComponent(token)}`;
+        } else {
+          console.warn('No access token available for voice WebSocket - connection may fail if AUTH_REQUIRED=true');
+        }
         
         const ws = new WebSocket(wsUrl);
 

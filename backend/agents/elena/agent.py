@@ -474,6 +474,32 @@ You should be aware that delegation creates a durable workflow, and you can expl
             return state
 
         try:
+            # Inject user_id from context if tool accepts it and it's not already provided
+            context: EnterpriseContext = state.get("context")
+            if context and "user_id" not in tool_args:
+                # Check if tool accepts user_id parameter by inspecting its schema
+                if hasattr(tool, 'args_schema') and tool.args_schema:
+                    try:
+                        # Try to get model fields (Pydantic v2) or __fields__ (Pydantic v1)
+                        # args_schema might be a class or an instance
+                        schema = tool.args_schema
+                        if hasattr(schema, '__call__'):
+                            # It's a class, try to get fields from the class
+                            fields = getattr(schema, 'model_fields', None) or getattr(schema, '__fields__', None)
+                        else:
+                            # It's an instance, get fields from the instance or its class
+                            fields = getattr(schema, 'model_fields', None) or getattr(schema, '__fields__', None)
+                            if not fields and hasattr(schema, '__class__'):
+                                fields = getattr(schema.__class__, 'model_fields', None) or getattr(schema.__class__, '__fields__', None)
+                        
+                        if fields and "user_id" in fields:
+                            tool_args["user_id"] = context.security.user_id
+                            logger.debug(f"Injected user_id={context.security.user_id} into tool {tool_name}")
+                    except Exception as e:
+                        # If schema inspection fails, continue without injection (not all tools have schemas)
+                        logger.debug(f"Could not inspect schema for tool {tool_name}: {e}")
+                        pass
+            
             # Handle async tools (like delegate_to_sage)
             if hasattr(tool, 'ainvoke'):
                 result = await tool.ainvoke(tool_args)
