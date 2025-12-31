@@ -12,8 +12,10 @@ FastAPI application providing:
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError, HTTPException
+from fastapi.responses import JSONResponse
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from backend.core import get_settings
@@ -82,6 +84,57 @@ def create_app() -> FastAPI:
     
     # CORS preflight handler (handles OPTIONS before auth)
     app.add_middleware(CORSPreflightMiddleware)
+    
+    # Exception handlers to ensure CORS headers are added to error responses
+    @app.exception_handler(HTTPException)
+    async def http_exception_handler(request: Request, exc: HTTPException):
+        """Ensure CORS headers are added to HTTPException responses"""
+        origin = request.headers.get("origin")
+        allowed_origins = settings.cors_origins
+        is_allowed = origin and (origin in allowed_origins or "*" in allowed_origins)
+        
+        headers = dict(exc.headers) if exc.headers else {}
+        
+        # Add CORS headers
+        if is_allowed and origin:
+            headers["Access-Control-Allow-Origin"] = origin
+            headers["Access-Control-Allow-Credentials"] = "true"
+        elif "*" in allowed_origins:
+            headers["Access-Control-Allow-Origin"] = "*"
+        
+        headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        headers["Access-Control-Allow-Headers"] = "authorization, content-type"
+        
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail},
+            headers=headers,
+        )
+    
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(request: Request, exc: RequestValidationError):
+        """Ensure CORS headers are added to validation error responses"""
+        origin = request.headers.get("origin")
+        allowed_origins = settings.cors_origins
+        is_allowed = origin and (origin in allowed_origins or "*" in allowed_origins)
+        
+        headers = {}
+        
+        # Add CORS headers
+        if is_allowed and origin:
+            headers["Access-Control-Allow-Origin"] = origin
+            headers["Access-Control-Allow-Credentials"] = "true"
+        elif "*" in allowed_origins:
+            headers["Access-Control-Allow-Origin"] = "*"
+        
+        headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        headers["Access-Control-Allow-Headers"] = "authorization, content-type"
+        
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content={"detail": exc.errors()},
+            headers=headers,
+        )
 
     # Custom middleware
     app.add_middleware(RequestLoggingMiddleware)
