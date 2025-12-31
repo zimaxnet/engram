@@ -1,8 +1,9 @@
 # Azure Foundry Chat (Model Router) SOP
 
-> **Last Updated**: December 27, 2025  
+> **Last Updated**: December 31, 2025  
 > **Status**: Enterprise POC - Verified Working  
-> **Maintainer**: Engram Platform Team
+> **Maintainer**: Engram Platform Team  
+> **API Version**: `2024-10-01-preview` (updated December 31, 2025)
 
 ## Overview
 
