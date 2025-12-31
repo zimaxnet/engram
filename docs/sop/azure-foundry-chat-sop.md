@@ -43,7 +43,7 @@ AZURE_AI_ENDPOINT="https://zimax-gw.azure-api.net/zimax/openai/v1/"
 AZURE_AI_DEPLOYMENT="gpt-5.1-chat"
 AZURE_AI_MODEL_ROUTER=""  # Empty = use direct model (bypass Model Router)
 AZURE_AI_KEY="<APIM_SUBSCRIPTION_KEY>"
-AZURE_AI_API_VERSION="2024-10-01-preview"
+AZURE_AI_API_VERSION="2024-12-01-preview"
 
 # NOT USED for APIM gateway (leave empty)
 AZURE_AI_PROJECT_NAME=""

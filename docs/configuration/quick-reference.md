@@ -12,7 +12,7 @@ AZURE_AI_ENDPOINT="https://zimax-gw.azure-api.net/zimax/openai/v1/"
 AZURE_AI_DEPLOYMENT="gpt-5.1-chat"
 AZURE_AI_MODEL_ROUTER=""  # Empty = use direct model
 AZURE_AI_KEY="cf23c3ed0f9d420dbd02c1e95a5b5bb3"
-AZURE_AI_API_VERSION="2024-10-01-preview"
+AZURE_AI_API_VERSION="2024-12-01-preview"
 ```
 
 ---

@@ -53,7 +53,7 @@ This document ensures alignment between all configuration sources:
 AZURE_AI_ENDPOINT="https://zimax-gw.azure-api.net/zimax/openai/v1/"
 AZURE_AI_DEPLOYMENT="gpt-5.1-chat"
 AZURE_AI_KEY="cf23c3ed0f9d420dbd02c1e95a5b5bb3"
-AZURE_AI_API_VERSION="2024-10-01-preview"
+AZURE_AI_API_VERSION="2024-12-01-preview"
 AZURE_AI_MODEL_ROUTER=""  # Empty = use direct model
 ```
 
@@ -113,8 +113,8 @@ AZURE_AI_MODEL_ROUTER=""  # Empty = use direct model
 - [ ] Code uses `Ocp-Apim-Subscription-Key` header for APIM
 
 ### ✅ API Version
-- [ ] `AZURE_AI_API_VERSION` is set to `2024-10-01-preview` (or compatible version)
-- [ ] Version supports `gpt-5.1-chat` model
+- [ ] `AZURE_AI_API_VERSION` is set to `2024-12-01-preview` (required for model version 2025-11-13)
+- [ ] Version supports `gpt-5.1-chat` model version `2025-11-13`
 
 ---
 
