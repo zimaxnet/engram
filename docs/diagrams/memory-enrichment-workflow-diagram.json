@@ -1,0 +1,611 @@
+{
+  "title": "Engram Memory Enrichment Workflow",
+  "subtitle": "Sessions, Episodes, Stories, and Chat Interactions",
+  "theme": "dark",
+  "layout": "layered",
+  "description": "Comprehensive diagram showing how sessions, episodes, stories, and chat interactions work together to automatically enrich Zep memory through agent interactions. Includes RAG (Retrieval-Augmented Generation) and automatic memory persistence flows.",
+  
+  "nodes": [
+    {
+      "id": "user",
+      "label": "User",
+      "type": "actor",
+      "icon": "user",
+      "position": {"x": 400, "y": 50},
+      "description": "Authenticated user interacting with Engram platform",
+      "style": {
+        "backgroundColor": "#1e293b",
+        "borderColor": "#00d4ff",
+        "borderWidth": 2
+      }
+    },
+    
+    {
+      "id": "frontend",
+      "label": "Frontend\n(React + MSAL)",
+      "type": "layer",
+      "icon": "application",
+      "position": {"x": 400, "y": 150},
+      "description": "React frontend with MSAL authentication, handles chat UI, voice UI, and story creation UI",
+      "style": {
+        "backgroundColor": "#0f172a",
+        "borderColor": "#a855f7",
+        "borderWidth": 2
+      }
+    },
+    
+    {
+      "id": "chat_api",
+      "label": "Chat API\nPOST /api/v1/chat",
+      "type": "service",
+      "icon": "api",
+      "position": {"x": 200, "y": 300},
+      "description": "FastAPI endpoint for chat interactions. Handles message routing, authentication, and session management",
+      "style": {
+        "backgroundColor": "#1e1b4b",
+        "borderColor": "#6366f1",
+        "borderWidth": 2
+      }
+    },
+    
+    {
+      "id": "voice_api",
+      "label": "Voice API\nWebSocket + REST",
+      "type": "service",
+      "icon": "api",
+      "position": {"x": 400, "y": 300},
+      "description": "Voice endpoints: WebSocket for real-time voice, REST for conversation turn persistence",
+      "style": {
+        "backgroundColor": "#1e1b4b",
+        "borderColor": "#6366f1",
+        "borderWidth": 2
+      }
+    },
+    
+    {
+      "id": "story_api",
+      "label": "Story API\nPOST /api/v1/story/create",
+      "type": "service",
+      "icon": "api",
+      "position": {"x": 600, "y": 300},
+      "description": "Story creation endpoint. Executes Temporal workflow for durable story generation",
+      "style": {
+        "backgroundColor": "#1e1b4b",
+        "borderColor": "#6366f1",
+        "borderWidth": 2
+      }
+    },
+    
+    {
+      "id": "enrich_context",
+      "label": "Enrich Context\n(RAG)",
+      "type": "process",
+      "icon": "process",
+      "position": {"x": 200, "y": 450},
+      "description": "Automatic memory retrieval: Searches Zep memory for relevant episodes, facts, and entities. Injects context into agent prompt",
+      "style": {
+        "backgroundColor": "#064e3b",
+        "borderColor": "#10b981",
+        "borderWidth": 2
+      }
+    },
+    
+    {
+      "id": "agent_elena",
+      "label": "Agent\n(Elena/Marcus/Sage)",
+      "type": "process",
+      "icon": "agent",
+      "position": {"x": 400, "y": 450},
+      "description": "LangGraph agent processes user input with enriched memory context. Generates response using LLM",
+      "style": {
+        "backgroundColor": "#7c2d12",
+        "borderColor": "#f59e0b",
+        "borderWidth": 2
+      }
+    },
+    
+    {
+      "id": "persist_conversation",
+      "label": "Persist Conversation\n(Background)",
+      "type": "process",
+      "icon": "database",
+      "position": {"x": 200, "y": 600},
+      "description": "Automatic memory persistence: Saves conversation turn to Zep session. Updates metadata (turn_count, agent_id, user identity)",
+      "style": {
+        "backgroundColor": "#064e3b",
+        "borderColor": "#10b981",
+        "borderWidth": 2
+      }
+    },
+    
+    {
+      "id": "zep_session",
+      "label": "Zep Session",
+      "type": "data-model",
+      "icon": "database",
+      "position": {"x": 100, "y": 750},
+      "description": "Zep session container. Contains all messages in a conversation thread. Metadata: user_id, tenant_id, agent_id, turn_count, email, display_name",
+      "style": {
+        "backgroundColor": "#1e293b",
+        "borderColor": "#00d4ff",
+        "borderWidth": 2
+      }
+    },
+    
+    {
+      "id": "zep_episode",
+      "label": "Zep Episode\n(Auto-created)",
+      "type": "data-model",
+      "icon": "database",
+      "position": {"x": 300, "y": 750},
+      "description": "Episodes are automatically created by Zep as semantic sub-segments of sessions. Improves retrieval accuracy",
+      "style": {
+        "backgroundColor": "#1e293b",
+        "borderColor": "#00d4ff",
+        "borderWidth": 2
+      }
+    },
+    
+    {
+      "id": "zep_entities_facts",
+      "label": "Entities & Facts\n(Auto-extracted)",
+      "type": "data-model",
+      "icon": "knowledge-graph",
+      "position": {"x": 500, "y": 750},
+      "description": "Zep automatically extracts entities (people, organizations) and facts (statements about user/world) from conversations",
+      "style": {
+        "backgroundColor": "#1e293b",
+        "borderColor": "#00d4ff",
+        "borderWidth": 2
+      }
+    },
+    
+    {
+      "id": "zep_search",
+      "label": "Zep Search\n(Hybrid)",
+      "type": "process",
+      "icon": "search",
+      "position": {"x": 700, "y": 750},
+      "description": "Hybrid search combining semantic (pgvector), keyword, and metadata matching. Uses RRF (Reciprocal Rank Fusion) for ranking",
+      "style": {
+        "backgroundColor": "#064e3b",
+        "borderColor": "#10b981",
+        "borderWidth": 2
+      }
+    },
+    
+    {
+      "id": "story_workflow",
+      "label": "Story Workflow\n(Temporal)",
+      "type": "process",
+      "icon": "workflow",
+      "position": {"x": 600, "y": 450},
+      "description": "Temporal durable workflow: Generates story with Claude, diagram with Gemini, saves artifacts, enriches memory",
+      "style": {
+        "backgroundColor": "#581c87",
+        "borderColor": "#a855f7",
+        "borderWidth": 2
+      }
+    },
+    
+    {
+      "id": "story_memory",
+      "label": "Story Memory\nstory-{story_id}",
+      "type": "data-model",
+      "icon": "document",
+      "position": {"x": 600, "y": 600},
+      "description": "Story session in Zep. Contains full story content. Searchable by agents. Metadata: title, type, story_id, image_path",
+      "style": {
+        "backgroundColor": "#1e293b",
+        "borderColor": "#a855f7",
+        "borderWidth": 2
+      }
+    },
+    
+    {
+      "id": "manual_ingestion",
+      "label": "Manual Ingestion\n(MCP Tool)",
+      "type": "process",
+      "icon": "import",
+      "position": {"x": 800, "y": 450},
+      "description": "Agents can use ingest_episode MCP tool to manually ingest external conversations, meetings, or canonical knowledge",
+      "style": {
+        "backgroundColor": "#422006",
+        "borderColor": "#f59e0b",
+        "borderWidth": 2
+      }
+    }
+  ],
+  
+  "connections": [
+    {
+      "from": "user",
+      "to": "frontend",
+      "label": "Interacts via\nBrowser",
+      "style": {
+        "strokeColor": "#00d4ff",
+        "strokeWidth": 2,
+        "animated": false
+      }
+    },
+    
+    {
+      "from": "frontend",
+      "to": "chat_api",
+      "label": "POST /api/v1/chat\n(With JWT Bearer)",
+      "style": {
+        "strokeColor": "#6366f1",
+        "strokeWidth": 2,
+        "animated": true
+      }
+    },
+    
+    {
+      "from": "frontend",
+      "to": "voice_api",
+      "label": "WebSocket\n(With token param)",
+      "style": {
+        "strokeColor": "#6366f1",
+        "strokeWidth": 2,
+        "animated": true
+      }
+    },
+    
+    {
+      "from": "frontend",
+      "to": "story_api",
+      "label": "POST /api/v1/story/create",
+      "style": {
+        "strokeColor": "#6366f1",
+        "strokeWidth": 2,
+        "animated": true
+      }
+    },
+    
+    {
+      "from": "chat_api",
+      "to": "enrich_context",
+      "label": "1. Enrich Context\n(Search Memory)",
+      "style": {
+        "strokeColor": "#10b981",
+        "strokeWidth": 3,
+        "animated": true,
+        "labelStyle": {
+          "fontWeight": "bold"
+        }
+      }
+    },
+    
+    {
+      "from": "voice_api",
+      "to": "enrich_context",
+      "label": "1. Enrich Context\n(Search Memory)",
+      "style": {
+        "strokeColor": "#10b981",
+        "strokeWidth": 3,
+        "animated": true
+      }
+    },
+    
+    {
+      "from": "enrich_context",
+      "to": "zep_search",
+      "label": "Query Memory",
+      "style": {
+        "strokeColor": "#10b981",
+        "strokeWidth": 2,
+        "dashed": true
+      }
+    },
+    
+    {
+      "from": "zep_search",
+      "to": "zep_session",
+      "label": "Search Sessions",
+      "style": {
+        "strokeColor": "#00d4ff",
+        "strokeWidth": 2,
+        "dashed": true
+      }
+    },
+    
+    {
+      "from": "zep_search",
+      "to": "zep_episode",
+      "label": "Search Episodes",
+      "style": {
+        "strokeColor": "#00d4ff",
+        "strokeWidth": 2,
+        "dashed": true
+      }
+    },
+    
+    {
+      "from": "zep_search",
+      "to": "zep_entities_facts",
+      "label": "Search Entities/Facts",
+      "style": {
+        "strokeColor": "#00d4ff",
+        "strokeWidth": 2,
+        "dashed": true
+      }
+    },
+    
+    {
+      "from": "enrich_context",
+      "to": "agent_elena",
+      "label": "2. Agent Processing\n(With Memory Context)",
+      "style": {
+        "strokeColor": "#f59e0b",
+        "strokeWidth": 3,
+        "animated": true,
+        "labelStyle": {
+          "fontWeight": "bold"
+        }
+      }
+    },
+    
+    {
+      "from": "chat_api",
+      "to": "persist_conversation",
+      "label": "3. Persist Turn\n(Background Task)",
+      "style": {
+        "strokeColor": "#10b981",
+        "strokeWidth": 3,
+        "animated": true,
+        "labelStyle": {
+          "fontWeight": "bold"
+        }
+      }
+    },
+    
+    {
+      "from": "voice_api",
+      "to": "persist_conversation",
+      "label": "3. Persist Turn\n(Background Task)",
+      "style": {
+        "strokeColor": "#10b981",
+        "strokeWidth": 3,
+        "animated": true
+      }
+    },
+    
+    {
+      "from": "persist_conversation",
+      "to": "zep_session",
+      "label": "Create/Update\nSession",
+      "style": {
+        "strokeColor": "#10b981",
+        "strokeWidth": 2,
+        "animated": true
+      }
+    },
+    
+    {
+      "from": "zep_session",
+      "to": "zep_episode",
+      "label": "Auto-creates\nEpisodes",
+      "style": {
+        "strokeColor": "#00d4ff",
+        "strokeWidth": 2,
+        "dashed": true,
+        "labelStyle": {
+          "fontStyle": "italic"
+        }
+      }
+    },
+    
+    {
+      "from": "zep_session",
+      "to": "zep_entities_facts",
+      "label": "Auto-extracts\nEntities/Facts",
+      "style": {
+        "strokeColor": "#00d4ff",
+        "strokeWidth": 2,
+        "dashed": true,
+        "labelStyle": {
+          "fontStyle": "italic"
+        }
+      }
+    },
+    
+    {
+      "from": "story_api",
+      "to": "story_workflow",
+      "label": "Execute\nWorkflow",
+      "style": {
+        "strokeColor": "#a855f7",
+        "strokeWidth": 2,
+        "animated": true
+      }
+    },
+    
+    {
+      "from": "story_workflow",
+      "to": "story_memory",
+      "label": "Enrich Memory",
+      "style": {
+        "strokeColor": "#a855f7",
+        "strokeWidth": 2,
+        "animated": true
+      }
+    },
+    
+    {
+      "from": "story_memory",
+      "to": "zep_search",
+      "label": "Searchable",
+      "style": {
+        "strokeColor": "#a855f7",
+        "strokeWidth": 2,
+        "dashed": true
+      }
+    },
+    
+    {
+      "from": "manual_ingestion",
+      "to": "zep_session",
+      "label": "Create Session",
+      "style": {
+        "strokeColor": "#f59e0b",
+        "strokeWidth": 2,
+        "animated": true
+      }
+    },
+    
+    {
+      "from": "agent_elena",
+      "to": "chat_api",
+      "label": "Response",
+      "style": {
+        "strokeColor": "#6366f1",
+        "strokeWidth": 2,
+        "animated": false
+      }
+    },
+    
+    {
+      "from": "agent_elena",
+      "to": "voice_api",
+      "label": "Response",
+      "style": {
+        "strokeColor": "#6366f1",
+        "strokeWidth": 2,
+        "animated": false
+      }
+    }
+  ],
+  
+  "annotations": [
+    {
+      "id": "annotation_rag",
+      "target": "enrich_context",
+      "text": "RAG Pattern:\nSearches existing memory\nbefore each response",
+      "position": "left",
+      "style": {
+        "backgroundColor": "#064e3b",
+        "textColor": "#10b981",
+        "borderColor": "#10b981"
+      }
+    },
+    {
+      "id": "annotation_persistence",
+      "target": "persist_conversation",
+      "text": "Automatic Persistence:\nEvery turn saved to memory\n(background task)",
+      "position": "right",
+      "style": {
+        "backgroundColor": "#064e3b",
+        "textColor": "#10b981",
+        "borderColor": "#10b981"
+      }
+    },
+    {
+      "id": "annotation_episodes",
+      "target": "zep_episode",
+      "text": "Zep automatically\nsegments sessions\ninto episodes",
+      "position": "bottom",
+      "style": {
+        "backgroundColor": "#1e293b",
+        "textColor": "#00d4ff",
+        "borderColor": "#00d4ff"
+      }
+    },
+    {
+      "id": "annotation_hybrid_search",
+      "target": "zep_search",
+      "text": "Hybrid Search:\nSemantic + Keyword +\nMetadata (RRF)",
+      "position": "right",
+      "style": {
+        "backgroundColor": "#064e3b",
+        "textColor": "#10b981",
+        "borderColor": "#10b981"
+      }
+    }
+  ],
+  
+  "legend": [
+    {
+      "label": "User Interaction",
+      "color": "#00d4ff",
+      "style": "solid"
+    },
+    {
+      "label": "Memory Retrieval (RAG)",
+      "color": "#10b981",
+      "style": "solid",
+      "lineWidth": 3
+    },
+    {
+      "label": "Memory Persistence",
+      "color": "#10b981",
+      "style": "solid",
+      "lineWidth": 3
+    },
+    {
+      "label": "Automatic Process",
+      "color": "#00d4ff",
+      "style": "dashed"
+    },
+    {
+      "label": "Story Workflow",
+      "color": "#a855f7",
+      "style": "solid"
+    },
+    {
+      "label": "Manual Ingestion",
+      "color": "#f59e0b",
+      "style": "solid"
+    }
+  ],
+  
+  "layers": [
+    {
+      "id": "interaction_layer",
+      "label": "Interaction Layer",
+      "nodes": ["user", "frontend"],
+      "y": 0,
+      "height": 200
+    },
+    {
+      "id": "api_layer",
+      "label": "API Layer",
+      "nodes": ["chat_api", "voice_api", "story_api"],
+      "y": 250,
+      "height": 100
+    },
+    {
+      "id": "processing_layer",
+      "label": "Processing Layer",
+      "nodes": ["enrich_context", "agent_elena", "story_workflow", "manual_ingestion"],
+      "y": 400,
+      "height": 150
+    },
+    {
+      "id": "memory_layer",
+      "label": "Memory Layer (Zep)",
+      "nodes": ["persist_conversation", "zep_session", "zep_episode", "zep_entities_facts", "zep_search", "story_memory"],
+      "y": 700,
+      "height": 150
+    }
+  ],
+  
+  "nano_banana_pro_prompt": {
+    "prompt": "Create a detailed layered architecture diagram showing the Engram Memory Enrichment Workflow. The diagram should show how sessions, episodes, stories, and chat interactions work together to automatically enrich Zep memory through agent interactions.\\n\\nLayout: Use a layered architecture with 4 layers:\\n1. Interaction Layer (top): User and Frontend (React + MSAL)\\n2. API Layer: Chat API, Voice API, Story API\\n3. Processing Layer: Enrich Context (RAG), Agent (Elena/Marcus/Sage), Story Workflow (Temporal), Manual Ingestion\\n4. Memory Layer (bottom): Zep Session, Zep Episode, Entities & Facts, Zep Search, Story Memory, Persist Conversation\\n\\nFlow A (Chat/Voice - RAG Pattern):\\n- User → Frontend → Chat/Voice API → Enrich Context (searches Zep Search) → Agent (with memory context) → Response → Persist Conversation (background) → Zep Session\\n\\nFlow B (Story Creation):\\n- User → Frontend → Story API → Story Workflow (Temporal) → Story Memory → Zep Search (searchable)\\n\\nFlow C (Auto-processing):\\n- Zep Session → Auto-creates Zep Episodes (semantic segmentation)\\n- Zep Session → Auto-extracts Entities & Facts\\n\\nFlow D (Manual Ingestion):\\n- Manual Ingestion (MCP Tool) → Zep Session\\n\\nKey Annotations:\\n- RAG Pattern: Searches existing memory before each response\\n- Automatic Persistence: Every turn saved to memory (background task)\\n- Zep automatically segments sessions into episodes\\n- Hybrid Search: Semantic + Keyword + Metadata (RRF)\\n\\nUse a dark theme with cyan (#00d4ff) for memory/data elements, green (#10b981) for RAG/persistence flows, purple (#a855f7) for story workflows, and orange (#f59e0b) for agents/manual processes. Make connections animated where data flows actively (RAG, persistence). Use dashed lines for automatic/background processes.",
+    "output_requirements": {
+      "diagram_type": "layered architecture + flow",
+      "detail_level": "high",
+      "include_annotations": true,
+      "include_legend": true,
+      "show_data_flow": true,
+      "highlight_automatic_processes": true,
+      "color_coding": {
+        "memory_elements": "#00d4ff",
+        "rag_flows": "#10b981",
+        "story_workflows": "#a855f7",
+        "agents": "#f59e0b",
+        "api_endpoints": "#6366f1"
+      }
+    }
+  }
+}
+
