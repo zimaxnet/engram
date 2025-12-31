@@ -275,7 +275,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             }
             {
               name: 'CORS_ORIGINS'
-              value: 'https://engram.work,http://localhost:5173,http://localhost:5174'
+              value: '["https://engram.work","http://localhost:5173","http://localhost:5174"]'
             }
             {
               name: 'AUTH_REQUIRED'
