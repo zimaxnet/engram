@@ -216,7 +216,7 @@ class EntraIDAuth:
             token_audience = unverified_payload.get("aud")
             
             # Validate with the token's actual audience if it's in our valid list
-                # Validate with the token's actual audience if it's in our valid list
+            if token_audience in valid_audiences:
                 # Verify issuer manually to support multiple valid issuers (Name vs GUID)
                 payload = jwt.decode(
                     token,
