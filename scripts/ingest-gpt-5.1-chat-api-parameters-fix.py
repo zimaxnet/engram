@@ -10,7 +10,7 @@ import asyncio
 import os
 import sys
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 backend_path = Path(__file__).parent.parent / "backend"
 sys.path.insert(0, str(backend_path.parent))
@@ -88,7 +88,8 @@ The backend code was sending `max_tokens` and `temperature` parameters, which ca
 
 Error messages from API:
 - "Unsupported parameter: 'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead."
-- "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported."""",
+- "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported."
+""",
         "metadata": {"agent_id": "elena"}
     },
     {
@@ -285,7 +286,7 @@ async def main():
         await client.add_memory(
             session_id=SESSION_ID,
             messages=MESSAGES,
-            metadata={"source": "ingest_gpt_5_1_chat_api_parameters_fix", "ingested_at": datetime.utcnow().isoformat()}
+            metadata={"source": "ingest_gpt_5_1_chat_api_parameters_fix", "ingested_at": datetime.now(timezone.utc).isoformat()}
         )
         print("   ✅ Messages added")
         
