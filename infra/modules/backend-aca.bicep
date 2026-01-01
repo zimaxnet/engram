@@ -364,7 +364,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
         minReplicas: 1
         // Warm Start: Set minReplicas to 1 if you want to avoid initial cold start.
         // Current: Warm start enabled for production verification
-        maxReplicas: 1
+        maxReplicas: 3
         rules: [
           {
             name: 'http-scale'
