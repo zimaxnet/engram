@@ -58,17 +58,6 @@ class CORSPreflightMiddleware(BaseHTTPMiddleware):
             # Create response
             response = Response(status_code=200)
             
-            # Add CORS headers only if origin is allowed
-            if is_allowed and origin:
-                response.headers["Access-Control-Allow-Origin"] = origin
-                response.headers["Access-Control-Allow-Credentials"] = "true"
-            elif "*" in allowed_origins:
-                response.headers["Access-Control-Allow-Origin"] = "*"
-            else:
-                # Origin not allowed - still return 200 but without CORS headers
-                # Browser will block the actual request
-                logger.warning(f"CORS preflight: origin {origin} not in allowed list: {allowed_origins}")
-            
             # Get requested method and headers from preflight request
             requested_method = request.headers.get(
                 "access-control-request-method", 
@@ -79,9 +68,21 @@ class CORSPreflightMiddleware(BaseHTTPMiddleware):
                 "authorization, content-type"
             )
             
+            # Always add these headers for OPTIONS requests
             response.headers["Access-Control-Allow-Methods"] = requested_method
             response.headers["Access-Control-Allow-Headers"] = requested_headers
             response.headers["Access-Control-Max-Age"] = "3600"
+            
+            # Add origin header only if origin is allowed
+            if is_allowed and origin:
+                response.headers["Access-Control-Allow-Origin"] = origin
+                response.headers["Access-Control-Allow-Credentials"] = "true"
+            elif "*" in allowed_origins:
+                response.headers["Access-Control-Allow-Origin"] = "*"
+            else:
+                # Origin not allowed - still return 200 but without Access-Control-Allow-Origin
+                # Browser will block the actual request
+                logger.warning(f"CORS preflight: origin {origin} not in allowed list: {allowed_origins}")
             
             logger.info(
                 f"CORS preflight response: 200 OK for {request.url.path}, "
