@@ -1,6 +1,9 @@
 ---
 layout: default
-title: Engram - Context Engineering Platform
+title: Home
+nav_order: 1
+description: "Engram Context Engineering Platform - Enterprise AI Memory & Cognition"
+permalink: /
 ---
 
 # Engram Context Engineering Platform

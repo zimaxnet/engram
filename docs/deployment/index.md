@@ -1,6 +1,8 @@
 ---
 layout: default
 title: Deployment
+nav_order: 7
+has_children: true
 ---
 
 # [Home](/) › Deployment
@@ -46,4 +48,3 @@ Engram supports multiple deployment levels:
 ---
 
 **Next**: [Operations Guide](../operations/) or [Troubleshooting](../operations/troubleshooting/)
-

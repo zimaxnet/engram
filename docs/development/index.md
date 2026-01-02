@@ -1,6 +1,8 @@
 ---
 layout: default
 title: Development
+nav_order: 6
+has_children: true
 ---
 
 # [Home](/) › Development
@@ -44,4 +46,3 @@ Guide for developers contributing to Engram.
 ---
 
 **Related**: [Getting Started](../getting-started/), [Architecture](../architecture/)
-

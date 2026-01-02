@@ -1,6 +1,8 @@
 ---
 layout: default
 title: Features
+nav_order: 5
+has_children: true
 ---
 
 # [Home](/) › Features

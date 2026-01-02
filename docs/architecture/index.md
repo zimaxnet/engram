@@ -1,6 +1,8 @@
 ---
 layout: default
 title: Architecture
+nav_order: 3
+has_children: true
 ---
 
 # [Home](/) › Architecture
@@ -36,15 +38,18 @@ Traditional prompt engineering focuses on crafting individual prompts. **Context
 ## Architecture Components
 
 ### 🧠 Brain + Spine Pattern
+
 - [Brain + Spine Story](brain-spine/brain-spine-story.md) - The foundational architecture pattern
 - [Brain + Spine Diagram](brain-spine/brain-spine-diagram.json) - Visual representation
 
 ### 📋 4-Layer Context Schema
+
 - [Context Schema Story](context-schema/4-layer-context-schema-story.md) - Complete guide to the 4-layer schema
 - [Security Context Architecture](context-schema/security-context-enterprise-architecture.md) - Enterprise identity & attribution
 - [Context Schema Diagram](context-schema/4-layer-context-schema-diagram.json) - Visual diagram
 
 ### 🔐 Authentication & Security
+
 - [Authentication Analysis](authentication/authentication-analysis.md) - Authentication deep dive
 - [Enterprise Auth Strategy](authentication/enterprise-auth-strategy.md) - Production authentication
 - [Entra External ID](authentication/entra-external-id.md) - Azure CIAM integration
@@ -59,6 +64,7 @@ Traditional prompt engineering focuses on crafting individual prompts. **Context
 ### Layer 1: Security Context
 
 **SecurityContext** is the foundation of enterprise security:
+
 - **Identity**: `user_id`, `tenant_id`, `email`, `display_name`
 - **Permissions**: `roles`, `scopes`
 - **Enterprise Boundaries**: Tenant isolation, project scoping, RBAC
@@ -68,6 +74,7 @@ See: [Security Context Architecture](context-schema/security-context-enterprise-
 ### Layer 2: Episodic State
 
 Short-term working memory:
+
 - Rolling window of recent turns
 - Compressed narrative of history
 - Prevents "Lost in the Middle" problem
@@ -75,6 +82,7 @@ Short-term working memory:
 ### Layer 3: Semantic Knowledge
 
 Long-term memory pointers:
+
 - Facts from knowledge graph
 - Entity context and relationships
 - Relevance scoring
@@ -82,6 +90,7 @@ Long-term memory pointers:
 ### Layer 4: Operational State
 
 Workflow & execution state:
+
 - Temporal workflow IDs
 - Plan steps and tool state
 - Human-in-the-loop support
@@ -97,4 +106,3 @@ Workflow & execution state:
 ---
 
 **Next**: Learn about [Agent Personas](../agents/) or explore [Features](../features/).
-

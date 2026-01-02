@@ -1,6 +1,8 @@
 ---
 layout: default
 title: Getting Started
+nav_order: 2
+has_children: true
 ---
 
 # [Home](/) › Getting Started
@@ -12,6 +14,7 @@ Welcome to Engram! This guide will help you get up and running quickly.
 ## Quick Start
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/zimaxnet/engram.git
    cd engram
@@ -22,6 +25,7 @@ Welcome to Engram! This guide will help you get up and running quickly.
    - [Secrets Configuration](secrets-setup.md)
 
 3. **Run the platform**
+
    ```bash
    docker-compose up -d
    open http://localhost:5173
@@ -41,16 +45,19 @@ Engram is an **enterprise-grade AI platform** that solves the Memory Wall Proble
 ## Learning Path
 
 ### For Developers
+
 1. [Local Setup](setup/local-setup.md) - Get your development environment ready
 2. [Development Guides](../development/guides/) - Learn how to contribute
 3. [Testing Guide](../development/testing/TESTING-GUIDE.md) - Run and write tests
 
 ### For Architects
+
 1. [Architecture Overview](../architecture/) - Understand the Brain + Spine pattern
 2. [4-Layer Context Schema](../architecture/context-schema/) - Learn about context engineering
 3. [Security Context](../architecture/context-schema/security-context-enterprise-architecture.md) - Enterprise security architecture
 
 ### For Operators
+
 1. [Deployment Guide](../deployment/) - Deploy to production
 2. [Operations Guide](../operations/) - Monitor and troubleshoot
 3. [Troubleshooting](../operations/troubleshooting/) - Common issues and solutions
@@ -65,4 +72,3 @@ Engram is an **enterprise-grade AI platform** that solves the Memory Wall Proble
 ---
 
 **Need Help?** Check out the [Troubleshooting Guide](../operations/troubleshooting/) or [open an issue](https://github.com/zimaxnet/engram/issues).
-

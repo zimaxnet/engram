@@ -1,6 +1,8 @@
 ---
 layout: default
 title: Operations
+nav_order: 8
+has_children: true
 ---
 
 # [Home](/) › Operations
@@ -40,4 +42,3 @@ Common issues and solutions:
 ---
 
 **Need Help?** Check the [Troubleshooting Guide](troubleshooting/) or [open an issue](https://github.com/zimaxnet/engram/issues).
-

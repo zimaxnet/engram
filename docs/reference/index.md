@@ -1,6 +1,8 @@
 ---
 layout: default
 title: Reference
+nav_order: 9
+has_children: true
 ---
 
 # [Home](/) › Reference
@@ -14,6 +16,7 @@ Technical reference documentation for Engram.
 Configuration and operational procedures:
 
 ### Authentication
+
 - [Auth Master](sop/auth-master.md) - Master authentication guide
 - [Auth Entra](sop/auth-entra.md) - Entra ID configuration
 - [Auth API](api/auth-api.md) - API authentication
@@ -28,6 +31,7 @@ Configuration and operational procedures:
 - [Auth CI/CD](sop/auth-cicd.md) - CI/CD authentication
 
 ### Configuration
+
 - [Azure AI Configuration](sop/azure-ai-configuration.md)
 - [Azure Foundry Chat SOP](sop/azure-foundry-chat-sop.md)
 - [Chat Model Router](sop/chat-model-router-enterprise-deployment.md)
@@ -38,11 +42,13 @@ Configuration and operational procedures:
 - [VoiceLive Configuration](sop/voicelive-configuration.md)
 
 ### Temporal
+
 - [Temporal Azure Configuration](sop/temporal-azure-configuration.md)
 - [Temporal Azure Research](sop/temporal-azure-research.md)
 - [Temporal Worker Postmortem](sop/temporal-worker-postmortem.md)
 
 ### Other
+
 - [Sage Nano Banana](sop/sage_nano_banana.md)
 - [Zep Memory Client Compatibility](sop/zep-memory-client-compatibility.md)
 
@@ -57,4 +63,3 @@ Configuration and operational procedures:
 ---
 
 **Related**: [Operations](../operations/), [Deployment](../deployment/)
-

@@ -1,6 +1,8 @@
 ---
 layout: default
 title: Agent Personas
+nav_order: 4
+has_children: true
 ---
 
 # [Home](/) › Agents
@@ -18,6 +20,7 @@ The Engram platform features specialized AI agent personas designed for enterpri
 **Background**: Ph.D. in Information Systems from MIT, MBA from Stanford. 15 years of experience in management consulting, digital transformation, and academic research.
 
 **Expertise**:
+
 - Requirements Analysis
 - Stakeholder Management
 - Process Optimization
@@ -36,6 +39,7 @@ The Engram platform features specialized AI agent personas designed for enterpri
 **Background**: Certified PMP and PMI-ACP. 12 years of experience managing complex technology programs at Amazon, Salesforce, and high-growth startups.
 
 **Expertise**:
+
 - Program Management
 - Agile Transformation
 - Risk Management
@@ -52,6 +56,7 @@ The Engram platform features specialized AI agent personas designed for enterpri
 **Background**: Specialized agent for creating visual content, stories, and diagrams.
 
 **Expertise**:
+
 - Visual Art Generation
 - Story Creation
 - Diagram Generation
@@ -73,6 +78,7 @@ Elena and Marcus are designed to work together seamlessly:
 ## Agent Attribution
 
 All agent actions are fully attributable:
+
 - **User ID**: Who invoked the agent
 - **Agent ID**: Which agent performed the action
 - **Tenant ID**: Enterprise boundary
@@ -83,4 +89,3 @@ See: [Security Context Architecture](../architecture/context-schema/security-con
 ---
 
 **Next**: Explore [Architecture](../architecture/) or [Features](../features/).
-
