@@ -26,7 +26,28 @@ If you see "No 'Access-Control-Allow-Origin' header is present":
 
    Must include: `https://engram.work`
 
-2. **Verify `CORSPreflightMiddleware` is registered in `main.py`**
+2. **Verify Azure Platform Auth is DISABLED**
+
+   ```bash
+   az containerapp auth show --name staging-env-api --resource-group engram-rg
+   ```
+
+   Must return:
+
+   ```json
+   "platform": {
+     "enabled": false
+   }
+   ```
+
+   If enabled:
+
+   ```bash
+   az containerapp auth update --name staging-env-api --resource-group engram-rg \
+     --enabled false --action AllowAnonymous
+   ```
+
+3. **Verify `CORSPreflightMiddleware` is registered in `main.py`**
 
    ```bash
    grep -n "CORSPreflightMiddleware" backend/api/main.py
@@ -34,7 +55,7 @@ If you see "No 'Access-Control-Allow-Origin' header is present":
 
    Must show import AND `app.add_middleware(CORSPreflightMiddleware)`
 
-3. **If missing, add the middleware:**
+4. **If missing, add the middleware:**
 
    ```python
    from .middleware.cors_preflight import CORSPreflightMiddleware
@@ -42,7 +63,7 @@ If you see "No 'Access-Control-Allow-Origin' header is present":
    app.add_middleware(CORSPreflightMiddleware)
    ```
 
-4. **Deploy and test**
+5. **Deploy and test**
 
    ```bash
    git add . && git commit -m "fix(cors): ensure middleware is registered"
@@ -132,6 +153,19 @@ az containerapp update --name staging-env-api --resource-group engram-rg \
 **Cause:** Auth middleware runs before CORS handler
 
 **Fix:** Ensure `CORSPreflightMiddleware` is added AFTER `CORSMiddleware` (runs before in execution order)
+
+### Issue 4: Azure Platform Auth (Easy Auth) Enabled
+
+**Symptom:** OPTIONS returns 401 Unauthorized or 302 Redirect before reaching app logs
+
+**Cause:** Azure Container Apps "Authentication and Authorization" feature intercepts requests.
+
+**Fix:** Disable Platform Auth via CLI (or ensure Bicep `authConfigs` resource is correctly applied):
+
+```bash
+az containerapp auth update --name staging-env-api --resource-group engram-rg \
+  --enabled false --action AllowAnonymous
+```
 
 ---
 

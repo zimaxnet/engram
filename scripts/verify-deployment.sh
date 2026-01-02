@@ -1,40 +1,51 @@
 #!/bin/bash
-# Verify Deployment Status
-# Checks if latest code is deployed
-
 set -e
 
-echo "🚀 Verifying Deployment"
-echo "======================"
+# Colors for output
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
 
-# Check latest commit
-echo ""
-echo "1. Latest commit:"
-git log -1 --oneline
+echo -e "${YELLOW}Starting Deployment Verification...${NC}"
 
-# Check GitHub Actions status
-echo ""
-echo "2. GitHub Actions deployment status:"
-if command -v gh &> /dev/null; then
-    gh run list --limit 1 --json status,conclusion,createdAt,headBranch \
-      --jq '.[] | "   Status: \(.status)\n   Conclusion: \(.conclusion // "N/A")\n   Created: \(.createdAt)\n   Branch: \(.headBranch)"' 2>&1 || echo "   GitHub CLI not configured"
+# 1. Check Azure Container App Environment Variables (CORS_ORIGINS)
+echo -e "\n1. Checking CORS_ORIGINS configuration..."
+CORS_ENV=$(az containerapp show --name staging-env-api --resource-group engram-rg --query "properties.template.containers[0].env[?name=='CORS_ORIGINS'].value" -o tsv)
+
+if [[ $CORS_ENV == *"https://engram.work"* ]]; then
+    echo -e "${GREEN}✓ CORS_ORIGINS correct:${NC} $CORS_ENV"
 else
-    echo "   GitHub CLI not available"
+    echo -e "${RED}✗ CORS_ORIGINS incorrect:${NC} $CORS_ENV"
+    echo "Expected to contain https://engram.work"
+    exit 1
 fi
 
-# Check container revision
-echo ""
-echo "3. Active container revision:"
-az containerapp revision list --name staging-env-api --resource-group engram-rg \
-  --query "[0].{name:name, createdTime:properties.createdTime, active:properties.active, trafficWeight:properties.trafficWeight}" \
-  --output json
+# 2. Check Azure Platform Auth (Easy Auth) Status
+echo -e "\n2. Checking Platform Auth status (must be DISABLED)..."
+AUTH_STATUS=$(az containerapp auth show --name staging-env-api --resource-group engram-rg --query "platform.enabled" -o tsv)
 
-# Check if new code is running
-echo ""
-echo "4. Checking for new code indicators in logs:"
-az containerapp logs show --name staging-env-api --resource-group engram-rg \
-  --tail 100 --type console 2>&1 | grep -iE "🔐|Auth module loaded|conditional" | tail -5 || echo "   No new code indicators found"
+if [[ $AUTH_STATUS == "false" ]]; then
+    echo -e "${GREEN}✓ Platform Auth is DISABLED${NC}"
+else
+    echo -e "${RED}✗ Platform Auth is ENABLED${NC}"
+    echo "This blocks OPTIONS requests. Fix with:"
+    echo "az containerapp auth update --name staging-env-api --resource-group engram-rg --enabled false --action AllowAnonymous"
+    exit 1
+fi
 
-echo ""
-echo "✅ Deployment check complete"
+# 3. Test OPTIONS Request via Curl
+echo -e "\n3. Testing live OPTIONS request..."
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X OPTIONS https://api.engram.work/api/v1/chat \
+  -H "Origin: https://engram.work" \
+  -H "Access-Control-Request-Method: POST")
 
+if [[ $HTTP_CODE == "200" ]]; then
+    echo -e "${GREEN}✓ OPTIONS request returned 200 OK${NC}"
+else
+    echo -e "${RED}✗ OPTIONS request returned $HTTP_CODE${NC}"
+    echo "Expected 200"
+    exit 1
+fi
+
+echo -e "\n${GREEN}All verification checks passed! Deployment is valid.${NC}"
