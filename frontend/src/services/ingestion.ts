@@ -90,3 +90,47 @@ export async function listIngestQueue(): Promise<IngestQueueItem[]> {
     return []
   }
 }
+
+// Document upload result with tri-indexing info
+export interface IngestResult {
+  success: boolean
+  filename: string
+  chunksProcessed: number
+  message: string
+  sessionId?: string  // Document session for keyword search
+  documentId?: string // Unique document identifier
+}
+
+/**
+ * Upload a document for ingestion with tri-indexing.
+ * Document will be processed by Unstructured and indexed for:
+ * - Keyword search (Zep sessions)
+ * - Vector search (pgvector embeddings)
+ * - Graph search (knowledge graph facts)
+ */
+export async function uploadDocument(file: File): Promise<IngestResult> {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const res = await fetch(`${API_BASE}${API_VERSION}/etl/ingest`, {
+    method: 'POST',
+    body: formData,
+    credentials: 'include',
+  })
+
+  if (!res.ok) {
+    const error = await res.text()
+    throw new Error(`Upload failed: ${error}`)
+  }
+
+  const data = await res.json()
+  return {
+    success: data.success,
+    filename: data.filename,
+    chunksProcessed: data.chunks_processed,
+    message: data.message,
+    sessionId: data.session_id,
+    documentId: data.document_id,
+  }
+}
+
