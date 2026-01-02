@@ -28,15 +28,12 @@ jobs:
         with:
           ruby-version: "3.2"
           bundler-cache: true
-      
-      - name: Install Jekyll
-        run: |
-          gem install bundler jekyll jekyll-relative-links jekyll-seo-tag jekyll-theme-minimal
+          working-directory: docs
       
       - name: Build site
         run: |
           cd docs
-          jekyll build --destination ../_site
+          bundle exec jekyll build --destination ../_site
       
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
