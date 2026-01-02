@@ -27,6 +27,7 @@ from backend.observability import (
 
 from .routers import admin, agents, bau, chat, health, memory, metrics, story, validation, voice, workflows, etl, images, graph
 from .middleware.logging import RequestLoggingMiddleware
+from .middleware.cors_preflight import CORSPreflightMiddleware
 
 # Configure structured logging
 configure_logging()
@@ -136,10 +137,15 @@ def create_app() -> FastAPI:
         )
 
     # Custom middleware
+    # NOTE: Middleware runs in REVERSE order from how they're added.
+    # We add in this order so execution is: ProxyHeaders -> Telemetry -> Logging -> CORSPreflight -> CORS
     app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(TelemetryMiddleware)
     # Trust the Azure Container Apps load balancer to handle SSL/Host headers correctly
     app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
+    # CORSPreflightMiddleware must run BEFORE auth but AFTER CORSMiddleware
+    # Since we added CORSMiddleware first, this will run before it
+    app.add_middleware(CORSPreflightMiddleware)
 
     # Include routers
     app.include_router(health.router, tags=["Health"])
