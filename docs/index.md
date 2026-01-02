@@ -80,40 +80,49 @@ Meet our AI agents:
 ## Documentation Structure
 
 ### 🚀 Getting Started
+
 - [Getting Started Guide](getting-started/) - Quick start and setup
-- [Local Development](getting-started/setup/local-setup.md) - Local environment setup
+- [Local Development](LOCAL-TESTING-GUIDE.md) - Local environment setup
 
 ### 🏗️ Architecture
+
 - [Architecture Overview](architecture/) - Brain + Spine pattern
 - [4-Layer Context Schema](architecture/context-schema/) - Context engineering
 - [Security Context](architecture/context-schema/security-context-enterprise-architecture.md) - Enterprise security
 - [Authentication](architecture/authentication/) - Auth & security architecture
 
 ### 🤖 Agents
+
 - [Agent Personas](agents/) - Elena, Marcus, and Sage
 - [Elena - Business Analyst](agents/elena/persona.md)
 - [Marcus - Project Manager](agents/marcus/persona.md)
 
 ### ⚡ Features
+
 - [Voice & Chat](features/voice/) - Voice interaction features
 - [Memory & Knowledge](features/memory/) - Memory architecture
 - [Connectors](features/connectors/) - Data ingestion
+- [📄 Document Ingestion](document-ingestion-strategy.md) - Tri-search enterprise pipeline
 
 ### 💻 Development
+
 - [Development Guide](development/) - Contributing to Engram
-- [Testing Guide](development/testing/TESTING-GUIDE.md) - Testing documentation
-- [Visual Development](development/guides/visual-development.md) - Creating visuals
+- [Testing Guide](TESTING-GUIDE.md) - Testing documentation
+- [Visual Development](visual-development.md) - Creating visuals
 
 ### 🚀 Deployment
+
 - [Deployment Guide](deployment/) - Production deployment
 - [Enterprise Deployment](deployment/enterprise/) - Enterprise setup
 - [FinOps Strategy](deployment/finops/) - Cost optimization
 
 ### 🔧 Operations
+
 - [Operations Guide](operations/) - Monitoring and maintenance
 - [Troubleshooting](operations/troubleshooting/) - Common issues and solutions
 
 ### 📚 Reference
+
 - [Standard Operating Procedures](reference/sop/) - Configuration SOPs
 - [API Reference](reference/api/) - API documentation
 
@@ -148,4 +157,3 @@ open http://localhost:5173
 <p class="footer-note">
   Built with ❤️ using the <strong>Context Engineering</strong> paradigm
 </p>
-
