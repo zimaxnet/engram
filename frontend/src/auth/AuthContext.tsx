@@ -57,7 +57,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
             // Add domain hint for Google if requested
             // For CIAM federation, 'google.com' is often the correct hint
+            // WORKAROUND: Azure CIAM has a known bug where it sends 'username' param to Google
+            // during silent refresh, which Google rejects. Force select_account to bypass this.
             if (provider === 'google') {
+                request.prompt = 'select_account';
                 request.extraQueryParameters = {
                     ...request.extraQueryParameters,
                     domain_hint: 'google.com'
