@@ -242,11 +242,11 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             }
             {
               name: 'AZURE_AI_DEPLOYMENT'
-              value: 'model-router'  // Use Model Router for intelligent routing via APIM
+              value: 'gpt-5.1-chat'
             }
             {
               name: 'AZURE_AI_API_VERSION'
-              value: '2024-10-01-preview'
+              value: '2024-05-01-preview'
             }
             ...modelRouterEnv
             {
