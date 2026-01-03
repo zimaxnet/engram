@@ -147,19 +147,85 @@ Return ONLY valid JSON, no markdown code blocks or explanations."""
             logger.error(f"GeminiClient: Failed to parse JSON: {e}")
             raise ValueError(f"Invalid JSON from Gemini: {e}")
 
+    async def generate_visual_spec(self, topic: str, context: str = "") -> dict:
+        """
+        Generate a visual specification (JSON) describing the image to create.
+        This is step 1 of the two-step flow: spec → image.
+        
+        Returns a dict with: style, subject, mood, colors, composition
+        """
+        import json
+        
+        prompt = f"""Generate a JSON specification for an AI-generated visual.
+
+Topic: {topic}
+Context: {context}
+
+Return ONLY valid JSON with this structure:
+{{
+  "title": "Brief title for the image",
+  "style": "digital art|photorealistic|illustration|abstract|concept art",
+  "subject": "Main subject/scene description",
+  "mood": "emotional tone (triumphant, serene, dramatic, etc.)",
+  "colors": ["primary color", "secondary color", "accent color"],
+  "composition": "Layout description (centered, rule of thirds, etc.)",
+  "elements": ["key element 1", "key element 2", "key element 3"],
+  "prompt": "Optimized prompt for image generation combining all above"
+}}
+
+No markdown code blocks, just JSON."""
+
+        response_text = await self.ainvoke(prompt)
+        
+        try:
+            cleaned = response_text.strip()
+            if cleaned.startswith("```"):
+                cleaned = cleaned.split("```")[1]
+                if cleaned.startswith("json"):
+                    cleaned = cleaned[4:]
+            return json.loads(cleaned)
+        except json.JSONDecodeError as e:
+            logger.error(f"GeminiClient: Failed to parse visual spec JSON: {e}")
+            # Return a basic spec as fallback
+            return {
+                "title": topic,
+                "style": "digital art",
+                "subject": topic,
+                "mood": "professional",
+                "colors": ["#00d4ff", "#1a1a2e", "#4a4a6a"],
+                "composition": "centered",
+                "elements": [topic],
+                "prompt": f"Professional digital art depicting {topic}, high quality, detailed"
+            }
+
+    async def generate_image_from_spec(self, spec: dict) -> bytes:
+        """
+        Generate an image from a visual specification.
+        This is step 2 of the two-step flow: spec → image.
+        
+        Uses Nano Banana Pro (Gemini 3 Pro Image) with proper response_modalities config.
+        """
+        prompt = spec.get("prompt", f"Create {spec.get('subject', 'an image')}")
+        logger.info(f"GeminiClient: Generating image from spec: {spec.get('title', 'untitled')}")
+        
+        return await self.generate_image(prompt)
+
     async def generate_image(self, prompt: str) -> bytes:
         """
         Generate an image using Nano Banana Pro (Gemini 3 Pro Image) via google-genai SDK.
-        Uses generate_content with image mime type config.
+        Uses generate_content with response_modalities config for image output.
         """
         logger.info(f"GeminiClient: Generating image with {self.IMAGE_MODEL} for: {prompt[:50]}...")
         
         try:
-            # Using generate_content as per user instructions, but removing strict mime type config
-            # to avoid INVALID_ARGUMENT error seen in verification.
+            # Configure for image generation with response_modalities
+            # This tells the model we want image output, not just text
             response = self.client.models.generate_content(
                 model=self.IMAGE_MODEL,
-                contents=prompt
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_modalities=["IMAGE", "TEXT"],
+                )
             )
             
             # Process response to get image bytes
@@ -172,7 +238,7 @@ Return ONLY valid JSON, no markdown code blocks or explanations."""
             
             logger.warning(f"GeminiClient: No inline image data in response. Full response: {response}")
             if response.text:
-                logger.warning(f"GeminiClient: Model returned text instead: {response.text}")
+                logger.warning(f"GeminiClient: Model returned text instead: {response.text[:200]}")
                 
             return await self._generate_mock_image(prompt)
             
@@ -181,16 +247,45 @@ Return ONLY valid JSON, no markdown code blocks or explanations."""
             return await self._generate_mock_image(prompt)
 
     async def _generate_mock_image(self, prompt: str) -> bytes:
-        """Fallback mock image generation"""
+        """Fallback mock image generation with better styling"""
         try:
-            from PIL import Image, ImageDraw
+            from PIL import Image, ImageDraw, ImageFont
             import random
             
-            color = (random.randint(50, 200), random.randint(50, 200), random.randint(50, 200))
-            img = Image.new('RGB', (1024, 1024), color=color)
+            # Create a nicer looking fallback image
+            width, height = 1024, 1024
+            
+            # Dark gradient background
+            img = Image.new('RGB', (width, height), color=(26, 26, 46))
             d = ImageDraw.Draw(img)
             
-            d.text((50, 500), "Image Generation Failed\n(Mock Fallback)", fill=(255, 255, 255))
+            # Add some visual interest
+            for i in range(20):
+                x = random.randint(0, width)
+                y = random.randint(0, height)
+                r = random.randint(50, 150)
+                alpha = random.randint(10, 30)
+                d.ellipse([x-r, y-r, x+r, y+r], fill=(0, 212, 255, alpha))
+            
+            # Center text
+            text = "Visual Generation\nPending"
+            try:
+                font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 48)
+            except:
+                font = ImageFont.load_default()
+            
+            # Get text bounding box for centering
+            bbox = d.textbbox((0, 0), text, font=font)
+            text_width = bbox[2] - bbox[0]
+            text_height = bbox[3] - bbox[1]
+            x = (width - text_width) // 2
+            y = (height - text_height) // 2
+            
+            d.text((x, y), text, fill=(255, 255, 255), font=font, align="center")
+            
+            # Add prompt snippet at bottom
+            snippet = prompt[:80] + "..." if len(prompt) > 80 else prompt
+            d.text((50, height - 100), f"Prompt: {snippet}", fill=(150, 150, 150))
             
             img_byte_arr = io.BytesIO()
             img.save(img_byte_arr, format='PNG')

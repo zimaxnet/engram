@@ -227,18 +227,37 @@ async def delegate_to_sage(topic: str, context: Optional[str] = None) -> str:
         )
         
         if result.success:
-            response = f"Delegated to Sage. He has created:\n\n**Story ID**: {result.story_id}\n\n{result.story_content[:200]}...\n\n[View Full Story & Visual](/stories/{result.story_id})"
-            
-            # Add image display if requested
-            if context and ("image" in context.lower() or "visual" in context.lower()):
-                 response += f"\n\n![Visual](/api/v1/images/{result.story_id}.png)"
+            # Build a transparent, visible response showing Sage's work
+            response = f"""✨ **Sage has completed your request!**
+
+📖 **Story Created**: `{result.story_id}`
+
+---
+
+**Preview**:
+{result.story_content[:400]}...
+
+---
+
+**Artifacts Created by Sage**:
+| Artifact | Status |
+|----------|--------|
+| 📖 Narrative | ✅ Generated |
+| 📊 Diagram | {"✅ Generated" if result.diagram_spec else "⏭️ Skipped"} |
+| 🖼️ Visual | {"✅ Generated" if result.image_path else "⏳ Pending"} |
+
+**View your story**: [Full Story & Visual](/stories/{result.story_id})"""
+
+            # Add image embed if it was generated
+            if result.image_path:
+                response += f"\n\n![Story Visual](/api/v1/images/{result.story_id}.png)"
                  
             return response
         else:
-            return f"Failed to delegate to Sage: {result.error}"
+            return f"⚠️ **Delegation to Sage encountered an issue**: {result.error}\n\nI'll try again or find an alternative approach."
             
     except Exception as e:
-        return f"Error delegating to Sage: {e}"
+        return f"❌ **Error delegating to Sage**: {e}\n\nThe workflow system may be temporarily unavailable."
 
 
 # =============================================================================

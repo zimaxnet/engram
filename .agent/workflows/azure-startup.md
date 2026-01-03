@@ -109,12 +109,24 @@ az containerapp logs show --name staging-env-zep --resource-group engram-rg --ty
 This confirms the API is reachable and authentication is correctly configured (bypassed).
 
 ```bash
-curl -v https://staging-env-api--0000095.gentleriver-dd0de193.eastus2.azurecontainerapps.io/health
+curl -s https://api.engram.work/health | jq .
 ```
 
-Expected output: `HTTP/2 200` and `{"status":"healthy"...}`.
+Expected output: `{"status":"healthy"...}`.
 If you get `401 Unauthorized`, Platform Auth may have been re-enabled. Disable it with:
 `az containerapp auth update --name staging-env-api --resource-group engram-rg --enabled false`
+
+### 10. E2E Memory Verification (Full Pipeline Test)
+
+// turbo
+
+Enriches a test episode and verifies it appears in episodes, search, and knowledge graph.
+
+```bash
+./scripts/verify-memory-e2e.sh
+```
+
+Expected output: All 4 checks should pass ✅
 
 ## Startup Order Summary
 
@@ -132,4 +144,30 @@ If Zep fails to start with connection errors:
 
 1. Verify PostgreSQL is fully `Ready` (not just starting)
 2. Check `max_connections` is still set to 100
-3. Restart Zep: `az containerapp revision restart --name staging-env-zep --resource-group engram-rg --revision $(az containerapp revision list --name staging-env-zep --resource-group engram-rg --query "[0].name" -o tsv)`
+3. Restart Zep: `az containerapp revision restart --name staging-env-zep --resource-group engram-rg --revision $(az containerapp revision list --name staging-env-zep --resource-group engram-rg --query "[0].name\" -o tsv)`
+
+## Post-Startup: Document Findings
+
+> [!TIP]
+> Always document startup findings and enrich memory so learnings are searchable.
+
+### 11. Document Startup Report (Standard Practice)
+
+After verification, document any challenges or findings:
+
+1. **Note key findings** (CORS issues, auth reverts, stale revisions, etc.)
+2. **Enrich memory** via the API:
+
+```bash
+curl -X POST "https://api.engram.work/api/v1/memory/enrich" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Startup Report [DATE]: [KEY FINDINGS]",
+    "session_id": "startup-episode-[YYYYMMDD]",
+    "speaker": "assistant",
+    "agent_id": "antigravity",
+    "channel": "automation"
+  }'
+```
+
+1. **Verify in Episodes UI** at <https://engram.work/memory/episodes>

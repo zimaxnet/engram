@@ -191,7 +191,11 @@ async def generate_diagram_activity(input: GenerateDiagramInput) -> GenerateDiag
 @activity.defn
 async def generate_image_activity(input: GenerateImageInput) -> GenerateImageOutput:
     """
-    Generate an image using Gemini/Imagen.
+    Generate an image using the two-step flow:
+    1. Generate visual spec (JSON describing the image)
+    2. Generate image from spec using Nano Banana Pro
+    
+    This mirrors the proven workflow: spec → Nano Banana Pro → image.
     """
     activity.logger.info(f"Generating image for prompt: {input.prompt[:50]}...")
     
@@ -199,7 +203,18 @@ async def generate_image_activity(input: GenerateImageInput) -> GenerateImageOut
         from backend.llm.gemini_client import get_gemini_client
         
         client = get_gemini_client()
-        image_data = await client.generate_image(prompt=input.prompt)
+        
+        # Step 1: Generate visual specification
+        activity.logger.info("Step 1: Generating visual specification...")
+        visual_spec = await client.generate_visual_spec(
+            topic=input.prompt,
+            context="Story illustration for Engram"
+        )
+        activity.logger.info(f"Visual spec generated: {visual_spec.get('title', 'untitled')}")
+        
+        # Step 2: Generate image from spec
+        activity.logger.info("Step 2: Generating image from visual spec...")
+        image_data = await client.generate_image_from_spec(visual_spec)
         
         if not image_data:
              return GenerateImageOutput(image_data=b"", success=False, error="Empty image data returned")

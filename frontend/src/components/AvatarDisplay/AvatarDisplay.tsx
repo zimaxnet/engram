@@ -60,18 +60,21 @@ const AGENT_INFO = {
     role: 'Business Analyst',
     accentColor: '#00d4ff',
     imagePlaceholder: 'E',
+    imageUrl: '/assets/images/elena-portrait.png',
   },
   marcus: {
     name: 'Marcus Chen',
     role: 'Project Manager',
     accentColor: '#a855f7',
     imagePlaceholder: 'M',
+    imageUrl: null,  // TODO: Add Marcus portrait
   },
   sage: {
     name: 'Sage Meridian',
     role: 'Storyteller',
     accentColor: '#f59e0b',
     imagePlaceholder: 'S',
+    imageUrl: null,  // TODO: Add Sage portrait
   },
 };
 
@@ -84,6 +87,7 @@ export default function AvatarDisplay({
   size = 'md',
 }: AvatarDisplayProps) {
   const [mouthShape, setMouthShape] = useState(VISEME_MOUTH_SHAPES[0]);
+  const [imageError, setImageError] = useState(false);
   const animationStartTime = useRef<number>(0);
   const animationFrameRef = useRef<number>(0);
   const mouthShapeRef = useRef(mouthShape);
@@ -96,6 +100,7 @@ export default function AvatarDisplay({
   useEffect(() => {
     prevIsSpeakingRef.current = isSpeaking;
   }, [isSpeaking]);
+
 
   // Animate visemes when speaking
   useEffect(() => {
@@ -180,9 +185,18 @@ export default function AvatarDisplay({
 
         {/* Avatar Image/Placeholder */}
         <div className="avatar-image">
-          <span className="avatar-placeholder">
-            {agent.imagePlaceholder}
-          </span>
+          {agent.imageUrl && !imageError ? (
+            <img
+              src={agent.imageUrl}
+              alt={agent.name}
+              className="avatar-img"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <span className="avatar-placeholder">
+              {agent.imagePlaceholder}
+            </span>
+          )}
         </div>
 
         {/* Animated Mouth Overlay (CSS-based) */}
