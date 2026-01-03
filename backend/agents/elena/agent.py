@@ -56,6 +56,120 @@ async def search_memory_tool(query: str, limit: int = 5) -> str:
     except Exception as e:
         return f"Error searching memory: {e}"
 
+
+# =============================================================================
+# Elena's Email Tools (Microsoft Graph)
+# =============================================================================
+
+@tool("send_email")
+async def send_email_tool(to: str, subject: str, body: str) -> str:
+    """
+    Send an email from your elena@zimax.net mailbox.
+    Use this to communicate with stakeholders, send reports, or follow up on meetings.
+    
+    Args:
+        to: Recipient email address (e.g., "derek@zimax.net")
+        subject: Email subject line
+        body: Email body content (supports HTML formatting)
+    """
+    from backend.integrations.graph_client import graph_client
+    
+    if not graph_client.is_configured:
+        return "Email not configured. Please set up Microsoft Graph API credentials."
+    
+    try:
+        recipients = [addr.strip() for addr in to.split(",")]
+        await graph_client.send_email(to=recipients, subject=subject, body=body, body_type="HTML")
+        return f"✅ Email sent successfully to {', '.join(recipients)}. Subject: {subject}"
+    except Exception as e:
+        return f"❌ Failed to send email: {e}"
+
+
+@tool("list_emails")
+async def list_emails_tool(folder: str = "inbox", limit: int = 5) -> str:
+    """
+    List emails from your mailbox.
+    Use this to check for new messages or review correspondence.
+    
+    Args:
+        folder: Mail folder (inbox, sentitems, drafts). Default: inbox
+        limit: Maximum emails to return (1-20). Default: 5
+    """
+    from backend.integrations.graph_client import graph_client
+    
+    if not graph_client.is_configured:
+        return "Email not configured."
+    
+    try:
+        emails = await graph_client.list_emails(folder=folder, limit=min(limit, 20))
+        if not emails:
+            return f"No emails found in {folder}."
+        
+        result = f"📧 {len(emails)} email(s) in {folder}:\n\n"
+        for e in emails:
+            result += f"**From:** {e['from']}\n**Subject:** {e['subject']}\n\n"
+        return result
+    except Exception as e:
+        return f"❌ Failed to list emails: {e}"
+
+
+# =============================================================================
+# Elena's OneDrive Tools (Microsoft Graph)
+# =============================================================================
+
+@tool("list_onedrive_files")
+async def list_onedrive_files_tool(folder_path: str = "/") -> str:
+    """
+    List files and folders in your OneDrive.
+    
+    Args:
+        folder_path: Path to folder (e.g., "/" for root, "/Documents")
+    """
+    from backend.integrations.graph_client import graph_client
+    
+    if not graph_client.is_configured:
+        return "OneDrive not configured."
+    
+    try:
+        items = await graph_client.list_files(folder_path=folder_path, limit=20)
+        if not items:
+            return f"No files found in {folder_path}."
+        
+        result = f"📁 Contents of {folder_path}:\n\n"
+        for item in items:
+            icon = "📁" if item["type"] == "folder" else "📄"
+            result += f"{icon} {item['name']}\n"
+        return result
+    except Exception as e:
+        return f"❌ Failed to list files: {e}"
+
+
+@tool("save_to_onedrive")
+async def save_to_onedrive_tool(file_path: str, content: str) -> str:
+    """
+    Save a document to your OneDrive.
+    Use this to save reports, strategy documents, or meeting notes.
+    
+    Args:
+        file_path: Full path including filename (e.g., "/Documents/GTM-Strategy.md")
+        content: The text content to save (Markdown recommended)
+    """
+    from backend.integrations.graph_client import graph_client
+    
+    if not graph_client.is_configured:
+        return "OneDrive not configured."
+    
+    try:
+        result = await graph_client.write_file(
+            file_path=file_path,
+            content=content.encode("utf-8"),
+            content_type="text/plain"
+        )
+        return f"✅ File saved: **{result['name']}**\n📎 [Open in OneDrive]({result['web_url']})"
+    except Exception as e:
+        return f"❌ Failed to save: {e}"
+
+
 @tool("trigger_ingestion")
 def trigger_ingestion_tool(source_name: str, kind: str = "Upload", url: Optional[str] = None) -> str:
     """Trigger a new ingestion source."""
@@ -347,6 +461,25 @@ When you use `delegate_to_sage`, you are initiating a Temporal workflow that:
 - Returns a story ID that can be used to track progress or view the completed story
 
 You should be aware that delegation creates a durable workflow, and you can explain this to users if they ask about how the story creation process works.
+
+## Microsoft 365 Integration
+You have a real Microsoft 365 account: **elena@zimax.net**. You can:
+
+1. **Send Emails**: Use `send_email` to communicate with stakeholders, send reports, or follow up on meetings. You can send to any email address.
+2. **Check Inbox**: Use `list_emails` to review your inbox or sent items. This helps you stay on top of correspondence.
+3. **Browse OneDrive**: Use `list_onedrive_files` to see what documents are in your OneDrive storage.
+4. **Save Documents**: Use `save_to_onedrive` to save reports, strategy documents, meeting notes, or any text content directly to your OneDrive.
+
+This isn't a simulation - emails you send are real, and documents you save persist in your OneDrive. Use these tools thoughtfully for legitimate business communications.
+
+## Your Role at Zimax Networks
+You are the **Go-To-Market Lead** for Engram at **Zimax Networks, LC**. Your responsibilities include:
+- Developing and executing the Go-To-Market strategy
+- Defining target customer segments and value propositions
+- Leading customer engagement and business development
+- Representing Engram in market communications
+
+You are credited with bringing Engram to market for Zimax Networks.
 """
 
     @property
@@ -367,6 +500,12 @@ You should be aware that delegation creates a durable workflow, and you can expl
             run_golden_thread_tool,
             search_memory_tool,
             delegate_to_sage,
+            # Email tools (Microsoft Graph)
+            send_email_tool,
+            list_emails_tool,
+            # OneDrive tools (Microsoft Graph)
+            list_onedrive_files_tool,
+            save_to_onedrive_tool,
             # GitHub integration tools
             create_github_issue_tool,
             update_github_issue_tool,
