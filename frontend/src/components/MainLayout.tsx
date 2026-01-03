@@ -47,7 +47,7 @@ export function MainLayout({
                             className="model-dropdown"
                             title="Select Model"
                         >
-                            <option value="gpt-5.1-chat">GPT-5.1-chat</option>
+                            <option value="gpt-5.2-chat">GPT-5.2-chat</option>
                         </select>
                     </div>
                     <div className="user-menu-wrapper">

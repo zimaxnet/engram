@@ -66,7 +66,7 @@ class Settings(BaseSettings):
     azure_ai_endpoint: Optional[str] = Field("https://zimax-gw.azure-api.net/zimax/openai/v1", alias="AZURE_AI_ENDPOINT")
     azure_ai_project_name: Optional[str] = Field(None, alias="AZURE_AI_PROJECT_NAME")
     azure_ai_key: Optional[str] = Field(None, alias="AZURE_AI_KEY")
-    azure_ai_deployment: str = Field("gpt-5.1-chat", alias="AZURE_AI_DEPLOYMENT")
+    azure_ai_deployment: str = Field("gpt-5.2-chat", alias="AZURE_AI_DEPLOYMENT")
     azure_ai_api_version: str = Field("2024-05-01-preview", alias="AZURE_AI_API_VERSION")
     # Model Router: If set, use Azure AI Foundry Model Router instead of direct deployment
     # Set to the Model Router deployment name (e.g., "model-router-prod")
