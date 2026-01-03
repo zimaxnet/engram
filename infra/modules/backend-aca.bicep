@@ -267,7 +267,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             }
             {
               name: 'AZURE_VOICELIVE_PROJECT_NAME'
-              value: ''  // Optional: set to project name if using Azure AI Foundry projects
+              value: 'zimax'  // Required for unified endpoint routing
             }
             {
               name: 'AZURE_VOICELIVE_API_VERSION'

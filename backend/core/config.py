@@ -94,7 +94,7 @@ class Settings(BaseSettings):
     sage_voicelive_voice: str = Field("en-US-Brian:DragonHDLatestNeural", alias="SAGE_VOICELIVE_VOICE")
     # Project name for unified endpoints (optional, used for project-based endpoints)
     # When using Azure AI Foundry projects, set this to the project name (e.g., "zimax")
-    azure_voicelive_project_name: Optional[str] = Field(None, alias="AZURE_VOICELIVE_PROJECT_NAME")
+    azure_voicelive_project_name: Optional[str] = Field("zimax", alias="AZURE_VOICELIVE_PROJECT_NAME")
     # API version for Realtime API
     # Use "2025-10-01" for latest features (140+ languages, Neural HD voices, improved VAD, 4K avatars)
     # Use "2024-10-01-preview" for legacy compatibility
