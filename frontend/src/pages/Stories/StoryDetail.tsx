@@ -21,6 +21,28 @@ export function StoryDetail() {
     const [error, setError] = useState<string | null>(null);
     // Use 'visual' as default tab if image exists? Or stick to story.
     const [activeTab, setActiveTab] = useState<'story' | 'diagram' | 'visual'>('story');
+    const [copied, setCopied] = useState(false);
+
+    // Generate shareable URL
+    const shareableUrl = `https://engram.work/stories/${storyId}`;
+
+    const handleShare = async () => {
+        try {
+            await navigator.clipboard.writeText(shareableUrl);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = shareableUrl;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
+    };
 
     useEffect(() => {
         if (!storyId) return;
@@ -55,6 +77,16 @@ export function StoryDetail() {
                     <span className="detail-date">
                         {new Date(story.created_at).toLocaleString()}
                     </span>
+                </div>
+                <div className="share-row">
+                    <button
+                        className={`share-button ${copied ? 'copied' : ''}`}
+                        onClick={handleShare}
+                        title="Copy shareable link"
+                    >
+                        {copied ? '✅ Copied!' : '🔗 Share'}
+                    </button>
+                    <span className="share-url">{shareableUrl}</span>
                 </div>
             </header>
 
@@ -109,7 +141,6 @@ export function StoryDetail() {
                                 src={story.image_path}
                                 alt={story.topic}
                                 className="story-image-full"
-                                style={{ maxWidth: '100%', height: 'auto', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
                             />
                         ) : (
                             <div className="no-visual">

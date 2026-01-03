@@ -221,6 +221,25 @@
     z-index: 999;
     animation: fadeIn 0.2s ease-out;
   }
+
+  /* Header controls on mobile */
+  .app-header {
+    padding: 0.5rem 1rem;
+  }
+
+  .header-controls {
+    gap: 0.5rem;
+  }
+
+  .model-selector {
+    display: none;
+    /* Hide model selector on mobile */
+  }
+
+  .logo {
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+  }
 }
 
 /* Concept Explainer Strings */

@@ -228,6 +228,8 @@ async def delegate_to_sage(topic: str, context: Optional[str] = None) -> str:
         
         if result.success:
             # Build a transparent, visible response showing Sage's work
+            shareable_url = f"https://engram.work/stories/{result.story_id}"
+            
             response = f"""✨ **Sage has completed your request!**
 
 📖 **Story Created**: `{result.story_id}`
@@ -246,7 +248,9 @@ async def delegate_to_sage(topic: str, context: Optional[str] = None) -> str:
 | 📊 Diagram | {"✅ Generated" if result.diagram_spec else "⏭️ Skipped"} |
 | 🖼️ Visual | {"✅ Generated" if result.image_path else "⏳ Pending"} |
 
-**View your story**: [Full Story & Visual](/stories/{result.story_id})"""
+**View your story**: [Full Story & Visual](/stories/{result.story_id})
+
+🔗 **Share on social media**: `{shareable_url}`"""
 
             # Add image embed if it was generated
             if result.image_path:

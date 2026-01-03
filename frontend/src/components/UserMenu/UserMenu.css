@@ -37,7 +37,8 @@
     box-shadow: 0 0 10px rgba(0, 200, 255, 0.3);
 }
 
-.login-button, .logout-button {
+.login-button,
+.logout-button {
     padding: 0.4rem 1rem;
     border-radius: 6px;
     font-size: 0.85rem;
@@ -87,7 +88,9 @@
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .login-button.google {
@@ -95,16 +98,42 @@
     padding: 0;
     width: 34px;
     height: 34px;
-    min-width: 34px; /* prevent shrinking */
+    min-width: 34px;
+    /* prevent shrinking */
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    margin-right: -0.5rem; /* slight overlap or closer spacing */
+    margin-right: -0.5rem;
+    /* slight overlap or closer spacing */
 }
 
 .login-button.google:hover {
     background: #f8f9fa;
-    transform: scale(1.05); /* override translate */
+    transform: scale(1.05);
+    /* override translate */
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* Mobile responsive */
+@media (max-width: 900px) {
+    .user-menu {
+        gap: 0.5rem;
+    }
+
+    .login-button {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+
+    .user-name {
+        display: none;
+        /* Hide name on mobile, show avatar only */
+    }
+
+    .logout-button {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+    }
 }
