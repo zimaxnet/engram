@@ -63,7 +63,7 @@ class Settings(BaseSettings):
     # ==========================================================================
     # Chat API Gateway (OpenAI-compatible)
     # ==========================================================================
-    azure_ai_endpoint: Optional[str] = Field(None, alias="AZURE_AI_ENDPOINT")
+    azure_ai_endpoint: Optional[str] = Field("https://zimax-gw.azure-api.net/zimax/openai/v1", alias="AZURE_AI_ENDPOINT")
     azure_ai_project_name: Optional[str] = Field(None, alias="AZURE_AI_PROJECT_NAME")
     azure_ai_key: Optional[str] = Field(None, alias="AZURE_AI_KEY")
     azure_ai_deployment: str = Field("gpt-5.1-chat", alias="AZURE_AI_DEPLOYMENT")

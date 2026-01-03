@@ -234,7 +234,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             }
             {
               name: 'AZURE_AI_ENDPOINT'
-              value: azureAiEndpoint
+              value: '${azureAiEndpoint}/openai/v1'
             }
             {
               name: 'AZURE_AI_PROJECT_NAME'
