@@ -183,7 +183,7 @@ class Settings(BaseSettings):
     ms_graph_tenant_id: Optional[str] = Field(None, alias="MS_GRAPH_TENANT_ID")
     ms_graph_client_id: Optional[str] = Field(None, alias="MS_GRAPH_CLIENT_ID")
     ms_graph_client_secret: Optional[str] = Field(None, alias="MS_GRAPH_CLIENT_SECRET")
-    ms_graph_user_email: str = Field("elana@zimax.net", alias="MS_GRAPH_USER_EMAIL")
+    ms_graph_user_email: str = Field("elena@zimax.net", alias="MS_GRAPH_USER_EMAIL")
 
     model_config = ConfigDict(
         env_file=[".env", "../.env"],
