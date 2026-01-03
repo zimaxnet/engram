@@ -418,19 +418,17 @@ class EnrichResponse(BaseModel):
 @router.post("/enrich", response_model=EnrichResponse)
 async def enrich_memory(request: EnrichRequest, user: SecurityContext = Depends(get_current_user)):
     """
-    Enrich memory with voice transcripts.
+    Enrich memory with voice transcripts or automation context.
     
     This endpoint is called by the browser after receiving transcription
-    from the Azure Realtime API. It's fire-and-forget — the voice experience
-    continues regardless of whether memory persistence succeeds.
-    
-    Part of VoiceLive v2 architecture: audio flows directly browser↔Azure,
-    memory enrichment happens asynchronously via this endpoint.
+    from the Azure Realtime API, or by automation tools to store context.
+    It's fire-and-forget — the experience continues regardless of 
+    whether memory persistence succeeds.
     """
     import logging
     import uuid
+    from datetime import datetime, timezone
     from backend.memory.client import memory_client
-    from backend.core import EnterpriseContext, MessageRole, Turn, Role
     
     logger = logging.getLogger(__name__)
     
@@ -438,7 +436,9 @@ async def enrich_memory(request: EnrichRequest, user: SecurityContext = Depends(
         # Generate session ID if not provided
         session_id = request.session_id or f"voice-{uuid.uuid4()}"
         
-        # Ensure memory session exists
+        # Create/update session with metadata including summary from content
+        summary = request.text[:200] + ("..." if len(request.text) > 200 else "")
+        
         await memory_client.get_or_create_session(
             session_id=session_id,
             user_id=user.user_id,
@@ -446,31 +446,27 @@ async def enrich_memory(request: EnrichRequest, user: SecurityContext = Depends(
                 "tenant_id": user.tenant_id,
                 "channel": request.channel,
                 "agent_id": request.agent_id or "unknown",
+                "summary": summary,
+                "turn_count": 1,
             },
         )
         
-        # Create a minimal context for the turn
-        security = user
-        context = EnterpriseContext(security=security, context_version="1.0.0")
-        context.episodic.conversation_id = session_id
-        
-        # Add the turn
-        role = MessageRole.USER if request.speaker == "user" else MessageRole.ASSISTANT
-        context.episodic.add_turn(
-            Turn(
-                role=role,
-                content=request.text,
-                agent_id=request.agent_id,
-                tool_calls=None,
-                token_count=None,
-            )
+        # Directly add the message to memory (bypassing EnterpriseContext complexity)
+        role = "user" if request.speaker == "user" else "assistant"
+        await memory_client.add_memory(
+            session_id=session_id,
+            messages=[{
+                "role": role,
+                "content": request.text,
+                "metadata": {
+                    "agent_id": request.agent_id,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "channel": request.channel,
+                },
+            }],
         )
         
-        # Persist to Zep
-        from backend.memory import persist_conversation
-        await persist_conversation(context)
-        
-        logger.info(f"Voice transcript enriched: session={session_id}, speaker={request.speaker}")
+        logger.info(f"Memory enriched: session={session_id}, speaker={request.speaker}, len={len(request.text)}")
         
         return EnrichResponse(
             success=True,
@@ -479,9 +475,10 @@ async def enrich_memory(request: EnrichRequest, user: SecurityContext = Depends(
         )
         
     except Exception as e:
-        logger.warning(f"Voice enrichment failed (non-blocking): {e}")
+        logger.warning(f"Memory enrichment failed (non-blocking): {e}")
         return EnrichResponse(
             success=False,
             session_id=request.session_id or "",
             message=f"Enrichment failed: {str(e)}",
         )
+
