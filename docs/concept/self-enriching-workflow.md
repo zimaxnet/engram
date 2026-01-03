@@ -12,6 +12,8 @@ Traditional software engineering is linear:
 
 The **Engram Self-Enriching Workflow** introduces a recursive loop where every resolution permanently upgrades the system's intelligence. When the Agent fixes a problem, it doesn't just push code—it **ingests the solution into its own memory**.
 
+![Self-Enriching Workflow Diagram](../assets/diagrams/self-enriching-workflow-recursive-engineering.png)
+
 ## The Workflow: Fix → Document → Ingest
 
 1. **Debug & Resolve:** The Agent identifies the root cause (e.g., "Azure Platform Auth breaks CORS") and applies a fix.

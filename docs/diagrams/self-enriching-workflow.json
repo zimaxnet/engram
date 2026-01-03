@@ -1,0 +1,215 @@
+{
+    "title": "Self-Enriching Workflow (Recursive Engineering)",
+    "subtitle": "Continuous Intelligence Upgrade Loop",
+    "version": "1.0",
+    "theme": "dark",
+    "layout": "circular",
+    "nodes": [
+        {
+            "id": "trigger_issue",
+            "label": "Issue / Task",
+            "type": "event",
+            "icon": "alert-circle",
+            "position": {
+                "x": 400,
+                "y": 100
+            },
+            "description": "User reports a bug or requests a feature (e.g., 'VoiceLive connection failed')",
+            "style": {
+                "backgroundColor": "#EF4444",
+                "borderColor": "#F87171"
+            }
+        },
+        {
+            "id": "agent",
+            "label": "Agent (Antigravity)",
+            "type": "agent",
+            "icon": "bot",
+            "position": {
+                "x": 600,
+                "y": 250
+            },
+            "description": "The AI engineer investigating, debugging, and resolving the issue",
+            "style": {
+                "backgroundColor": "#8B5CF6",
+                "borderColor": "#A78BFA"
+            }
+        },
+        {
+            "id": "resolve",
+            "label": "1. RESOLVE",
+            "type": "action",
+            "icon": "check-circle",
+            "position": {
+                "x": 600,
+                "y": 400
+            },
+            "description": "Fix applied to code/infrastructure (e.g., Updated config.py)",
+            "style": {
+                "backgroundColor": "#10B981",
+                "borderColor": "#34D399"
+            }
+        },
+        {
+            "id": "codify",
+            "label": "2. CODIFY",
+            "type": "action",
+            "icon": "file-text",
+            "position": {
+                "x": 400,
+                "y": 550
+            },
+            "description": "Knowledge captured in persistent documentation (Source of Truth)",
+            "style": {
+                "backgroundColor": "#F59E0B",
+                "borderColor": "#FBBF24"
+            }
+        },
+        {
+            "id": "enrich",
+            "label": "3. ENRICH",
+            "type": "action",
+            "icon": "upload-cloud",
+            "position": {
+                "x": 200,
+                "y": 400
+            },
+            "description": "Document ingested into Zep Memory (Vector + Knowledge Graph)",
+            "style": {
+                "backgroundColor": "#06B6D4",
+                "borderColor": "#22D3EE"
+            }
+        },
+        {
+            "id": "memory",
+            "label": "Zep Memory",
+            "type": "storage",
+            "icon": "database",
+            "position": {
+                "x": 200,
+                "y": 250
+            },
+            "description": "Long-term semantic storage holding the new 'synapse'",
+            "style": {
+                "backgroundColor": "#3B82F6",
+                "borderColor": "#60A5FA",
+                "glow": true
+            }
+        },
+        {
+            "id": "reference",
+            "label": "4. REFERENCE",
+            "type": "action",
+            "icon": "link",
+            "position": {
+                "x": 300,
+                "y": 150
+            },
+            "description": "Session ID returned to user for verification (e.g., doc-workflow-...)",
+            "style": {
+                "backgroundColor": "#EC4899",
+                "borderColor": "#F472B6"
+            }
+        },
+        {
+            "id": "awareness",
+            "label": "Recursive Awareness",
+            "type": "outcome",
+            "icon": "lightbulb",
+            "position": {
+                "x": 400,
+                "y": 325
+            },
+            "description": "The system is now smarter. Future queries retrieve this new context.",
+            "style": {
+                "backgroundColor": "#7C3AED",
+                "borderColor": "#A78BFA",
+                "glow": true
+            }
+        }
+    ],
+    "connections": [
+        {
+            "from": "trigger_issue",
+            "to": "agent",
+            "label": "Prompts",
+            "style": {
+                "strokeColor": "#EF4444",
+                "animated": true
+            }
+        },
+        {
+            "from": "agent",
+            "to": "resolve",
+            "label": "Debugs & Fixes",
+            "style": {
+                "strokeColor": "#A78BFA"
+            }
+        },
+        {
+            "from": "resolve",
+            "to": "codify",
+            "label": "Creates Artifact",
+            "style": {
+                "strokeColor": "#10B981"
+            }
+        },
+        {
+            "from": "codify",
+            "to": "enrich",
+            "label": "Ingests",
+            "style": {
+                "strokeColor": "#FBBF24"
+            }
+        },
+        {
+            "from": "enrich",
+            "to": "memory",
+            "label": "Stores",
+            "style": {
+                "strokeColor": "#22D3EE",
+                "strokeDash": "5,5"
+            }
+        },
+        {
+            "from": "memory",
+            "to": "agent",
+            "label": "Retrieves Context",
+            "style": {
+                "strokeColor": "#3B82F6",
+                "animated": true,
+                "strokeDash": "2,2"
+            }
+        },
+        {
+            "from": "enrich",
+            "to": "reference",
+            "label": "Generates ID",
+            "style": {
+                "strokeColor": "#EC4899"
+            }
+        },
+        {
+            "from": "memory",
+            "to": "awareness",
+            "label": "Powers",
+            "style": {
+                "strokeColor": "#7C3AED"
+            }
+        }
+    ],
+    "annotations": [
+        {
+            "id": "loop_annotation",
+            "target": "awareness",
+            "text": "THE LOOP:\nBug → Fix → Knowledge → Intelligence\nThe system treats its own development as data.",
+            "position": "center"
+        }
+    ],
+    "metadata": {
+        "generator": "Antigravity Agent",
+        "created": "2026-01-02",
+        "author": "Engram Recursive Engineering",
+        "purpose": "Visualizing the Self-Enriching Workflow for users"
+    }
+}
