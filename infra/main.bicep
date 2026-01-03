@@ -610,3 +610,20 @@ resource swaReaderRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   }
 }
 
+
+// =============================================================================
+// Auth Fix (Post-SWA Linking)
+// =============================================================================
+// The SWA Linked Backend resource automatically enables "Easy Auth" and sets
+// "RedirectToLoginPage" on the backend Container App. This breaks CORS for
+// unauthenticated OPTIONS requests. We must reset it to "AllowAnonymous"
+// AFTER the SWA module runs.
+module authFixModule 'modules/auth-fix.bicep' = {
+  name: 'authFix'
+  dependsOn: [
+    swaModule
+  ]
+  params: {
+    containerAppName: '${envName}-api'
+  }
+}
