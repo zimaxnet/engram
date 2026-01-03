@@ -17,7 +17,7 @@ Engram is transitioning from proof-of-concept to production business operations.
 ### Elena Vasquez - Go-To-Market Lead
 
 **Role**: Business Analyst AI Agent  
-**Email**: <elena@zimaxnet.com> (to be provisioned)  
+**Email**: <elena@zimax.net> ✅ **ACTIVE** (Business Basic, month-to-month)  
 **Responsibilities**:
 
 - Develop and execute Go-To-Market strategy
@@ -56,8 +56,8 @@ Engram is transitioning from proof-of-concept to production business operations.
 ### Licensing Requirements (Marcus to complete)
 
 | Vendor | Product | Priority | Notes |
-|--------|---------|----------|-------|
-| Microsoft | 365 Business Premium | HIGH | Elena email + OneDrive |
+| ------ | ------- | -------- | ----- |
+| Microsoft | 365 Business Basic | ✅ ACTIVE | <elena@zimax.net> + OneDrive |
 | Zep | Cloud Flex | MEDIUM | Upgrade when OSS limits hit |
 | Temporal | Enterprise Support | LOW | Evaluate need |
 | Unstructured | Enterprise | LOW | Evaluate need |
@@ -110,7 +110,7 @@ Permissions needed:
 
 ### Week 1
 
-- [ ] Provision <elena@zimaxnet.com> in Microsoft 365
+- [x] Provision <elena@zimax.net> in Microsoft 365 ✅ DONE
 - [ ] Create Azure AD app registration for Graph API
 - [ ] Elena: Draft initial GTM strategy outline
 - [ ] Marcus: Complete licensing inventory

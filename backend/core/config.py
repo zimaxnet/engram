@@ -175,6 +175,16 @@ class Settings(BaseSettings):
     github_repo_owner: str = Field("zimaxnet", alias="GITHUB_REPO_OWNER")
     github_repo_name: str = Field("engram", alias="GITHUB_REPO_NAME")
 
+    # ==========================================================================
+    # Microsoft Graph API (Elena Email, OneDrive, Calendar)
+    # ==========================================================================
+    # Register app at https://portal.azure.com → App registrations
+    # Required application permissions: Mail.Send, Mail.Read, Files.ReadWrite.All
+    ms_graph_tenant_id: Optional[str] = Field(None, alias="MS_GRAPH_TENANT_ID")
+    ms_graph_client_id: Optional[str] = Field(None, alias="MS_GRAPH_CLIENT_ID")
+    ms_graph_client_secret: Optional[str] = Field(None, alias="MS_GRAPH_CLIENT_SECRET")
+    ms_graph_user_email: str = Field("elena@zimax.net", alias="MS_GRAPH_USER_EMAIL")
+
     model_config = ConfigDict(
         env_file=[".env", "../.env"],
         env_file_encoding="utf-8",
