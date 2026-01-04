@@ -36,6 +36,7 @@ from backend.workflows.agent_workflow import (
     ConversationWorkflow,
 )
 from backend.workflows.story_workflow import StoryWorkflow
+from backend.workflows.maintenance import RepairWorkflow, repair_stories_activity
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -89,6 +90,7 @@ async def run_worker():
             ConversationWorkflow,
             ApprovalWorkflow,
             StoryWorkflow,
+            RepairWorkflow,
         ],
         activities=[
             initialize_context_activity,
@@ -104,6 +106,8 @@ async def run_worker():
             generate_image_activity,
             save_artifacts_activity,
             enrich_story_memory_activity,
+            # Maintenance activities
+            repair_stories_activity,
         ],
     )
 

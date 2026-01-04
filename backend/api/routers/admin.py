@@ -155,3 +155,40 @@ async def get_audit_logs(user: SecurityContext = Depends(get_current_user)):
     state = _load_state()
     logs = state.get("audit") or []
     return [AuditLog(**log) for log in logs]
+
+
+class RepairResponse(BaseModel):
+    workflow_id: str
+    run_id: str
+    status: str
+
+@router.post("/repair", response_model=RepairResponse)
+async def trigger_repair_workflow(user: SecurityContext = Depends(get_current_user)):
+    """
+    Trigger the story image repair workflow.
+    
+    This regenerates missing images for stories using Imagen 3.0 Pro.
+    """
+    try:
+        from backend.workflows.worker import create_temporal_client
+        from backend.workflows.maintenance import RepairWorkflow
+        
+        # Connect to Temporal
+        client = await create_temporal_client()
+        
+        # Start workflow
+        handle = await client.start_workflow(
+            RepairWorkflow.run,
+            id=f"repair-images-{int(datetime.utcnow().timestamp())}",
+            task_queue="engram-queue",
+        )
+        
+        return RepairResponse(
+            workflow_id=handle.id,
+            run_id=handle.result_run_id or "unknown",
+            status="started"
+        )
+    except Exception as e:
+        logger.exception("Failed to trigger repair workflow")
+        # Return 500 but structured if possible, or let FastAPI handle generic 500
+        raise
