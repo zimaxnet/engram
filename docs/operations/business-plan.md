@@ -45,7 +45,7 @@ Engram is transitioning from proof-of-concept to production business operations.
 
 | Component | Product | Deployment | License Status |
 |-----------|---------|------------|----------------|
-| Memory | Zep OSS v0.x | Azure Container Apps | OSS (deprecated, monitoring) |
+| Memory | Zep Cloud Flex | Managed (SaaS) | **PLANNED MIGRATION** |
 | Workflow | Temporal | Azure Container Apps | OSS (self-hosted) |
 | Database | PostgreSQL | Azure Flexible Server | Azure managed |
 | Frontend | React SPA | Azure Static Web Apps | N/A |
@@ -58,28 +58,42 @@ Engram is transitioning from proof-of-concept to production business operations.
 | Vendor | Product | Priority | Notes |
 | ------ | ------- | -------- | ----- |
 | Microsoft | 365 Business Basic | ✅ ACTIVE | <elena@zimax.net> + OneDrive |
-| Zep | Cloud Flex | MEDIUM | Upgrade when OSS limits hit |
-| Temporal | Enterprise Support | LOW | Evaluate need |
-| Unstructured | Enterprise | LOW | Evaluate need |
-| LangChain | LangSmith Enterprise | LOW | Evaluate need |
+| Zep | Cloud Flex | ✅ HIGH | Required for production metadata |
+| Temporal | Enterprise Support | LOW | Evaluate need at scale |
+| Unstructured | Enterprise | LOW | Evaluate need at scale |
+| LangChain | LangSmith Enterprise | LOW | Evaluate need at scale |
+
+---
+
+## Customer Pricing Model
+
+Engram operates a 4-tier commercial pricing model designed to scale with customer needs.
+
+| Tier | Price | Capacity | Target |
+|------|-------|----------|--------|
+| **Developer** | Free | 100 convos, 1k episodes/mo | Individual Devs / POC |
+| **Team** | $49/mo | 1,000 convos, 10k episodes/mo | Startups (up to 5 users) |
+| **Business** | $199/mo | Unlimited convos, 50k episodes/mo | Scale (up to 25 users) |
+| **Enterprise** | $2,000/mo+ | Unlimited, SSO, SLA | Fortune 500 / Regulated |
+
+### Add-Ons
+
+- **Voice Live**: $10 per 30 minutes (beyond tier)
+- **Document Ingestion**: $20 per 500 documents (beyond tier)
+- **Custom Agent Dev**: $2,000 one-time engagement
 
 ---
 
 ## FinOps Strategy
 
-### Current Approach
+### Primary Directive
 
-- **Maximize OSS**: Use open-source components until limitations materially impact business
-- **Scale Target**: 10,000+ documents
-- **Cloud Transition Trigger**: Document when OSS limitations justify paid services
+Maximize margins by leveraging internal OSS infrastructure where possible, while using premium SaaS (Zep Cloud) for customer-facing reliability and advanced features.
 
-### Cost Tracking
+### Scale Targets
 
-Marcus is responsible for maintaining cost tracking across:
-
-- Azure infrastructure
-- LLM API usage (OpenAI, Anthropic, Google)
-- Paid services when adopted
+- **Year 1 ARR**: $380,000 (Target)
+- **Customer Acquisition**: Focus on Developer conversion to Team tier.
 
 ---
 
@@ -108,19 +122,17 @@ Permissions needed:
 
 ## Immediate Action Items
 
-### Week 1
-
 - [x] Provision <elena@zimax.net> in Microsoft 365 ✅ DONE
-- [ ] Create Azure AD app registration for Graph API
-- [ ] Elena: Draft initial GTM strategy outline
-- [ ] Marcus: Complete licensing inventory
+- [x] Create Azure AD app registration for Graph API ✅ DONE
+- [x] Integrate Graph API into Elena agent ✅ DONE
+- [x] Elena: Draft initial GTM strategy (Saved to OneDrive) ✅ DONE
 
 ### Week 2-4
 
-- [ ] Integrate Graph API into Elena agent
-- [ ] Test email and OneDrive operations
-- [ ] Elena: Finalize target customer segments
-- [ ] Marcus: Prepare vendor support requirements
+- [ ] Migrate memory layer to Zep Cloud Flex
+- [ ] Implement usage metering (conversations, voice minutes)
+- [ ] Finalize wiki pricing page deployment
+- [ ] Marcus: Complete licensing inventory and vendor support matrix
 
 ---
 
@@ -132,6 +144,8 @@ Permissions needed:
 | 2026-01-03 | Elena owns GTM | Derek | Customer-facing persona |
 | 2026-01-03 | Marcus owns licensing | Derek | PM scope includes vendors |
 | 2026-01-03 | Production status | Derek | Time to operate as real business |
+| 2026-01-03 | Migrate to Zep Cloud | Derek | Approved to fix metadata/reach scale |
+| 2026-01-03 | Approve 4-tier pricing | Derek | Commercial model validation |
 
 ---
 
