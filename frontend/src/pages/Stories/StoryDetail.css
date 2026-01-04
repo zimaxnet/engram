@@ -98,6 +98,10 @@
     font-size: 1.1rem;
     line-height: 1.8;
     color: var(--color-text-dim);
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
 }
 
 .markdown-content h1,
