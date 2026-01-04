@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { getStory, API_BASE_URL } from '../../services/api';
+import { MermaidDiagram } from '../../components/MermaidDiagram/MermaidDiagram';
+import '../../components/MermaidDiagram/MermaidDiagram.css';
 import './StoryDetail.css';
 
 interface StoryDetailed {
@@ -125,7 +127,29 @@ export function StoryDetail() {
                     <div className="story-content-area">
                         {activeTab === 'story' && (
                             <div className="markdown-content">
-                                <ReactMarkdown>{story.story_content}</ReactMarkdown>
+                                <ReactMarkdown
+                                    components={{
+                                        code({ node, className, children, ...props }) {
+                                            const match = /language-(\w+)/.exec(className || '');
+                                            const language = match ? match[1] : '';
+
+                                            // Render Mermaid diagrams
+                                            if (language === 'mermaid') {
+                                                const code = String(children).replace(/\n$/, '');
+                                                return <MermaidDiagram chart={code} />;
+                                            }
+
+                                            // Default code block rendering
+                                            return (
+                                                <code className={className} {...props}>
+                                                    {children}
+                                                </code>
+                                            );
+                                        }
+                                    }}
+                                >
+                                    {story.story_content}
+                                </ReactMarkdown>
                             </div>
                         )}
 
