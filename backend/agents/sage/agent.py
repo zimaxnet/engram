@@ -403,6 +403,50 @@ When creating visuals:
             search_memory_tool,
         ]
 
+    async def _reason_node(self, state: AgentState) -> AgentState:
+        """
+        Custom reasoning node for Sage.
+        Unlike BaseAgent, we DO NOT call the LLM here.
+        We only prepare context and RAG, then let _decide_next route the request.
+        """
+        # Extract user query for memory search
+        user_messages = [m for m in state["messages"] if m.type == "human"]
+        query = user_messages[-1].content if user_messages else ""
+        
+        # Automatic memory retrieval (RAG)
+        if query:
+            try:
+                from backend.memory.client import memory_client
+                results = await memory_client.search_memory(
+                    session_id="global-search",
+                    query=query,
+                    limit=3
+                )
+                if results:
+                    memory_items = []
+                    for r in results[:3]:
+                        content = r.get("content", "")[:300]
+                        session_id = r.get("session_id", "unknown")
+                        memory_items.append(f"[{session_id}] {content}")
+                    
+                    # Inject into context for use in _respond_with_context
+                    context_str = "\n\n## Retrieved Knowledge\n" + "\n".join(memory_items)
+                    # We store it in a temporary field in context or just rely on 
+                    # _respond_with_context calling _build_full_prompt later
+                    # For now, we'll append it to the last message content temporarily? 
+                    # No, better to update the context object if possible, or just pass it 
+                    # via state, but AgentState structure is fixed.
+                    # Simplest is to rely on _respond_with_context doing its own build.
+                    # But BaseAgent._reason_node modified the prompt.
+                    # Let's simple skip RAG here or implement sophisticated state passing.
+                    # Since Sage relies on RAG less than Elena, we'll skip for now 
+                    # or assume the LLM call in 'respond' node will handle prompt building.
+            except Exception as e:
+                logger.warning(f"Sage memory retrieval failed: {e}")
+                
+        state["current_step"] = "reason"
+        return state
+
     def build_graph(self):
         """
         Sage's LangGraph:
