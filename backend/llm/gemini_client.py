@@ -27,8 +27,9 @@ class GeminiClient:
     # Text/Function Calling Model
     DEFAULT_MODEL = "gemini-2.0-flash"
     
-    # Nano Banana Pro (High Quality Image)
-    IMAGE_MODEL = "gemini-3-pro-image-preview" 
+    # Imagen 3.0 Pro - Highest quality image generation
+    # Models: imagen-3.0-generate-002 (stable/quality), imagen-3.0-fast-generate-001 (speed)
+    IMAGE_MODEL = "imagen-3.0-generate-002"
 
     def __init__(self, api_key: Optional[str] = None):
         settings = get_settings()
@@ -212,38 +213,61 @@ No markdown code blocks, just JSON."""
 
     async def generate_image(self, prompt: str) -> bytes:
         """
-        Generate an image using Nano Banana Pro (Gemini 3 Pro Image) via google-genai SDK.
-        Uses generate_content with response_modalities config for image output.
+        Generate an image using Imagen 3.0 Pro via google-genai SDK.
+        Uses the dedicated images.generate method for high-quality output.
         """
         logger.info(f"GeminiClient: Generating image with {self.IMAGE_MODEL} for: {prompt[:50]}...")
         
         try:
-            # Configure for image generation with response_modalities
-            # This tells the model we want image output, not just text
-            response = self.client.models.generate_content(
+            # Imagen 3.0 uses the images.generate method, not generate_content
+            response = self.client.models.generate_images(
                 model=self.IMAGE_MODEL,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_modalities=["IMAGE", "TEXT"],
+                prompt=prompt,
+                config=types.GenerateImagesConfig(
+                    number_of_images=1,
+                    aspect_ratio="1:1",  # Square for story cards
+                    safety_filter_level="BLOCK_MEDIUM_AND_ABOVE",
+                    person_generation="ALLOW_ADULT",
                 )
             )
             
             # Process response to get image bytes
-            if response.candidates:
-                candidate = response.candidates[0]
-                for part in candidate.content.parts:
-                    if part.inline_data:
-                        logger.info(f"GeminiClient: Image generated successfully (mime: {part.inline_data.mime_type})")
-                        return part.inline_data.data
+            if response.generated_images:
+                image = response.generated_images[0]
+                if hasattr(image, 'image') and image.image:
+                    # The image data is base64 encoded
+                    if hasattr(image.image, 'image_bytes'):
+                        logger.info(f"GeminiClient: Imagen 3.0 image generated successfully")
+                        return image.image.image_bytes
+                    elif hasattr(image.image, 'data'):
+                        logger.info(f"GeminiClient: Imagen 3.0 image generated successfully (data attr)")
+                        return image.image.data
             
-            logger.warning(f"GeminiClient: No inline image data in response. Full response: {response}")
-            if response.text:
-                logger.warning(f"GeminiClient: Model returned text instead: {response.text[:200]}")
-                
+            logger.warning(f"GeminiClient: No image data in Imagen response. Response: {response}")
             return await self._generate_mock_image(prompt)
             
         except Exception as e:
-            logger.error(f"GeminiClient: Image generation failed: {e}")
+            logger.error(f"GeminiClient: Imagen 3.0 generation failed: {e}")
+            # Try fallback to Gemini multimodal if Imagen isn't available
+            try:
+                logger.info("GeminiClient: Falling back to gemini-2.0-flash-exp multimodal...")
+                response = self.client.models.generate_content(
+                    model="gemini-2.0-flash-exp",
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_modalities=["IMAGE", "TEXT"],
+                    )
+                )
+                
+                if response.candidates:
+                    for part in response.candidates[0].content.parts:
+                        if part.inline_data:
+                            logger.info(f"GeminiClient: Fallback image generated successfully")
+                            return part.inline_data.data
+                            
+            except Exception as fallback_err:
+                logger.error(f"GeminiClient: Fallback also failed: {fallback_err}")
+            
             return await self._generate_mock_image(prompt)
 
     async def _generate_mock_image(self, prompt: str) -> bytes:
