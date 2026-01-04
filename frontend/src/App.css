@@ -123,11 +123,14 @@
   height: calc(100dvh - 60px);
   overflow-y: auto;
   overflow-x: hidden;
+  min-width: 0;
+  /* Prevent Grid blowout */
 }
 
 .column-left {
   background: var(--glass-bg);
   border-right: 1px solid var(--glass-border);
+  z-index: 2;
 }
 
 .column-center {
@@ -137,12 +140,16 @@
   overflow-x: hidden;
   height: calc(100vh - 60px);
   height: calc(100dvh - 60px);
+  min-width: 0;
+  /* Prevent Grid blowout */
+  z-index: 1;
 }
 
 .column-right {
   background: var(--glass-bg);
   border-left: 1px solid var(--glass-border);
   padding: 1rem;
+  z-index: 2;
 }
 
 /* Scrollbar Styling */
