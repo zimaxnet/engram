@@ -189,7 +189,11 @@ async def _create_story_direct(request: StoryCreateRequest, user: SecurityContex
     
     # Generate file paths
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    slug = request.topic.lower().replace(" ", "-").replace("_", "-")[:50]
+    # Sanitize slug: strict alphanumeric + hyphens
+    safe_topic = "".join(c if c.isalnum() or c in " -_" else "" for c in request.topic).strip()
+    slug = safe_topic.lower().replace(" ", "-").replace("_", "-")[:50]
+    # Double ensure no invalid chars
+    slug = slug.replace(":", "").replace("/", "")
     story_id = f"{timestamp}-{slug}"
     
     # Save story

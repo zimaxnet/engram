@@ -131,7 +131,11 @@ async def generate_story_activity(input: GenerateStoryInput) -> GenerateStoryOut
         
         # Generate story ID
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        slug = input.topic.lower().replace(" ", "-").replace("_", "-")[:50]
+        # Sanitize slug: strict alphanumeric + hyphens
+        safe_topic = "".join(c if c.isalnum() or c in " -_" else "" for c in input.topic).strip()
+        slug = safe_topic.lower().replace(" ", "-").replace("_", "-")[:50]
+        # Double ensure no invalid chars
+        slug = slug.replace(":", "").replace("/", "")
         story_id = f"{timestamp}-{slug}"
         
         activity.logger.info(f"Story generated: {len(content)} chars")

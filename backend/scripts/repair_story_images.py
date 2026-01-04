@@ -55,7 +55,38 @@ async def repair_stories():
     errors = 0
 
     for story_file in story_files:
-        story_id = story_file.stem
+        original_stem = story_file.stem
+        # Check for invalid characters (colons, slashes)
+        if ":" in original_stem or "/" in original_stem:
+            safe_stem = original_stem.replace(":", "").replace("/", "")
+            logger.info(f"  [!] Found unsafe filename: {original_stem}. Renaming to {safe_stem}...")
+            
+            safe_file = stories_dir / f"{safe_stem}.md"
+            safe_image = images_dir / f"{safe_stem}.png"
+            
+            # Rename markdown
+            try:
+                story_file.rename(safe_file)
+                story_file = safe_file # Update for rest of loop
+                logger.info(f"    - Renamed markdown file")
+            except Exception as e:
+                logger.error(f"    - Failed to rename markdown: {e}")
+                errors += 1
+                continue
+                
+            # Rename existing image if it happens to exist under old name (unlikely but possible)
+            old_image = images_dir / f"{original_stem}.png"
+            if old_image.exists() and not safe_image.exists():
+                try:
+                    old_image.rename(safe_image)
+                    logger.info(f"    - Renamed image file")
+                except Exception as e:
+                    logger.error(f"    - Failed to rename image: {e}")
+            
+            story_id = safe_stem
+        else:
+            story_id = original_stem
+
         image_file = images_dir / f"{story_id}.png"
         image_web_path = f"/api/v1/images/{story_id}.png"
         
