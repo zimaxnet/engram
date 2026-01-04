@@ -1,0 +1,84 @@
+---
+description: Query the Engram Memory Graph for project context
+globs: ["**/*.py", "**/*.ts", "**/*.tsx", "**/*.md"]
+---
+
+# Engram Memory Query Interface
+
+You have direct access to the Engram Knowledge Graph, which contains all project documentation, conversation history, and learned facts about this codebase.
+
+## Why This Matters
+
+Before asking the user for context that might already be documented, **query memory first**. The Memory Graph contains:
+- All wiki documentation
+- Past debugging sessions
+- Architecture decisions
+- Configuration details
+- Agent behavior patterns
+
+## Commands
+
+Run these commands from the project root (`/Users/derek/Library/CloudStorage/OneDrive-zimaxnet/code/engram`):
+
+### Search for Information (Hybrid Search)
+```bash
+# Query Azure production memory (recommended - has all ingested docs)
+python -m backend.scripts.query_memory --env azure -q "YOUR SEARCH QUERY"
+
+# Query local development memory
+python -m backend.scripts.query_memory --env local -q "YOUR SEARCH QUERY"
+```
+
+### List Recent Episodes (Conversation History)
+```bash
+# See recent conversations from Azure
+python -m backend.scripts.query_memory --env azure --episodes --limit 10
+```
+
+### Get Knowledge Graph Facts
+```bash
+# Get facts about a specific user
+python -m backend.scripts.query_memory --env azure --facts --user-id "user-derek"
+```
+
+### List Available Environments
+```bash
+python -m backend.scripts.query_memory --list-envs
+```
+
+## Example Queries
+
+```bash
+# Find VoiceLive configuration details
+python -m backend.scripts.query_memory --env azure -q "voice live websocket config"
+
+# Find authentication setup
+python -m backend.scripts.query_memory --env azure -q "Entra External ID CIAM"
+
+# Find agent delegation patterns
+python -m backend.scripts.query_memory --env azure -q "Elena delegate to Sage"
+
+# Find deployment configuration
+python -m backend.scripts.query_memory --env azure -q "Azure Container Apps deployment"
+```
+
+## Environment Reference
+
+| Environment | URL | Description |
+|-------------|-----|-------------|
+| `local` | http://localhost:8000 | Local development Zep |
+| `azure` | https://zep.engram.work | Azure Container Apps (Production) |
+| `staging` | https://zep-staging.engram.work | Staging (if available) |
+
+## Best Practices
+
+1. **Always query Azure first** - it has all ingested documentation
+2. **Use specific queries** - "VoiceLive websocket timeout" > "voice"
+3. **Check episodes** for recent debugging sessions
+4. **Get facts** for user-specific context
+
+## Related Files
+
+- Script: `backend/scripts/query_memory.py`
+- Memory Client: `backend/memory/client.py`
+- Config: `backend/core/config.py` (ZEP_API_URL)

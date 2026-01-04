@@ -2,43 +2,103 @@
 """
 Query Memory Script (Antigravity Interface)
 
-This script provides a CLI interface for the Antigravity Agent to query Zep memory.
+This script provides a CLI interface for AI Agents (Antigravity, Cursor, VSCode)
+to query Zep memory across any environment (local, Azure, staging).
+
 It exposes:
 1. Hybrid Search (Keyword + Semantic)
 2. Knowledge Graph Facts
 3. Recent Episodes
 
 Usage:
+    # Query local Zep (default)
     python -m backend.scripts.query_memory --query "voice live config"
-    python -m backend.scripts.query_memory --facts --user-id "user-derek"
-    python -m backend.scripts.query_memory --episodes --limit 5
+    
+    # Query Azure production Zep
+    python -m backend.scripts.query_memory --env azure --query "voice live config"
+    
+    # List Azure episodes
+    python -m backend.scripts.query_memory --env azure --episodes --limit 5
+    
+    # Get facts from Azure
+    python -m backend.scripts.query_memory --env azure --facts --user-id "user-derek"
+
+Environments:
+    local   - http://localhost:8000 (default)
+    azure   - https://zep.engram.work (production)
+    staging - https://zep-staging.engram.work (if available)
 """
 
 import argparse
 import asyncio
 import json
 import logging
+import os
 import sys
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
-
-from backend.core import get_settings
-from backend.memory.client import ZepMemoryClient
 
 # Configure concise logging for CLI output
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger("query_memory")
 
+# Environment presets
+ENVIRONMENT_PRESETS = {
+    "local": {
+        "ZEP_API_URL": "http://localhost:8000",
+        "description": "Local development Zep",
+    },
+    "azure": {
+        "ZEP_API_URL": "https://zep.engram.work",
+        "description": "Azure Container Apps (Production)",
+    },
+    "staging": {
+        "ZEP_API_URL": "https://zep-staging.engram.work",
+        "description": "Azure Staging Environment",
+    },
+}
+
+
+def apply_environment(env_name: str) -> str:
+    """Apply environment preset and return the Zep URL."""
+    if env_name not in ENVIRONMENT_PRESETS:
+        print(f"❌ Unknown environment: {env_name}")
+        print(f"   Available: {', '.join(ENVIRONMENT_PRESETS.keys())}")
+        sys.exit(1)
+    
+    preset = ENVIRONMENT_PRESETS[env_name]
+    zep_url = preset["ZEP_API_URL"]
+    
+    # Override the environment variable for this process
+    os.environ["ZEP_API_URL"] = zep_url
+    
+    return zep_url
+
+
 async def query_memory(
     query: Optional[str] = None,
     user_id: Optional[str] = None,
     mode: str = "hybrid",
-    limit: int = 5
+    limit: int = 5,
+    env_name: str = "local"
 ):
-    client = ZepMemoryClient()
+    # Apply environment preset BEFORE importing settings
+    zep_url = apply_environment(env_name)
     
-    print(f"🔍 Querying Zep Memory ({mode})...")
-    print(f"   URL: {client.zep_url}")
+    # Import after environment is set
+    from backend.memory.client import ZepMemoryClient
+    
+    # Create client with explicit URL override
+    client = ZepMemoryClient()
+    # Force the URL from our preset (in case settings cached old value)
+    client.zep_url = zep_url
+    
+    env_info = ENVIRONMENT_PRESETS[env_name]
+    print(f"🧠 Engram Memory Query")
+    print(f"   Environment: {env_name.upper()} ({env_info['description']})")
+    print(f"   URL: {zep_url}")
+    print(f"   Mode: {mode}")
     print(f"   User: {user_id or 'All Users'}")
     print("-" * 60)
 
@@ -47,24 +107,13 @@ async def query_memory(
             print("❌ Error: --query is required for hybrid search")
             return
 
-        # Generic search session
-        search_user_id = user_id or "system-search"
-        session_id = f"search-{datetime.utcnow().strftime('%Y%m%d')}"
-        
-        # CRITICAL: Ensure user exists first
-        await client.get_or_create_user(
-            user_id=search_user_id,
-            metadata={"display_name": "Antigravity Search System"}
-        )
-
-        # Ensure search session exists (minimal overhead)
-        await client.get_or_create_session(session_id, search_user_id)
-
+        # For hybrid search, we don't need to create a user/session
+        # The search_memory function lists all sessions and searches across them
         results = await client.search_memory(
-            session_id=session_id,
+            session_id="global-search",  # Not actually used for session-based search
             query=query,
             limit=limit,
-            user_id=user_id
+            user_id=user_id  # Optional filter
         )
 
         if not results:
@@ -125,15 +174,48 @@ async def query_memory(
                 print(f"    Topics: {', '.join(topics)}")
             print("")
 
+
+def list_environments():
+    """Print available environments."""
+    print("🌍 Available Environments:\n")
+    for name, config in ENVIRONMENT_PRESETS.items():
+        print(f"  {name:10} → {config['ZEP_API_URL']}")
+        print(f"             {config['description']}\n")
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Query Zep Memory")
+    parser = argparse.ArgumentParser(
+        description="Query Engram Memory Graph (Local, Azure, K8s)",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Query Azure production for VoiceLive info
+  python -m backend.scripts.query_memory --env azure -q "voice live config"
+  
+  # List recent episodes from Azure
+  python -m backend.scripts.query_memory --env azure --episodes
+  
+  # Get facts for a user from Azure
+  python -m backend.scripts.query_memory --env azure --facts -u "user-derek"
+  
+  # List available environments
+  python -m backend.scripts.query_memory --list-envs
+"""
+    )
+    parser.add_argument("-e", "--env", default="local", 
+                        help="Environment: local, azure, staging (default: local)")
     parser.add_argument("-q", "--query", help="Search query text")
     parser.add_argument("-u", "--user-id", help="Filter by User ID")
     parser.add_argument("-l", "--limit", type=int, default=5, help="Max results")
     parser.add_argument("--facts", action="store_true", help="Mode: Get Knowledge Graph Facts")
     parser.add_argument("--episodes", action="store_true", help="Mode: List Episodes")
+    parser.add_argument("--list-envs", action="store_true", help="List available environments")
     
     args = parser.parse_args()
+    
+    if args.list_envs:
+        list_environments()
+        return
     
     mode = "hybrid"
     if args.facts:
@@ -146,7 +228,8 @@ def main():
             query=args.query,
             user_id=args.user_id,
             mode=mode,
-            limit=args.limit
+            limit=args.limit,
+            env_name=args.env
         ))
     except Exception as e:
         print(f"❌ Fatal Error: {e}")
