@@ -5,18 +5,28 @@ Provides API for:
 - Querying the knowledge graph
 - Viewing episodic memory
 - Managing semantic facts
+- AI Agent access via API key
 """
 
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Query, Depends
+from fastapi import APIRouter, Query, Depends, HTTPException, Header
 from pydantic import BaseModel
 
 from backend.core import SecurityContext, get_settings
 from backend.api.middleware.auth import get_current_user
 
 router = APIRouter()
+
+
+def verify_api_key(x_api_key: str = Header(None, alias="X-API-Key")) -> str:
+    """Verify API key for AI agent access (lighter than full Entra ID auth)."""
+    settings = get_settings()
+    # Accept the configured Azure AI Key as a valid agent API key
+    if x_api_key and settings.azure_ai_key and x_api_key == settings.azure_ai_key:
+        return "agent-api"
+    raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
 
 class MemoryNode(BaseModel):
@@ -184,6 +194,27 @@ async def _build_graph(user_id: str, query: str) -> MemoryGraphResponse:
             nodes[edge.target].degree += 1
 
     return MemoryGraphResponse(nodes=list(nodes.values()), edges=edges)
+
+
+@router.post("/search/public", response_model=MemorySearchResponse)
+async def search_memory_public(
+    request: MemorySearchRequest, 
+    api_key: str = Depends(verify_api_key)
+):
+    """
+    Public search endpoint for AI Agents (Cursor, Windsurf, etc).
+    Protected by X-API-Key header.
+    Hardcoded to search 'user-derek' memory for now (single user mode).
+    """
+    # Create a dummy security context for the agent
+    # In single-user mode, agents act on behalf of the primary user
+    user = SecurityContext(
+        user_id="user-derek",
+        tenant_id="default-tenant",
+        roles=["agent"],
+        is_authenticated=True
+    )
+    return await search_memory(request, user)
 
 
 @router.post("/search", response_model=MemorySearchResponse)
