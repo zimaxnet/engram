@@ -303,7 +303,7 @@ class StoryWorkflow:
                     story_id=story_id,
                     topic=input.topic,
                     content=self._story_content[:5000], 
-                    image_path=self._image_path,
+                    image_path=f"/api/v1/images/{story_id}.png" if self._image_path else None,
                 ),
                 start_to_close_timeout=timedelta(seconds=30),
                 retry_policy=STORAGE_RETRY_POLICY,

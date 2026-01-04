@@ -45,7 +45,7 @@ Engram is transitioning from proof-of-concept to production business operations.
 
 | Component | Product | Deployment | License Status |
 |-----------|---------|------------|----------------|
-| Memory | Zep Cloud Flex | Managed (SaaS) | **PLANNED MIGRATION** |
+| Memory | Zep OSS | Azure Container Apps | OSS (self-hosted) |
 | Workflow | Temporal | Azure Container Apps | OSS (self-hosted) |
 | Database | PostgreSQL | Azure Flexible Server | Azure managed |
 | Frontend | React SPA | Azure Static Web Apps | N/A |
@@ -58,7 +58,7 @@ Engram is transitioning from proof-of-concept to production business operations.
 | Vendor | Product | Priority | Notes |
 | ------ | ------- | -------- | ----- |
 | Microsoft | 365 Business Basic | ✅ ACTIVE | <elena@zimax.net> + OneDrive |
-| Zep | Cloud Flex | ✅ HIGH | Required for production metadata |
+| Zep | Cloud Flex | DEFERRED | Migrate when first customer pays |
 | Temporal | Enterprise Support | LOW | Evaluate need at scale |
 | Unstructured | Enterprise | LOW | Evaluate need at scale |
 | LangChain | LangSmith Enterprise | LOW | Evaluate need at scale |
@@ -88,7 +88,14 @@ Engram operates a 4-tier commercial pricing model designed to scale with custome
 
 ### Primary Directive
 
-Maximize margins by leveraging internal OSS infrastructure where possible, while using premium SaaS (Zep Cloud) for customer-facing reliability and advanced features.
+Maximize margins by staying fully OSS during pre-revenue phase. Migrate to premium SaaS (Zep Cloud Flex) only after first paying customer.
+
+### Memory Layer Strategy
+
+- **Current**: Zep OSS (self-hosted, $0/mo)
+- **Trigger**: First paying customer
+- **Action**: Migrate to Zep Cloud Flex ($25/mo)
+- **Rationale**: No 1,000 user limit pressure yet; metadata limitations are acceptable for POC
 
 ### Scale Targets
 
@@ -129,10 +136,14 @@ Permissions needed:
 
 ### Week 2-4
 
-- [ ] Migrate memory layer to Zep Cloud Flex
 - [ ] Implement usage metering (conversations, voice minutes)
 - [ ] Finalize wiki pricing page deployment
 - [ ] Marcus: Complete licensing inventory and vendor support matrix
+
+### Post First Customer
+
+- [ ] Migrate memory layer to Zep Cloud Flex
+- [ ] Evaluate Temporal Enterprise Support need
 
 ---
 
@@ -140,11 +151,10 @@ Permissions needed:
 
 | Date | Decision | Owner | Rationale |
 |------|----------|-------|-----------|
-| 2026-01-03 | Stay on Zep OSS | Derek | FinOps - maximize free tier |
+| 2026-01-03 | Stay on Zep OSS until customer | Derek | FinOps - $0 burn until revenue |
 | 2026-01-03 | Elena owns GTM | Derek | Customer-facing persona |
 | 2026-01-03 | Marcus owns licensing | Derek | PM scope includes vendors |
 | 2026-01-03 | Production status | Derek | Time to operate as real business |
-| 2026-01-03 | Migrate to Zep Cloud | Derek | Approved to fix metadata/reach scale |
 | 2026-01-03 | Approve 4-tier pricing | Derek | Commercial model validation |
 
 ---

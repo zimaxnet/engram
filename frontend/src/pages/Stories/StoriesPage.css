@@ -89,3 +89,12 @@
 .stories-error {
   color: var(--color-error);
 }
+
+/* Thumbnail */
+.story-thumbnail-image {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--glass-border);
+}
