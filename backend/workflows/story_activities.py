@@ -33,6 +33,7 @@ class GenerateStoryInput:
 class GenerateStoryOutput:
     """Output from story generation activity"""
     story_id: str
+    title: str
     content: str
     tokens_used: int
     success: bool
@@ -157,24 +158,33 @@ async def generate_story_activity(input: GenerateStoryInput) -> GenerateStoryOut
             activity.logger.warning(f"Sage Verification search failed: {e}")
         # -------------------------------------------
 
-        content = await client.generate_story(
+        result = await client.generate_story(
             topic=input.topic,
             context=input.context,
         )
         
-        # Generate story ID
+        # Handle dict or string response (for backward compatibility if client wasn't updated)
+        if isinstance(result, dict):
+            content = result.get("content", "")
+            title = result.get("title", input.topic)
+        else:
+            content = str(result)
+            title = input.topic
+        
+        # Generate story ID from the TITLE, not the topic
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
         # Sanitize slug: strict alphanumeric + hyphens
-        safe_topic = "".join(c if c.isalnum() or c in " -_" else "" for c in input.topic).strip()
-        slug = safe_topic.lower().replace(" ", "-").replace("_", "-")[:50]
+        safe_title = "".join(c if c.isalnum() or c in " -_" else "" for c in title).strip()
+        slug = safe_title.lower().replace(" ", "-").replace("_", "-")[:50]
         # Double ensure no invalid chars
         slug = slug.replace(":", "").replace("/", "")
         story_id = f"{timestamp}-{slug}"
         
-        activity.logger.info(f"Story generated: {len(content)} chars")
+        activity.logger.info(f"Story generated: '{title}' ({len(content)} chars)")
         
         return GenerateStoryOutput(
             story_id=story_id,
+            title=title,
             content=content,
             tokens_used=len(content) // 4,  # Rough estimate
             success=True,
@@ -184,6 +194,7 @@ async def generate_story_activity(input: GenerateStoryInput) -> GenerateStoryOut
         activity.logger.error(f"Story generation failed: {e}")
         return GenerateStoryOutput(
             story_id="",
+            title="",
             content="",
             tokens_used=0,
             success=False,

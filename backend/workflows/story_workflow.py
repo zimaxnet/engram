@@ -65,6 +65,7 @@ class StoryWorkflowOutput:
     
     story_id: str
     topic: str
+    title: str
     story_content: str
     story_path: Optional[str] = None
     diagram_spec: Optional[dict] = None
@@ -119,6 +120,7 @@ class StoryWorkflow:
     
     def __init__(self):
         self._story_content: Optional[str] = None
+        self._story_title: Optional[str] = None
         self._diagram_spec: Optional[dict] = None
         self._story_path: Optional[str] = None
         self._diagram_path: Optional[str] = None
@@ -191,6 +193,7 @@ class StoryWorkflow:
                 )
             
             self._story_content = story_result.content
+            self._story_title = story_result.title
             story_id = story_result.story_id
             tokens_used += story_result.tokens_used
             self._progress = 40
@@ -259,7 +262,7 @@ class StoryWorkflow:
                 save_artifacts_activity,
                 SaveArtifactsInput(
                     story_id=story_id,
-                    topic=input.topic,
+                    topic=self._story_title or input.topic,  # Use generated title if available
                     story_content=self._story_content,
                     diagram_spec=self._diagram_spec,
                     image_data=image_data,
@@ -288,7 +291,7 @@ class StoryWorkflow:
                 EnrichMemoryInput(
                     user_id=input.user_id,
                     story_id=story_id,
-                    topic=input.topic,
+                    topic=self._story_title or input.topic, # Use generated title
                     content=self._story_content[:5000], 
                     image_path=f"/api/v1/images/{story_id}.png" if self._image_path else None,
                 ),
@@ -311,6 +314,7 @@ class StoryWorkflow:
             return StoryWorkflowOutput(
                 story_id=story_id,
                 topic=input.topic,
+                title=self._story_title or input.topic,
                 story_content=self._story_content,
                 story_path=self._story_path,
                 diagram_spec=self._diagram_spec,

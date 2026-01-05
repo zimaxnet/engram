@@ -128,7 +128,7 @@ export function SourcesPage() {
   const hasSources = sources.length > 0;
 
   return (
-    <div className="sources-page">
+    <div className="column column-center sources-page">
       <style>{errorStyle}</style>
       {error && (
         <div className="callout status-error" role="alert">

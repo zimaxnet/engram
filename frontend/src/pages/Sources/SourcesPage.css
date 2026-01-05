@@ -5,6 +5,8 @@
   padding: 1.5rem 1.75rem 2.5rem;
   color: #0f172a;
   background: radial-gradient(circle at 20% 20%, #f4f6ff 0, #f8f9ff 35%, #ffffff 70%);
+  overflow-y: auto;
+  min-height: 100%;
 }
 
 .eyebrow {
@@ -197,9 +199,17 @@
 }
 
 @keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
-  70% { box-shadow: 0 0 0 12px rgba(99, 102, 241, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 12px rgba(99, 102, 241, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+  }
 }
 
 .upload-panel .dropzone {
@@ -458,6 +468,7 @@ button:hover {
   .hero {
     grid-template-columns: 1fr;
   }
+
   .flex-row {
     grid-template-columns: 1fr;
   }

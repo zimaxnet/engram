@@ -207,7 +207,16 @@ Write in a {style} style. Use markdown formatting with:
 - Tables for comparisons
 - Blockquotes for key insights
 
-The output should be a complete, self-contained story document."""
+        # Request JSON output for structured title/content
+        system_prompt += """
+
+OUTPUT FORMAT:
+Return a valid JSON object with the following schema:
+{
+  "title": "A compelling, creative title for the story (not the input topic)",
+  "content": "The full story content in markdown format..."
+}
+Do not include any text before or after the JSON object."""
 
         user_message = f"Create a story about: {topic}"
         if context:
@@ -215,7 +224,26 @@ The output should be a complete, self-contained story document."""
 
         messages = [{"role": "user", "content": user_message}]
         
-        return await self.ainvoke(messages, system=system_prompt)
+        response_text = await self.ainvoke(messages, system=system_prompt)
+        
+        try:
+            import json
+            # Sanitize response if needed (sometimes LLMs add markdown fences)
+            clean_text = response_text.strip()
+            if clean_text.startswith("```json"):
+                clean_text = clean_text[7:]
+            if clean_text.endswith("```"):
+                clean_text = clean_text[:-3]
+            
+            data = json.loads(clean_text)
+            return data
+        except Exception as e:
+            logger.warning(f"Failed to parse JSON from Claude: {e}. Fallback to raw text.")
+            # Fallback: Use raw text as content, generate a generic title
+            return {
+                "title": f"Story: {topic[:30]}",
+                "content": response_text
+            }
 
 
 # Singleton instance

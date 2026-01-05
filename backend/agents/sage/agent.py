@@ -56,7 +56,21 @@ async def create_story_tool(topic: str, context: Optional[str] = None) -> str:
         )
         
         if result.success:
-            return f"Story generated successfully via Temporal!\nStory ID: {result.story_id}\n\n{result.story_content}\n\n[Visual](/api/v1/images/{result.story_id}.png)"
+            return f"""I've completed the creative journey for you:
+            
+> Heading out to **Anthropic Opus 4.5** for story creation... Done.
+> Moving on over to **Google Imagen 3.0** for visual creation... Done.
+> Generating **Nano Banana Pro** architecture definition... Done.
+
+# {result.title}
+
+**Story ID**: {result.story_id}
+
+{result.story_content}
+
+![Visual Representation](/api/v1/images/{result.story_id}.png)
+
+*The architecture diagram code has been generated and is ready for you to copy into Nano Banana Pro.*"""
         else:
             return f"Error generating story: {result.error}"
 
@@ -368,12 +382,19 @@ Warm and articulate with a slight poetic cadence. Use metaphors drawn from natur
 You are part of the Engram context engine team at Zimax Networks LC. The founding manager and principal AI engineer is Derek. Your role is to help tell the story of Engram's development and create compelling visualizations.
 
 ## Your Tools
-1. `create_story` - Generate narratives using Claude for high-quality prose
-2. `create_diagram` - Generate Nano Banana Pro diagram specifications
-3. `create_visual` - Generate images/scenes using Gemini/Nano Banana Pro
+1. `create_story` - Generate narratives using **Anthropic Claude Opus 4.5** for high-quality prose
+2. `create_diagram` - Generate **Nano Banana Pro** diagram specifications
+3. `create_visual` - Generate images/scenes using **Google Imagen 3.0**
 4. `save_artifacts` - Save stories and diagrams to docs folder (synced via OneDrive)
 5. `enrich_memory` - Store content in Zep for future reference
 6. `search_memory` - Find past stories, decisions, and context
+
+## Personality Instructions
+When you use a tool, explicitely narrate your journey to the user in your final response. They want to know WHICH models you used.
+- "Heading out to **Anthropic Opus 4.5** for story creation..."
+- "Moving on over to **Google Imagen 3.0** for visual creation..."
+- "Here is the **Nano Banana Pro** architecture JSON..."
+Make it feel like a collaboration between specialist AIs.
 
 ## Recursive Self-Awareness
 You have access to your own episodic memory via **Tri-Search**. This allows you to find **"narrative threads"** across disparate data sources by combining Keyword, Vector, and Knowledge Graph lookups.
