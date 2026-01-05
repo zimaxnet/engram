@@ -42,8 +42,8 @@
 | Element | Symbol | Status | Engram Component | Dashboard |
 |---------|--------|--------|------------------|-----------|
 | Function Call | Fc | 🟢 Strong | **Story Gen** `delegate_to_sage`<br>**GH Issues** `create_github_issue`<br>**OneDrive** `save_to_onedrive` | [MCP Docs](../mcp.md) |
-| Vector | Vx | 🟢 Strong | Zep Tri-Search | [Zep Cloud](https://cloud.getzep.com) |
-| RAG | Rg | 🟢 Strong | Context assembly pipeline | [Architecture](../architecture.md) |
+| Vector | Vx | 🟢 Strong | Zep Tri-Search (Vector Layer) | [Zep Cloud](https://cloud.getzep.com) |
+| RAG | Rg | 🟢 Strong | Context assembly pipeline (Tri-Search Fusion) | [Architecture](../architecture.md) |
 | Guardrails | Gr | 🟢 Strong | Azure Entra ID | [Entra Admin](https://entra.microsoft.com) |
 | Multimodal | Mm | 🟢 Strong | Imagen 3.0 + VoiceLive | [Azure AI](https://portal.azure.com) |
 
@@ -63,7 +63,7 @@
 |---------|--------|--------|------------------|-----------|
 | Multi-agent | Ma | 🟢 Strong | Agent delegation | [Workflow Monitor](https://temporal.engram.work) |
 | Synthetic | Sy | 🟢 Strong | Story + visual gen | [Stories](https://engram.work/stories) |
-| **Graph Knowledge** | **Gk** | ⭐ **Unique** | **Zep Temporal KG** | [Zep Cloud](https://cloud.getzep.com) |
+| **Graph Knowledge** | **Gk** | ⭐ **Unique** | **Zep Temporal KG + Visualization** | [Graph Interface](https://engram.work/memory/graph) |
 | Interpret | In | 🔴 Gap | *Roadmap: Explainability* | — |
 | Thinking | Th | 🟢 Strong | Extended reasoning | [Workflow Monitor](https://temporal.engram.work) |
 
@@ -73,7 +73,8 @@
 
 > **Symbol**: Gk  
 > **Position**: Row 4 (Emerging) × Column 3 (Orchestration)  
-> **Definition**: Temporal knowledge graphs for dynamic context orchestration
+> **Definition**: Temporal knowledge graphs for dynamic context orchestration  
+> **Status**: ⭐ **Unique Differentiator** — Production-ready with enhanced visualization
 
 ### Why Gk Matters
 
@@ -86,14 +87,66 @@ While competitors use static RAG (retrieve → augment → generate), Engram use
 | Memory | Stateless or session-scoped | Temporal, multi-session knowledge |
 | Discovery | Explicit tool registration | Emergent via entity relationships |
 
+### Tri-Search: The Complete Picture
+
+Graph Knowledge is the **critical third layer** of Engram's tri-search capability:
+
+1. **Keyword Search (BM25)**: Exact phrase matching, acronym lookup
+2. **Vector Search (Semantic)**: Conceptual similarity via embeddings
+3. **Graph Search (Gk)**: Relationship traversal, multi-hop reasoning ⭐
+
+Results from all three layers are combined using **Reciprocal Rank Fusion (RRF)** for optimal retrieval.
+
+**📖 Full Documentation**: [Graph Knowledge & Tri-Search Guide](../features/memory/graph-knowledge-tri-search.md)
+
 ### Implementation
 
-Engram implements Gk through [Zep](https://www.getzep.com/):
+Engram implements Gk through [Zep Cloud](https://cloud.getzep.com/):
 
-- **Entity Extraction**: Automatic extraction from conversations
-- **Fact Linking**: Relationships stored as graph edges
-- **Temporal Awareness**: Facts have timestamps
-- **Cross-Session Learning**: Knowledge compounds automatically
+- **Entity Extraction**: Automatic extraction from conversations and documents
+- **Fact Linking**: Relationships stored as graph edges with timestamps
+- **Temporal Awareness**: Facts have timestamps, enabling time-aware queries
+- **Cross-Session Learning**: Knowledge compounds automatically across conversations
+- **Visualization**: Interactive graph interface at `/memory/graph`
+
+### Graph Knowledge Interface
+
+**Access**: [Knowledge Graph Visualization](https://engram.work/memory/graph)
+
+**Features**:
+- **Interactive Force-Directed Graph**: Visualize relationships between entities, facts, episodes, and topics
+- **Search & Filter**: Query-based filtering, node type filters, degree-based filtering
+- **Statistics Dashboard**: Total nodes/edges, average degree, node type breakdown
+- **Node Details**: Full content, metadata, connections, and traversal paths
+- **Tri-Search Context**: Explanation of how Graph Knowledge fits into tri-search
+
+**Node Types**:
+- **Facts** (Cyan): Semantic facts extracted from conversations
+- **Entities** (Purple): People, projects, concepts
+- **Episodes** (Green): Conversation sessions/episodic memory
+- **Topics** (Amber): Conversation themes and topics
+- **Metadata** (Gray): Source tags, filenames, tenant IDs
+
+### Use Cases
+
+1. **Entity Discovery**: "Who worked on the authentication project?" → Traverse graph to find connected people
+2. **Project Timeline**: "What happened with Project Alpha over time?" → Chronological episode traversal
+3. **Knowledge Gap Analysis**: Identify isolated nodes (low degree) that need more context
+4. **Multi-Hop Reasoning**: "What did Elena say about topics related to security?" → Multi-step graph traversal
+
+### Observability
+
+**What You Can See**:
+- ✅ Graph structure and relationships
+- ✅ Node details (content, metadata, connections)
+- ✅ Statistics (total nodes, edges, degree metrics)
+- ✅ Search transparency (which nodes match query)
+
+**Roadmap**:
+- 🔄 Tri-search breakdown (which layer contributed each result)
+- 🔄 Retrieval path visualization
+- 🔄 Graph analytics (centrality, community detection)
+- 🔄 Time slider (view graph at different time points)
 
 ---
 
@@ -104,6 +157,7 @@ Engram implements Gk through [Zep](https://www.getzep.com/):
 | Azure AI | [Portal](https://portal.azure.com) | Model deployments, costs |
 | Temporal | [UI](https://temporal.engram.work) | Workflow monitoring |
 | Zep | [Cloud](https://cloud.getzep.com) | Memory, embeddings, graph |
+| Knowledge Graph | [Interface](https://engram.work/memory/graph) | Graph visualization, tri-search layer 3 |
 | Entra ID | [Admin](https://entra.microsoft.com) | Authentication, RBAC |
 | Cost Management | [Azure](https://portal.azure.com/#blade/Microsoft_Azure_CostManagement/Menu/costanalysis) | FinOps |
 
@@ -122,3 +176,5 @@ Engram implements Gk through [Zep](https://www.getzep.com/):
 - [Business Plan](../business-plan-ai-periodic-table.md)
 - [Interactive Matrix](../ai-periodic-table-matrix.html)
 - [Architecture Overview](../architecture.md)
+- [Graph Knowledge & Tri-Search Guide](../features/memory/graph-knowledge-tri-search.md) - Comprehensive documentation
+- [AI Periodic Table Roadmap](../ai-periodic-table-roadmap.md) - Detailed element mapping

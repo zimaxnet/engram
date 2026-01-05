@@ -206,6 +206,13 @@ export class ApiClient {
         label?: string | null
         weight: number
       }>
+      stats?: {
+        total_nodes: number
+        total_edges: number
+        node_types: Record<string, number>
+        avg_degree: number
+        max_degree: number
+      }
     }>(`/memory/graph${params.toString() ? `?${params.toString()}` : ''}`)
   }
 

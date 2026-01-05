@@ -110,6 +110,7 @@ Meet our AI agents:
 ### 💻 Development
 
 - [Development Guide](development/) - Contributing to Engram
+- [IDE Integration](developer/ide-integration.md) - Cursor/VS Code setup
 - [Testing Guide](TESTING-GUIDE.md) - Testing documentation
 - [Visual Development](visual-development.md) - Creating visuals
 

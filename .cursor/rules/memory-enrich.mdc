@@ -1,0 +1,213 @@
+---
+description: Push context, findings, or code explanations from the IDE directly to Engram's long-term memory
+globs: ["**/*.py", "**/*.ts", "**/*.tsx", "**/*.md"]
+---
+
+# Engram Memory Enrichment Interface
+
+Push context, findings, or code explanations from the IDE directly to Engram's long-term memory. Use this to ensure the system remembers architectural decisions or debugging discoveries.
+
+## Why This Matters
+
+When you discover important information during development, debugging, or code review, **enrich memory** so that:
+- Future conversations remember these insights
+- Agents can retrieve this context automatically
+- Knowledge compounds across sessions
+- Architectural decisions are preserved
+
+## Function Definition
+
+The `enrich_memory` function allows you to store context in Engram's knowledge graph:
+
+```json
+{
+  "name": "enrich_memory",
+  "description": "Push context, findings, or code explanations from the IDE directly to Engram's long-term memory. Use this to ensure the system remembers architectural decisions or debugging discoveries.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "The context, insight, or finding to store in memory."
+      },
+      "session_id": {
+        "type": "string",
+        "description": "Optional session ID to group related log entries (e.g., 'debugging-auth-bug')."
+      },
+      "speaker": {
+        "type": "string",
+        "enum": ["user", "assistant"],
+        "description": "Who is generating this insight.",
+        "default": "user"
+      }
+    },
+    "required": ["text"]
+  }
+}
+```
+
+## API Endpoint
+
+**POST** `/api/v1/memory/enrich`
+
+**Authentication**: Bearer token (required)
+
+**Request Body**:
+```json
+{
+  "text": "The visual generation pipeline now strictly links Story -> Diagram -> Image",
+  "session_id": "ide-context-updates",
+  "speaker": "user"
+}
+```
+
+## Usage Examples
+
+### Using cURL
+
+```bash
+# Set your API token
+export ENGRAM_API_TOKEN="your-token-here"
+
+# Enrich memory with a finding
+curl -X POST "https://engram.work/api/v1/memory/enrich" \
+  -H "Authorization: Bearer $ENGRAM_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "The visual generation pipeline now strictly links Story -> Diagram -> Image",
+    "session_id": "ide-context-updates"
+  }'
+```
+
+### Using Python
+
+```python
+import requests
+import os
+
+ENGRAM_API_TOKEN = os.getenv("ENGRAM_API_TOKEN")
+ENGRAM_API_URL = "https://engram.work/api/v1/memory/enrich"
+
+def enrich_memory(text: str, session_id: str = None, speaker: str = "user"):
+    """Enrich Engram memory with context from IDE."""
+    headers = {
+        "Authorization": f"Bearer {ENGRAM_API_TOKEN}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "text": text,
+        "speaker": speaker
+    }
+    if session_id:
+        payload["session_id"] = session_id
+    
+    response = requests.post(ENGRAM_API_URL, headers=headers, json=payload)
+    return response.json()
+
+# Example usage
+enrich_memory(
+    text="The authentication middleware now bypasses validation in test mode",
+    session_id="debugging-auth-bug"
+)
+```
+
+### Using JavaScript/TypeScript
+
+```typescript
+async function enrichMemory(
+  text: string,
+  sessionId?: string,
+  speaker: "user" | "assistant" = "user"
+): Promise<any> {
+  const response = await fetch("https://engram.work/api/v1/memory/enrich", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${process.env.ENGRAM_API_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      text,
+      session_id: sessionId,
+      speaker,
+    }),
+  });
+  return response.json();
+}
+
+// Example usage
+await enrichMemory(
+  "The Knowledge Graph visualization now supports query-based filtering and statistics",
+  "graph-enhancement-2026"
+);
+```
+
+## When to Use
+
+### ✅ Good Use Cases
+
+- **Architectural Decisions**: "We chose Temporal for workflow orchestration because..."
+- **Debugging Discoveries**: "The auth bug was caused by missing tenant_id in session metadata"
+- **Configuration Notes**: "Azure Container Apps requires these specific environment variables..."
+- **Code Patterns**: "We use this pattern for agent delegation: ..."
+- **Performance Findings**: "The tri-search RRF fusion improves recall by 15%"
+- **Integration Details**: "VoiceLive websocket requires these headers..."
+
+### ❌ Don't Use For
+
+- Temporary debugging output (use logs instead)
+- Code snippets without context (add explanation)
+- Duplicate information already in documentation
+- Sensitive credentials or secrets
+
+## Best Practices
+
+1. **Be Specific**: Include enough context for future retrieval
+   - ✅ Good: "The Knowledge Graph API now returns statistics including node types, average degree, and total edges"
+   - ❌ Bad: "Graph updated"
+
+2. **Use Session IDs**: Group related insights together
+   - `"debugging-auth-bug"` - All findings from one debugging session
+   - `"graph-enhancement-2026"` - All changes from a feature work
+   - `"ide-context-updates"` - General IDE discoveries
+
+3. **Include Context**: Explain why something matters
+   - ✅ Good: "We added query filtering to the graph endpoint to enable focused exploration of specific topics"
+   - ❌ Bad: "Added query param"
+
+4. **Timely Updates**: Enrich memory immediately after discoveries
+   - Don't wait until the end of a session
+   - Capture insights while they're fresh
+
+5. **Link to Code**: Reference specific files when relevant
+   - "The tri-search implementation in `backend/memory/client.py` uses RRF fusion"
+
+## Response Format
+
+```json
+{
+  "success": true,
+  "session_id": "ide-context-updates",
+  "message": "Transcript enriched successfully"
+}
+```
+
+## Integration with Memory Graph
+
+Enriched memory appears in:
+- **Knowledge Graph**: Visualized as nodes and relationships at `/memory/graph`
+- **Search Results**: Retrieved via tri-search (keyword, vector, graph)
+- **Agent Context**: Automatically included in agent conversations when relevant
+
+## Related Documentation
+
+- [Memory Query Interface](./memory-query.mdc) - How to query memory
+- [Graph Knowledge Guide](../docs/features/memory/graph-knowledge-tri-search.md) - Understanding the knowledge graph
+- [Memory Architecture](../docs/concept/memory-architecture.md) - Overall memory system design
+
+## Authentication
+
+Get your API token from:
+- Azure Entra ID (for user authentication)
+- API key configuration (for automation)
+
+The token must be included in the `Authorization: Bearer <token>` header.

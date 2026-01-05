@@ -67,9 +67,18 @@ class GraphEdgeView(BaseModel):
     weight: float = 1.0
 
 
+class GraphStatistics(BaseModel):
+    total_nodes: int
+    total_edges: int
+    node_types: dict[str, int]
+    avg_degree: float
+    max_degree: int
+
+
 class MemoryGraphResponse(BaseModel):
     nodes: list[GraphNodeView]
     edges: list[GraphEdgeView]
+    stats: GraphStatistics | None = None
 
 
 async def _build_graph(user_id: str, query: str) -> MemoryGraphResponse:
@@ -104,14 +113,21 @@ async def _build_graph(user_id: str, query: str) -> MemoryGraphResponse:
     # 2. Build Graph from Episodic Memory (Sessions & Topics)
     # This works with Zep OSS v0.x and provides an "Episode Graph"
     try:
-        # Get recent sessions
-        sessions = await memory_client.list_sessions(user_id=user_id, limit=20)
+        # Get recent sessions (increase limit for better graph coverage)
+        sessions = await memory_client.list_sessions(user_id=user_id, limit=50)
         
         for sess in sessions:
             sess_id = sess.get("session_id")
             meta = sess.get("metadata", {})
             summary = meta.get("summary", "Conversation")
             topics = meta.get("topics", [])
+            
+            # Filter by query if provided
+            if query:
+                query_lower = query.lower()
+                if not (query_lower in summary.lower() or 
+                        any(query_lower in topic.lower() for topic in topics)):
+                    continue
             
             # Create Episode Node
             # Use a short label for the node, full summary in metadata
@@ -125,7 +141,12 @@ async def _build_graph(user_id: str, query: str) -> MemoryGraphResponse:
                 node_id=sess_id,
                 content=label,
                 node_type="memory", # Valid types: fact, memory, entity
-                metadata={"full_content": summary, "timestamp": sess.get("created_at")},
+                metadata={
+                    "full_content": summary, 
+                    "timestamp": sess.get("created_at"),
+                    "agent_id": meta.get("agent_id"),
+                    "turn_count": meta.get("turn_count", 0),
+                },
             )
             
             # Create Topic Nodes and Edges
@@ -134,7 +155,7 @@ async def _build_graph(user_id: str, query: str) -> MemoryGraphResponse:
                 ensure_node(
                     node_id=topic_id,
                     content=topic,
-                    node_type="entity", 
+                    node_type="topic",  # Use "topic" as a distinct type
                     metadata={"kind": "topic"},
                 )
                 
@@ -193,7 +214,26 @@ async def _build_graph(user_id: str, query: str) -> MemoryGraphResponse:
         if edge.target in nodes:
             nodes[edge.target].degree += 1
 
-    return MemoryGraphResponse(nodes=list(nodes.values()), edges=edges)
+    # Calculate statistics
+    node_list = list(nodes.values())
+    node_types: dict[str, int] = {}
+    total_degree = 0
+    max_degree = 0
+    
+    for node in node_list:
+        node_types[node.node_type] = node_types.get(node.node_type, 0) + 1
+        total_degree += node.degree
+        max_degree = max(max_degree, node.degree)
+    
+    stats = GraphStatistics(
+        total_nodes=len(node_list),
+        total_edges=len(edges),
+        node_types=node_types,
+        avg_degree=total_degree / len(node_list) if node_list else 0.0,
+        max_degree=max_degree,
+    )
+
+    return MemoryGraphResponse(nodes=node_list, edges=edges, stats=stats)
 
 
 @router.post("/search/public", response_model=MemorySearchResponse)
@@ -292,13 +332,38 @@ async def search_memory(request: MemorySearchRequest, user: SecurityContext = De
 
 @router.get("/graph", response_model=MemoryGraphResponse)
 async def get_memory_graph(query: str = Query("", max_length=200), user: SecurityContext = Depends(get_current_user)):
-    """Return a lightweight knowledge graph for the current user."""
+    """
+    Return a knowledge graph for the current user with statistics.
+    
+    This endpoint provides the Graph Knowledge (Gk) layer of Engram's tri-search capability:
+    - Keyword Search: Full-text matching in session content
+    - Vector Search: Semantic similarity via embeddings  
+    - Graph Search: Relationship traversal (this endpoint)
+    
+    Results are combined using Reciprocal Rank Fusion (RRF) for optimal retrieval.
+    
+    Query parameter filters facts and episodes by content/topics.
+    """
     try:
         return await _build_graph(user.user_id, query)
-    except Exception:
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to build graph: {e}", exc_info=True)
         if get_settings().environment == "test":
             raise
-        return MemoryGraphResponse(nodes=[], edges=[])
+        # Return empty graph with stats
+        return MemoryGraphResponse(
+            nodes=[], 
+            edges=[],
+            stats=GraphStatistics(
+                total_nodes=0,
+                total_edges=0,
+                node_types={},
+                avg_degree=0.0,
+                max_degree=0,
+            )
+        )
 
 
 class Episode(BaseModel):
