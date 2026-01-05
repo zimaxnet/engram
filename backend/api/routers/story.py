@@ -56,6 +56,12 @@ class StoryListItem(BaseModel):
     image_path: Optional[str] = None
 
 
+class VisualGenerateRequest(BaseModel):
+    """Request to generate a visual for an existing story."""
+    prompt: Optional[str] = None
+    context: Optional[str] = None
+
+
 # =============================================================================
 # Helper Functions
 # =============================================================================
@@ -297,68 +303,6 @@ async def get_latest_story(user: SecurityContext = Depends(get_current_user)):
     )
 
 
-@router.get("/{story_id}", response_model=StoryResponse)
-async def get_story(story_id: str, user: SecurityContext = Depends(get_current_user)):
-    """Get a specific story by ID."""
-    stories_dir = _get_stories_dir()
-    story_path = stories_dir / f"{story_id}.md"
-    
-    if not story_path.exists():
-        raise HTTPException(status_code=404, detail=f"Story not found: {story_id}")
-    
-    # Try to load corresponding diagram
-    diagrams_dir = _get_diagrams_dir()
-    diagram_path = diagrams_dir / f"{story_id}.json"
-    diagram_spec = None
-    if diagram_path.exists():
-        diagram_spec = json.loads(diagram_path.read_text())
-    
-    # Check for image
-    image_path_str = None
-    if (stories_dir.parent / "images" / f"{story_id}.png").exists():
-        image_path_str = f"/api/v1/images/{story_id}.png"
-    
-    return StoryResponse(
-        story_id=story_id,
-        topic=story_id.split("-", 2)[-1].replace("-", " ") if "-" in story_id else story_id,
-        story_content=story_path.read_text(),
-        story_path=str(story_path),
-        diagram_spec=diagram_spec,
-        diagram_path=str(diagram_path) if diagram_path.exists() else None,
-        image_path=image_path_str,
-        created_at=datetime.fromtimestamp(story_path.stat().st_mtime).isoformat(),
-    )
-
-
-@router.get("/", response_model=list[StoryListItem])
-async def list_stories(user: SecurityContext = Depends(get_current_user)):
-    """List all available stories."""
-    stories_dir = _get_stories_dir()
-    
-    stories = []
-    for story_file in sorted(stories_dir.glob("*.md"), reverse=True):
-        story_id = story_file.stem
-        
-        # Check for image
-        image_path_str = None
-        if (stories_dir.parent / "images" / f"{story_id}.png").exists():
-            image_path_str = f"/api/v1/images/{story_id}.png"
-            
-        stories.append(StoryListItem(
-            story_id=story_id,
-            topic=story_id.split("-", 2)[-1].replace("-", " ") if "-" in story_id else story_id,
-            created_at=datetime.fromtimestamp(story_file.stat().st_mtime).isoformat(),
-            story_path=str(story_file),
-            image_path=image_path_str
-        ))
-    
-
-class VisualGenerateRequest(BaseModel):
-    """Request to generate a visual for an existing story."""
-    prompt: Optional[str] = None
-    context: Optional[str] = None
-
-
 @router.post("/{story_id}/visual", response_model=StoryResponse)
 async def generate_story_visual(
     story_id: str,
@@ -415,20 +359,11 @@ async def generate_story_visual(
         try:
             from backend.memory.client import memory_client
             session_id = f"story-{story_id}"
-            
-            # We need to fetch the existing session to get the user_id (if we want to be safe)
-            # or just overwrite if we trust the current user? 
-            # Ideally repair scripts run as admins or the system user.
-            
-            # Note: `get_session` is better but `get_or_create` allows update.
-            # We assume session exists.
             await memory_client.get_or_create_session(
                 session_id=session_id,
-                user_id=user.user_id, # This assumes the repairing user owns it, or we rely on system
+                user_id=user.user_id,
                 metadata={
                     "image_path": image_path_str,
-                    # We preserve other metadata ideally, but Zep's update semantics vary.
-                    # Best effort:
                     "last_updated": datetime.now().isoformat()
                 }
             )
@@ -441,3 +376,60 @@ async def generate_story_visual(
     except Exception as e:
         logger.error(f"Visual generation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{story_id}", response_model=StoryResponse)
+async def get_story(story_id: str, user: SecurityContext = Depends(get_current_user)):
+    """Get a specific story by ID."""
+    stories_dir = _get_stories_dir()
+    story_path = stories_dir / f"{story_id}.md"
+    
+    if not story_path.exists():
+        raise HTTPException(status_code=404, detail=f"Story not found: {story_id}")
+    
+    # Try to load corresponding diagram
+    diagrams_dir = _get_diagrams_dir()
+    diagram_path = diagrams_dir / f"{story_id}.json"
+    diagram_spec = None
+    if diagram_path.exists():
+        diagram_spec = json.loads(diagram_path.read_text())
+    
+    # Check for image
+    image_path_str = None
+    if (stories_dir.parent / "images" / f"{story_id}.png").exists():
+        image_path_str = f"/api/v1/images/{story_id}.png"
+    
+    return StoryResponse(
+        story_id=story_id,
+        topic=story_id.split("-", 2)[-1].replace("-", " ") if "-" in story_id else story_id,
+        story_content=story_path.read_text(),
+        story_path=str(story_path),
+        diagram_spec=diagram_spec,
+        diagram_path=str(diagram_path) if diagram_path.exists() else None,
+        image_path=image_path_str,
+        created_at=datetime.fromtimestamp(story_path.stat().st_mtime).isoformat(),
+    )
+
+
+@router.get("/", response_model=list[StoryListItem])
+async def list_stories(user: SecurityContext = Depends(get_current_user)):
+    """List all available stories."""
+    stories_dir = _get_stories_dir()
+    
+    stories = []
+    for story_file in sorted(stories_dir.glob("*.md"), reverse=True):
+        story_id = story_file.stem
+        
+        # Check for image
+        image_path_str = None
+        if (stories_dir.parent / "images" / f"{story_id}.png").exists():
+            image_path_str = f"/api/v1/images/{story_id}.png"
+            
+        stories.append(StoryListItem(
+            story_id=story_id,
+            topic=story_id.split("-", 2)[-1].replace("-", " ") if "-" in story_id else story_id,
+            created_at=datetime.fromtimestamp(story_file.stat().st_mtime).isoformat(),
+            story_path=str(story_file),
+            image_path=image_path_str
+        ))
+    return stories
