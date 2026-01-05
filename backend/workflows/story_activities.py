@@ -124,6 +124,37 @@ async def generate_story_activity(input: GenerateStoryInput) -> GenerateStoryOut
         from backend.llm.claude_client import get_claude_client
         
         client = get_claude_client()
+        
+        # --- SOP: Double Tri-Search Verification ---
+        # Sage performs an independent search to verify and enrich context
+        activity.logger.info(f"Sage Verification: Searching memory for '{input.topic}'")
+        try:
+            from backend.memory.client import memory_client
+            
+            # Using global-search or a specific session if we had one
+            search_results = await memory_client.search_memory(
+                session_id="global-search",
+                query=input.topic,
+                limit=3
+            )
+            
+            if search_results:
+                verification_context = "\n\n## Verification Context (Sage Tri-Search)\n"
+                for i, res in enumerate(search_results):
+                    content = res.get("content", "")[:300]
+                    verification_context += f"{i+1}. {content}\n"
+                
+                # Append to existing context
+                input.context = (input.context or "") + verification_context
+                activity.logger.info(f"Sage Verification: Added {len(search_results)} insights to context")
+            else:
+                activity.logger.info("Sage Verification: No additional insights found")
+                
+        except Exception as e:
+            # Non-blocking failure - log and proceed
+            activity.logger.warning(f"Sage Verification search failed: {e}")
+        # -------------------------------------------
+
         content = await client.generate_story(
             topic=input.topic,
             context=input.context,

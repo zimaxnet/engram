@@ -60,3 +60,4 @@ venv311/
 # Archives and Local files
 archive/
 mn-bank-app/
+scripts/verify_*.py
