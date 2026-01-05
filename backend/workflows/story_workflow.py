@@ -197,69 +197,56 @@ class StoryWorkflow:
             
             workflow.logger.info(f"Story generated: {len(self._story_content)} chars")
             
-            # Step 2: Generate Diagram and Image (Sequential for simplicity, or Parallel)
-            # Parallel execution is better for performance
+            # Step 2: Generate Diagram and Image (Sequential to allow Diagram -> Visual linking)
             
-            futures = []
-            
+            # 2a. Generate Diagram first (if requested)
             if input.include_diagram:
-                workflow.logger.info("Step 2a: Scheduling diagram generation...")
-                futures.append(
-                    workflow.execute_activity(
+                workflow.logger.info("Step 2a: Generating diagram...")
+                try:
+                    diagram_result = await workflow.execute_activity(
                         generate_diagram_activity,
                         GenerateDiagramInput(
                             topic=input.topic,
+                            story_content=self._story_content, # Pass story context for alignment
                             diagram_type=input.diagram_type,
                         ),
                         start_to_close_timeout=timedelta(minutes=2),
                         retry_policy=LLM_RETRY_POLICY,
                     )
-                )
+                    
+                    if diagram_result.success:
+                        self._diagram_spec = diagram_result.spec
+                        workflow.logger.info("Diagram spec generated")
+                    else:
+                        workflow.logger.warning(f"Diagram generation failed: {diagram_result.error}")
+                except Exception as e:
+                    workflow.logger.warning(f"Diagram activity failed: {e}")
 
+            # 2b. Generate Image (using diagram spec if available)
+            image_data = None
             if input.include_image:
-                 workflow.logger.info("Step 2b: Scheduling image generation...")
-                 futures.append(
-                    workflow.execute_activity(
+                 workflow.logger.info("Step 2b: Generating image...")
+                 try:
+                     image_result = await workflow.execute_activity(
                         generate_image_activity,
                         GenerateImageInput(
-                            prompt=input.topic, # Use topic as prompt for now
+                            prompt=input.topic, # Use topic as prompt
+                            diagram_spec=self._diagram_spec, # Pass the diagram spec for visual alignment
                         ),
                         start_to_close_timeout=timedelta(minutes=2),
                         retry_policy=LLM_RETRY_POLICY,
                     )
-                 )
-            
-            self._status = "generating_visuals"
-            self._progress = 50
-            
-            # Wait for all visual tasks
-            visual_results = await asyncio.gather(*futures, return_exceptions=True)
-            
-            # Process results (order depends on what was scheduled)
-            current_result_idx = 0
-            
-            if input.include_diagram:
-                res = visual_results[current_result_idx]
-                current_result_idx += 1
-                if isinstance(res, Exception):
-                     workflow.logger.warning(f"Diagram generation failed: {res}")
-                elif res.success:
-                    self._diagram_spec = res.spec
-                    workflow.logger.info("Diagram spec generated")
-                else:
-                    workflow.logger.warning(f"Diagram generation failed: {res.error}")
+                     
+                     if image_result.success:
+                        image_data = image_result.image_data
+                        workflow.logger.info(f"Image generated: {len(image_data)} bytes")
+                     else:
+                        workflow.logger.warning(f"Image generation failed: {image_result.error}")
+                 except Exception as e:
+                    workflow.logger.warning(f"Image activity failed: {e}")
 
-            image_data = None
-            if input.include_image:
-                res = visual_results[current_result_idx]
-                current_result_idx += 1
-                if isinstance(res, Exception):
-                     workflow.logger.warning(f"Image generation failed: {res}")
-                elif res.success:
-                    image_data = res.image_data
-                    workflow.logger.info(f"Image generated: {len(image_data)} bytes")
-                else:
-                    workflow.logger.warning(f"Image generation failed: {res.error}")
+            self._status = "generating_visuals" # Keep status update for UI consistency
+            self._progress = 70
 
             self._progress = 70
             

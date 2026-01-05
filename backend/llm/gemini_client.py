@@ -77,6 +77,7 @@ class GeminiClient:
         self,
         topic: str,
         diagram_type: str = "architecture",
+        story_context: Optional[str] = None,
         existing_spec: Optional[dict] = None,
     ) -> dict:
         """
@@ -84,10 +85,20 @@ class GeminiClient:
         """
         import json
         
+        context_block = ""
+        if story_context:
+            context_block = f"""
+STORY CONTEXT:
+The diagram must align with this narrative description:
+"{story_context[:2000]}..."
+Ensure node names and relationships reflect the terminology used in the story.
+"""
+
         prompt = f"""Generate a detailed JSON specification for a Nano Banana Pro diagram.
 
 Topic: {topic}
 Diagram Type: {diagram_type}
+{context_block}
 
 The JSON should follow this structure:
 {{
@@ -148,7 +159,7 @@ Return ONLY valid JSON, no markdown code blocks or explanations."""
             logger.error(f"GeminiClient: Failed to parse JSON: {e}")
             raise ValueError(f"Invalid JSON from Gemini: {e}")
 
-    async def generate_visual_spec(self, topic: str, context: str = "") -> dict:
+    async def generate_visual_spec(self, topic: str, context: str = "", diagram_spec: Optional[dict] = None) -> dict:
         """
         Generate a visual specification (JSON) describing the image to create.
         This is step 1 of the two-step flow: spec → image.
@@ -157,10 +168,28 @@ Return ONLY valid JSON, no markdown code blocks or explanations."""
         """
         import json
         
+        # Enhance context with diagram details if available
+        diagram_context = ""
+        if diagram_spec:
+            theme = diagram_spec.get("theme", "modern")
+            # Extract up to 5 key node labels to ground the visual
+            nodes = diagram_spec.get("nodes", [])
+            node_labels = [n.get("label", "") for n in nodes[:5] if n.get("label")]
+            node_str = ", ".join(node_labels)
+            
+            diagram_context = f"""
+            ARCHITECTURAL ALIGNMENT REQUIRED:
+            This visual MUST align with the provided architectural diagram.
+            - Visual Theme: {theme} style
+            - Key Components to Visualize: {node_str}
+            - Structure: Reflect the interconnected nature of these components.
+            """
+
         prompt = f"""Generate a JSON specification for an AI-generated visual.
 
 Topic: {topic}
 Context: {context}
+{diagram_context}
 
 Return ONLY valid JSON with this structure:
 {{
@@ -171,7 +200,7 @@ Return ONLY valid JSON with this structure:
   "colors": ["primary color", "secondary color", "accent color"],
   "composition": "Layout description (centered, rule of thirds, etc.)",
   "elements": ["key element 1", "key element 2", "key element 3"],
-  "prompt": "Optimized prompt for image generation combining all above"
+  "prompt": "Optimized prompt for image generation combining all above. If architectural components are listed, they MUST be seamlessly integrated into the scene."
 }}
 
 No markdown code blocks, just JSON."""

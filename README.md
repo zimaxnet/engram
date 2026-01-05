@@ -115,6 +115,35 @@ The agent "remembers" past conversations and facts.
 
 **Full documentation**: [Wiki](https://wiki.engram.work)
 
+## AI Periodic Table Position
+
+Engram's architecture maps directly to [Martin Keen's AI Periodic Table](https://youtu.be/ESBMgZHzfG0?si=Q2GME-RqGHjGaz_6) — a framework organizing AI technologies into Reactive, Retrieval, Orchestration, Validation, and Models columns.
+
+```
+     C1 Reactive   C2 Retrieval   C3 Orchestration   C4 Validation   C5 Models
+   ┌──────────────┬──────────────┬──────────────────┬───────────────┬──────────────┐
+R1 │   🟢 Pr      │   🟢 Em      │                  │               │   🟢 Lg      │
+   │   Prompts    │  Embeddings  │                  │               │    LLM       │
+   ├──────────────┼──────────────┼──────────────────┼───────────────┼──────────────┤
+R2 │   🟢 Fc      │   🟢 Vx      │     🟢 Rg        │    🟢 Gr      │   🟢 Mm      │
+   │ Function Call│   Vector     │      RAG         │  Guardrails   │  Multimodal  │
+   ├──────────────┼──────────────┼──────────────────┼───────────────┼──────────────┤
+R3 │   🟢 Ag      │   🟡 Ft      │     🟢 Fw        │    🟡 Rt      │   🟡 Sm      │
+   │    Agent     │  Finetune    │   Framework      │  Red-team     │    Small     │
+   ├──────────────┼──────────────┼──────────────────┼───────────────┼──────────────┤
+R4 │   🟢 Ma      │   🟢 Sy      │     ⭐ Gk        │    🟡 In      │   🟢 Th      │
+   │ Multi-agent  │  Synthetic   │ Graph Knowledge  │  Interpret    │  Thinking    │
+   └──────────────┴──────────────┴──────────────────┴───────────────┴──────────────┘
+
+🟢 Strong (12)    🟡 Gap/Emerging (4)    ⭐ Unique Differentiator
+```
+
+**Gk (Graph Knowledge)** is Engram's unique contribution — temporal knowledge graphs for dynamic context orchestration via Zep.
+
+📊 [View Interactive Matrix](docs/ai-periodic-table-matrix.html) | 📋 [Full Analysis](docs/business-plan-ai-periodic-table.md)
+
+*Framework credit: [Martin Keen, IBM Master Inventor](https://youtu.be/ESBMgZHzfG0?si=Q2GME-RqGHjGaz_6)*
+
 ## Features
 
 - 🧠 **Context Engineering** - 4-layer enterprise context schema
@@ -130,6 +159,7 @@ The agent "remembers" past conversations and facts.
 We provide specific context files to help AI IDEs (Cursor, VS Code) and Agents understand the system's capabilities immediately.
 
 See [Engram Capabilities](docs/ide-context/engram-capabilities.md) for available tools:
+
 - **Sage Storyteller**: Generate narratives & visuals (`simulate_sage_story.py`)
 - **Tri-Search**: Keyword, Vector, Graph memory integration
 - **Data Connectors**: Ingest Wiki, Tickets, and Code

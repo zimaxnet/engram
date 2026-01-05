@@ -43,6 +43,7 @@ class GenerateStoryOutput:
 class GenerateDiagramInput:
     """Input for diagram generation activity"""
     topic: str
+    story_content: Optional[str] = None
     diagram_type: str = "architecture"
 
 
@@ -58,6 +59,7 @@ class GenerateDiagramOutput:
 class GenerateImageInput:
     """Input for image generation activity"""
     prompt: str
+    diagram_spec: Optional[dict] = None
 
 
 @dataclass
@@ -205,6 +207,7 @@ async def generate_diagram_activity(input: GenerateDiagramInput) -> GenerateDiag
         spec = await client.generate_diagram_spec(
             topic=input.topic,
             diagram_type=input.diagram_type,
+            story_context=input.story_content,
         )
         
         activity.logger.info("Diagram spec generated")
@@ -243,7 +246,8 @@ async def generate_image_activity(input: GenerateImageInput) -> GenerateImageOut
         activity.logger.info("Step 1: Generating visual specification...")
         visual_spec = await client.generate_visual_spec(
             topic=input.prompt,
-            context="Story illustration for Engram"
+            context="Story illustration for Engram",
+            diagram_spec=input.diagram_spec
         )
         activity.logger.info(f"Visual spec generated: {visual_spec.get('title', 'untitled')}")
         
