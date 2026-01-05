@@ -300,12 +300,64 @@ class IngestionService:
     async def ingest_document(self, content: bytes, filename: str, content_type: str, user_id: str, background_tasks: BackgroundTasks) -> IngestResponse:
         """
         Ingest a file document with TRI-INDEXING.
+        Saves the file to the docs/diagrams folder for persistence/display.
         """
         logger.info(f"Processing document: {filename}")
-        chunks = processor.process_file(content, filename, content_type)
+        
+        # 1. Save artifact to docs/diagrams (mapped to Azure Files)
+        save_path = None
+        try:
+            from backend.core import get_settings
+            settings = get_settings()
+            docs_path = Path(settings.onedrive_docs_path or "docs")
+            
+            # Determine target subdirectory based on extension/type
+            if any(x in filename.lower() for x in [".png", ".jpg", ".jpeg", ".svg"]):
+                target_dir = docs_path / "images"
+            elif ".json" in filename.lower():
+                target_dir = docs_path / "diagrams"
+            else:
+                target_dir = docs_path / "uploads"
+                
+            target_dir.mkdir(parents=True, exist_ok=True)
+            save_path = target_dir / filename
+            
+            # Write bytes
+            save_path.write_bytes(content)
+            logger.info(f"Saved artifact to: {save_path}")
+            
+        except Exception as e:
+            logger.error(f"Failed to save artifact {filename}: {e}")
+            # Non-blocking failure - we still want to ingest memory if possible
+        
+        # 2. Extract Text via Unstructured
+        try:
+            chunks = processor.process_file(content, filename, content_type)
+        except Exception as e:
+            logger.warning(f"Unstructured processing failed for {filename}: {e}")
+            # If extracting text fails (e.g. binary image without OCR), we shouldn't 500.
+            # We return success=True for the upload, but note the extraction failure.
+            saved_msg = f"File uploaded to {save_path.name}" if save_path else "File persistence failed"
+            return IngestResponse(
+                success=True,
+                filename=filename,
+                chunks_processed=0,
+                message=f"{saved_msg}, but text extraction failed: {str(e)}",
+                session_id=None,
+                document_id=None,
+            )
 
         if not chunks:
-            raise ValueError("No text content extracted from file")
+            # Valid file but no text found
+            saved_msg = f"File uploaded to {save_path.name}" if save_path else "File persistence failed"
+            return IngestResponse(
+                success=True,
+                filename=filename,
+                chunks_processed=0,
+                message=f"{saved_msg}. No text content extracted.",
+                session_id=None,
+                document_id=None,
+            )
 
         document_id = f"doc-{uuid.uuid4().hex[:12]}"
         session_id = f"doc-upload-{uuid.uuid4().hex[:8]}"
@@ -319,7 +371,7 @@ class IngestionService:
             success=True,
             filename=filename,
             chunks_processed=len(chunks),
-            message=f"Document accepted. Processing {len(chunks)} chunks with tri-indexing.",
+            message=f"Document uploaded and processed. {len(chunks)} chunks indexed.",
             session_id=session_id,
             document_id=document_id,
         )
