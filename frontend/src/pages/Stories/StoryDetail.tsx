@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { getStory, API_BASE_URL } from '../../services/api';
+import { getStory, uploadArchitectureImage, API_BASE_URL } from '../../services/api';
 import { MermaidDiagram } from '../../components/MermaidDiagram/MermaidDiagram';
 import '../../components/MermaidDiagram/MermaidDiagram.css';
 import './StoryDetail.css';
@@ -11,7 +11,8 @@ interface StoryDetailed {
     topic: string;
     story_content: string;
     diagram_spec?: any;
-    image_path?: string;
+    image_path?: string | null;
+    architecture_image_path?: string | null;
     created_at: string;
 }
 
@@ -23,6 +24,9 @@ export function StoryDetail() {
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'story' | 'diagram' | 'visual'>('story');
     const [copied, setCopied] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Generate shareable URL
     const shareableUrl = `https://engram.work/stories/${storyId}`;
@@ -65,6 +69,38 @@ export function StoryDetail() {
         if (!path) return '';
         if (path.startsWith('http')) return path;
         return `${API_BASE_URL}${path}`;
+    };
+
+    const handleUploadClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file || !storyId) return;
+
+        // Validate file type
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            setUploadError('Please select a PNG, JPG, or WebP image');
+            return;
+        }
+
+        setUploading(true);
+        setUploadError(null);
+
+        try {
+            const updatedStory = await uploadArchitectureImage(storyId, file);
+            setStory(updatedStory);
+        } catch (err: any) {
+            setUploadError(err.message || 'Upload failed');
+        } finally {
+            setUploading(false);
+            // Reset file input
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
     };
 
     if (loading) return (
@@ -155,6 +191,39 @@ export function StoryDetail() {
 
                         {activeTab === 'diagram' && story.diagram_spec && (
                             <div className="diagram-view">
+                                {/* Upload button and uploaded image */}
+                                <div className="architecture-upload-section">
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleFileChange}
+                                        accept="image/png,image/jpeg,image/webp"
+                                        className="hidden-file-input"
+                                        aria-label="Upload architecture diagram image"
+                                    />
+                                    <button
+                                        className={`upload-architecture-btn ${uploading ? 'uploading' : ''}`}
+                                        onClick={handleUploadClick}
+                                        disabled={uploading}
+                                    >
+                                        {uploading ? '⏳ Uploading...' : '📤 Upload Architecture Diagram'}
+                                    </button>
+                                    {uploadError && (
+                                        <div className="upload-error">{uploadError}</div>
+                                    )}
+                                </div>
+
+                                {/* Display uploaded architecture image if available */}
+                                {story.architecture_image_path && (
+                                    <div className="architecture-image-container">
+                                        <img
+                                            src={getFullImageUrl(story.architecture_image_path)}
+                                            alt={`${story.topic} - Architecture Diagram`}
+                                            className="architecture-image"
+                                        />
+                                    </div>
+                                )}
+
                                 <div className="diagram-placeholder">
                                     <h3>Technical Specification</h3>
                                     <pre>{JSON.stringify(story.diagram_spec, null, 2)}</pre>

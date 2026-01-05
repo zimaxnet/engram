@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks
 from pydantic import BaseModel
 
 from backend.api.middleware.auth import get_current_user
@@ -44,6 +44,7 @@ class StoryResponse(BaseModel):
     diagram_spec: Optional[dict] = None
     diagram_path: Optional[str] = None
     image_path: Optional[str] = None
+    architecture_image_path: Optional[str] = None
     created_at: str
 
 
@@ -89,6 +90,18 @@ def _get_diagrams_dir() -> Path:
     except Exception as e:
         logger.error(f"Failed to create diagrams directory: {e}")
     return diagrams_dir
+
+
+def _get_images_dir() -> Path:
+    """Get the images directory path."""
+    settings = get_settings()
+    docs_path = Path(settings.onedrive_docs_path or "docs")
+    images_dir = docs_path / "images"
+    try:
+        images_dir.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        logger.error(f"Failed to create images directory: {e}")
+    return images_dir
 
 
 # =============================================================================
@@ -378,6 +391,109 @@ async def generate_story_visual(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/{story_id}/architecture-image", response_model=StoryResponse)
+async def upload_architecture_image(
+    story_id: str,
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    user: SecurityContext = Depends(get_current_user),
+):
+    """
+    Upload a high-quality architecture diagram image for a story.
+    
+    The image is:
+    1. Validated (PNG, JPG, WebP only)
+    2. Saved to docs/images/{story_id}-architecture.{ext}
+    3. Processed with Unstructured for OCR/text extraction
+    4. Extracted text enriched to Zep memory for searchability
+    
+    The uploaded image becomes the primary visual for the Architecture Diagram tab,
+    while the Imagen-generated visual remains in the Visual tab.
+    """
+    stories_dir = _get_stories_dir()
+    story_path = stories_dir / f"{story_id}.md"
+    
+    if not story_path.exists():
+        raise HTTPException(status_code=404, detail=f"Story not found: {story_id}")
+    
+    # Validate file type
+    allowed_types = {"image/png", "image/jpeg", "image/webp"}
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid file type: {file.content_type}. Allowed: PNG, JPG, WebP"
+        )
+    
+    # Determine extension from content type
+    ext_map = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp"}
+    ext = ext_map.get(file.content_type, "png")
+    
+    try:
+        # Read file content
+        content = await file.read()
+        
+        # Save architecture image
+        images_dir = _get_images_dir()
+        arch_image_filename = f"{story_id}-architecture.{ext}"
+        arch_image_path = images_dir / arch_image_filename
+        arch_image_path.write_bytes(content)
+        
+        logger.info(f"Saved architecture image: {arch_image_path}")
+        
+        # Process with Unstructured for OCR (background task)
+        async def process_and_enrich():
+            try:
+                from backend.etl.processor import processor
+                from backend.memory.client import memory_client
+                
+                # Extract text from image using Unstructured
+                chunks = processor.process_file(
+                    file_content=content,
+                    filename=arch_image_filename,
+                    content_type=file.content_type,
+                    strategy="hi_res",  # Use hi_res for OCR
+                )
+                
+                if chunks:
+                    extracted_text = "\n".join(chunk["text"] for chunk in chunks if chunk.get("text"))
+                    
+                    if extracted_text.strip():
+                        # Enrich to Zep for searchability
+                        session_id = f"story-{story_id}-architecture"
+                        await memory_client.add_session(
+                            session_id=session_id,
+                            user_id=user.user_id,
+                            metadata={
+                                "type": "architecture_diagram",
+                                "story_id": story_id,
+                                "source": "user_upload",
+                                "created_at": datetime.now().isoformat(),
+                            }
+                        )
+                        await memory_client.add_messages(
+                            session_id=session_id,
+                            messages=[{
+                                "role": "assistant",
+                                "content": f"Architecture diagram for story {story_id}:\n\n{extracted_text}",
+                                "metadata": {"agent_id": "sage", "source": "ocr_extraction"},
+                            }]
+                        )
+                        logger.info(f"Enriched OCR text to memory for {story_id}")
+            except Exception as e:
+                logger.warning(f"Failed to process/enrich architecture image: {e}")
+        
+        background_tasks.add_task(process_and_enrich)
+        
+        # Return updated story
+        return await get_story(story_id, user)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Architecture image upload failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/{story_id}", response_model=StoryResponse)
 async def get_story(story_id: str, user: SecurityContext = Depends(get_current_user)):
     """Get a specific story by ID."""
@@ -394,10 +510,19 @@ async def get_story(story_id: str, user: SecurityContext = Depends(get_current_u
     if diagram_path.exists():
         diagram_spec = json.loads(diagram_path.read_text())
     
-    # Check for image
+    # Check for Imagen-generated image
+    images_dir = _get_images_dir()
     image_path_str = None
-    if (stories_dir.parent / "images" / f"{story_id}.png").exists():
+    if (images_dir / f"{story_id}.png").exists():
         image_path_str = f"/api/v1/images/{story_id}.png"
+    
+    # Check for uploaded architecture image (try all extensions)
+    architecture_image_path_str = None
+    for ext in ["png", "jpg", "webp"]:
+        arch_image = images_dir / f"{story_id}-architecture.{ext}"
+        if arch_image.exists():
+            architecture_image_path_str = f"/api/v1/images/{story_id}-architecture.{ext}"
+            break
     
     return StoryResponse(
         story_id=story_id,
@@ -407,8 +532,10 @@ async def get_story(story_id: str, user: SecurityContext = Depends(get_current_u
         diagram_spec=diagram_spec,
         diagram_path=str(diagram_path) if diagram_path.exists() else None,
         image_path=image_path_str,
+        architecture_image_path=architecture_image_path_str,
         created_at=datetime.fromtimestamp(story_path.stat().st_mtime).isoformat(),
     )
+
 
 
 @router.get("/", response_model=list[StoryListItem])

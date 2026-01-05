@@ -561,10 +561,33 @@ export class ApiClient {
       story_path: string
       diagram_spec?: Record<string, unknown> | null
       diagram_path?: string | null
+      image_path?: string | null
+      architecture_image_path?: string | null
       created_at: string
     }>(`/story/${storyId}`)
   }
+
+  async uploadArchitectureImage(storyId: string, file: File) {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    return this.request<{
+      story_id: string
+      topic: string
+      story_content: string
+      story_path: string
+      diagram_spec?: Record<string, unknown> | null
+      diagram_path?: string | null
+      image_path?: string | null
+      architecture_image_path?: string | null
+      created_at: string
+    }>(`/story/${storyId}/architecture-image`, {
+      method: 'POST',
+      body: formData,
+    })
+  }
 }
+
 
 
 // Singleton instance
@@ -617,6 +640,7 @@ export const getGoldenRun = (runId: string) => apiClient.getGoldenRun(runId);
 // Stories
 export const listStories = () => apiClient.listStories();
 export const getStory = (storyId: string) => apiClient.getStory(storyId);
+export const uploadArchitectureImage = (storyId: string, file: File) => apiClient.uploadArchitectureImage(storyId, file);
 
 export const getSystemSettings = () => apiClient.getSystemSettings();
 export const updateSystemSettings = (settings: unknown) => apiClient.updateSystemSettings(settings);
