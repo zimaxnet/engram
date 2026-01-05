@@ -1,3 +1,8 @@
+---
+layout: default
+title: "Engram Documentation"
+---
+
 # Engram Documentation
 
 Welcome to the Engram documentation! This wiki provides comprehensive guides for using, developing, and deploying the Engram Context Engineering Platform.

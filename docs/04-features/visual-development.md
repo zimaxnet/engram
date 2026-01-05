@@ -1,0 +1,471 @@
+---
+layout: default
+title: "Visual Development"
+parent: "Feature Specs"
+---
+
+
+
+  
+  
+    
+      
+        # [Engram - Context Engineering Platform](https://wiki.engram.work/)
+
+
+        
+
+        Enterprise AI Memory & Cognition Platform
+
+
+
+        
+
+        
+
+        
+      
+      
+
+      [Home](/) › Visual Development
+
+Visual Development Guide
+
+This guide documents the visual assets for the Engram platform and provides JSON prompts for generating consistent imagery using AI image generation tools like Nano Banana Pro.
+
+
+
+Platform Visuals
+
+1. Platform Architecture Diagram
+
+
+
+
+
+**Description**: A comprehensive visual representation of the Engram platform showing the Brain + Spine architecture, data flows, and component interactions.
+
+
+
+JSON Prompt
+
+{
+  "diagram_type": "technical_architecture",
+  "title": "Engram Context Engineering Platform",
+  "style": {
+    "aesthetic": "modern_tech_dark_theme",
+    "color_scheme": {
+      "background": "#0a0e1a",
+      "primary": "#00d4ff",
+      "secondary": "#a855f7",
+      "accent": "#10b981",
+      "text": "#e2e8f0"
+    },
+    "visual_style": "glassmorphism_with_glow"
+  },
+  "components": [
+    {
+      "name": "Frontend",
+      "type": "layer",
+      "position": "top",
+      "elements": ["React UI", "Voice Controls", "Avatar Display"],
+      "color": "#3b82f6"
+    },
+    {
+      "name": "API Gateway",
+      "type": "middleware",
+      "position": "upper-middle",
+      "elements": ["FastAPI", "Auth Middleware", "RBAC"],
+      "color": "#10b981"
+    },
+    {
+      "name": "Brain Layer",
+      "type": "core_component",
+      "position": "middle-left",
+      "elements": ["LangGraph Agents", "Elena", "Marcus", "Router"],
+      "color": "#00d4ff",
+      "glow": true
+    },
+    {
+      "name": "Spine Layer",
+      "type": "core_component",
+      "position": "middle-center",
+      "elements": ["Temporal Workflows", "Activities", "Signals"],
+      "color": "#a855f7",
+      "glow": true
+    },
+    {
+      "name": "Memory Layer",
+      "type": "core_component",
+      "position": "middle-right",
+      "elements": ["Zep", "Graphiti", "Vector Store"],
+      "color": "#f59e0b",
+      "glow": true
+    },
+    {
+      "name": "Infrastructure",
+      "type": "layer",
+      "position": "bottom",
+      "elements": ["Azure Container Apps", "PostgreSQL", "Key Vault"],
+      "color": "#6b7280"
+    }
+  ],
+  ### 2. Voice Interaction Flow (removed)
+
+  Voice diagrams are omitted because voice features are disabled in this build.
+
+      "icon": "avatar_speaking",
+      "description": "Lip-sync animation",
+      "color": "#f59e0b"
+    }
+  ],
+  "data_labels": [
+    {"between": [0, 1], "label": "Audio WAV"},
+    {"between": [1, 2], "label": "Transcript"},
+    {"between": [2, 3], "label": "Response Text"},
+    {"between": [3, 4], "label": "Audio + Visemes"}
+  ]
+}
+
+
+
+
+3. Agent Workflow Diagram
+
+
+
+
+
+**Description**: Illustrates how Elena and Marcus collaborate with handoff patterns.
+
+
+
+JSON Prompt
+
+{
+  "diagram_type": "collaboration_flow",
+  "title": "Agent Collaboration Workflow",
+  "style": {
+    "aesthetic": "modern_tech_dark_theme",
+    "layout": "circular_with_center"
+  },
+  "agents": [
+    {
+      "name": "Elena",
+      "role": "Business Analyst",
+      "position": "left",
+      "color": "#00d4ff",
+      "avatar": "elena_portrait"
+    },
+    {
+      "name": "Marcus",
+      "role": "Project Manager",
+      "position": "right",
+      "color": "#a855f7",
+      "avatar": "marcus_portrait"
+    }
+  ],
+  "center_element": {
+    "name": "Agent Router",
+    "description": "Context-aware routing",
+    "icon": "router_switch"
+  },
+  "workflows": [
+    {
+      "trigger": "Requirements question",
+      "from": "User",
+      "to": "Elena",
+      "arrow_style": "solid"
+    },
+    {
+      "trigger": "Planning question",
+      "from": "User",
+      "to": "Marcus",
+      "arrow_style": "solid"
+    },
+    {
+      "trigger": "Handoff: plan this",
+      "from": "Elena",
+      "to": "Marcus",
+      "arrow_style": "dashed",
+      "label": "Context Transfer"
+    },
+    {
+      "trigger": "Handoff: analyze requirements",
+      "from": "Marcus",
+      "to": "Elena",
+      "arrow_style": "dashed",
+      "label": "Context Transfer"
+    }
+  ]
+}
+
+
+
+
+4. Context Schema Visualization
+
+
+
+
+
+**Description**: Visual representation of the 4-layer EnterpriseContext schema.
+
+
+
+JSON Prompt
+
+{
+  "diagram_type": "layered_schema",
+  "title": "4-Layer Enterprise Context Schema",
+  "style": {
+    "aesthetic": "modern_tech_dark_theme",
+    "layout": "stacked_layers_3d"
+  },
+  "layers": [
+    {
+      "number": 1,
+      "name": "Security Context",
+      "color": "#ef4444",
+      "fields": ["user_id", "tenant_id", "roles", "scopes", "session_id"],
+      "description": "WHO is asking"
+    },
+    {
+      "number": 2,
+      "name": "Episodic State",
+      "color": "#f59e0b",
+      "fields": ["conversation_id", "recent_turns", "summary"],
+      "description": "WHAT happened recently"
+    },
+    {
+      "number": 3,
+      "name": "Semantic Knowledge",
+      "color": "#10b981",
+      "fields": ["retrieved_facts", "entity_context", "graph_nodes"],
+      "description": "WHAT we know"
+    },
+    {
+      "number": 4,
+      "name": "Operational State",
+      "color": "#3b82f6",
+      "fields": ["current_plan", "active_tools", "workflow_id", "status"],
+      "description": "WHAT we're doing"
+    }
+  ],
+  "flow_arrow": {
+    "direction": "top_to_bottom",
+    "label": "Context flows through all layers"
+  }
+}
+
+
+
+
+5. Engram Logo
+
+
+
+
+
+**Description**: The Engram platform logo representing memory and neural connections.
+
+
+
+JSON Prompt
+
+{
+  "logo_type": "abstract_tech",
+  "name": "Engram",
+  "concept": "memory_trace_neural_pathway",
+  "style": {
+    "aesthetic": "minimalist_futuristic",
+    "color_palette": {
+      "primary": "#00d4ff",
+      "secondary": "#a855f7",
+      "glow": true
+    }
+  },
+  "elements": {
+    "primary_shape": "stylized_brain_outline",
+    "accent": "neural_pathway_traces",
+    "integration": "memory_node_constellation"
+  },
+  "variations": [
+    {"type": "full_color", "background": "dark"},
+    {"type": "monochrome", "background": "light"},
+    {"type": "icon_only", "size": "favicon"}
+  ]
+}
+
+
+
+
+Image Asset Locations
+
+
+  
+    
+      Asset
+      Path
+      Resolution
+      Format
+    
+  
+  
+    
+      Platform Architecture
+      /assets/images/engram-platform-architecture.png
+      1920x1080
+      PNG
+    
+    
+      Voice Interaction Flow
+      /assets/images/voice-interaction-flow.png
+      1920x600
+      PNG
+    
+    
+      Agent Workflow
+      /assets/images/agent-workflow-diagram.png
+      1200x800
+      PNG
+    
+    
+      Context Schema
+      /assets/images/context-schema.png
+      1200x900
+      PNG
+    
+    
+      Elena Portrait
+      /assets/images/elena-portrait.png
+      512x512
+      PNG
+    
+    
+      Marcus Portrait
+      /assets/images/marcus-portrait.png
+      512x512
+      PNG
+    
+    
+      Engram Logo
+      /assets/images/engram-logo.png
+      800x200
+      PNG
+    
+    
+      Logo Icon
+      /assets/images/engram-icon.png
+      512x512
+      PNG
+    
+  
+
+
+
+
+Generating New Visuals
+
+To generate consistent visuals for the Engram platform:
+
+
+
+
+  - **Use the JSON prompts** above as templates
+  **Maintain the color scheme**:
+    
+      - Background: #0a0e1a
+      - Primary (Cyan): #00d4ff
+      - Secondary (Purple): #a855f7
+      - Accent (Green): #10b981
+      - Text: #e2e8f0
+    
+  
+  - **Apply glassmorphism** effects with subtle glows
+  - **Export at appropriate resolutions** for web use
+
+
+Tips for Nano Banana Pro
+
+
+  - Use "render_style": "photorealistic_with_slight_stylization" for portraits
+  - Use "aesthetic": "modern_tech_dark_theme" for diagrams
+  - Include "glow": true" for interactive elements
+  - Specify exact hex colors for brand consistency
+
+
+
+
+Design-to-Implementation Contract
+
+Every screen and flow depicted in /assets/images/ represents required functionality. The visual design drives all functionality that should be built and fully tested. This is the critical part of the ability required to go from POC to enterprise adoption as BAU.
+
+
+
+
+  
+    
+      Image
+      Screen/Feature
+      API Endpoints
+      Test Suite
+    
+  
+  
+    
+      bau-hub.png
+      BAU Hub
+      /api/v1/bau/*
+      BAUHub.test.tsx, test_bau_router.py
+    
+    
+      evidence-telemetry-panel.png
+      Evidence & Telemetry
+      /api/v1/metrics/evidence
+      EvidenceTelemetry.test.tsx, test_metrics_router.py
+    
+    
+      golden-thread-validation.png
+      Golden Thread Runner
+      /api/v1/validation/*
+      GoldenThreadRunner.test.tsx, test_validation_router.py
+    
+    
+      workflow-detail-durable-spine.png
+      Workflow Detail
+      /api/v1/workflows/:id
+      WorkflowDetail.test.tsx
+    
+    
+      memory-search-provenance.png
+      Memory Search
+      /api/v1/memory/search
+      Search.test.tsx
+    
+  
+
+
+**Contract Requirements:**
+
+
+
+  - All screens must be built with all intended flows, connections, and functions inherent to the visual design
+  - The design drives all functionality that should be built
+  - All functionality must be fully tested and validated to be completely working
+  - This contract is the acceptance criteria for POC-to-enterprise transition
+
+
+
+
+      
+      
+        
+        Hosted on GitHub Pages &mdash; Theme by [orderedlist](https://github.com/orderedlist)
+
+
+      
+    
+    
+  
+
