@@ -352,4 +352,92 @@ async def list_stories(user: SecurityContext = Depends(get_current_user)):
             image_path=image_path_str
         ))
     
-    return stories
+
+class VisualGenerateRequest(BaseModel):
+    """Request to generate a visual for an existing story."""
+    prompt: Optional[str] = None
+    context: Optional[str] = None
+
+
+@router.post("/{story_id}/visual", response_model=StoryResponse)
+async def generate_story_visual(
+    story_id: str,
+    request: VisualGenerateRequest,
+    user: SecurityContext = Depends(get_current_user),
+):
+    """
+    Generate (or regenerate) a visual for an existing story.
+    Useful for repairs or adding visuals to text-only stories.
+    """
+    stories_dir = _get_stories_dir()
+    story_path = stories_dir / f"{story_id}.md"
+    
+    if not story_path.exists():
+        raise HTTPException(status_code=404, detail=f"Story not found: {story_id}")
+        
+    # Read story content for context if needed
+    story_content = story_path.read_text(encoding="utf-8")
+    topic = story_id.split("-", 2)[-1].replace("-", " ") if "-" in story_id else story_id
+    
+    logger.info(f"Regenerating visual for story: {story_id}")
+    
+    try:
+        from backend.llm.gemini_client import get_gemini_client
+        client = get_gemini_client()
+        
+        # Use provided prompt or fall back to topic
+        prompt = request.prompt or topic
+        appended_context = request.context or f"Illustration for story: {topic}"
+        
+        # 1. Generate visual spec
+        visual_spec = await client.generate_visual_spec(
+            topic=prompt,
+            context=appended_context
+        )
+        
+        # 2. Generate image
+        image_data = await client.generate_image_from_spec(visual_spec)
+        
+        if not image_data:
+            raise HTTPException(status_code=500, detail="Failed to generate image data")
+            
+        # 3. Save image
+        docs_path = Path(get_settings().onedrive_docs_path or "docs")
+        images_dir = docs_path / "images"
+        images_dir.mkdir(parents=True, exist_ok=True)
+        
+        image_filename = f"{story_id}.png"
+        image_file = images_dir / image_filename
+        image_file.write_bytes(image_data)
+        image_path_str = f"/api/v1/images/{story_id}.png"
+        
+        # 4. Update Zep Memory
+        try:
+            from backend.memory.client import memory_client
+            session_id = f"story-{story_id}"
+            
+            # We need to fetch the existing session to get the user_id (if we want to be safe)
+            # or just overwrite if we trust the current user? 
+            # Ideally repair scripts run as admins or the system user.
+            
+            # Note: `get_session` is better but `get_or_create` allows update.
+            # We assume session exists.
+            await memory_client.get_or_create_session(
+                session_id=session_id,
+                user_id=user.user_id, # This assumes the repairing user owns it, or we rely on system
+                metadata={
+                    "image_path": image_path_str,
+                    # We preserve other metadata ideally, but Zep's update semantics vary.
+                    # Best effort:
+                    "last_updated": datetime.now().isoformat()
+                }
+            )
+        except Exception as e:
+            logger.warning(f"Failed to update Zep memory during visual repair: {e}")
+            
+        # Return updated story response
+        return await get_story(story_id, user)
+        
+    except Exception as e:
+        logger.error(f"Visual generation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

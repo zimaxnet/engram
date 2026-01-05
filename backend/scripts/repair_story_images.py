@@ -25,156 +25,70 @@ from backend.llm.gemini_client import get_gemini_client
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("repair_story_images")
 
+
 async def repair_stories():
-    settings = get_settings()
-    docs_path = Path(settings.onedrive_docs_path or "docs")
-    stories_dir = docs_path / "stories"
-    images_dir = docs_path / "images"
+    """
+    Repair stories by triggering the API to generate missing visuals.
+    """
+    api_base = os.getenv("ENGRAM_API_URL", "https://engram.work")
+    api_token = os.getenv("ENGRAM_API_TOKEN")
     
-    if not stories_dir.exists():
-        logger.error(f"Stories directory not found: {stories_dir}")
+    if not api_token:
+        print("Error: ENGRAM_API_TOKEN is required")
         return
 
-    images_dir.mkdir(parents=True, exist_ok=True)
-    
-    # 1. Get all stories from disk
-    story_files = list(stories_dir.glob("*.md"))
-    logger.info(f"Found {len(story_files)} stories in {stories_dir}")
-    
-    # 2. Get all sessions from Zep to find user_ids
-    # Note: We need user_id to update metadata in Zep
-    all_sessions = await memory_client.list_sessions(limit=100)
-    session_map = {s["session_id"]: s for s in all_sessions}
-    logger.info(f"Fetched {len(all_sessions)} sessions from Zep")
-    
-    gemini = get_gemini_client()
-    
-    # Track results
-    repaired = 0
-    skipped = 0
-    errors = 0
+    headers = {
+        "Authorization": f"Bearer {api_token}",
+        "Content-Type": "application/json"
+    }
 
-    for story_file in story_files:
-        original_stem = story_file.stem
-        # Check for invalid characters (colons, slashes)
-        if ":" in original_stem or "/" in original_stem:
-            safe_stem = original_stem.replace(":", "").replace("/", "")
-            logger.info(f"  [!] Found unsafe filename: {original_stem}. Renaming to {safe_stem}...")
-            
-            safe_file = stories_dir / f"{safe_stem}.md"
-            safe_image = images_dir / f"{safe_stem}.png"
-            
-            # Rename markdown
-            try:
-                story_file.rename(safe_file)
-                story_file = safe_file # Update for rest of loop
-                logger.info(f"    - Renamed markdown file")
-            except Exception as e:
-                logger.error(f"    - Failed to rename markdown: {e}")
-                errors += 1
-                continue
-                
-            # Rename existing image if it happens to exist under old name (unlikely but possible)
-            old_image = images_dir / f"{original_stem}.png"
-            if old_image.exists() and not safe_image.exists():
-                try:
-                    old_image.rename(safe_image)
-                    logger.info(f"    - Renamed image file")
-                except Exception as e:
-                    logger.error(f"    - Failed to rename image: {e}")
-            
-            story_id = safe_stem
-        else:
-            story_id = original_stem
+    async with httpx.AsyncClient(base_url=api_base, headers=headers, timeout=60.0) as client:
+        # 1. List all stories
+        print(f"Fetching stories from {api_base}...")
+        try:
+            resp = await client.get("/api/v1/story/")
+            resp.raise_for_status()
+            stories = resp.json()
+        except Exception as e:
+            print(f"Failed to list stories: {e}")
+            return
 
-        image_file = images_dir / f"{story_id}.png"
-        image_web_path = f"/api/v1/images/{story_id}.png"
+        print(f"Found {len(stories)} stories.")
         
-        logger.info(f"Checking story: {story_id}")
-        
-        # A. Handle disk image
-        if not image_file.exists():
-            logger.info(f"  [X] Image missing on disk: {image_file}. Regenerating...")
-            
-            # Read story content for context
-            try:
-                content = story_file.read_text(encoding="utf-8")
-                topic = story_id.split("-", 2)[-1].replace("-", " ") if "-" in story_id else story_id
-                
-                # Step 1: Generate visual spec
-                logger.info(f"    - Generating visual spec for: {topic}")
-                visual_spec = await gemini.generate_visual_spec(
-                    topic=topic,
-                    context=f"Story illustration for metadata repair. Content preview: {content[:500]}"
-                )
-                
-                # Step 2: Generate image from spec
-                logger.info(f"    - Generating image from spec using Nano Banana Pro...")
-                image_data = await gemini.generate_image_from_spec(visual_spec)
-                
-                if image_data:
-                    image_file.write_bytes(image_data)
-                    logger.info(f"    - Saved regenerated image: {image_file}")
-                else:
-                    logger.error(f"    - Failed to generate image data for {story_id}")
-                    errors += 1
-                    continue
-            except Exception as e:
-                logger.error(f"    - Error regenerating image: {e}")
-                errors += 1
-                continue
-        else:
-            logger.info(f"  [OK] Image exists on disk")
+        repaired = 0
+        skipped = 0
+        errors = 0
 
-        # B. Handle Zep Memory Metadata
-        session_id = f"story-{story_id}"
-        zep_session = session_map.get(session_id)
-        
-        if zep_session:
-            user_id = zep_session.get("user_id")
-            current_metadata = zep_session.get("metadata", {}) or {}
+        for story in stories:
+            story_id = story["story_id"]
+            topic = story["topic"]
+            image_path = story.get("image_path")
             
-            if current_metadata.get("image_path") != image_web_path:
-                logger.info(f"  [X] Zep metadata mismatch. Updating {session_id}...")
-                new_metadata = {**current_metadata, "image_path": image_web_path}
-                
-                try:
-                    await memory_client.get_or_create_session(
-                        session_id=session_id,
-                        user_id=user_id,
-                        metadata=new_metadata
-                    )
-                    logger.info(f"    - Zep metadata updated successfully")
-                    repaired += 1
-                except Exception as e:
-                    logger.error(f"    - Failed to update Zep metadata: {e}")
-                    errors += 1
-            else:
-                logger.info(f"  [OK] Zep metadata is correct")
+            print(f"Checking story [{story_id}]: {topic[:30]}...")
+            
+            if image_path:
+                print(f"  [OK] Image exists: {image_path}")
                 skipped += 1
-        else:
-            logger.warning(f"  [?] Session {session_id} not found in Zep. Skipping metadata update.")
-            skipped += 1
-
-    # C. Handle orphan Zep stories (in Zep but not on disk)
-    for session_id, sess in session_map.items():
-        if not session_id.startswith("story-"):
-            continue
+                continue
+                
+            print(f"  [X] Image MISSING. Triggering generation...")
             
-        story_id = sess.get("metadata", {}).get("story_id")
-        if not story_id:
-            # Try to extract from session_id
-            story_id = session_id.replace("story-", "")
-            
-        story_file = stories_dir / f"{story_id}.md"
-        if not story_file.exists():
-            logger.warning(f"  [!] Story {story_id} exists in Zep but is missing on disk: {story_file}")
-
-    logger.info("-" * 40)
-    logger.info(f"Repair process completed:")
-    logger.info(f"  Repaired/Updated: {repaired}")
-    logger.info(f"  Already correct:  {skipped}")
-    logger.info(f"  Errors encountered: {errors}")
+            try:
+                # Trigger visual generation
+                # We use the topic as the prompt
+                gen_resp = await client.post(
+                    f"/api/v1/story/{story_id}/visual",
+                    json={"prompt": topic}
+                )
+                gen_resp.raise_for_status()
+                print(f"    - SUCCESS: Visual generated.")
+                repaired += 1
+            except Exception as e:
+                print(f"    - FAILED: {e}")
+                errors += 1
+                
+        print("-" * 40)
+        print(f"Repair complete: Repaired {repaired}, Skipped {skipped}, Errors {errors}")
 
 if __name__ == "__main__":
     asyncio.run(repair_stories())
