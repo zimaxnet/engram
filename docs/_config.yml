@@ -3,7 +3,7 @@ description: Enterprise AI Memory & Cognition Platform
 baseurl: ""
 url: "https://wiki.engram.work"
 
-theme: just-the-docs
+remote_theme: just-the-docs/just-the-docs
 
 # Search
 search_enabled: true
@@ -33,3 +33,4 @@ include: [".gitignore"]
 plugins:
   - jekyll-relative-links
   - jekyll-seo-tag
+  - jekyll-remote-theme
