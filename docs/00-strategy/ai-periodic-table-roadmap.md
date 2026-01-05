@@ -32,9 +32,6 @@ parent: "Strategy"
         
 ## Element Reference
 
-        
-            
-                
                     Symbol
                     Element
                     Row
@@ -198,15 +195,8 @@ parent: "Strategy"
    │Ag Ma    │    │         │    │          │ │         │ │         │    │         │
    └─────────┘    └─────────┘    └──────────┘ └─────────┘ └─────────┘    └─────────┘
 
-
-        
-
-        
 ## Summary Statistics
 
-        
-            
-                
                     Status
                     Count
                     Elements
@@ -241,8 +231,6 @@ parent: "Strategy"
         
 ## Element-by-Element Tree Mapping
 
-
-        
 ### 🟢 ROW 1: PRIMITIVES (Foundation Layer)
 
         R1 PRIMITIVES
@@ -298,8 +286,6 @@ parent: "Strategy"
         ├── [ ] Latency-optimized routing (edge deployment)
         └── [ ] Model performance comparison dashboard
 
-
-        
 ### 🟢 ROW 2: COMPOSITIONS (Integration Layer)
 
         R2 COMPOSITIONS
@@ -357,8 +343,6 @@ parent: "Strategy"
     ├── Voice → Text → Voice (VoiceLive)
     └── Story + Image + Diagram bundling
 
-
-        
 ### 🟡 ROW 3: DEPLOYMENT (Production Layer)
 
         R3 DEPLOYMENT
@@ -378,8 +362,6 @@ parent: "Strategy"
 └── Sm (Small Models) ─────────────────────────────── 🔴 GAP
     └── Roadmap: Phi-4, Granite, edge deployment
 
-
-        
 ### ⭐ ROW 4: EMERGING (Innovation Layer)
 
         R4 EMERGING
@@ -401,41 +383,36 @@ parent: "Strategy"
 └── Th (Thinking) ─────────────────────────────────── 🟢 STRONG
     └── LangGraph multi-step reasoning + tool-augmented thinking
 
+## Implementation Matrix (Effort vs. Impact)
 
-        
-
-        
-## Roadmap Priority Matrix
-
-                                IMPACT
-                    Low         High
-                ┌──────────┬──────────┐
-        Low     │          │    Sm    │
-    EFFORT      │          │ (edge)   │
-                ├──────────┼──────────┤
-        High    │    Ft    │  In, Rt  │
-                │(finetune)│(regulate)│
-                └──────────┴──────────┘
-
-
-        
-### Recommended Implementation Order
-
-        
-            - **In (Interpret)** - High impact for compliance, moderate effort
-            - **Rt (Red-team)** - Critical for production safety
-            - **Sm (Small Models)** - Cost optimization, edge deployment
-            - **Ft (Finetune)** - Domain customization, requires data
-        
-
-        
-
-        
-            Framework credit: Martin Keen, IBM Master Inventor | Video
-            Engram AI Platform — AI Periodic Table Architecture Mapping
-
-
-        
+```mermaid
+quadrantChart
+    title AI Periodic Table Roadmap Matrix
+    x-axis Low Effort --> High Effort
+    y-axis Low Impact --> High Impact
+    quadrant-1 High Impact / High Effort
+    quadrant-2 High Impact / Low Effort
+    quadrant-3 Low Impact / Low Effort
+    quadrant-4 Low Impact / High Effort
     
+    "Sm (Small Models)": [0.8, 0.3]
+    "Ft (Finetune)": [0.7, 0.4]
+    "In (Interpret)": [0.6, 0.8]
+    "Rt (Red-team)": [0.6, 0.7]
+    "Pr (Prompts)": [0.2, 0.2]
+    "Em (Embeddings)": [0.3, 0.8]
+    "Lg (LLM)": [0.2, 0.9]
+    "Gk (Graph)": [0.4, 0.95]
+    "Ag (Agents)": [0.4, 0.85]
+    "Sy (Synthetic)": [0.3, 0.6]
+```
 
+### Recommendation
 
+- **Quadrant 2 (High Impact, Low Effort)**: Focus on **Embeddings (Em)**, **LLM (Lg)**, and **Synthetic (Sy)** pipelines. (🟢 Completed)
+- **Quadrant 1 (High Impact, High Effort)**: The **Graph Knowledge (Gk)** and **Agents (Ag)** layers are the core differentiators. (⭐ In Progress)
+- **Quadrant 4 (Low Impact, High Effort)**: **Small Models (Sm)** and **Finetuning (Ft)** should be deferred until strict cost/latency requirements emerge.
+
+## Element-by-Element Tree Mapping
+
+(See full breakdown below)

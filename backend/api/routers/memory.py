@@ -502,6 +502,7 @@ class EnrichRequest(BaseModel):
     speaker: str = "user"  # 'user' or 'assistant'
     agent_id: Optional[str] = None
     channel: str = "voice"
+    metadata: dict = {}
 
 
 class EnrichResponse(BaseModel):
@@ -535,30 +536,39 @@ async def enrich_memory(request: EnrichRequest, user: SecurityContext = Depends(
         # Create/update session with metadata including summary from content
         summary = request.text[:200] + ("..." if len(request.text) > 200 else "")
         
+        # Merge request metadata with session metadata
+        session_metadata = {
+            "tenant_id": user.tenant_id,
+            "channel": request.channel,
+            "agent_id": request.agent_id or "unknown",
+            "summary": summary,
+            "turn_count": 1,
+            **request.metadata  # Include extra context in session metadata too
+        }
+
         await memory_client.get_or_create_session(
             session_id=session_id,
             user_id=user.user_id,
-            metadata={
-                "tenant_id": user.tenant_id,
-                "channel": request.channel,
-                "agent_id": request.agent_id or "unknown",
-                "summary": summary,
-                "turn_count": 1,
-            },
+            metadata=session_metadata,
         )
         
         # Directly add the message to memory (bypassing EnterpriseContext complexity)
         role = "user" if request.speaker == "user" else "assistant"
+        
+        # Merge message metadata
+        message_metadata = {
+            "agent_id": request.agent_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "channel": request.channel,
+            **request.metadata
+        }
+
         await memory_client.add_memory(
             session_id=session_id,
             messages=[{
                 "role": role,
                 "content": request.text,
-                "metadata": {
-                    "agent_id": request.agent_id,
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "channel": request.channel,
-                },
+                "metadata": message_metadata,
             }],
         )
         
