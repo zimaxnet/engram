@@ -190,14 +190,116 @@ class IngestionService:
             return None
         return Connector(**connector_data)
 
+    async def _index_chunks_tri(
+        self,
+        chunks_to_index: list,
+        uid: str,
+        fname: str,
+        doc_id: str,
+        sess_id: str,
+        upload_ts: str,
+    ):
+        """
+        Index chunks into all three search layers:
+        - Graph (facts)
+        - Vector (embeddings) 
+        - Keyword (session messages)
+        """
+        logger.info(
+            f"Tri-indexing started: {len(chunks_to_index)} chunks for user: {uid}, "
+            f"file: {fname}, document: {doc_id}, session: {sess_id}"
+        )
+        
+        # 1. Create session for keyword search (if not exists)
+        try:
+            await memory_client.get_or_create_session(
+                session_id=sess_id,
+                user_id=uid,
+                metadata={
+                    "title": fname,
+                    "source": "document_upload",
+                    "document_id": doc_id,
+                    "filename": fname,
+                    "uploaded_at": upload_ts,
+                    "chunk_count": len(chunks_to_index),
+                },
+            )
+            logger.info(f"Created/Verified document session: {sess_id}")
+        except Exception as e:
+            logger.error(f"Failed to create session {sess_id}: {e}")
+            # Continue with indexing even if session creation fails
+
+        graph_count = 0
+        vector_count = 0
+        keyword_count = 0
+
+        for i, chunk in enumerate(chunks_to_index):
+            text = chunk["text"]
+            chunk_metadata = dict(chunk.get("metadata") or {})
+            etl_source = chunk_metadata.pop("source", None)
+            etl_filename = chunk_metadata.pop("filename", None)
+            page_number = chunk_metadata.get("page_number")
+
+            base_metadata = {
+                "source": "document_upload",
+                "filename": fname,
+                "document_id": doc_id,
+                "chunk_index": i,
+                "etl_source": etl_source,
+                "etl_filename": etl_filename,
+                **chunk_metadata,
+            }
+
+            # Layer 1: Graph - Add as fact for knowledge graph
+            try:
+                await memory_client.add_fact(
+                    user_id=uid,
+                    fact=text,
+                    metadata=base_metadata,
+                )
+                graph_count += 1
+            except Exception as e:
+                logger.error(f"Graph indexing failed for chunk {i}: {e}")
+
+            # Layer 2: Vector - Generate embedding and store
+            try:
+                await store_with_embedding(
+                    session_id=sess_id,
+                    content=text,
+                    title=f"{fname} (chunk {i + 1})",
+                    topics=[fname, doc_id],
+                    source_type="document",
+                )
+                vector_count += 1
+            except Exception as e:
+                logger.error(f"Vector indexing failed for chunk {i}: {e}")
+
+            # Layer 3: Keyword - Add as message to session
+            try:
+                await memory_client.add_memory(
+                    session_id=sess_id,
+                    messages=[{
+                        "role": "system",
+                        "content": text,
+                        "metadata": {
+                            "chunk_index": i,
+                            "page_number": page_number,
+                        },
+                    }],
+                    metadata=base_metadata,
+                )
+                keyword_count += 1
+            except Exception as e:
+                logger.error(f"Keyword indexing failed for chunk {i}: {e}")
+
+        logger.info(
+            f"Tri-indexing completed for {fname}: "
+            f"graph={graph_count}, vector={vector_count}, keyword={keyword_count}"
+        )
+
     async def ingest_document(self, content: bytes, filename: str, content_type: str, user_id: str, background_tasks: BackgroundTasks) -> IngestResponse:
         """
-        Ingest a document with TRI-INDEXING for comprehensive search.
-        
-        Indexes document chunks into three search layers:
-        1. **Graph Layer**: Stores as facts for knowledge graph traversal
-        2. **Vector Layer**: Generates embeddings for semantic search
-        3. **Keyword Layer**: Creates session with messages for Zep keyword search
+        Ingest a file document with TRI-INDEXING.
         """
         logger.info(f"Processing document: {filename}")
         chunks = processor.process_file(content, filename, content_type)
@@ -205,127 +307,55 @@ class IngestionService:
         if not chunks:
             raise ValueError("No text content extracted from file")
 
-        # Generate unique identifiers for this document
         document_id = f"doc-{uuid.uuid4().hex[:12]}"
         session_id = f"doc-upload-{uuid.uuid4().hex[:8]}"
         upload_timestamp = datetime.now(UTC).isoformat()
 
-        # Background Task Function for Tri-Indexing
-        async def index_chunks_tri(
-            chunks_to_index: list,
-            uid: str,
-            fname: str,
-            doc_id: str,
-            sess_id: str,
-            upload_ts: str,
-        ):
-            """
-            Index chunks into all three search layers:
-            - Graph (facts)
-            - Vector (embeddings) 
-            - Keyword (session messages)
-            """
-            logger.info(
-                f"Tri-indexing started: {len(chunks_to_index)} chunks for user: {uid}, "
-                f"file: {fname}, document: {doc_id}, session: {sess_id}"
-            )
-            
-            # 1. Create session for keyword search
-            try:
-                await memory_client.get_or_create_session(
-                    session_id=sess_id,
-                    user_id=uid,
-                    metadata={
-                        "title": fname,
-                        "source": "document_upload",
-                        "document_id": doc_id,
-                        "filename": fname,
-                        "uploaded_at": upload_ts,
-                        "chunk_count": len(chunks_to_index),
-                    },
-                )
-                logger.info(f"Created document session: {sess_id}")
-            except Exception as e:
-                logger.error(f"Failed to create session {sess_id}: {e}")
-                # Continue with indexing even if session creation fails
-
-            graph_count = 0
-            vector_count = 0
-            keyword_count = 0
-
-            for i, chunk in enumerate(chunks_to_index):
-                text = chunk["text"]
-                chunk_metadata = dict(chunk.get("metadata") or {})
-                etl_source = chunk_metadata.pop("source", None)
-                etl_filename = chunk_metadata.pop("filename", None)
-                page_number = chunk_metadata.get("page_number")
-
-                base_metadata = {
-                    "source": "document_upload",
-                    "filename": fname,
-                    "document_id": doc_id,
-                    "chunk_index": i,
-                    "etl_source": etl_source,
-                    "etl_filename": etl_filename,
-                    **chunk_metadata,
-                }
-
-                # Layer 1: Graph - Add as fact for knowledge graph
-                try:
-                    await memory_client.add_fact(
-                        user_id=uid,
-                        fact=text,
-                        metadata=base_metadata,
-                    )
-                    graph_count += 1
-                except Exception as e:
-                    logger.error(f"Graph indexing failed for chunk {i}: {e}")
-
-                # Layer 2: Vector - Generate embedding and store
-                try:
-                    await store_with_embedding(
-                        session_id=sess_id,
-                        content=text,
-                        title=f"{fname} (chunk {i + 1})",
-                        topics=[fname, doc_id],
-                        source_type="document",
-                    )
-                    vector_count += 1
-                except Exception as e:
-                    logger.error(f"Vector indexing failed for chunk {i}: {e}")
-
-                # Layer 3: Keyword - Add as message to session
-                try:
-                    await memory_client.add_memory(
-                        session_id=sess_id,
-                        messages=[{
-                            "role": "system",
-                            "content": text,
-                            "metadata": {
-                                "chunk_index": i,
-                                "page_number": page_number,
-                            },
-                        }],
-                        metadata=base_metadata,
-                    )
-                    keyword_count += 1
-                except Exception as e:
-                    logger.error(f"Keyword indexing failed for chunk {i}: {e}")
-
-            logger.info(
-                f"Tri-indexing completed for {fname}: "
-                f"graph={graph_count}, vector={vector_count}, keyword={keyword_count}"
-            )
-
         background_tasks.add_task(
-            index_chunks_tri, chunks, user_id, filename, document_id, session_id, upload_timestamp
+            self._index_chunks_tri, chunks, user_id, filename, document_id, session_id, upload_timestamp
         )
 
         return IngestResponse(
             success=True,
             filename=filename,
             chunks_processed=len(chunks),
-            message=f"Document accepted. Processing {len(chunks)} chunks with tri-indexing (graph, vector, keyword).",
+            message=f"Document accepted. Processing {len(chunks)} chunks with tri-indexing.",
+            session_id=session_id,
+            document_id=document_id,
+        )
+
+    async def ingest_text(
+        self, 
+        text: str, 
+        filename: str, 
+        user_id: str, 
+        background_tasks: BackgroundTasks,
+        metadata: Optional[dict] = None
+    ) -> IngestResponse:
+        """
+        Ingest raw text (from Wiki, Tickets, Code) with TRI-INDEXING.
+        """
+        logger.info(f"Processing text ingestion: {filename}")
+        chunks = processor.process_text(text, filename, metadata)
+
+        if not chunks:
+            raise ValueError("No chunks generated from text")
+
+        document_id = f"doc-{uuid.uuid4().hex[:12]}"
+        # Use specific session prefix if provided, else generic
+        session_prefix = metadata.get("session_prefix", "doc-text") if metadata else "doc-upload"
+        session_id = f"{session_prefix}-{uuid.uuid4().hex[:8]}"
+        upload_timestamp = datetime.now(UTC).isoformat()
+
+        background_tasks.add_task(
+            self._index_chunks_tri, chunks, user_id, filename, document_id, session_id, upload_timestamp
+        )
+
+        return IngestResponse(
+            success=True,
+            filename=filename,
+            chunks_processed=len(chunks),
+            message=f"Text accepted. Processing {len(chunks)} chunks with tri-indexing.",
             session_id=session_id,
             document_id=document_id,
         )

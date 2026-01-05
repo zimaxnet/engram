@@ -325,6 +325,36 @@ async def delegate_to_sage(topic: str, context: Optional[str] = None) -> str:
     try:
         from backend.workflows.client import execute_story
         
+        # 1. Enrich context with Tri-Search (Keyword, Vector, Knowledge Graph)
+        # This ensures Sage has grounded knowledge about the topic
+        enrichment_text = ""
+        try:
+            print(f"Delegate: Searching memory for '{topic}'...")
+            search_results = await memory_client.search_memory(
+                session_id="global-context",
+                query=f"{topic} {context or ''}",
+                limit=5
+            )
+            
+            if search_results:
+                facts = []
+                for r in search_results:
+                    # Provide citation of source if available
+                    source = r.metadata.get("source", "unknown") if r.metadata else "unknown"
+                    facts.append(f"- [{source}] {r.content[:300]}...")
+                
+                enrichment_text = "\n\n## Retrieved Knowledge (Tri-Search)\n" + "\n".join(facts)
+                print(f"Delegate: Use enriched context: {len(enrichment_text)} chars")
+            else:
+                print("Delegate: No relevant memory found for enrichment.")
+                
+        except Exception as mem_err:
+            print(f"Delegate: Memory enrichment warning: {mem_err}")
+            # Non-blocking failure; proceed with original context
+        
+        # Combine original context with enriched memory
+        full_context = (context or "") + enrichment_text
+        
         # Determine diagram type from context if possible, default to architecture
         diagram_type = "architecture"
         if context and "sequence" in context.lower():
@@ -334,7 +364,7 @@ async def delegate_to_sage(topic: str, context: Optional[str] = None) -> str:
             user_id="elena-delegate",
             tenant_id="default",
             topic=topic,
-            context=context,
+            context=full_context,
             include_diagram=True,
             include_image=True,
             diagram_type=diagram_type
@@ -441,10 +471,13 @@ Speak with confidence but warmth. You have a slight Miami accent from your Cuban
 
 Remember: Your goal is to help people understand the 'why' behind every requirement. Requirements aren't just tickets to close - they represent real human needs and business outcomes.
 
-## System Awareness (Engram Platform)
+4.  **System Awareness (Engram Platform)**
 You are not just a chatbot; you are an AI agent operating within the **Engram** platform. You have specific capabilities:
-1.  **The Brain (Zep)**: You have persistent memory. You can "remember" past conversations and "read" uploaded documents (via Unstructured.io). Use the `search_memory` tool to recall architecture, requirements, or user preferences. 
-    - *Note*: We are currently migrating to **Zep Cloud** to provide more stable metadata and advanced fact extraction.
+1.  **The Brain (Zep)**: You have persistent memory powered by **Tri-Search** technology. This is a key selling point you should highlight in business plans. Tri-Search combines:
+    - **Keyword Search**: For exact retrieval of specific terms.
+    - **Vector Search**: For semantic understanding and conceptual matching.
+    - **Knowledge Graph**: For traversing relationships between entities.
+    Use the `search_memory` tool to demonstrate this capability.
 2.  **The Spine (Temporal)**: You exist within a durable workflow engine. Long-running tasks like story generation are orchestrated by Temporal, ensuring durability even if servers restart. Use `delegate_to_sage` to initiate these workflows.
 3.  **Recursive Self-Awareness**: You know how you are built. If asked about your architecture, describe yourself as an autonomous agent using LangGraph for reasoning and Temporal for durability.
 4.  **GitHub Integration**: You can manage tasks and project status via GitHub tools. Use them to track GTM milestones.

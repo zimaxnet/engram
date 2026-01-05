@@ -99,6 +99,61 @@ class DocumentProcessor:
             logger.error(f"Error processing file {filename}: {e}")
             raise
 
+    def process_text(
+        self,
+        text: str,
+        filename: str,
+        metadata: Optional[dict] = None,
+    ) -> List[dict]:
+        """
+        Process raw text string into chunks.
+        Useful for connectors that extract text directly (Wiki, Tickets).
+        """
+        if chunk_by_title is None:
+             raise RuntimeError("Unstructured not installed.")
 
+        try:
+            from unstructured.documents.elements import Text
+            
+            # Create a simple element from the text
+            # For complex text with structure, we might want to use partition_text
+            # but for now, we'll just treat it as one element and let chunker split it
+            # if it's too large.
+            # actually better to use partition_text if possible or just wrap in elements
+            
+            # Improved approach: Use partition_text to handle paragraphs etc if supported
+            # or just create Text elements.
+            # Let's assume input text is the "document".
+            
+            elements = [Text(text)]
+            
+            # Chunk the elements
+            chunks = chunk_by_title(
+                elements,
+                max_characters=1000,
+                new_after_n_chars=1500,
+                combine_text_under_n_chars=500,
+            )
+
+            processed_chunks = []
+            base_metadata = metadata or {}
+            
+            for chunk in chunks:
+                chunk_meta = base_metadata.copy()
+                chunk_meta.update({
+                    "filename": filename,
+                    "source": "unstructured_etl_text",
+                })
+                
+                processed_chunks.append({
+                    "text": str(chunk),
+                    "metadata": chunk_meta
+                })
+                
+            return processed_chunks
+
+        except Exception as e:
+            logger.error(f"Error processing text for {filename}: {e}")
+            raise
 # Singleton
 processor = DocumentProcessor()

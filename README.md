@@ -125,6 +125,15 @@ The agent "remembers" past conversations and facts.
 - 🔐 **Enterprise Security** - Entra ID + RBAC
 - 💰 **FinOps-First** - Scale-to-zero architecture
 
+## 🤖 Emerging Context for AI Agents
+
+We provide specific context files to help AI IDEs (Cursor, VS Code) and Agents understand the system's capabilities immediately.
+
+See [Engram Capabilities](docs/ide-context/engram-capabilities.md) for available tools:
+- **Sage Storyteller**: Generate narratives & visuals (`simulate_sage_story.py`)
+- **Tri-Search**: Keyword, Vector, Graph memory integration
+- **Data Connectors**: Ingest Wiki, Tickets, and Code
+
 ## License
 
 MIT
