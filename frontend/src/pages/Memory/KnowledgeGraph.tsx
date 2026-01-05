@@ -56,7 +56,7 @@ export function KnowledgeGraph() {
     const [showStats, setShowStats] = useState(true)
     const [filterNodeType, setFilterNodeType] = useState<string>('all')
     const [minDegree, setMinDegree] = useState(0)
-    
+
     const containerRef = useRef<HTMLDivElement>(null)
     const graphRef = useRef<any>(null)
     const [dimensions, setDimensions] = useState({ width: 800, height: 600 })
@@ -67,18 +67,18 @@ export function KnowledgeGraph() {
         setError(null)
         try {
             const response = await getMemoryGraph(searchQuery)
-            
+
             // Calculate statistics
             const nodeTypes: Record<string, number> = {}
             let totalDegree = 0
             let maxDegree = 0
-            
+
             response.nodes.forEach(node => {
                 nodeTypes[node.node_type] = (nodeTypes[node.node_type] || 0) + 1
                 totalDegree += node.degree
                 maxDegree = Math.max(maxDegree, node.degree)
             })
-            
+
             const stats = {
                 total_nodes: response.nodes.length,
                 total_edges: response.edges.length,
@@ -86,7 +86,7 @@ export function KnowledgeGraph() {
                 avg_degree: response.nodes.length > 0 ? totalDegree / response.nodes.length : 0,
                 max_degree: maxDegree,
             }
-            
+
             setData({
                 nodes: response.nodes,
                 edges: response.edges,
@@ -128,39 +128,39 @@ export function KnowledgeGraph() {
             if (node.degree < minDegree) return false
             return true
         })
-        
+
         const nodeIds = new Set(filteredNodes.map(n => n.id))
-        const filteredEdges = data.edges.filter(edge => 
+        const filteredEdges = data.edges.filter(edge =>
             nodeIds.has(edge.source) && nodeIds.has(edge.target)
         )
-        
-        return { nodes: filteredNodes, edges: filteredEdges }
+
+        return { nodes: filteredNodes, links: filteredEdges }
     }, [data, filterNodeType, minDegree])
 
     // Get connected nodes for selected node
     const connectedNodes = useMemo(() => {
         if (!selectedNode) return { nodes: [], edges: [] }
-        
+
         const connectedIds = new Set<string>([selectedNode.id])
-        const connectedEdges = data.edges.filter(edge => 
+        const connectedEdges = data.edges.filter(edge =>
             edge.source === selectedNode.id || edge.target === selectedNode.id
         )
-        
+
         connectedEdges.forEach(edge => {
             connectedIds.add(edge.source)
             connectedIds.add(edge.target)
         })
-        
+
         const connectedNodes = data.nodes.filter(node => connectedIds.has(node.id))
-        
+
         return { nodes: connectedNodes, edges: connectedEdges }
     }, [selectedNode, data])
 
     // Node size based on degree
     const getNodeSize = (node: GraphNode) => {
         if (!data.stats) return 5
-        const normalizedDegree = data.stats.max_degree > 0 
-            ? node.degree / data.stats.max_degree 
+        const normalizedDegree = data.stats.max_degree > 0
+            ? node.degree / data.stats.max_degree
             : 0.5
         return 5 + normalizedDegree * 10
     }
@@ -195,8 +195,8 @@ export function KnowledgeGraph() {
                     <div>
                         <h2>Knowledge Graph (Tri-Search: Graph Layer)</h2>
                         <p style={{ marginTop: '0.5rem', opacity: 0.8, maxWidth: '800px' }}>
-                            Visualize the semantic knowledge graph extracted from conversations, documents, and facts. 
-                            This is the <strong>graph layer</strong> of Engram's tri-search capability, enabling relationship-based 
+                            Visualize the semantic knowledge graph extracted from conversations, documents, and facts.
+                            This is the <strong>graph layer</strong> of Engram's tri-search capability, enabling relationship-based
                             reasoning and multi-hop traversal.
                         </p>
                     </div>
@@ -274,24 +274,24 @@ export function KnowledgeGraph() {
             {/* Main Content */}
             <div style={{ display: 'flex', flex: 1, gap: '1rem', padding: '0 2rem 2rem 2rem', overflow: 'hidden' }}>
                 {/* Graph Visualization */}
-                <div 
-                    ref={containerRef} 
-                    style={{ 
-                        flex: 1, 
+                <div
+                    ref={containerRef}
+                    style={{
+                        flex: 1,
                         position: 'relative',
-                        border: '1px solid var(--glass-border)', 
-                        borderRadius: '12px', 
-                        overflow: 'hidden', 
+                        border: '1px solid var(--glass-border)',
+                        borderRadius: '12px',
+                        overflow: 'hidden',
                         background: 'var(--glass-bg)',
                         minHeight: '500px'
                     }}
                 >
                     {loading && (
-                        <div style={{ 
-                            position: 'absolute', 
-                            top: '50%', 
-                            left: '50%', 
-                            transform: 'translate(-50%, -50%)', 
+                        <div style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
                             zIndex: 10,
                             background: 'var(--glass-bg)',
                             padding: '1rem 2rem',
@@ -303,12 +303,12 @@ export function KnowledgeGraph() {
                     )}
 
                     {error && (
-                        <div style={{ 
-                            position: 'absolute', 
-                            top: '50%', 
-                            left: '50%', 
-                            transform: 'translate(-50%, -50%)', 
-                            color: 'red', 
+                        <div style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            color: 'red',
                             zIndex: 10,
                             background: 'var(--glass-bg)',
                             padding: '1rem 2rem',
@@ -320,11 +320,11 @@ export function KnowledgeGraph() {
                     )}
 
                     {!loading && !error && filteredData.nodes.length === 0 && (
-                        <div style={{ 
-                            position: 'absolute', 
-                            top: '50%', 
-                            left: '50%', 
-                            transform: 'translate(-50%, -50%)', 
+                        <div style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
                             zIndex: 10,
                             textAlign: 'center',
                             opacity: 0.7
@@ -371,9 +371,9 @@ export function KnowledgeGraph() {
                             nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
                                 const graphNode = data.nodes.find(n => n.id === node.id)
                                 if (!graphNode) return
-                                
-                                const label = graphNode.content.length > 30 
-                                    ? graphNode.content.substring(0, 30) + '...' 
+
+                                const label = graphNode.content.length > 30
+                                    ? graphNode.content.substring(0, 30) + '...'
                                     : graphNode.content
                                 const fontSize = 12 / Math.sqrt(globalScale)
                                 ctx.font = `${fontSize}px Sans-Serif`
@@ -382,18 +382,18 @@ export function KnowledgeGraph() {
 
                                 const isSelected = selectedNode && node.id === selectedNode.id
                                 const isHovered = hoveredNode && node.id === hoveredNode.id
-                                
-                                ctx.fillStyle = isSelected 
-                                    ? 'rgba(0, 212, 255, 0.3)' 
-                                    : isHovered 
-                                        ? 'rgba(255, 255, 255, 0.2)' 
+
+                                ctx.fillStyle = isSelected
+                                    ? 'rgba(0, 212, 255, 0.3)'
+                                    : isHovered
+                                        ? 'rgba(255, 255, 255, 0.2)'
                                         : 'rgba(0, 0, 0, 0.3)'
-                                
+
                                 if (node.x && node.y) {
                                     ctx.fillRect(
-                                        node.x - bckgDimensions[0] / 2, 
-                                        node.y - bckgDimensions[1] / 2, 
-                                        bckgDimensions[0], 
+                                        node.x - bckgDimensions[0] / 2,
+                                        node.y - bckgDimensions[1] / 2,
+                                        bckgDimensions[0],
                                         bckgDimensions[1]
                                     )
                                 }
@@ -410,10 +410,10 @@ export function KnowledgeGraph() {
                 </div>
 
                 {/* Sidebar */}
-                <div style={{ 
-                    width: '350px', 
-                    display: 'flex', 
-                    flexDirection: 'column', 
+                <div style={{
+                    width: '350px',
+                    display: 'flex',
+                    flexDirection: 'column',
                     gap: '1rem',
                     overflowY: 'auto'
                 }}>
@@ -488,7 +488,7 @@ export function KnowledgeGraph() {
                                     ×
                                 </button>
                             </div>
-                            
+
                             <div style={{ marginBottom: '0.75rem' }}>
                                 <span style={{
                                     display: 'inline-block',
@@ -503,17 +503,17 @@ export function KnowledgeGraph() {
                                     {NODE_LABELS[selectedNode.node_type] || selectedNode.node_type}
                                 </span>
                             </div>
-                            
+
                             <div style={{ marginBottom: '0.75rem' }}>
                                 <p style={{ fontSize: '0.85rem', opacity: 0.8, marginBottom: '0.25rem' }}>Content:</p>
                                 <p style={{ fontSize: '0.9rem', lineHeight: '1.5' }}>{selectedNode.content}</p>
                             </div>
-                            
+
                             <div style={{ marginBottom: '0.75rem' }}>
                                 <p style={{ fontSize: '0.85rem', opacity: 0.8, marginBottom: '0.25rem' }}>Degree (Connections):</p>
                                 <p style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>{selectedNode.degree}</p>
                             </div>
-                            
+
                             {Object.keys(selectedNode.metadata || {}).length > 0 && (
                                 <div style={{ marginBottom: '0.75rem' }}>
                                     <p style={{ fontSize: '0.85rem', opacity: 0.8, marginBottom: '0.25rem' }}>Metadata:</p>
@@ -526,7 +526,7 @@ export function KnowledgeGraph() {
                                     </div>
                                 </div>
                             )}
-                            
+
                             {connectedNodes.edges.length > 0 && (
                                 <div>
                                     <p style={{ fontSize: '0.85rem', opacity: 0.8, marginBottom: '0.25rem' }}>
@@ -537,8 +537,8 @@ export function KnowledgeGraph() {
                                             .filter(n => n.id !== selectedNode.id)
                                             .slice(0, 10)
                                             .map(node => (
-                                                <div 
-                                                    key={node.id} 
+                                                <div
+                                                    key={node.id}
                                                     onClick={() => handleNodeClick({ id: node.id })}
                                                     style={{
                                                         padding: '0.5rem',
