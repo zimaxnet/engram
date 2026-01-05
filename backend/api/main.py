@@ -19,17 +19,28 @@ from fastapi.responses import JSONResponse
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from backend.core import get_settings
-from backend.observability import (
-    configure_telemetry,
-    configure_logging,
-    TelemetryMiddleware,
-)
+
+# Defensive Observability Import
+try:
+    from backend.observability import (
+        configure_telemetry,
+        configure_logging,
+        TelemetryMiddleware,
+    )
+    OBSERVABILITY_AVAILABLE = True
+except ImportError:
+    # Fallback logger configuration if observability module is missing
+    logging.basicConfig(level=logging.INFO)
+    def configure_logging(): pass
+    def configure_telemetry(app): pass
+    TelemetryMiddleware = None
+    OBSERVABILITY_AVAILABLE = False
 
 from .routers import admin, agents, bau, chat, health, memory, metrics, story, validation, voice, workflows, etl, images, graph
 from .middleware.logging import RequestLoggingMiddleware
 from .middleware.cors_preflight import CORSPreflightMiddleware
 
-# Configure structured logging
+# Configure structured logging (if available)
 configure_logging()
 logger = logging.getLogger(__name__)
 
@@ -41,8 +52,11 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
     logger.info(f"Environment: {settings.environment}")
 
-    # Configure telemetry
-    configure_telemetry(app)
+    # Configure telemetry (if available)
+    if OBSERVABILITY_AVAILABLE:
+        configure_telemetry(app)
+    else:
+        logger.warning("Observability module missing; telemetry disabled.")
 
     # Startup
     try:
@@ -74,9 +88,6 @@ def create_app() -> FastAPI:
     )
 
     # CORS middleware (handles preflight OPTIONS requests automatically)
-    # CORSMiddleware processes OPTIONS requests at the middleware level,
-    # before route dependencies (like get_current_user) are evaluated,
-    # so it doesn't require authentication for preflight requests.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
@@ -138,13 +149,13 @@ def create_app() -> FastAPI:
 
     # Custom middleware
     # NOTE: Middleware runs in REVERSE order from how they're added.
-    # We add in this order so execution is: ProxyHeaders -> Telemetry -> Logging -> CORSPreflight -> CORS
     app.add_middleware(RequestLoggingMiddleware)
-    app.add_middleware(TelemetryMiddleware)
+    
+    if OBSERVABILITY_AVAILABLE and TelemetryMiddleware:
+        app.add_middleware(TelemetryMiddleware)
+        
     # Trust the Azure Container Apps load balancer to handle SSL/Host headers correctly
     app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
-    # CORSPreflightMiddleware must run BEFORE auth but AFTER CORSMiddleware
-    # Since we added CORSMiddleware first, this will run before it
     app.add_middleware(CORSPreflightMiddleware)
 
     # Include routers
@@ -163,34 +174,34 @@ def create_app() -> FastAPI:
     app.include_router(images.router, prefix="/api/v1/images", tags=["Images"])
     app.include_router(graph.router, prefix="/api/v1/graph", tags=["Graph"])
     
-    # MCP (Model Context Protocol)
-    # FastMCP provides a Starlette/ASGI compatible app for SSE
-    from .routers.mcp_server import mcp_server
-    
-    # Get the underlying Starlette app
-    mcp_app = mcp_server.sse_app()
-    
-    # Fix: FastMCP has strict TrustedHostMiddleware that only allows "localhost".
-    # We wrap the app with an ASGI middleware that rewrites the Host header
-    # to "localhost" before FastMCP sees it, effectively bypassing the check.
-    class HostRewriteMiddleware:
-        def __init__(self, app):
-            self.app = app
+    # MCP (Model Context Protocol) - Defensive Loading
+    try:
+        from .routers.mcp_server import mcp_server
         
-        async def __call__(self, scope, receive, send):
-            if scope["type"] == "http":
-                # Rewrite host to bypass FastMCP's TrustedHostMiddleware
-                headers = dict(scope.get("headers", []))
-                headers[b"host"] = b"localhost"
-                scope["headers"] = list(headers.items())
-            await self.app(scope, receive, send)
-    
-    # Wrap the MCP app
-    wrapped_mcp_app = HostRewriteMiddleware(mcp_app)
-
-    app.mount("/api/v1/mcp", wrapped_mcp_app)
-    logger.info("Mounted MCP server at /api/v1/mcp")
-
+        # Get the underlying Starlette app
+        mcp_app = mcp_server.sse_app()
+        
+        # Wrapped app to fix Host header issues in FastMCP
+        class HostRewriteMiddleware:
+            def __init__(self, app):
+                self.app = app
+            
+            async def __call__(self, scope, receive, send):
+                if scope["type"] == "http":
+                    # Rewrite host to bypass FastMCP's TrustedHostMiddleware
+                    headers = dict(scope.get("headers", []))
+                    headers[b"host"] = b"localhost"
+                    scope["headers"] = list(headers.items())
+                await self.app(scope, receive, send)
+        
+        wrapped_mcp_app = HostRewriteMiddleware(mcp_app)
+        app.mount("/api/v1/mcp", wrapped_mcp_app)
+        logger.info("Mounted MCP server at /api/v1/mcp")
+        
+    except ImportError as e:
+        logger.warning(f"MCP Server components missing (FastMCP/SSE). MCP endpoint disabled: {e}")
+    except Exception as e:
+        logger.error(f"Failed to mount MCP server: {e}")
 
     return app
 
@@ -200,5 +211,6 @@ app = create_app()
 
 if __name__ == "__main__":
     import uvicorn
-
+    # If running directly, we can't easily patch observability imports at module level
+    # so we rely on what was loaded above.
     uvicorn.run("backend.api.main:app", host="0.0.0.0", port=8080, reload=True)
