@@ -98,9 +98,11 @@
     border-radius: var(--radius-lg);
     padding: 2.5rem;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+    overflow: auto;
     width: 100%;
     box-sizing: border-box;
+    flex: 1;
+    min-height: 0;
 }
 
 .markdown-content {
