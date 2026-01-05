@@ -6,7 +6,7 @@
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/ESBMgZHzfG0?si=Q2GME-RqGHjGaz_6" title="Martin Keen - AI Periodic Table Explained" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
-*Credit: [Martin Keen, IBM Master Inventor](https://www.youtube.com/watch?v=ESBMgZHzfG0)*
+*Credit: [Martin Keen](https://www.linkedin.com/in/martingkeen/), IBM Master Inventor | [Video](https://www.youtube.com/watch?v=ESBMgZHzfG0)*
 
 ---
 

@@ -501,4 +501,4 @@ R4 EMERGING
 
 ---
 
-*Framework credit: [Martin Keen, IBM Master Inventor](https://youtu.be/ESBMgZHzfG0?si=Q2GME-RqGHjGaz_6)*
+*Framework credit: [Martin Keen](https://www.linkedin.com/in/martingkeen/), IBM Master Inventor | [Video](https://youtu.be/ESBMgZHzfG0?si=Q2GME-RqGHjGaz_6)*
