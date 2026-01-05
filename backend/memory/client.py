@@ -185,12 +185,16 @@ class ZepMemoryClient:
             try:
                 existing = await self._request("GET", f"/api/v1/sessions/{session_id}")
                 if existing:
-                    # Update metadata if provided
+                    # Update metadata if provided - MERGE with existing to preserve fields
                     if metadata:
                         try:
-                            updated = await self._request("PATCH", f"/api/v1/sessions/{session_id}", json={"metadata": metadata})
+                            # Merge existing metadata with new metadata
+                            existing_metadata = existing.get("metadata", {}) or {}
+                            merged_metadata = {**existing_metadata, **metadata}
+                            
+                            updated = await self._request("PATCH", f"/api/v1/sessions/{session_id}", json={"metadata": merged_metadata})
                             if updated:
-                                logger.info(f"Updated metadata for session: {session_id}")
+                                logger.info(f"Updated metadata for session: {session_id} with agent_id={metadata.get('agent_id')}, summary={str(metadata.get('summary', ''))[:50]}...")
                                 return updated
                         except Exception as e:
                             logger.warning(f"Failed to update metadata for existing session {session_id}: {e}")
