@@ -1,96 +1,38 @@
----
-layout: default
-title: "Engram Documentation"
----
+# Engram Context Engineering Platform
 
-# Engram Documentation
+> **Cognition-as-a-Service for the Enterprise**
 
-Welcome to the Engram documentation! This wiki provides comprehensive guides for using, developing, and deploying the Engram Context Engineering Platform.
+![Engram Platform Architecture](docs/assets/images/engram-platform-architecture.png)
 
-## 📚 Documentation Structure
+## Overview
 
-### 🚀 [Getting Started](getting-started/)
-Quick start guides and setup instructions for new users.
+Engram is an enterprise-grade AI platform that solves the **Memory Wall Problem** in Large Language Models.
 
-### 🏗️ [Architecture](architecture/)
-Deep dive into Engram's architecture:
-- **Brain + Spine Pattern** - Core architecture pattern
-- **4-Layer Context Schema** - Context engineering approach
-- **Authentication & Security** - Enterprise security architecture
+[Read the Full Documentation on our Wiki](https://wiki.engram.work)
 
-### 🤖 [Agents](agents/)
-Documentation for Engram's AI agent personas:
-- **Elena** - Business Analyst
-- **Marcus** - Project Manager
-- **Sage** - Visual Storyteller
+## Repository Structure
 
-### ⚡ [Features](features/)
-Feature-specific documentation:
-- **Voice** - Voice interaction features
-- **Memory** - Memory and knowledge graph
-- **Connectors** - Data ingestion
-- **Mobile** - Mobile features
+- `frontend/` - React 19 + Vite application
+- `backend/` - FastAPI + LangGraph agents
+- `docs/` - Jekyll Documentation Site
+- `infra/` - Azure Bicep Infrastructure
 
-### 💻 [Development](development/)
-Guides for developers contributing to Engram:
-- **Setup** - Development environment setup
-- **Guides** - Development best practices
-- **Testing** - Testing documentation
+## Documentation
 
-### 🚀 [Deployment](deployment/)
-Production deployment guides:
-- **Enterprise** - Enterprise deployment
-- **Infrastructure** - Infrastructure setup
-- **FinOps** - Cost optimization
+- **[Strategy](docs/00-strategy/)**: Business plans, roadmaps
+- **[Architecture](docs/01-architecture/)**: System diagrams
+- **[Developer Guide](docs/02-developer/)**: Setup and testing
+- **[Operations](docs/03-operations/)**: Deployment and Auth
+- **[Features](docs/04-features/)**: Specs and designs
+- **[Knowledge Base](docs/05-knowledge-base/)**: SOPs and Troubleshooting
 
-### 🔧 [Operations](operations/)
-Operations and maintenance:
-- **Monitoring** - Observability and monitoring
-- **Stability** - Stability guides
-- **Troubleshooting** - Common issues and solutions
+## Getting Started
 
-### 📚 [Reference](reference/)
-Technical reference documentation:
-- **SOP** - Standard Operating Procedures
-- **API** - API reference
-- **Sessions** - Session documentation
+```bash
+# Clone
+git clone https://github.com/zimaxnet/engram.git
 
-### 📖 [Guides](guides/)
-General guides and tutorials.
-
-## 🗺️ Navigation
-
-Use the navigation menu at the top to explore different sections, or start with:
-
-1. **[Getting Started](getting-started/)** - If you're new to Engram
-2. **[Architecture](architecture/)** - To understand how Engram works
-3. **[Development](development/)** - To contribute to Engram
-4. **[Deployment](deployment/)** - To deploy Engram
-
-## 🔍 Quick Links
-
-- [Main Index](index.md) - Platform overview
-- [Architecture Overview](architecture/) - System architecture
-- [Agent Personas](agents/) - Meet Elena and Marcus
-- [Troubleshooting](operations/troubleshooting/) - Common issues
-
-## 📝 Contributing
-
-When adding new documentation:
-
-1. Place files in the appropriate section
-2. Update the section's `index.md` if needed
-3. Follow the existing naming conventions (kebab-case)
-4. Include frontmatter for Jekyll rendering
-
-## 🏷️ File Organization
-
-- **Markdown files** (`.md`) - Documentation content
-- **JSON files** (`.json`) - Diagram specifications
-- **Images** (`.png`, `.svg`) - Visual assets in `assets/`
-
----
-
-**Last Updated**: 2025-12-31  
-**Reorganization**: Complete - See [REORGANIZATION-COMPLETE.md](REORGANIZATION-COMPLETE.md)
-
+# Local Dev
+docker-compose up -d
+open http://localhost:5173
+```

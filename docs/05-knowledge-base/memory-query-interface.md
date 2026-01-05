@@ -161,6 +161,6 @@ python -m backend.scripts.query_memory --env azure --episodes
 
 ## Related
 
-- [Agent Architecture]({% link agents/index.md %})
-- [Elena Agent]({% link agents/elena.md %})
-- [Memory Integration]({% link architecture/memory.md %})
+- [Agent Personas]({% link 01-architecture/agents.md %})
+- [Elena Agent]({% link 05-knowledge-base/elena/persona.md %})
+- [Memory Architecture]({% link 01-architecture/memory-architecture.md %})
