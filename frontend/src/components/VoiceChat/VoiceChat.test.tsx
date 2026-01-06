@@ -1,13 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import VoiceChat from './VoiceChat';
-import * as api from '../../services/api';
+import * as authConfig from '../../auth/authConfig';
 
-// Mock API
-vi.mock('../../services/api', () => ({
-  getVoiceToken: vi.fn(),
-  persistTurn: vi.fn(),
+// Mock auth config
+vi.mock('../../auth/authConfig', () => ({
+  getAccessToken: vi.fn().mockResolvedValue('fake-access-token'),
 }));
 
 describe('VoiceChat Component', () => {
@@ -15,35 +14,45 @@ describe('VoiceChat Component', () => {
     agentId: 'elena',
   };
 
-  // Mock WebSocket
-  const mockWs: any = {
-    send: vi.fn(),
-    close: vi.fn(),
-    readyState: WebSocket.OPEN,
-    onopen: null,
-    onmessage: null,
-    onerror: null,
-    onclose: null,
+  // Mock WebSocket with proper handler storage
+  let mockWs: any;
+  
+  const createMockWebSocket = () => {
+    const handlers: any = {
+      onopen: null,
+      onmessage: null,
+      onerror: null,
+      onclose: null,
+    };
+    
+    mockWs = {
+      send: vi.fn(),
+      close: vi.fn(),
+      readyState: WebSocket.CONNECTING,
+      get onopen() { return handlers.onopen; },
+      set onopen(fn) { handlers.onopen = fn; },
+      get onmessage() { return handlers.onmessage; },
+      set onmessage(fn) { handlers.onmessage = fn; },
+      get onerror() { return handlers.onerror; },
+      set onerror(fn) { handlers.onerror = fn; },
+      get onclose() { return handlers.onclose; },
+      set onclose(fn) { handlers.onclose = fn; },
+    };
+    
+    return mockWs;
   };
 
-  const MockWebSocket = vi.fn(() => mockWs) as any;
+  const MockWebSocket = vi.fn(() => createMockWebSocket()) as any;
   MockWebSocket.OPEN = WebSocket.OPEN;
+  MockWebSocket.CONNECTING = WebSocket.CONNECTING;
+  MockWebSocket.CLOSED = WebSocket.CLOSED;
 
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubGlobal('WebSocket', MockWebSocket);
 
-    // Reset mock callbacks
-    mockWs.onopen = null;
-    mockWs.onmessage = null;
-    mockWs.onerror = null;
-    mockWs.onclose = null;
-
-    // Mock getVoiceToken response
-    (api.getVoiceToken as any).mockResolvedValue({
-      token: 'fake-token',
-      endpoint: 'https://fake-azure.com/'
-    });
+    // Mock environment variable
+    import.meta.env = { VITE_API_URL: 'http://localhost:8082' };
 
     // Mock AudioContext and MediaDevices
     global.AudioContext = vi.fn().mockImplementation(() => ({
@@ -97,17 +106,17 @@ describe('VoiceChat Component', () => {
     render(<VoiceChat {...defaultProps} />);
     expect(screen.getByRole('button')).toBeInTheDocument();
 
-    // Should call API to get token
-    await waitFor(() => {
-      expect(api.getVoiceToken).toHaveBeenCalledWith('elena', expect.stringMatching(/^voice-/));
-    });
-
-    // Should create WebSocket
+    // Should create WebSocket connection to backend proxy
     await waitFor(() => {
       expect(MockWebSocket).toHaveBeenCalledWith(
-        expect.stringContaining('wss://fake-azure.com/openai/realtime'),
-        'realtime-openai-v1-beta'
+        expect.stringMatching(/^ws:\/\/localhost:8082\/api\/v1\/voice\/voicelive\/voice-/),
+        undefined
       );
+    });
+
+    // Should get access token
+    await waitFor(() => {
+      expect(authConfig.getAccessToken).toHaveBeenCalled();
     });
   });
 
@@ -115,26 +124,38 @@ describe('VoiceChat Component', () => {
     const onMessage = vi.fn();
     render(<VoiceChat {...defaultProps} onMessage={onMessage} />);
 
-    await waitFor(() => expect(MockWebSocket).toHaveBeenCalled());
+    await waitFor(() => {
+      expect(MockWebSocket).toHaveBeenCalled();
+      expect(mockWs).toBeDefined();
+    });
+
+    // Wait for handlers to be set
+    await waitFor(() => {
+      expect(mockWs.onopen).toBeDefined();
+    });
 
     // Simulate WebSocket open
-    mockWs.onopen();
+    mockWs.readyState = WebSocket.OPEN;
+    if (mockWs.onopen) {
+      mockWs.onopen();
+    }
 
-    // Simulate incoming transcript delta
-    mockWs.onmessage({
-      data: JSON.stringify({
-        type: 'response.audio_transcript.delta',
-        delta: 'Hello '
-      })
+    // Wait a bit for state updates
+    await waitFor(() => {
+      expect(mockWs.onmessage).toBeDefined();
     });
 
-    // Simulate transcript done
-    mockWs.onmessage({
-      data: JSON.stringify({
-        type: 'response.audio_transcript.done',
-        transcript: 'Hello world'
-      })
-    });
+    // Simulate incoming transcript from backend proxy
+    if (mockWs.onmessage) {
+      mockWs.onmessage({
+        data: JSON.stringify({
+          type: 'transcription',
+          speaker: 'assistant',
+          status: 'complete',
+          text: 'Hello world'
+        })
+      });
+    }
 
     // Should call onMessage with final text
     await waitFor(() => {
@@ -142,54 +163,78 @@ describe('VoiceChat Component', () => {
         text: 'Hello world',
         type: 'agent'
       }));
-    });
-
-    // Should persist turn
-    expect(api.persistTurn).toHaveBeenCalledWith(expect.objectContaining({
-      content: 'Hello world',
-      role: 'assistant'
-    }));
+    }, { timeout: 3000 });
   });
 
   it('should handle user speech recognition', async () => {
     const onMessage = vi.fn();
     render(<VoiceChat {...defaultProps} onMessage={onMessage} />);
 
-    await waitFor(() => expect(MockWebSocket).toHaveBeenCalled());
-    mockWs.onopen();
-
-    // Simulate user transcript completion
-    mockWs.onmessage({
-      data: JSON.stringify({
-        type: 'conversation.item.input_audio_transcription.completed',
-        transcript: 'Hello Elena'
-      })
+    await waitFor(() => {
+      expect(MockWebSocket).toHaveBeenCalled();
+      expect(mockWs).toBeDefined();
     });
+
+    // Wait for handlers to be set
+    await waitFor(() => {
+      expect(mockWs.onopen).toBeDefined();
+    });
+    
+    // Simulate WebSocket open
+    mockWs.readyState = WebSocket.OPEN;
+    if (mockWs.onopen) {
+      mockWs.onopen();
+    }
+
+    // Wait for message handler
+    await waitFor(() => {
+      expect(mockWs.onmessage).toBeDefined();
+    });
+
+    // Simulate user transcript completion from backend proxy
+    if (mockWs.onmessage) {
+      mockWs.onmessage({
+        data: JSON.stringify({
+          type: 'transcription',
+          speaker: 'user',
+          status: 'complete',
+          text: 'Hello Elena'
+        })
+      });
+    }
 
     await waitFor(() => {
       expect(onMessage).toHaveBeenCalledWith(expect.objectContaining({
         text: 'Hello Elena',
         type: 'user'
       }));
-    });
-
-    // Should persist turn
-    expect(api.persistTurn).toHaveBeenCalledWith(expect.objectContaining({
-      content: 'Hello Elena',
-      role: 'user'
-    }));
+    }, { timeout: 3000 });
   });
 
   it('should handle connection errors', async () => {
     const onStatusChange = vi.fn();
-    (api.getVoiceToken as any).mockRejectedValue(new Error('Auth failed'));
-
+    
     render(<VoiceChat {...defaultProps} onStatusChange={onStatusChange} />);
 
     await waitFor(() => {
-      expect(onStatusChange).toHaveBeenCalledWith('error');
+      expect(MockWebSocket).toHaveBeenCalled();
+      expect(mockWs).toBeDefined();
     });
 
-    expect(screen.getByText('Auth failed')).toBeInTheDocument();
+    // Wait for error handler to be set
+    await waitFor(() => {
+      expect(mockWs.onerror).toBeDefined();
+    });
+
+    // Simulate WebSocket error
+    if (mockWs.onerror) {
+      mockWs.onerror(new Event('error'));
+    }
+
+    await waitFor(() => {
+      expect(onStatusChange).toHaveBeenCalledWith('error');
+    }, { timeout: 3000 });
+
+    expect(screen.getByText(/Voice connection error/i)).toBeInTheDocument();
   });
 });
