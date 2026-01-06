@@ -26,7 +26,7 @@ interface VisualPanelProps {
 }
 
 export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessage, sessionId }: VisualPanelProps) {
-  const [voiceAvatarVideoUrl, setVoiceAvatarVideoUrl] = useState<string | null>(null);
+  const [voiceAvatarVideoUrl, setVoiceAvatarVideoUrl] = useState<string | undefined>(undefined);
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [currentVisemes, setCurrentVisemes] = useState<Viseme[]>([])
   const [expression, setExpression] = useState<'neutral' | 'smile' | 'thinking' | 'listening'>('neutral')

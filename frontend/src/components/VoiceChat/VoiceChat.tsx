@@ -31,6 +31,7 @@ interface VoiceChatProps {
   onMessage?: (message: VoiceMessage) => void;
   onVisemes?: (visemes: Viseme[]) => void;
   onStatusChange?: (status: 'connecting' | 'connected' | 'error') => void;
+  onAvatarVideo?: (url: string | undefined) => void;  // Callback for avatar video URL
   disabled?: boolean;
 }
 
@@ -51,8 +52,7 @@ export default function VoiceChat({
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
   const [error, setError] = useState<string | null>(null);
   const [audioLevel, setAudioLevel] = useState(0);
-  const [avatarVideoUrl, setAvatarVideoUrl] = useState<string | null>(null);
-  const [avatarVideoChunks, setAvatarVideoChunks] = useState<Uint8Array[]>([]);
+  const [avatarVideoUrl, setAvatarVideoUrl] = useState<string | undefined>(undefined);
 
   const wsRef = useRef<WebSocket | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
@@ -71,6 +71,7 @@ export default function VoiceChat({
   const onMessageRef = useRef(onMessage);
   const onVisemesRef = useRef(onVisemes);
   const onStatusChangeRef = useRef(onStatusChange);
+  const onAvatarVideoRef = useRef(onAvatarVideo);
 
   // Generate local session ID if not provided
   const [localSessionId] = useState(() => `voice-${Date.now()}`);
@@ -90,7 +91,9 @@ export default function VoiceChat({
   
   // Notify parent when avatar video URL changes
   useEffect(() => {
-    onAvatarVideoRef.current?.(avatarVideoUrl);
+    if (onAvatarVideoRef.current) {
+      onAvatarVideoRef.current(avatarVideoUrl);
+    }
   }, [avatarVideoUrl]);
 
   // Audio Playback Context
@@ -272,15 +275,10 @@ export default function VoiceChat({
                 break;
 
               case 'avatar_video':
-                // Avatar video chunk from VoiceLive
+                // Avatar video chunk from VoiceLive (streaming - not currently used)
+                // Future: could assemble chunks into video blob
                 if (data.data) {
-                  try {
-                    const chunk = Uint8Array.from(atob(data.data), c => c.charCodeAt(0));
-                    setAvatarVideoChunks(prev => [...prev, chunk]);
-                    setIsSpeaking(true);
-                  } catch (e) {
-                    console.error('Failed to decode avatar video chunk:', e);
-                  }
+                  setIsSpeaking(true);
                 }
                 break;
 
@@ -288,7 +286,6 @@ export default function VoiceChat({
                 // Avatar video URL (final video)
                 if (data.url) {
                   setAvatarVideoUrl(data.url);
-                  setAvatarVideoChunks([]); // Clear chunks when URL is available
                   setIsSpeaking(true);
                   console.log('Avatar video URL received:', data.url);
                 }
@@ -298,8 +295,7 @@ export default function VoiceChat({
                 // Agent was switched (backend confirms)
                 console.log('Agent switched to:', data.agent_id);
                 // Clear avatar when switching agents
-                setAvatarVideoUrl(null);
-                setAvatarVideoChunks([]);
+                setAvatarVideoUrl(undefined);
                 break;
 
               case 'error':

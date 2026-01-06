@@ -52,7 +52,7 @@ interface AvatarDisplayProps {
   visemes?: Viseme[];
   showName?: boolean;
   size?: 'sm' | 'md' | 'lg';
-  avatarVideoUrl?: string;  // Foundry avatar video URL (if available)
+  avatarVideoUrl?: string | undefined;  // Foundry avatar video URL (if available)
 }
 
 const AGENT_INFO = {
