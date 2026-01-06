@@ -61,10 +61,16 @@
   box-shadow: 0 0 10px var(--agent-color, var(--color-primary));
 }
 
-.message-avatar img {
+.message-avatar img,
+.message-avatar video {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.message-avatar video.avatar-video {
+  border-radius: 50%;
+  background: var(--color-bg);
 }
 
 /* Content */

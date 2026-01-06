@@ -26,6 +26,7 @@ interface VisualPanelProps {
 }
 
 export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessage, sessionId }: VisualPanelProps) {
+  const [voiceAvatarVideoUrl, setVoiceAvatarVideoUrl] = useState<string | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [currentVisemes, setCurrentVisemes] = useState<Viseme[]>([])
   const [expression, setExpression] = useState<'neutral' | 'smile' | 'thinking' | 'listening'>('neutral')
@@ -91,12 +92,13 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
 
         {/* Avatar Component */}
         <AvatarDisplay
-          agentId={agent.id as 'elena' | 'marcus'}
+          agentId={agent.id as 'elena' | 'marcus' | 'sage'}
           isSpeaking={isSpeaking}
           expression={expression}
           visemes={currentVisemes}
           showName={true}
           size="lg"
+          avatarVideoUrl={voiceAvatarVideoUrl}  // VoiceLive avatar video URL
         />
 
         {/* Voice Chat Component */}
@@ -112,11 +114,12 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
             ) : (
               <VoiceChat
                 agentId={agent.id}
+                sessionId={sessionId}
                 onMessage={handleVoiceMessage}
                 onVisemes={handleVisemes}
                 onStatusChange={setVoiceStatus}
+                onAvatarVideo={setVoiceAvatarVideoUrl}
                 disabled={!voiceEnabled}
-                sessionId={sessionId}
               />
             )}
           </div>

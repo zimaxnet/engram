@@ -308,6 +308,28 @@ def check_tenant_access(user: SecurityContext, resource_tenant_id: str) -> bool:
     return user.tenant_id == resource_tenant_id
 
 
+def check_project_access(user: SecurityContext, resource_project_id: Optional[str]) -> bool:
+    """
+    Check if user can access resources from a specific project.
+
+    Rules:
+    - Admins can access any project
+    - If no project_id specified, allow access (no project restriction)
+    - Users can access their own project (project_id matches)
+    - Users can access projects they have scope for (project-{id}:read or project-{id}:write)
+    """
+    # Admins can access any project
+    if Role.ADMIN in user.roles:
+        return True
+    
+    # No project restriction - allow access
+    if not resource_project_id:
+        return True
+    
+    # Use the can_access_project method from SecurityContext
+    return user.can_access_project(resource_project_id)
+
+
 def require_tenant_access(tenant_id_param: str = "tenant_id"):
     """
     Dependency to require tenant access.

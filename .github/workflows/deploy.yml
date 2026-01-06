@@ -84,6 +84,10 @@ jobs:
             azureAdClientId=${{ secrets.AZURE_AD_CLIENT_ID || '' }}
             azureAdExternalId=${{ secrets.AZURE_AD_EXTERNAL_ID == 'true' }}
             azureAdExternalDomain=${{ secrets.AZURE_AD_EXTERNAL_DOMAIN || '' }}
+            azureFoundryAgentEndpoint=${{ secrets.AZURE_FOUNDRY_AGENT_ENDPOINT || '' }}
+            azureFoundryAgentProject=${{ secrets.AZURE_FOUNDRY_AGENT_PROJECT || '' }}
+            azureFoundryAgentKey=${{ secrets.AZURE_FOUNDRY_AGENT_KEY || '' }}
+            elenaFoundryAgentId=${{ secrets.ELENA_FOUNDRY_AGENT_ID || '' }}
           deploymentName: engram-infra-${{ github.sha }}
           failOnStdErr: false
       

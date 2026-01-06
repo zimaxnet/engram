@@ -29,28 +29,47 @@ function AppContent() {
   const [activeAgent, setActiveAgent] = useState<AgentId>('elena');
   const [selectedModel, setSelectedModel] = useState('gpt-5.2-chat');
 
-  // Single conversation/session ID shared across Chat + Voice so both persist into the same Zep session.
-  // Can be overridden via navigation state (e.g., from Episodes page)
-  const [sessionId, setSessionId] = useState<string>(() => {
-    const key = 'engram_session_id'
-    const fallback = `session-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-    try {
-      const existing = sessionStorage.getItem(key)
-      if (existing) return existing
-      sessionStorage.setItem(key, fallback)
-      return fallback
-    } catch {
-      return fallback
+  // Agent-specific session IDs: Each agent (Elena, Marcus, Sage) has its own conversation thread
+  // This ensures agents maintain separate contexts and can validate each other's work
+  const getSessionKey = (agentId: AgentId) => `engram_session_${agentId}`
+  
+  const [sessionIds, setSessionIds] = useState<Record<AgentId, string>>(() => {
+    const sessions: Record<AgentId, string> = {
+      elena: '',
+      marcus: '',
+      sage: ''
     }
-  });
+    
+    // Initialize session IDs for each agent
+    ;(['elena', 'marcus', 'sage'] as AgentId[]).forEach(agentId => {
+      const key = getSessionKey(agentId)
+      const fallback = `session-${agentId}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+      try {
+        const existing = sessionStorage.getItem(key)
+        sessions[agentId] = existing || fallback
+        if (!existing) {
+          sessionStorage.setItem(key, fallback)
+        }
+      } catch {
+        sessions[agentId] = fallback
+      }
+    })
+    
+    return sessions
+  })
+
+  // Get current session ID for active agent
+  const sessionId = sessionIds[activeAgent] || sessionIds.elena
 
   // Update session ID and agent when navigating from Episodes
   useEffect(() => {
     const state = location.state as { sessionId?: string; agentId?: string } | null;
-    if (state?.sessionId) {
+    if (state?.sessionId && state?.agentId && ['elena', 'marcus', 'sage'].includes(state.agentId)) {
+      const agentId = state.agentId as AgentId
       try {
-        sessionStorage.setItem('engram_session_id', state.sessionId);
-        setSessionId(state.sessionId);
+        const key = getSessionKey(agentId)
+        sessionStorage.setItem(key, state.sessionId);
+        setSessionIds(prev => ({ ...prev, [agentId]: state.sessionId! }))
       } catch (err) {
         console.error('Failed to update session ID:', err);
       }

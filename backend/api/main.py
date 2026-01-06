@@ -36,7 +36,7 @@ except ImportError:
     TelemetryMiddleware = None
     OBSERVABILITY_AVAILABLE = False
 
-from .routers import admin, agents, bau, chat, health, memory, metrics, story, validation, voice, workflows, etl, images, graph
+from .routers import admin, agents, bau, chat, health, memory, metrics, story, validation, voice, workflows, etl, images, graph, tools
 from .middleware.logging import RequestLoggingMiddleware
 from .middleware.cors_preflight import CORSPreflightMiddleware
 
@@ -173,6 +173,7 @@ def create_app() -> FastAPI:
     app.include_router(story.router, prefix="/api/v1/story", tags=["Story"])
     app.include_router(images.router, prefix="/api/v1/images", tags=["Images"])
     app.include_router(graph.router, prefix="/api/v1/graph", tags=["Graph"])
+    app.include_router(tools.router, prefix="/api/v1", tags=["Tools"])  # Tool endpoints for Foundry agents
     
     # MCP (Model Context Protocol) - Defensive Loading
     try:

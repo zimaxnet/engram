@@ -604,21 +604,42 @@ class ZepMemoryClient:
             messages=messages,
         )
 
-    async def list_sessions(self, user_id: Optional[str] = None, limit: int = 20, offset: int = 0) -> list[dict]:
+    async def list_sessions(
+        self, 
+        user_id: Optional[str] = None, 
+        project_id: Optional[str] = None,
+        limit: int = 20, 
+        offset: int = 0
+    ) -> list[dict]:
         """
-        List conversation sessions (episodes).
+        List conversation sessions (episodes) with user and project filtering.
+        
+        Args:
+            user_id: Filter sessions by user (required for user isolation)
+            project_id: Optional project filter (for project-based access control)
+            limit: Maximum number of sessions to return
+            offset: Pagination offset
         """
         try:
             result = await self._request("GET", "/api/v1/sessions")
             if result and isinstance(result, list):
                 sessions = result
                 
-                logger.info(f"Fetched {len(sessions)} sessions from Zep. Filtering for user: {user_id}")
+                logger.info(f"Fetched {len(sessions)} sessions from Zep. Filtering for user: {user_id}, project: {project_id}")
 
                 if user_id:
                     # Include sessions that match user_id OR have no user_id (legacy/ingested docs)
                     sessions = [s for s in sessions if s.get("user_id") == user_id or s.get("user_id") is None]
                     logger.info(f"After user filter: {len(sessions)} sessions remain")
+                
+                # Filter by project_id if specified
+                if project_id:
+                    sessions = [
+                        s for s in sessions 
+                        if s.get("metadata", {}).get("project_id") == project_id 
+                        or s.get("metadata", {}).get("project_id") is None  # Include legacy sessions without project_id
+                    ]
+                    logger.info(f"After project filter: {len(sessions)} sessions remain")
 
                 # Sort by created_at descending (newest first)
                 sessions.sort(key=lambda x: x.get("created_at", ""), reverse=True)
@@ -661,6 +682,19 @@ class ZepMemoryClient:
             session_metadata["email"] = context.security.email
         if context.security.display_name:
             session_metadata["display_name"] = context.security.display_name
+        
+        # Include agent_id and project_id for agent isolation and project-based access
+        if context.episodic.metadata:
+            agent_id = context.episodic.metadata.get("agent_id")
+            if agent_id:
+                session_metadata["agent_id"] = agent_id
+            project_id = context.episodic.metadata.get("project_id")
+            if project_id:
+                session_metadata["project_id"] = project_id
+        
+        # Include project_id from security context if available
+        if context.security.project_id:
+            session_metadata["project_id"] = context.security.project_id
         
         await self.get_or_create_session(
             session_id=session_id,
@@ -749,6 +783,12 @@ class ZepMemoryClient:
         if agent_id:
             session_metadata["agent_id"] = agent_id
         
+        # Include project_id for project-based access control
+        if context.security.project_id:
+            session_metadata["project_id"] = context.security.project_id
+        elif context.episodic.metadata and context.episodic.metadata.get("project_id"):
+            session_metadata["project_id"] = context.episodic.metadata.get("project_id")
+        
         # Set summary if available, otherwise generate a simple one
         if context.episodic.summary:
             session_metadata["summary"] = context.episodic.summary
@@ -800,9 +840,14 @@ async def get_facts(user_id: str, query: str = None, limit: int = 20) -> list[Gr
     return await memory_client.get_facts(user_id, query, limit)
 
 
-async def list_episodes(user_id: Optional[str] = None, limit: int = 20, offset: int = 0) -> list[dict]:
-    """List conversation episodes"""
-    return await memory_client.list_sessions(user_id, limit, offset)
+async def list_episodes(
+    user_id: Optional[str] = None, 
+    project_id: Optional[str] = None,
+    limit: int = 20, 
+    offset: int = 0
+) -> list[dict]:
+    """List conversation episodes with user and project filtering"""
+    return await memory_client.list_sessions(user_id, project_id, limit, offset)
 
 
 async def get_session_transcript(session_id: str) -> list[dict]:

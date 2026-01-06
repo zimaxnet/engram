@@ -89,10 +89,15 @@
   overflow: hidden;
 }
 
-.avatar-image img {
+.avatar-image img,
+.avatar-image video {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.avatar-image video.avatar-video {
+  background: var(--color-bg);
 }
 
 .avatar-placeholder {

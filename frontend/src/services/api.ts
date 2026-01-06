@@ -113,6 +113,7 @@ export class ApiClient {
       tokens_used?: number
       latency_ms?: number
       session_id: string
+      avatar_video_url?: string  // Foundry avatar video URL (if available)
     }>('/chat', {
       method: 'POST',
       body: JSON.stringify({

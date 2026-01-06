@@ -28,6 +28,7 @@ interface Message {
   agentName?: string
   timestamp: Date
   tokensUsed?: number
+  avatarVideoUrl?: string  // Foundry avatar video URL (if available)
 }
 
 // Create initial welcome message
@@ -196,7 +197,8 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
         agentId: response.agent_id,
         agentName: response.agent_name,
         timestamp: new Date(response.timestamp),
-        tokensUsed: response.tokens_used
+        tokensUsed: response.tokens_used,
+        avatarVideoUrl: response.avatar_video_url,  // Include avatar video URL if available
       }
 
       setMessages(prev => [...prev, assistantMessage])
@@ -264,13 +266,43 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
           >
             {message.role === 'assistant' && (
               <div className="message-avatar">
-                <img
-                  src={agent.avatarUrl}
-                  alt={agent.name}
-                  onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-                    (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%233b82f6"/></svg>'
-                  }}
-                />
+                {message.avatarVideoUrl ? (
+                  // Show Foundry avatar video if available
+                  <video
+                    src={message.avatarVideoUrl}
+                    autoPlay
+                    loop={false}
+                    muted={false}
+                    playsInline
+                    className="avatar-video"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      borderRadius: '50%',
+                    }}
+                    onError={(e) => {
+                      // Fallback to static image if video fails
+                      const target = e.target as HTMLVideoElement;
+                      const img = document.createElement('img');
+                      img.src = agent.avatarUrl;
+                      img.alt = agent.name;
+                      img.onerror = () => {
+                        img.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%233b82f6"/></svg>';
+                      };
+                      target.parentElement?.replaceChild(img, target);
+                    }}
+                  />
+                ) : (
+                  // Fallback to static image
+                  <img
+                    src={agent.avatarUrl}
+                    alt={agent.name}
+                    onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                      (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%233b82f6"/></svg>'
+                    }}
+                  />
+                )}
               </div>
             )}
             <div className="message-content">

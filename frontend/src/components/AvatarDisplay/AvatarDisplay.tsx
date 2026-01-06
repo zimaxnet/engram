@@ -52,6 +52,7 @@ interface AvatarDisplayProps {
   visemes?: Viseme[];
   showName?: boolean;
   size?: 'sm' | 'md' | 'lg';
+  avatarVideoUrl?: string;  // Foundry avatar video URL (if available)
 }
 
 const AGENT_INFO = {
@@ -85,6 +86,7 @@ export default function AvatarDisplay({
   visemes = [],
   showName = true,
   size = 'md',
+  avatarVideoUrl,
 }: AvatarDisplayProps) {
   const [mouthShape, setMouthShape] = useState(VISEME_MOUTH_SHAPES[0]);
   const [imageError, setImageError] = useState(false);
@@ -183,9 +185,23 @@ export default function AvatarDisplay({
           </>
         )}
 
-        {/* Avatar Image/Placeholder */}
+        {/* Avatar Image/Video/Placeholder */}
         <div className="avatar-image">
-          {agent.imageUrl && !imageError ? (
+          {avatarVideoUrl ? (
+            // Show Foundry avatar video if available
+            <video
+              src={avatarVideoUrl}
+              autoPlay
+              loop={false}
+              muted={false}
+              playsInline
+              className="avatar-video"
+              onError={() => {
+                // Fallback to static image if video fails
+                setImageError(true);
+              }}
+            />
+          ) : agent.imageUrl && !imageError ? (
             <img
               src={agent.imageUrl}
               alt={agent.name}

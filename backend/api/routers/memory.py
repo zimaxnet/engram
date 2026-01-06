@@ -526,7 +526,12 @@ async def list_episodes(
     try:
         from backend.memory.client import list_episodes as client_list_episodes
 
-        sessions = await client_list_episodes(user_id=user.user_id, limit=limit, offset=offset)
+        sessions = await client_list_episodes(
+            user_id=user.user_id, 
+            project_id=user.project_id,
+            limit=limit, 
+            offset=offset
+        )
 
         episodes = []
         for s in sessions:

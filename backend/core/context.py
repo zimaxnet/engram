@@ -48,6 +48,7 @@ class SecurityContext(BaseModel):
     session_id: str = Field(default_factory=lambda: str(uuid4()), description="Current session ID")
     roles: list[Role] = Field(default_factory=list, description="User's assigned roles")
     scopes: list[str] = Field(default_factory=list, description="Fine-grained permission scopes")
+    project_id: Optional[str] = Field(None, description="Current project ID for project-based access control")
 
     # Entra ID token metadata
     token_expiry: Optional[datetime] = Field(None, description="Token expiration time")
@@ -66,11 +67,36 @@ class SecurityContext(BaseModel):
 
     def get_memory_filter(self) -> dict:
         """Generate filter for memory queries based on permissions"""
-        return {
+        filter_dict = {
             "tenant_id": self.tenant_id,
             "user_id": self.user_id,
             "scopes": self.scopes,
         }
+        # Add project_id if specified (enables project-based access)
+        if self.project_id:
+            filter_dict["project_id"] = self.project_id
+        return filter_dict
+    
+    def can_access_project(self, project_id: str) -> bool:
+        """
+        Check if user can access a specific project.
+        
+        Rules:
+        - Admins can access any project
+        - Users can access their own project (project_id matches)
+        - Users can access projects they have scope for (project-{id}:read or project-{id}:write)
+        """
+        if Role.ADMIN in self.roles:
+            return True
+        
+        # Can access own project
+        if self.project_id == project_id:
+            return True
+        
+        # Check for project scope
+        project_scope_read = f"project-{project_id}:read"
+        project_scope_write = f"project-{project_id}:write"
+        return project_scope_read in self.scopes or project_scope_write in self.scopes
 
 
 # =============================================================================

@@ -94,6 +94,19 @@ param registryPassword string
 @secure()
 param zepApiKey string = ''
 
+@description('Azure AI Foundry Agent Service endpoint.')
+param azureFoundryAgentEndpoint string = ''
+
+@description('Azure AI Foundry Agent Service project name.')
+param azureFoundryAgentProject string = ''
+
+@description('Azure AI Foundry Agent Service API key (optional, uses Managed Identity if not provided).')
+@secure()
+param azureFoundryAgentKey string = ''
+
+@description('Elena Foundry Agent ID.')
+param elenaFoundryAgentId string = ''
+
 // Enhanced tagging schema for enterprise data-plane split
 var baseTags = {
   Project: 'Engram'
@@ -363,7 +376,7 @@ module keyVaultModule 'modules/keyvault.bicep' = {
   }
 }
 
-// Seed required secrets (postgres, zep, azure-ai)
+// Seed required secrets (postgres, zep, azure-ai, foundry)
 module keyVaultSecrets 'modules/keyvault-secrets.bicep' = {
   name: 'keyVaultSecrets'
   params: {
@@ -371,6 +384,10 @@ module keyVaultSecrets 'modules/keyvault-secrets.bicep' = {
     postgresPassword: postgresPassword
     zepApiKey: zepApiKey
     azureAiKey: azureAiKey
+    azureFoundryAgentEndpoint: azureFoundryAgentEndpoint
+    azureFoundryAgentProject: azureFoundryAgentProject
+    azureFoundryAgentKey: azureFoundryAgentKey
+    elenaFoundryAgentId: elenaFoundryAgentId
   }
 }
 

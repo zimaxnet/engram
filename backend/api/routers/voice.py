@@ -263,6 +263,9 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
             ServerVad, ServerEventType, AzureStandardVoice
         )
         
+        # Check if avatar should be enabled (for Elena)
+        enable_avatar = session["agent_id"] == "elena"
+        
         # Get agent configuration
         agent_config = session["voice_config"]
         
@@ -307,18 +310,36 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
             model=voicelive_service.model,
         ) as voicelive_connection:
             
-            # Configure session
-            session_config = RequestSession(
-                modalities=[Modality.TEXT, Modality.AUDIO],
-                instructions=enriched_instructions,
-                input_audio_format=InputAudioFormat.PCM16,
-                output_audio_format=OutputAudioFormat.PCM16,
-                voice=AzureStandardVoice(name=agent_config.voice_name),
-                turn_detection=ServerVad(
+            # Configure session with avatar support for Elena
+            modalities = [Modality.TEXT, Modality.AUDIO]
+            session_kwargs = {
+                "instructions": enriched_instructions,
+                "input_audio_format": InputAudioFormat.PCM16,
+                "output_audio_format": OutputAudioFormat.PCM16,
+                "voice": AzureStandardVoice(name=agent_config.voice_name),
+                "turn_detection": ServerVad(
                     threshold=0.6,
                     prefix_padding_ms=300,
                     silence_duration_ms=800,
                 ),
+            }
+            
+            # Add avatar support for Elena
+            if enable_avatar:
+                modalities.append(Modality.VIDEO)
+                # Avatar configuration - match Elena's Foundry avatar settings
+                session_kwargs["avatar"] = {
+                    "avatar_id": "en-US-JennyNeural",  # Match Elena's voice
+                    "style": "professional",
+                    "emotion": "neutral",
+                    "resolution": "1080p",
+                    "background": "transparent",
+                }
+                logger.info(f"VoiceLive avatar enabled for {session['agent_id']}")
+            
+            session_config = RequestSession(
+                modalities=modalities,
+                **session_kwargs
             )
             await voicelive_connection.session.update(session=session_config)
             
@@ -429,6 +450,28 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                                 "data": audio_base64,
                                 "format": "audio/pcm16",
                             })
+                        
+                        # Handle avatar video events (if VIDEO modality is enabled)
+                        elif hasattr(ServerEventType, 'RESPONSE_VIDEO_DELTA') and event.type == getattr(ServerEventType, 'RESPONSE_VIDEO_DELTA'):
+                            # Send avatar video chunk to client
+                            video_data = getattr(event, "delta", None) or getattr(event, "data", None)
+                            if video_data:
+                                video_base64 = base64.b64encode(video_data).decode("utf-8")
+                                await websocket.send_json({
+                                    "type": "avatar_video",
+                                    "data": video_base64,
+                                    "format": "video/mp4",
+                                })
+                        
+                        elif hasattr(ServerEventType, 'RESPONSE_VIDEO_DONE') and event.type == getattr(ServerEventType, 'RESPONSE_VIDEO_DONE'):
+                            # Avatar video complete - send final video URL if available
+                            video_url = getattr(event, "url", None) or getattr(event, "video_url", None)
+                            if video_url:
+                                await websocket.send_json({
+                                    "type": "avatar_video_url",
+                                    "url": video_url,
+                                })
+                                logger.info(f"Avatar video URL received: {video_url}")
                         
                         elif event.type == ServerEventType.RESPONSE_AUDIO_TRANSCRIPT_DELTA:
                             delta = getattr(event, "delta", "") or ""

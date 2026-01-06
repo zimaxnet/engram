@@ -165,6 +165,26 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
           keyVaultUrl: '${keyVaultUri}secrets/github-token'
           identity: identityResourceId
         }
+        {
+          name: 'azure-foundry-agent-endpoint'
+          keyVaultUrl: '${keyVaultUri}secrets/azure-foundry-agent-endpoint'
+          identity: identityResourceId
+        }
+        {
+          name: 'azure-foundry-agent-project'
+          keyVaultUrl: '${keyVaultUri}secrets/azure-foundry-agent-project'
+          identity: identityResourceId
+        }
+        {
+          name: 'azure-foundry-agent-key'
+          keyVaultUrl: '${keyVaultUri}secrets/azure-foundry-agent-key'
+          identity: identityResourceId
+        }
+        {
+          name: 'elena-foundry-agent-id'
+          keyVaultUrl: '${keyVaultUri}secrets/elena-foundry-agent-id'
+          identity: identityResourceId
+        }
       ]
       registries: [
         {
@@ -252,6 +272,27 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'AZURE_AI_KEY'
               secretRef: 'azure-ai-key'
+            }
+            // Azure AI Foundry Agent Service
+            {
+              name: 'AZURE_FOUNDRY_AGENT_ENDPOINT'
+              secretRef: 'azure-foundry-agent-endpoint'
+            }
+            {
+              name: 'AZURE_FOUNDRY_AGENT_PROJECT'
+              secretRef: 'azure-foundry-agent-project'
+            }
+            {
+              name: 'AZURE_FOUNDRY_AGENT_KEY'
+              secretRef: 'azure-foundry-agent-key'
+            }
+            {
+              name: 'AZURE_FOUNDRY_AGENT_API_VERSION'
+              value: '2024-10-01-preview'
+            }
+            {
+              name: 'ELENA_FOUNDRY_AGENT_ID'
+              secretRef: 'elena-foundry-agent-id'
             }
             {
               name: 'AZURE_VOICELIVE_ENDPOINT'

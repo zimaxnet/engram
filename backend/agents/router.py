@@ -9,15 +9,18 @@ Routes requests to the appropriate agent (Elena or Marcus) based on:
 Also handles agent handoffs when one agent recommends the other.
 """
 
+import logging
 import re
 from typing import Literal, Optional
 
-from backend.core import EnterpriseContext
+from backend.core import EnterpriseContext, get_settings
 
 from .base import BaseAgent
 from .elena import elena
 from .marcus import marcus
 from .sage import sage
+
+logger = logging.getLogger(__name__)
 
 
 AgentId = Literal["elena", "marcus", "sage"]
@@ -29,8 +32,23 @@ class AgentRouter:
     """
 
     def __init__(self):
+        settings = get_settings()
+        
+        # Initialize agents - use Foundry Elena if enabled
+        elena_agent = None
+        if settings.use_foundry_elena and settings.elena_foundry_agent_id:
+            try:
+                from .foundry_elena_wrapper import FoundryElenaWrapper
+                elena_agent = FoundryElenaWrapper(settings.elena_foundry_agent_id)
+                logger.info(f"Using Foundry Elena agent: {settings.elena_foundry_agent_id}")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Foundry Elena, falling back to LangGraph: {e}")
+                elena_agent = elena
+        else:
+            elena_agent = elena
+        
         self.agents: dict[AgentId, BaseAgent] = {
-            "elena": elena,
+            "elena": elena_agent,
             "marcus": marcus,
             "sage": sage,
         }
@@ -175,7 +193,7 @@ class AgentRouter:
 
     async def route_and_execute(
         self, query: str, context: EnterpriseContext, agent_id: Optional[AgentId] = None
-    ) -> tuple[str, EnterpriseContext, AgentId]:
+    ) -> tuple[str, EnterpriseContext, AgentId, Optional[str]]:
         """
         Route query to appropriate agent and execute.
 
@@ -185,7 +203,7 @@ class AgentRouter:
             agent_id: Explicit agent selection (optional)
 
         Returns:
-            Tuple of (response, updated_context, agent_id_used)
+            Tuple of (response, updated_context, agent_id_used, avatar_video_url)
         """
         # Determine which agent to use
         if agent_id:
@@ -199,7 +217,13 @@ class AgentRouter:
 
         # Get agent and execute
         agent = self.get_agent(selected_agent_id)
-        response, updated_context = await agent.run(query, context)
+        
+        # Handle Foundry Elena wrapper which returns avatar_video_url
+        avatar_video_url = None
+        if hasattr(agent, 'foundry_agent_id'):  # FoundryElenaWrapper
+            response, updated_context, avatar_video_url = await agent.run(query, context)
+        else:
+            response, updated_context = await agent.run(query, context)
 
         # Check for handoff suggestion
         handoff_target = self.detect_handoff(response)
@@ -208,7 +232,7 @@ class AgentRouter:
             target_agent = self.get_agent(handoff_target)
             response += f"\n\n*[{target_agent.agent_name} is available if you'd like their perspective.]*"
 
-        return response, updated_context, selected_agent_id
+        return response, updated_context, selected_agent_id, avatar_video_url
 
     def get_agent_info(self, agent_id: AgentId) -> dict:
         """Get information about an agent for the UI"""

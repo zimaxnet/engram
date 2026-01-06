@@ -185,6 +185,33 @@ class Settings(BaseSettings):
     ms_graph_client_secret: Optional[str] = Field(None, alias="MS_GRAPH_CLIENT_SECRET")
     ms_graph_user_email: str = Field("elena@zimax.net", alias="MS_GRAPH_USER_EMAIL")
 
+    # ==========================================================================
+    # Azure AI Foundry Agent Service (Optional - POC)
+    # ==========================================================================
+    # Azure AI Foundry Agent Service endpoint (e.g., https://<account>.services.ai.azure.com)
+    azure_foundry_agent_endpoint: Optional[str] = Field(None, alias="AZURE_FOUNDRY_AGENT_ENDPOINT")
+    # Foundry project name for Agent Service
+    azure_foundry_agent_project: Optional[str] = Field(None, alias="AZURE_FOUNDRY_AGENT_PROJECT")
+    # Optional API key (falls back to Managed Identity if not provided)
+    azure_foundry_agent_key: Optional[str] = Field(None, alias="AZURE_FOUNDRY_AGENT_KEY")
+    # API version for Agent Service REST API
+    azure_foundry_agent_api_version: str = Field("2025-11-15-preview", alias="AZURE_FOUNDRY_AGENT_API_VERSION")
+    
+    # Feature flags - all disabled by default (zero production impact)
+    # Enable Foundry thread management (replaces in-memory sessions)
+    use_foundry_threads: bool = Field(False, alias="USE_FOUNDRY_THREADS")
+    # Enable Foundry file storage (additive, doesn't replace existing ingestion)
+    use_foundry_files: bool = Field(False, alias="USE_FOUNDRY_FILES")
+    # Enable Foundry vector stores (not recommended initially - keep Zep)
+    use_foundry_vectors: bool = Field(False, alias="USE_FOUNDRY_VECTORS")
+    # Enable Foundry tool registration (optional observability only)
+    use_foundry_tools: bool = Field(False, alias="USE_FOUNDRY_TOOLS")
+    
+    # Foundry Agent IDs (for agents created in Foundry)
+    elena_foundry_agent_id: Optional[str] = Field(None, alias="ELENA_FOUNDRY_AGENT_ID")
+    # Enable Foundry Elena (uses Foundry agent runtime instead of LangGraph)
+    use_foundry_elena: bool = Field(False, alias="USE_FOUNDRY_ELENA")
+
     model_config = ConfigDict(
         env_file=[".env", "../.env"],
         env_file_encoding="utf-8",
@@ -232,6 +259,11 @@ class KeyVaultSettings:
             "azure-client-id": "azure_client_id",
             "azure-tenant-id": "azure_tenant_id",
             "appinsights-connection-string": "appinsights_connection_string",
+            # Foundry Agent Service secrets
+            "azure-foundry-agent-endpoint": "azure_foundry_agent_endpoint",
+            "azure-foundry-agent-project": "azure_foundry_agent_project",
+            "azure-foundry-agent-key": "azure_foundry_agent_key",
+            "elena-foundry-agent-id": "elena_foundry_agent_id",
         }
 
         for secret_name, setting_attr in secret_mappings.items():
