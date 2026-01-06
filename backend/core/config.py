@@ -206,11 +206,16 @@ class Settings(BaseSettings):
     use_foundry_vectors: bool = Field(False, alias="USE_FOUNDRY_VECTORS")
     # Enable Foundry tool registration (optional observability only)
     use_foundry_tools: bool = Field(False, alias="USE_FOUNDRY_TOOLS")
+    # Enable Foundry IQ for enterprise document search (hybrid with Engram tri-search)
+    use_foundry_iq: bool = Field(False, alias="USE_FOUNDRY_IQ")
     
     # Foundry Agent IDs (for agents created in Foundry)
     elena_foundry_agent_id: Optional[str] = Field(None, alias="ELENA_FOUNDRY_AGENT_ID")
     # Enable Foundry Elena (uses Foundry agent runtime instead of LangGraph)
     use_foundry_elena: bool = Field(False, alias="USE_FOUNDRY_ELENA")
+    
+    # Foundry IQ Configuration
+    foundry_iq_knowledge_base_id: Optional[str] = Field(None, alias="FOUNDRY_IQ_KB_ID")
 
     model_config = ConfigDict(
         env_file=[".env", "../.env"],

@@ -300,18 +300,21 @@ class ZepMemoryClient:
         """
         Search memory for relevant content using HYBRID SEARCH.
         
-        Combines three search methods with Reciprocal Rank Fusion (RRF):
+        Combines multiple search methods with Reciprocal Rank Fusion (RRF):
         1. **Semantic Search** (pgvector) - Embedding cosine similarity
         2. **Keyword Search** (Zep) - Full-text matching in session content
         3. **Metadata Match** - Title, topics, summary matching
+        4. **Foundry IQ** (optional) - Enterprise document search via Azure AI Search
         
         Enhanced to prioritize:
         - Wiki pages (doc-wiki-*)
         - Canonical knowledge (doc-*, sess-*)
         - High semantic similarity scores
+        - Enterprise documents (when Foundry IQ enabled)
         """
         results = []
         semantic_results = []
+        foundry_iq_results = []
 
         try:
             # ---------- PHASE 1: Semantic Search via pgvector ----------
@@ -459,62 +462,119 @@ class ZepMemoryClient:
                                 "source_type": "wiki_content" if is_wiki else "content",
                             })
             
-            # ---------- PHASE 3: Reciprocal Rank Fusion (RRF) ----------
-            # Combine semantic and keyword results using RRF scoring
+            # ---------- PHASE 3: Foundry IQ Search (if enabled) ----------
+            from backend.core import get_settings
+            from backend.agents.foundry_iq_client import get_foundry_iq_client
+            
+            settings = get_settings()
+            if settings.use_foundry_iq:
+                foundry_iq_client = get_foundry_iq_client()
+                if foundry_iq_client:
+                    try:
+                        foundry_iq_results = await foundry_iq_client.search(
+                            query=query,
+                            limit=limit * 2,  # Get more for fusion
+                        )
+                        logger.info(f"Foundry IQ search returned {len(foundry_iq_results)} results")
+                    except Exception as e:
+                        logger.warning(f"Foundry IQ search failed (non-blocking): {e}")
+                        # Continue with Engram-only search
+            
+            # ---------- PHASE 4: Reciprocal Rank Fusion (RRF) ----------
+            # Combine semantic, keyword, and Foundry IQ results using RRF scoring
             # RRF formula: score = sum(1 / (k + rank)) where k = 60 (standard constant)
             
-            rrf_scores = {}  # session_id -> {score: float, result: dict}
+            rrf_scores = {}  # result_id -> {score: float, result: dict}
             k = 60  # RRF constant
             
             # Score semantic results (ranked by embedding similarity)
             for rank, r in enumerate(semantic_results, start=1):
-                sid = r.get("session_id", "")
-                if sid:
-                    rrf_score = 1.0 / (k + rank)
-                    if sid not in rrf_scores or r.get("score", 0) > rrf_scores[sid].get("semantic_score", 0):
-                        rrf_scores[sid] = {
-                            "semantic_rank": rank,
-                            "semantic_score": r.get("score", 0),
-                            "rrf_score": rrf_score,
-                            "result": r,
-                        }
+                sid = r.get("session_id", "") or f"semantic-{rank}"
+                rrf_score = 1.0 / (k + rank)
+                if sid not in rrf_scores or r.get("score", 0) > rrf_scores[sid].get("semantic_score", 0):
+                    rrf_scores[sid] = {
+                        "semantic_rank": rank,
+                        "semantic_score": r.get("score", 0),
+                        "rrf_score": rrf_score,
+                        "result": r,
+                    }
             
             # Score keyword results (ranked by keyword matching)
             keyword_results = results  # Results from keyword search above
             for rank, r in enumerate(keyword_results, start=1):
-                sid = r.get("session_id", "")
-                if sid:
-                    rrf_score = 1.0 / (k + rank)
-                    if sid in rrf_scores:
-                        # Fusion: add scores from both sources
-                        rrf_scores[sid]["keyword_rank"] = rank
-                        rrf_scores[sid]["keyword_score"] = r.get("score", 0)
-                        rrf_scores[sid]["rrf_score"] += rrf_score
-                        # Prefer keyword result if it has more content
-                        if len(r.get("content", "")) > len(rrf_scores[sid]["result"].get("content", "")):
-                            rrf_scores[sid]["result"] = r
-                    else:
-                        rrf_scores[sid] = {
-                            "keyword_rank": rank,
-                            "keyword_score": r.get("score", 0),
-                            "rrf_score": rrf_score,
-                            "result": r,
-                        }
+                sid = r.get("session_id", "") or f"keyword-{rank}"
+                rrf_score = 1.0 / (k + rank)
+                if sid in rrf_scores:
+                    # Fusion: add scores from both sources
+                    rrf_scores[sid]["keyword_rank"] = rank
+                    rrf_scores[sid]["keyword_score"] = r.get("score", 0)
+                    rrf_scores[sid]["rrf_score"] += rrf_score
+                    # Prefer keyword result if it has more content
+                    if len(r.get("content", "")) > len(rrf_scores[sid]["result"].get("content", "")):
+                        rrf_scores[sid]["result"] = r
+                else:
+                    rrf_scores[sid] = {
+                        "keyword_rank": rank,
+                        "keyword_score": r.get("score", 0),
+                        "rrf_score": rrf_score,
+                        "result": r,
+                    }
+            
+            # Score Foundry IQ results (ranked by Azure AI Search relevance)
+            for rank, r in enumerate(foundry_iq_results, start=1):
+                # Foundry IQ results use source URL as unique identifier
+                result_id = r.get("source", "") or f"foundry-iq-{rank}"
+                rrf_score = 1.0 / (k + rank)
+                if result_id in rrf_scores:
+                    # Fusion: add scores from multiple sources
+                    rrf_scores[result_id]["foundry_iq_rank"] = rank
+                    rrf_scores[result_id]["foundry_iq_score"] = r.get("score", 0)
+                    rrf_scores[result_id]["rrf_score"] += rrf_score
+                    # Prefer Foundry IQ result if it has higher score
+                    if r.get("score", 0) > rrf_scores[result_id].get("foundry_iq_score", 0):
+                        rrf_scores[result_id]["result"] = r
+                else:
+                    rrf_scores[result_id] = {
+                        "foundry_iq_rank": rank,
+                        "foundry_iq_score": r.get("score", 0),
+                        "rrf_score": rrf_score,
+                        "result": r,
+                    }
             
             # Build final results with RRF scores
             final_results = []
-            for sid, data in rrf_scores.items():
+            for result_id, data in rrf_scores.items():
                 result = data["result"].copy()
                 result["score"] = data["rrf_score"]
-                result["fusion_source"] = "hybrid" if "semantic_rank" in data and "keyword_rank" in data else (
-                    "semantic" if "semantic_rank" in data else "keyword"
-                )
+                
+                # Determine fusion source
+                sources = []
+                if "semantic_rank" in data:
+                    sources.append("semantic")
+                if "keyword_rank" in data:
+                    sources.append("keyword")
+                if "foundry_iq_rank" in data:
+                    sources.append("foundry-iq")
+                
+                result["fusion_source"] = "+".join(sources) if len(sources) > 1 else (sources[0] if sources else "unknown")
                 final_results.append(result)
             
             # Sort by RRF score descending
             final_results.sort(key=lambda x: x["score"], reverse=True)
             
-            logger.info(f"Hybrid search found {len(final_results)} results ({len(semantic_results)} semantic, {len(keyword_results)} keyword) for: {query[:50]}...")
+            # Log search summary
+            source_counts = {
+                "semantic": len(semantic_results),
+                "keyword": len(keyword_results),
+                "foundry_iq": len(foundry_iq_results),
+            }
+            logger.info(
+                f"Hybrid search found {len(final_results)} results "
+                f"(semantic: {source_counts['semantic']}, "
+                f"keyword: {source_counts['keyword']}, "
+                f"foundry_iq: {source_counts['foundry_iq']}) "
+                f"for: {query[:50]}..."
+            )
             return final_results[:limit]
 
         except Exception as e:
