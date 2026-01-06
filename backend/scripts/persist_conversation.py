@@ -27,22 +27,11 @@ from pathlib import Path
 # Default Antigravity brain directory
 DEFAULT_BRAIN_DIR = Path.home() / ".gemini" / "antigravity" / "brain"
 
-# Environment presets
-ENVIRONMENT_PRESETS = {
-    "local": {"ZEP_API_URL": "http://localhost:8000"},
-    "azure": {"ZEP_API_URL": "https://zep.engram.work"},
-    "staging": {"ZEP_API_URL": "https://zep-staging.engram.work"},
-}
-
-
 def apply_environment(env_name: str) -> str:
     """Apply environment preset and return the Zep URL."""
-    if env_name not in ENVIRONMENT_PRESETS:
-        return ENVIRONMENT_PRESETS["azure"]["ZEP_API_URL"]
-    
-    zep_url = ENVIRONMENT_PRESETS[env_name]["ZEP_API_URL"]
-    os.environ["ZEP_API_URL"] = zep_url
-    return zep_url
+    from backend.memory.environments import apply_environment
+
+    return apply_environment(env_name, strict=False)
 
 
 def find_conversation_artifacts(brain_dir: Path, conversation_id: str = None) -> list[dict]:

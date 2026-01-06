@@ -155,6 +155,20 @@ For urgent/critical fixes:
 
 **When in doubt: Batch, Review, Commit Once, Wait.**
 
+## Release Tags (Elements)
+
+We are adopting a lightweight tag scheme for the “16 elements” program.
+
+- **Immutable milestone tag**: `element-<symbol>-vX.Y` (never move)
+- **Moving pointer tag**: `element-<symbol>-latest` (can be force-updated)
+
+Current:
+
+- `element-gk-v1.0` — first shipped Gk milestone
+- `element-gk-latest` — should always point at the most recent Gk iteration
+
+If you need to “rename” a tag, you must delete and recreate it (local + remote).
+
 ## 🤖 AI Agent Context & Capabilities
 
 This project is equipped with **Engram Engine** capabilities.

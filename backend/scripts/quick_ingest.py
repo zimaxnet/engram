@@ -28,34 +28,11 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Environment presets (shared with query_memory.py)
-ENVIRONMENT_PRESETS = {
-    "local": {
-        "ZEP_API_URL": "http://localhost:8000",
-        "description": "Local development Zep",
-    },
-    "azure": {
-        "ZEP_API_URL": "https://zep.engram.work",
-        "description": "Azure Container Apps (Production)",
-    },
-    "staging": {
-        "ZEP_API_URL": "https://zep-staging.engram.work",
-        "description": "Azure Staging Environment",
-    },
-}
-
-
 def apply_environment(env_name: str) -> str:
     """Apply environment preset and return the Zep URL."""
-    if env_name not in ENVIRONMENT_PRESETS:
-        print(f"❌ Unknown environment: {env_name}")
-        print(f"   Available: {', '.join(ENVIRONMENT_PRESETS.keys())}")
-        sys.exit(1)
-    
-    preset = ENVIRONMENT_PRESETS[env_name]
-    zep_url = preset["ZEP_API_URL"]
-    os.environ["ZEP_API_URL"] = zep_url
-    return zep_url
+    from backend.memory.environments import apply_environment
+
+    return apply_environment(env_name, strict=True)
 
 
 async def quick_ingest(
@@ -97,7 +74,7 @@ async def quick_ingest(
         )
         
         # Create session with metadata
-        await client.get_or_create_session(
+        session = await client.get_or_create_session(
             session_id=session_id,
             user_id=user_id,
             metadata={
@@ -107,8 +84,13 @@ async def quick_ingest(
                 "summary": content[:200] + "..." if len(content) > 200 else content,
                 "source": "quick_ingest",
                 "ingested_at": datetime.now(timezone.utc).isoformat(),
-            }
+            },
         )
+        if isinstance(session, dict) and session.get("_offline") is True:
+            print("❌ Failed to create session in Zep (write requires server credentials)")
+            print("   Tip: use https://engram.work/api/v1/memory/enrich (server-side write),")
+            print("   or configure a valid ZEP_API_KEY for direct Zep writes.")
+            sys.exit(1)
         
         # Add content as a message
         messages = [

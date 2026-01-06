@@ -49,6 +49,9 @@ python -m backend.scripts.query_memory --list-envs
 ## Example Queries
 
 ```bash
+# Find the 16-elements release tag convention
+python -m backend.scripts.query_memory --env azure -q "element-tagging element-gk-latest"
+
 # Find VoiceLive configuration details
 python -m backend.scripts.query_memory --env azure -q "voice live websocket config"
 
