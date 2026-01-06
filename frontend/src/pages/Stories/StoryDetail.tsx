@@ -55,6 +55,7 @@ export function StoryDetail() {
     const [copied, setCopied] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Generate shareable URL
@@ -149,10 +150,6 @@ export function StoryDetail() {
             <div className="story-error">Story not found</div>
         </section>
     );
-
-    const [isModalOpen, setIsModalOpen] = useState(false);
-
-    // ... (existing code)
 
     const toggleModal = () => setIsModalOpen(!isModalOpen);
 
