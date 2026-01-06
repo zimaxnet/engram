@@ -43,21 +43,7 @@ from typing import Optional
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger("query_memory")
 
-# Environment presets
-ENVIRONMENT_PRESETS = {
-    "local": {
-        "ZEP_API_URL": "http://localhost:8000",
-        "description": "Local development Zep",
-    },
-    "azure": {
-        "ZEP_API_URL": "https://zep.engram.work",
-        "description": "Azure Container Apps (Production)",
-    },
-    "staging": {
-        "ZEP_API_URL": "https://zep-staging.engram.work",
-        "description": "Azure Staging Environment",
-    },
-}
+from backend.memory.environments import ENVIRONMENT_PRESETS
 
 
 def apply_environment(env_name: str) -> str:

@@ -1,0 +1,297 @@
+{
+  "title": "Gk (Graph Knowledge) — Tri-Search + Provenance",
+  "subtitle": "Keyword + Vector + Gk fused by RRF; Fc + Environments make provenance inspectable",
+  "version": "1.0",
+  "theme": "dark",
+  "layout": "flow",
+  "diagram_type": "architecture",
+  "legend": {
+    "node_types": {
+      "trigger": "Entry point",
+      "ui": "User-facing surface",
+      "api": "Backend API",
+      "orchestrator": "Fusion / routing logic",
+      "retriever": "Retriever layer",
+      "store": "Storage system",
+      "graph": "Graph knowledge system",
+      "observability": "Transparency surface",
+      "data": "Artifact / trace"
+    },
+    "edge_labels": {
+      "Fc": "Function call (API endpoint)",
+      "retrieves": "Retrieval call",
+      "fuses": "Rank fusion",
+      "persists": "Persistence/write path",
+      "provenance": "Provenance link",
+      "enriches": "Graph enrichment edges"
+    }
+  },
+  "nodes": [
+    {
+      "id": "user",
+      "label": "User",
+      "type": "trigger",
+      "icon": "user",
+      "position": { "x": 120, "y": 80 },
+      "description": "Human operator interacting with Engram UI"
+    },
+    {
+      "id": "ui_graph",
+      "label": "UI: /memory/graph (Gk)",
+      "type": "ui",
+      "icon": "network",
+      "position": { "x": 320, "y": 60 },
+      "description": "Graph visualization + filters + Fc + environments"
+    },
+    {
+      "id": "ui_search",
+      "label": "UI: /memory/search",
+      "type": "ui",
+      "icon": "search",
+      "position": { "x": 320, "y": 140 },
+      "description": "Tri-search result list with provenance intent"
+    },
+    {
+      "id": "api_memory",
+      "label": "API: Memory Router",
+      "type": "api",
+      "icon": "server",
+      "position": { "x": 560, "y": 100 },
+      "description": "GET /api/v1/memory/graph; POST /api/v1/memory/search; GET /api/v1/memory/environments"
+    },
+    {
+      "id": "rrf",
+      "label": "RRF Fusion",
+      "type": "orchestrator",
+      "icon": "git-branch",
+      "position": { "x": 800, "y": 140 },
+      "description": "Reciprocal Rank Fusion merges ranked outputs from K/V/G"
+    },
+    {
+      "id": "kw",
+      "label": "Keyword Retriever",
+      "type": "retriever",
+      "icon": "type",
+      "position": { "x": 980, "y": 60 },
+      "description": "Lexical retrieval over sessions + metadata"
+    },
+    {
+      "id": "vx",
+      "label": "Vector Retriever",
+      "type": "retriever",
+      "icon": "vector",
+      "position": { "x": 980, "y": 140 },
+      "description": "Semantic retrieval over embeddings (pgvector)"
+    },
+    {
+      "id": "gk",
+      "label": "Gk Retriever (Graph)",
+      "type": "graph",
+      "icon": "network",
+      "position": { "x": 980, "y": 220 },
+      "description": "Graph traversal over facts, episodes, topics, and provenance nodes"
+    },
+    {
+      "id": "zep_sessions",
+      "label": "Zep Sessions",
+      "type": "store",
+      "icon": "database",
+      "position": { "x": 1180, "y": 60 },
+      "description": "Episodes + message content + session metadata"
+    },
+    {
+      "id": "pgvector",
+      "label": "Postgres + pgvector",
+      "type": "store",
+      "icon": "database",
+      "position": { "x": 1180, "y": 140 },
+      "description": "Embeddings table used for semantic similarity"
+    },
+    {
+      "id": "zep_graph",
+      "label": "Zep Facts / Graph",
+      "type": "store",
+      "icon": "graph",
+      "position": { "x": 1180, "y": 220 },
+      "description": "Facts + metadata (and provider-side graph capabilities when available)"
+    },
+    {
+      "id": "enrichment",
+      "label": "Graph Enrichment",
+      "type": "orchestrator",
+      "icon": "spark",
+      "position": { "x": 800, "y": 240 },
+      "description": "Adds relationship types: Episode→Agent, Fact→Topic, Fact→Agent, Episode→Meta provenance"
+    },
+    {
+      "id": "fc",
+      "label": "Fc: Function Calls",
+      "type": "observability",
+      "icon": "code",
+      "position": { "x": 560, "y": 260 },
+      "description": "UI shows exact API calls + request timing"
+    },
+    {
+      "id": "envs",
+      "label": "Environments",
+      "type": "observability",
+      "icon": "globe",
+      "position": { "x": 560, "y": 320 },
+      "description": "UI shows active Zep URL + known env presets"
+    },
+    {
+      "id": "trace",
+      "label": "Provenance Traces",
+      "type": "data",
+      "icon": "tag",
+      "position": { "x": 800, "y": 320 },
+      "description": "Meta nodes: tenant_id/channel/source/filename; edge labels reflect provenance keys"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_user_graph",
+      "source": "user",
+      "target": "ui_graph",
+      "label": "uses",
+      "type": "interaction",
+      "style": { "stroke": "#60A5FA" }
+    },
+    {
+      "id": "e_user_search",
+      "source": "user",
+      "target": "ui_search",
+      "label": "uses",
+      "type": "interaction",
+      "style": { "stroke": "#60A5FA" }
+    },
+    {
+      "id": "e_graph_fc",
+      "source": "ui_graph",
+      "target": "api_memory",
+      "label": "Fc: GET /api/v1/memory/graph",
+      "type": "Fc",
+      "style": { "stroke": "#00D4FF" }
+    },
+    {
+      "id": "e_graph_env",
+      "source": "ui_graph",
+      "target": "api_memory",
+      "label": "Fc: GET /api/v1/memory/environments",
+      "type": "Fc",
+      "style": { "stroke": "#00D4FF" }
+    },
+    {
+      "id": "e_search_fc",
+      "source": "ui_search",
+      "target": "api_memory",
+      "label": "Fc: POST /api/v1/memory/search",
+      "type": "Fc",
+      "style": { "stroke": "#00D4FF" }
+    },
+    {
+      "id": "e_api_rrf",
+      "source": "api_memory",
+      "target": "rrf",
+      "label": "fuses",
+      "type": "control",
+      "style": { "stroke": "#F472B6" }
+    },
+    {
+      "id": "e_rrf_kw",
+      "source": "rrf",
+      "target": "kw",
+      "label": "retrieves",
+      "type": "control",
+      "style": { "stroke": "#F59E0B" }
+    },
+    {
+      "id": "e_rrf_vx",
+      "source": "rrf",
+      "target": "vx",
+      "label": "retrieves",
+      "type": "control",
+      "style": { "stroke": "#10B981" }
+    },
+    {
+      "id": "e_rrf_gk",
+      "source": "rrf",
+      "target": "gk",
+      "label": "retrieves",
+      "type": "control",
+      "style": { "stroke": "#8B5CF6" }
+    },
+    {
+      "id": "e_kw_store",
+      "source": "kw",
+      "target": "zep_sessions",
+      "label": "reads",
+      "type": "data",
+      "style": { "stroke": "#F59E0B" }
+    },
+    {
+      "id": "e_vx_store",
+      "source": "vx",
+      "target": "pgvector",
+      "label": "reads",
+      "type": "data",
+      "style": { "stroke": "#10B981" }
+    },
+    {
+      "id": "e_gk_store",
+      "source": "gk",
+      "target": "zep_graph",
+      "label": "reads",
+      "type": "data",
+      "style": { "stroke": "#8B5CF6" }
+    },
+    {
+      "id": "e_api_enrich",
+      "source": "api_memory",
+      "target": "enrichment",
+      "label": "enriches",
+      "type": "control",
+      "style": { "stroke": "#A855F7" }
+    },
+    {
+      "id": "e_enrich_trace",
+      "source": "enrichment",
+      "target": "trace",
+      "label": "provenance",
+      "type": "data",
+      "style": { "stroke": "#6B7280" }
+    },
+    {
+      "id": "e_api_fc",
+      "source": "api_memory",
+      "target": "fc",
+      "label": "exposes",
+      "type": "observability",
+      "style": { "stroke": "#00D4FF" }
+    },
+    {
+      "id": "e_api_env",
+      "source": "api_memory",
+      "target": "envs",
+      "label": "exposes",
+      "type": "observability",
+      "style": { "stroke": "#00D4FF" }
+    }
+  ],
+  "rendering_guidance": {
+    "canvas": { "width": 1400, "height": 420, "padding": 24 },
+    "grouping": [
+      { "id": "g_ui", "label": "UI", "members": ["ui_graph", "ui_search"], "bounds": { "x": 260, "y": 30, "w": 220, "h": 170 } },
+      { "id": "g_api", "label": "API", "members": ["api_memory"], "bounds": { "x": 510, "y": 60, "w": 220, "h": 110 } },
+      { "id": "g_tri", "label": "Tri-Search", "members": ["rrf", "kw", "vx", "gk"], "bounds": { "x": 760, "y": 30, "w": 360, "h": 230 } },
+      { "id": "g_store", "label": "Stores", "members": ["zep_sessions", "pgvector", "zep_graph"], "bounds": { "x": 1140, "y": 30, "w": 220, "h": 230 } },
+      { "id": "g_obs", "label": "Transparency", "members": ["fc", "envs", "trace"], "bounds": { "x": 510, "y": 220, "w": 520, "h": 170 } }
+    ],
+    "style": {
+      "defaultNode": { "backgroundColor": "#111827", "borderColor": "#374151", "textColor": "#E5E7EB" },
+      "defaultEdge": { "stroke": "#9CA3AF", "strokeWidth": 2 },
+      "title": { "textColor": "#E5E7EB" },
+      "subtitle": { "textColor": "#9CA3AF" }
+    }
+  }
+}

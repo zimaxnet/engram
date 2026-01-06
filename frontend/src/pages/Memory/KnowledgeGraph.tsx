@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import ForceGraph2D from 'react-force-graph-2d'
-import { getMemoryGraph } from '../../services/api'
+import { getMemoryEnvironments, getMemoryGraph } from '../../services/api'
+import './KnowledgeGraph.css'
 
 type GraphNode = {
     id: string
@@ -30,6 +31,12 @@ type GraphData = {
     }
 }
 
+type MemoryEnvironment = {
+    name: string
+    zep_api_url: string
+    description: string
+}
+
 const NODE_COLORS: Record<string, string> = {
     fact: '#00d4ff',      // Cyan for facts
     entity: '#a855f7',    // Purple for entities
@@ -57,6 +64,13 @@ export function KnowledgeGraph() {
     const [filterNodeType, setFilterNodeType] = useState<string>('all')
     const [minDegree, setMinDegree] = useState(0)
 
+    const [envLoading, setEnvLoading] = useState(false)
+    const [environments, setEnvironments] = useState<MemoryEnvironment[]>([])
+    const [activeZepUrl, setActiveZepUrl] = useState<string>('')
+
+    const [lastQueryTimeMs, setLastQueryTimeMs] = useState<number | null>(null)
+    const [lastLoadedAt, setLastLoadedAt] = useState<Date | null>(null)
+
     const containerRef = useRef<HTMLDivElement>(null)
     const graphRef = useRef<any>(null)
     const [dimensions, setDimensions] = useState({ width: 800, height: 600 })
@@ -66,7 +80,11 @@ export function KnowledgeGraph() {
         setLoading(true)
         setError(null)
         try {
+            const start = performance.now()
             const response = await getMemoryGraph(searchQuery)
+            const elapsed = performance.now() - start
+            setLastQueryTimeMs(elapsed)
+            setLastLoadedAt(new Date())
 
             // Calculate statistics
             const nodeTypes: Record<string, number> = {}
@@ -97,6 +115,31 @@ export function KnowledgeGraph() {
             setError('Unable to load knowledge graph. Please try again.')
         } finally {
             setLoading(false)
+        }
+    }, [])
+
+    // Fetch environment metadata (behind-the-veil visibility)
+    useEffect(() => {
+        let cancelled = false
+        const load = async () => {
+            setEnvLoading(true)
+            try {
+                const res = await getMemoryEnvironments()
+                if (cancelled) return
+                setActiveZepUrl(res.active_zep_api_url || '')
+                setEnvironments(res.environments || [])
+            } catch (e) {
+                // Non-blocking: the graph can still render.
+                if (cancelled) return
+                setEnvironments([])
+                setActiveZepUrl('')
+            } finally {
+                if (!cancelled) setEnvLoading(false)
+            }
+        }
+        void load()
+        return () => {
+            cancelled = true
         }
     }, [])
 
@@ -185,19 +228,18 @@ export function KnowledgeGraph() {
     }, [data.nodes])
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
+        <div className="memory-graph-page">
             {/* Header */}
-            <div style={{ padding: '2rem', paddingBottom: '1rem', color: 'var(--color-text)' }}>
+            <div className="memory-graph-header">
                 <p style={{ fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
                     Memory
                 </p>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: '0.5rem' }}>
                     <div>
-                        <h2>Knowledge Graph (Tri-Search: Graph Layer)</h2>
+                        <h2>Gk (Graph Knowledge) — Tri-Search Graph Layer</h2>
                         <p style={{ marginTop: '0.5rem', opacity: 0.8, maxWidth: '800px' }}>
-                            Visualize the semantic knowledge graph extracted from conversations, documents, and facts.
-                            This is the <strong>graph layer</strong> of Engram's tri-search capability, enabling relationship-based
-                            reasoning and multi-hop traversal.
+                            Explore entities, facts, and relationships extracted from conversations and documents.
+                            Gk is the <strong>relationship layer</strong> of Engram’s tri-search capability, helping close the “what vs why” gap with provenance.
                         </p>
                     </div>
                     <button
@@ -218,7 +260,7 @@ export function KnowledgeGraph() {
             </div>
 
             {/* Controls */}
-            <div style={{ padding: '0 2rem 1rem 2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            <div className="memory-graph-controls">
                 <div style={{ flex: 1, minWidth: '300px' }}>
                     <input
                         type="text"
@@ -272,19 +314,11 @@ export function KnowledgeGraph() {
             </div>
 
             {/* Main Content */}
-            <div style={{ display: 'flex', flex: 1, gap: '1rem', padding: '0 2rem 2rem 2rem', overflow: 'hidden' }}>
+            <div className="memory-graph-main">
                 {/* Graph Visualization */}
                 <div
                     ref={containerRef}
-                    style={{
-                        flex: 1,
-                        position: 'relative',
-                        border: '1px solid var(--glass-border)',
-                        borderRadius: '12px',
-                        overflow: 'hidden',
-                        background: 'var(--glass-bg)',
-                        minHeight: '500px'
-                    }}
+                    className="memory-graph-viz"
                 >
                     {loading && (
                         <div style={{
@@ -410,21 +444,57 @@ export function KnowledgeGraph() {
                 </div>
 
                 {/* Sidebar */}
-                <div style={{
-                    width: '350px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '1rem',
-                    overflowY: 'auto'
-                }}>
+                <div className="memory-graph-sidebar">
+                    {/* Environments Panel */}
+                    <div className="memory-graph-panel">
+                        <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Environments</h3>
+                        <p style={{ fontSize: '0.85rem', lineHeight: '1.6', marginBottom: '0.75rem', opacity: 0.9 }}>
+                            Visibility into where memory is retrieved from.
+                        </p>
+                        <div style={{ fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <div className="memory-graph-kv">
+                                <span style={{ opacity: 0.8 }}>Active Zep URL:</span>
+                                <strong style={{ overflowWrap: 'anywhere', textAlign: 'right' }}>{activeZepUrl || (envLoading ? 'Loading…' : 'Unknown')}</strong>
+                            </div>
+                            {environments.map(env => (
+                                <div key={env.name} style={{ paddingTop: '0.5rem', borderTop: '1px solid var(--glass-border)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+                                        <strong>{env.name}</strong>
+                                        <span style={{ opacity: 0.8, overflowWrap: 'anywhere', textAlign: 'right' }}>{env.zep_api_url}</span>
+                                    </div>
+                                    <div style={{ fontSize: '0.8rem', opacity: 0.75, marginTop: '0.25rem' }}>{env.description}</div>
+                                </div>
+                            ))}
+                            {!envLoading && environments.length === 0 && (
+                                <div style={{ opacity: 0.7 }}>No environment metadata available.</div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Function Calls (Fc) Panel */}
+                    <div className="memory-graph-panel">
+                        <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Function Calls (Fc)</h3>
+                        <p style={{ fontSize: '0.85rem', lineHeight: '1.6', marginBottom: '0.75rem', opacity: 0.9 }}>
+                            The UI maps directly to API calls so you can “peer behind the veil”.
+                        </p>
+                        <div style={{ fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <div>
+                                <strong>GET</strong> <span style={{ opacity: 0.9 }}>/api/v1/memory/graph</span>
+                                <div style={{ fontSize: '0.8rem', opacity: 0.75 }}>Params: query={query || '(empty)'}; client-side filters: type={filterNodeType}, minDegree={minDegree}</div>
+                                <div style={{ fontSize: '0.8rem', opacity: 0.75 }}>
+                                    Last load: {lastLoadedAt ? lastLoadedAt.toLocaleString() : '—'}; fetch: {lastQueryTimeMs != null ? `${Math.round(lastQueryTimeMs)}ms` : '—'}
+                                </div>
+                            </div>
+                            <div style={{ paddingTop: '0.5rem', borderTop: '1px solid var(--glass-border)' }}>
+                                <strong>GET</strong> <span style={{ opacity: 0.9 }}>/api/v1/memory/environments</span>
+                                <div style={{ fontSize: '0.8rem', opacity: 0.75 }}>Used for: environment list + active Zep URL</div>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Statistics Panel */}
                     {showStats && data.stats && (
-                        <div style={{
-                            background: 'var(--glass-bg)',
-                            border: '1px solid var(--glass-border)',
-                            borderRadius: '12px',
-                            padding: '1rem'
-                        }}>
+                        <div className="memory-graph-panel">
                             <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>Graph Statistics</h3>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.9rem' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -466,12 +536,7 @@ export function KnowledgeGraph() {
 
                     {/* Node Details Panel */}
                     {selectedNode && (
-                        <div style={{
-                            background: 'var(--glass-bg)',
-                            border: '1px solid var(--glass-border)',
-                            borderRadius: '12px',
-                            padding: '1rem'
-                        }}>
+                        <div className="memory-graph-panel">
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                                 <h3 style={{ fontSize: '1rem' }}>Node Details</h3>
                                 <button

@@ -17,10 +17,10 @@ const CONTENT_MAP: Record<string, ConceptContent> = {
         content: (
             <>
                 <p>
-                    <strong>Knowledge Graphs</strong> represent the "Long-term Semantic Memory" of the system.
+                    <strong>Gk (Graph Knowledge)</strong> is Engram’s relationship layer: entities, facts, and links with provenance.
                 </p>
                 <p>
-                    Unlike vector databases which find "similar" text, graphs capture <em>relationships</em>. This allows the AI to reason about how entities (people, projects, concepts) are interconnected, enabling multi-hop reasoning that mimics human understanding.
+                    Gk helps close the “what vs why” gap: not just “what happened”, but the decision traces and precedents that explain <em>why</em> it happened.
                 </p>
             </>
         )

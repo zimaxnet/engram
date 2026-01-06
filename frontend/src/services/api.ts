@@ -216,6 +216,17 @@ export class ApiClient {
     }>(`/memory/graph${params.toString() ? `?${params.toString()}` : ''}`)
   }
 
+  async getMemoryEnvironments() {
+    return this.request<{
+      active_zep_api_url: string
+      environments: Array<{
+        name: string
+        zep_api_url: string
+        description: string
+      }>
+    }>('/memory/environments')
+  }
+
   async getGraphDump() {
     return this.request<{
       directed: boolean
@@ -623,6 +634,7 @@ export const getEpisode = (episodeId: string) => apiClient.getEpisode(episodeId)
 
 export const addFact = (content: string, metadata?: Record<string, unknown>) => apiClient.addFact(content, metadata)
 export const getMemoryGraph = (query?: string) => apiClient.getMemoryGraph(query)
+export const getMemoryEnvironments = () => apiClient.getMemoryEnvironments()
 export const getGraphDump = () => apiClient.getGraphDump()
 
 export const listWorkflows = (status?: string, limit?: number, offset?: number) => apiClient.listWorkflows(status, limit, offset);

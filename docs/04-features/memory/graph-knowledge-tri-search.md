@@ -143,7 +143,7 @@ Where:
 
 ### Access
 
-Navigate to: **Memory → Knowledge Graph (Semantic)**
+Navigate to: **Memory → Gk (Graph Knowledge)**
 
 URL: `https://engram.work/memory/graph`
 
@@ -206,8 +206,18 @@ Explains:
 ### Endpoint
 
 ```
-GET /api/memory/graph?query=<search_term>
+GET /api/v1/memory/graph?query=<search_term>
 ```
+
+### Transparency Endpoints
+
+```
+GET /api/v1/memory/environments
+```
+
+Used by the UI to display:
+- Active Zep URL (where memory is currently retrieved from)
+- Known environment presets (local / azure / staging)
 
 ### Response
 
@@ -282,7 +292,7 @@ Graph Knowledge is built automatically from:
 Users can manually add facts via:
 
 ```
-POST /api/memory/facts
+POST /api/v1/memory/facts
 {
   "content": "Custom fact text",
   "fact_type": "custom",
@@ -352,6 +362,8 @@ POST /api/memory/facts
 2. **Node Details**: Full content, metadata, connections
 3. **Statistics**: Quantitative metrics about graph health
 4. **Search Transparency**: See which nodes match your query
+5. **Function Calls (Fc)**: The UI shows the exact API calls and request timing
+6. **Environment Metadata**: Which environment and Zep URL are active
 
 ### What You Can't See (Yet)
 
@@ -420,7 +432,7 @@ POST /api/memory/facts
 ```
 User Query
     ↓
-GET /api/memory/graph?query=...
+GET /api/v1/memory/graph?query=...
     ↓
 _build_graph(user_id, query)
     ↓
@@ -433,6 +445,33 @@ _build_graph(user_id, query)
 Return Graph + Stats
     ↓
 Frontend Visualization
+
+---
+
+## Architectural Diagram (Gk in Tri-Search)
+
+```mermaid
+flowchart TB
+  U[User Query] --> FE[Frontend: /memory/search + /memory/graph]
+  FE -->|Fc: GET /api/v1/memory/search| API1[Memory API]
+  FE -->|Fc: GET /api/v1/memory/graph| API2[Memory API]
+  FE -->|Fc: GET /api/v1/memory/environments| API3[Memory API]
+
+  API1 --> RRF[Reciprocal Rank Fusion]
+  API2 --> GK[Graph Knowledge (Gk)]
+
+  RRF --> K[Keyword Search\n(Zep sessions + metadata)]
+  RRF --> V[Vector Search\n(pgvector embeddings)]
+  RRF --> GK
+
+  GK --> Z[Zep Knowledge Graph\n(facts, entities, edges)]
+  K --> ZS[Zep Sessions API\n(episodic + keyword)]
+  V --> PG[(Postgres + pgvector)]
+
+  Z --> OUT[Ranked context + provenance]
+  ZS --> OUT
+  PG --> OUT
+```
 ```
 
 ---
@@ -460,6 +499,7 @@ Frontend Visualization
 - [Memory Architecture](../concept/memory-architecture.md) - Overall memory system design
 - [AI Periodic Table Roadmap](../../ai-periodic-table-roadmap.md) - Gk element details
 - [Agent Personas](../../AGENTS.md) - How agents use graph knowledge
+- [Gk Technical Specification](gk-graph-knowledge-technical.md) - Node/edge taxonomy, enrichment, invariants
 
 ---
 

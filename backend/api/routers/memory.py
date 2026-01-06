@@ -20,6 +20,17 @@ from backend.api.middleware.auth import get_current_user
 router = APIRouter()
 
 
+class MemoryEnvironment(BaseModel):
+    name: str
+    zep_api_url: str
+    description: str
+
+
+class MemoryEnvironmentsResponse(BaseModel):
+    active_zep_api_url: str
+    environments: list[MemoryEnvironment]
+
+
 def verify_api_key(x_api_key: str = Header(None, alias="X-API-Key")) -> str:
     """Verify API key for AI agent access (lighter than full Entra ID auth)."""
     settings = get_settings()
@@ -86,6 +97,10 @@ async def _build_graph(user_id: str, query: str) -> MemoryGraphResponse:
 
     nodes: dict[str, GraphNodeView] = {}
     edges: list[GraphEdgeView] = []
+
+    # Keep minimal in-memory indexes so we can add relationship types after
+    # collecting nodes from facts + sessions.
+    fact_metadata_by_id: dict[str, dict] = {}
     
     def ensure_node(node_id: str, content: str, node_type: str, metadata: dict | None = None) -> None:
         if node_id not in nodes:
@@ -100,6 +115,7 @@ async def _build_graph(user_id: str, query: str) -> MemoryGraphResponse:
     try:
         facts = await memory_client.get_facts(user_id=user_id, query=query or "", limit=50)
         for fact in facts:
+            fact_metadata_by_id[fact.id] = getattr(fact, "metadata", {}) or {}
             ensure_node(
                 fact.id,
                 fact.content,
@@ -121,6 +137,7 @@ async def _build_graph(user_id: str, query: str) -> MemoryGraphResponse:
             meta = sess.get("metadata", {})
             summary = meta.get("summary", "Conversation")
             topics = meta.get("topics", [])
+            agent_id = meta.get("agent_id")
             
             # Filter by query if provided
             if query:
@@ -144,10 +161,34 @@ async def _build_graph(user_id: str, query: str) -> MemoryGraphResponse:
                 metadata={
                     "full_content": summary, 
                     "timestamp": sess.get("created_at"),
-                    "agent_id": meta.get("agent_id"),
+                    "agent_id": agent_id,
                     "turn_count": meta.get("turn_count", 0),
+                    # Optional provenance fields if present
+                    "tenant_id": meta.get("tenant_id"),
+                    "channel": meta.get("channel"),
+                    "source": meta.get("source"),
+                    "filename": meta.get("filename"),
                 },
             )
+
+            # Link Episode to Agent (as an entity node) to enrich relationship traversal
+            if agent_id:
+                agent_node_id = f"entity-agent-{str(agent_id).lower().replace(' ', '-')}"
+                ensure_node(
+                    node_id=agent_node_id,
+                    content=f"Agent: {agent_id}",
+                    node_type="entity",
+                    metadata={"kind": "agent"},
+                )
+                edges.append(
+                    GraphEdgeView(
+                        id=f"edge-{sess_id}-{agent_node_id}",
+                        source=sess_id,
+                        target=agent_node_id,
+                        label="by",
+                        weight=1.0,
+                    )
+                )
             
             # Create Topic Nodes and Edges
             for topic in topics:
@@ -191,7 +232,7 @@ async def _build_graph(user_id: str, query: str) -> MemoryGraphResponse:
             for idx, value in enumerate(values):
                 value_str = str(value)
                 meta_id = f"meta-{key}-{value_str}".replace(" ", "-")
-                ensure_node(meta_id, f"{key}: {value_str}", "entity", {"source": key})
+                ensure_node(meta_id, f"{key}: {value_str}", "meta", {"source": key})
                 edge_id = f"edge-{node.id}-{meta_id}-{idx}"
                 edges.append(
                     GraphEdgeView(
@@ -202,6 +243,83 @@ async def _build_graph(user_id: str, query: str) -> MemoryGraphResponse:
                         weight=1.0,
                     )
                 )
+
+    # 4. Enrich with additional relationship types
+    #    - Fact → Topic (about)
+    #    - Fact → Agent (attributed_to)
+    #    - Episode → Meta (provenance)
+
+    def _normalize_id_fragment(value: str) -> str:
+        return value.strip().lower().replace(" ", "-")
+
+    # 4a. Fact → Topic / Agent
+    for fact_id, meta in fact_metadata_by_id.items():
+        if fact_id not in nodes:
+            continue
+
+        # Fact → Topic
+        topics_value = meta.get("topics") or meta.get("topic")
+        topics_list: list[str] = []
+        if isinstance(topics_value, list):
+            topics_list = [str(t) for t in topics_value if t is not None]
+        elif isinstance(topics_value, str) and topics_value.strip():
+            topics_list = [topics_value]
+
+        for t in topics_list:
+            topic_text = t.strip()
+            if not topic_text:
+                continue
+            topic_id = f"topic-{_normalize_id_fragment(topic_text)}"
+            ensure_node(topic_id, topic_text, "topic", {"kind": "topic"})
+            edges.append(
+                GraphEdgeView(
+                    id=f"edge-{fact_id}-{topic_id}",
+                    source=fact_id,
+                    target=topic_id,
+                    label="about",
+                    weight=1.0,
+                )
+            )
+
+        # Fact → Agent
+        agent_value = meta.get("agent_id")
+        if isinstance(agent_value, str) and agent_value.strip():
+            agent_node_id = f"entity-agent-{_normalize_id_fragment(agent_value)}"
+            ensure_node(agent_node_id, f"Agent: {agent_value}", "entity", {"kind": "agent"})
+            edges.append(
+                GraphEdgeView(
+                    id=f"edge-{fact_id}-{agent_node_id}-attr",
+                    source=fact_id,
+                    target=agent_node_id,
+                    label="attributed_to",
+                    weight=1.0,
+                )
+            )
+
+    # 4b. Episode → Meta (provenance)
+    episode_meta_keys = {"tenant_id", "channel", "source", "filename"}
+    for node in list(nodes.values()):
+        if node.node_type != "memory":
+            continue
+        meta = node.metadata or {}
+        for key in episode_meta_keys:
+            raw_value = meta.get(key)
+            if raw_value is None:
+                continue
+            value_str = str(raw_value)
+            if not value_str.strip():
+                continue
+            meta_id = f"meta-{key}-{value_str}".replace(" ", "-")
+            ensure_node(meta_id, f"{key}: {value_str}", "meta", {"source": key})
+            edges.append(
+                GraphEdgeView(
+                    id=f"edge-{node.id}-{meta_id}-prov",
+                    source=node.id,
+                    target=meta_id,
+                    label=key,
+                    weight=1.0,
+                )
+            )
 
     if not nodes:
         sample_id = "fact-sample"
@@ -364,6 +482,18 @@ async def get_memory_graph(query: str = Query("", max_length=200), user: Securit
                 max_degree=0,
             )
         )
+
+
+@router.get("/environments", response_model=MemoryEnvironmentsResponse)
+async def get_memory_environments(user: SecurityContext = Depends(get_current_user)):
+    """Expose memory environment metadata for UI transparency."""
+    import os
+    from backend.memory.environments import list_environment_presets
+
+    return MemoryEnvironmentsResponse(
+        active_zep_api_url=os.getenv("ZEP_API_URL", ""),
+        environments=[MemoryEnvironment(**e) for e in list_environment_presets()],
+    )
 
 
 class Episode(BaseModel):

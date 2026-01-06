@@ -32,3 +32,4 @@ Engram's memory architecture for long-term context retention.
 
 - [4-Layer Context Schema](../../4-layer-context-schema-story.md)
 - [Knowledge Graph Implementation](../../knowledge-graph-implementation.md)
+- [Gk (Graph Knowledge) — Technical Specification](gk-graph-knowledge-technical.md)

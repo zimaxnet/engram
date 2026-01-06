@@ -121,7 +121,7 @@ export function TreeNav({ activeAgent, onAgentChange, onNavigate }: TreeNavProps
       children: [
         { id: 'search', label: 'Search with Provenance', icon: '🔍', path: '/memory/search' },
         { id: 'episodes', label: 'Episodes (Episodic Memory)', icon: '📝', path: '/memory/episodes' },
-        { id: 'graph', label: 'Knowledge Graph (Semantic)', icon: '🔗', path: '/memory/graph' }
+        { id: 'graph', label: 'Gk (Graph Knowledge)', icon: '🔗', path: '/memory/graph' }
       ]
     },
     {
