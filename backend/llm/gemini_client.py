@@ -244,65 +244,76 @@ No markdown code blocks, just JSON."""
         """
         Generate an image using Imagen 3.0 Pro via google-genai SDK.
         Uses the dedicated images.generate method for high-quality output.
+        safely handles all exceptions to prevent workflow crashes.
         """
         logger.info(f"GeminiClient: Generating image with {self.IMAGE_MODEL} for: {prompt[:50]}...")
         
         try:
-            # Imagen 3.0 uses the images.generate method, not generate_content
-            response = self.client.models.generate_images(
-                model=self.IMAGE_MODEL,
-                prompt=prompt,
-                config=types.GenerateImagesConfig(
-                    number_of_images=1,
-                    aspect_ratio="1:1",  # Square for story cards
-                    safety_filter_level="BLOCK_MEDIUM_AND_ABOVE",
-                    person_generation="ALLOW_ADULT",
-                )
-            )
-            
-            # Process response to get image bytes
-            if response.generated_images:
-                image = response.generated_images[0]
-                if hasattr(image, 'image') and image.image:
-                    # The image data is base64 encoded
-                    if hasattr(image.image, 'image_bytes'):
-                        logger.info(f"GeminiClient: Imagen 3.0 image generated successfully")
-                        return image.image.image_bytes
-                    elif hasattr(image.image, 'data'):
-                        logger.info(f"GeminiClient: Imagen 3.0 image generated successfully (data attr)")
-                        return image.image.data
-            
-            logger.warning(f"GeminiClient: No image data in Imagen response. Response: {response}")
-            return await self._generate_mock_image(prompt)
-            
-        except Exception as e:
-            logger.error(f"GeminiClient: Imagen 3.0 generation failed: {e}")
-            # Try fallback to Gemini multimodal if Imagen isn't available
             try:
-                logger.info("GeminiClient: Falling back to gemini-2.0-flash-exp multimodal...")
-                response = self.client.models.generate_content(
-                    model="gemini-2.0-flash-exp",
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        response_modalities=["IMAGE", "TEXT"],
+                # Imagen 3.0 uses the images.generate method, not generate_content
+                response = self.client.models.generate_images(
+                    model=self.IMAGE_MODEL,
+                    prompt=prompt,
+                    config=types.GenerateImagesConfig(
+                        number_of_images=1,
+                        aspect_ratio="1:1",  # Square for story cards
+                        safety_filter_level="BLOCK_MEDIUM_AND_ABOVE",
+                        person_generation="ALLOW_ADULT",
                     )
                 )
                 
-                if response.candidates:
-                    for part in response.candidates[0].content.parts:
-                        if part.inline_data:
-                            logger.info(f"GeminiClient: Fallback image generated successfully")
-                            return part.inline_data.data
-                            
-            except Exception as fallback_err:
-                logger.error(f"GeminiClient: Fallback also failed: {fallback_err}")
+                # Process response to get image bytes
+                if response.generated_images:
+                    image = response.generated_images[0]
+                    if hasattr(image, 'image') and image.image:
+                        # The image data is base64 encoded
+                        if hasattr(image.image, 'image_bytes'):
+                            logger.info(f"GeminiClient: Imagen 3.0 image generated successfully")
+                            return image.image.image_bytes
+                        elif hasattr(image.image, 'data'):
+                            logger.info(f"GeminiClient: Imagen 3.0 image generated successfully (data attr)")
+                            return image.image.data
+                
+                logger.warning(f"GeminiClient: No image data in Imagen response. Response: {response}")
+                
+            except Exception as e:
+                logger.error(f"GeminiClient: Imagen 3.0 generation failed: {e}")
+                
+                # Try fallback to Gemini multimodal if Imagen isn't available
+                try:
+                    logger.info("GeminiClient: Falling back to gemini-2.0-flash-exp multimodal...")
+                    response = self.client.models.generate_content(
+                        model="gemini-2.0-flash-exp",
+                        contents=prompt,
+                        config=types.GenerateContentConfig(
+                            response_modalities=["IMAGE", "TEXT"],
+                        )
+                    )
+                    
+                    if response.candidates:
+                        for part in response.candidates[0].content.parts:
+                            if part.inline_data:
+                                logger.info(f"GeminiClient: Fallback image generated successfully")
+                                return part.inline_data.data
+                                
+                except Exception as fallback_err:
+                    logger.error(f"GeminiClient: Fallback also failed: {fallback_err}")
             
             return await self._generate_mock_image(prompt)
+            
+        except Exception as e:
+            logger.error(f"GeminiClient: Critical error in generate_image: {e}")
+            return b""
 
     async def _generate_mock_image(self, prompt: str) -> bytes:
         """Fallback mock image generation with better styling"""
         try:
             from PIL import Image, ImageDraw, ImageFont
+        except ImportError:
+            logger.warning("GeminiClient: Pillow not installed, cannot generate mock image")
+            return b""
+
+        try:
             import random
             
             # Create a nicer looking fallback image
@@ -323,27 +334,37 @@ No markdown code blocks, just JSON."""
             # Center text
             text = "Visual Generation\nPending"
             try:
-                font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 48)
-            except:
+                # Try system font, fallback to default
+                font_path = "/System/Library/Fonts/Helvetica.ttc"
+                if os.path.exists(font_path):
+                    font = ImageFont.truetype(font_path, 48)
+                else:
+                    font = ImageFont.load_default()
+            except Exception:
                 font = ImageFont.load_default()
             
             # Get text bounding box for centering
-            bbox = d.textbbox((0, 0), text, font=font)
-            text_width = bbox[2] - bbox[0]
-            text_height = bbox[3] - bbox[1]
-            x = (width - text_width) // 2
-            y = (height - text_height) // 2
-            
-            d.text((x, y), text, fill=(255, 255, 255), font=font, align="center")
-            
-            # Add prompt snippet at bottom
-            snippet = prompt[:80] + "..." if len(prompt) > 80 else prompt
-            d.text((50, height - 100), f"Prompt: {snippet}", fill=(150, 150, 150))
-            
+            try:
+                bbox = d.textbbox((0, 0), text, font=font)
+                text_width = bbox[2] - bbox[0]
+                text_height = bbox[3] - bbox[1]
+                x = (width - text_width) // 2
+                y = (height - text_height) // 2
+                
+                d.text((x, y), text, fill=(255, 255, 255), font=font, align="center")
+                
+                # Add prompt snippet at bottom
+                snippet = prompt[:80] + "..." if len(prompt) > 80 else prompt
+                d.text((50, height - 100), f"Prompt: {snippet}", fill=(150, 150, 150))
+            except Exception as e:
+                logger.warning(f"GeminiClient: Text rendering failed in mock image: {e}")
+
             img_byte_arr = io.BytesIO()
             img.save(img_byte_arr, format='PNG')
             return img_byte_arr.getvalue()
-        except ImportError:
+            
+        except Exception as e:
+            logger.error(f"GeminiClient: Mock image generation failed: {e}")
             return b""
 
 

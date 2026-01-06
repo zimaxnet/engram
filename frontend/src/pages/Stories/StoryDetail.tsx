@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Component, type ErrorInfo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { getStory, uploadArchitectureImage, API_BASE_URL } from '../../services/api';
@@ -14,6 +14,35 @@ interface StoryDetailed {
     image_path?: string | null;
     architecture_image_path?: string | null;
     created_at: string;
+}
+
+class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null }> {
+    constructor(props: { children: React.ReactNode }) {
+        super(props);
+        this.state = { hasError: false, error: null };
+    }
+
+    static getDerivedStateFromError(error: Error) {
+        return { hasError: true, error };
+    }
+
+    componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+        console.error("StoryDetail crashed:", error, errorInfo);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div className="story-error-boundary" style={{ padding: '2rem', textAlign: 'center' }}>
+                    <h2>⚠️ Something went wrong displaying this story.</h2>
+                    <pre style={{ textAlign: 'left', background: '#333', padding: '1rem', overflow: 'auto' }}>
+                        {this.state.error?.toString()}
+                    </pre>
+                </div>
+            );
+        }
+        return this.props.children;
+    }
 }
 
 export function StoryDetail() {
@@ -65,7 +94,7 @@ export function StoryDetail() {
         fetchStory();
     }, [storyId]);
 
-    const getFullImageUrl = (path: string) => {
+    const getFullImageUrl = (path: string | null | undefined) => {
         if (!path) return '';
         if (path.startsWith('http')) return path;
         return `${API_BASE_URL}${path}`;
@@ -128,7 +157,7 @@ export function StoryDetail() {
     const toggleModal = () => setIsModalOpen(!isModalOpen);
 
     return (
-        <>
+        <ErrorBoundary>
             <section className="column column-center">
                 <div className="story-detail-container">
                     <header className="detail-header">
@@ -319,7 +348,7 @@ export function StoryDetail() {
                     </div>
                 </div>
             )}
-        </>
+        </ErrorBoundary>
     );
 }
 
