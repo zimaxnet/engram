@@ -206,10 +206,10 @@ Write in a {style} style. Use markdown formatting with:
 - Code blocks for technical details
 - Tables for comparisons
 - Blockquotes for key insights
+"""
 
         # Request JSON output for structured title/content
         system_prompt += """
-
 OUTPUT FORMAT:
 Return a valid JSON object with the following schema:
 {
