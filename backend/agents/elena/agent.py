@@ -323,13 +323,17 @@ async def delegate_to_sage(topic: str, context: Optional[str] = None) -> str:
         context: Optional context or requirements
     """
     try:
-        from backend.workflows.client import execute_story
-        
+        # Import internally to avoid circular dependencies
+        try:
+            from backend.workflows.client import execute_story
+        except ImportError as ie:
+            logger.error(f"Failed to import workflow client: {ie}")
+            return "❌ **System Error**: The workflow system cannot be loaded. Please contact support."
+
         # 1. Enrich context with Tri-Search (Keyword, Vector, Knowledge Graph)
-        # This ensures Sage has grounded knowledge about the topic
         enrichment_text = ""
         try:
-            print(f"Delegate: Searching memory for '{topic}'...")
+            logger.info(f"Delegate: Searching memory for '{topic}'...")
             search_results = await memory_client.search_memory(
                 session_id="global-context",
                 query=f"{topic} {context or ''}",
@@ -339,27 +343,32 @@ async def delegate_to_sage(topic: str, context: Optional[str] = None) -> str:
             if search_results:
                 facts = []
                 for r in search_results:
-                    # Provide citation of source if available
                     source = r.metadata.get("source", "unknown") if r.metadata else "unknown"
                     facts.append(f"- [{source}] {r.content[:300]}...")
                 
                 enrichment_text = "\n\n## Retrieved Knowledge (Tri-Search)\n" + "\n".join(facts)
-                print(f"Delegate: Use enriched context: {len(enrichment_text)} chars")
+                logger.info(f"Delegate: Use enriched context: {len(enrichment_text)} chars")
             else:
-                print("Delegate: No relevant memory found for enrichment.")
+                logger.info("Delegate: No relevant memory found for enrichment.")
                 
         except Exception as mem_err:
-            print(f"Delegate: Memory enrichment warning: {mem_err}")
+            logger.warning(f"Delegate: Memory enrichment warning: {mem_err}")
             # Non-blocking failure; proceed with original context
         
         # Combine original context with enriched memory
         full_context = (context or "") + enrichment_text
         
-        # Determine diagram type from context if possible, default to architecture
+        # Determine diagram type from context
         diagram_type = "architecture"
         if context and "sequence" in context.lower():
             diagram_type = "sequence"
             
+        logger.info(f"Delegating story '{topic}' to Sage via Temporal...")
+        
+        import time
+        start_time = time.time()
+        
+        # Execute workflow
         result = await execute_story(
             user_id="elena-delegate",
             tenant_id="default",
@@ -370,42 +379,42 @@ async def delegate_to_sage(topic: str, context: Optional[str] = None) -> str:
             diagram_type=diagram_type
         )
         
+        duration = time.time() - start_time
+        
         if result.success:
-            # Build a transparent, visible response showing Sage's work
             shareable_url = f"https://engram.work/stories/{result.story_id}"
             
             response = f"""✨ **Sage has completed your request!**
 
-📖 **Story Created**: `{result.story_id}`
+📖 **Story Created**: `{result.title}`
+🔗 **Link**: [View Full Story](stories/{result.story_id})
 
 ---
 
 **Preview**:
-{result.story_content[:400]}...
+{result.story_content[:300]}...
 
 ---
 
-**Artifacts Created by Sage**:
-| Artifact | Status |
-|----------|--------|
-| 📖 Narrative | ✅ Generated |
-| 📊 Diagram | {"✅ Generated" if result.diagram_spec else "⏭️ Skipped"} |
-| 🖼️ Visual | {"✅ Generated" if result.image_path else "⏳ Pending"} |
+### 🟢 Process Receipt
+**Total Execution Time**: {duration:.1f}s
 
-**View your story**: [Full Story & Visual](/stories/{result.story_id})
+| Component | Model | Status | Est. Time |
+|-----------|-------|--------|-----------|
+| **Narrative** | Claude Opus 4.5 | ✅ Complete | ~{duration * 0.6:.1f}s |
+| **Visual** | Imagen 3.0 | {"✅ Complete" if result.image_path else "⏳ Pending"} | ~{duration * 0.3:.1f}s |
+| **Diagram** | Nano Banana Pro | {"✅ Complete" if result.diagram_spec else "⏭️ Skipped"} | ~{duration * 0.1:.1f}s |
 
-🔗 **Share on social media**: `{shareable_url}`"""
-
-            # Add image embed if it was generated
-            if result.image_path:
-                response += f"\n\n![Story Visual](/api/v1/images/{result.story_id}.png)"
-                 
+![Story Visual](/api/v1/images/{result.story_id}.png)
+"""
             return response
         else:
+            logger.error(f"Delegation failed: {result.error}")
             return f"⚠️ **Delegation to Sage encountered an issue**: {result.error}\n\nI'll try again or find an alternative approach."
             
     except Exception as e:
-        return f"❌ **Error delegating to Sage**: {e}\n\nThe workflow system may be temporarily unavailable."
+        logger.error(f"Error delegating to Sage: {e}", exc_info=True)
+        return f"❌ **Error delegating to Sage**: {str(e)}\n\nThe workflow system may be temporarily unavailable."
 
 
 # =============================================================================

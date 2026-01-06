@@ -56,21 +56,25 @@ async def create_story_tool(topic: str, context: Optional[str] = None) -> str:
         )
         
         if result.success:
-            return f"""I've completed the creative journey for you:
+            response = f"""I've completed the creative journey for you:
             
 > Heading out to **Anthropic Opus 4.5** for story creation... Done.
-> Moving on over to **Google Imagen 3.0** for visual creation... Done.
-> Generating **Nano Banana Pro** architecture definition... Done.
+> Moving on over to **Google Imagen 3.0** for visual creation... {"Done" if result.image_path else "Pending"}.
+> Generating **Nano Banana Pro** architecture definition... {"Done" if result.diagram_spec else "Skipped"}.
 
 # {result.title}
 
 **Story ID**: {result.story_id}
 
-{result.story_content}
+{result.story_content}"""
 
-![Visual Representation](/api/v1/images/{result.story_id}.png)
-
-*The architecture diagram code has been generated and is ready for you to copy into Nano Banana Pro.*"""
+            if result.image_path:
+                response += f"\n\n![Visual Representation]({result.image_path})"
+            
+            if result.diagram_spec:
+                response += "\n\n*The architecture diagram code has been generated and is ready for you to copy into Nano Banana Pro.*"
+                
+            return response
         else:
             return f"Error generating story: {result.error}"
 

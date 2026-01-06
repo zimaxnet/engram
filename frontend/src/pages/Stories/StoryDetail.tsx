@@ -121,14 +121,25 @@ export function StoryDetail() {
         </section>
     );
 
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // ... (existing code)
+
+    const toggleModal = () => setIsModalOpen(!isModalOpen);
+
     return (
         <>
             <section className="column column-center">
                 <div className="story-detail-container">
                     <header className="detail-header">
-                        <button className="back-button" onClick={() => navigate('/stories')}>
-                            ← Back to Artifacts
-                        </button>
+                        <div className="header-top-row">
+                            <button className="back-button" onClick={() => navigate('/stories')}>
+                                ← Back
+                            </button>
+                            <button className="mobile-share-button" onClick={handleShare}>
+                                {copied ? '✅' : '🔗'} Share
+                            </button>
+                        </div>
                         <div className="title-row">
                             <h1>{story.topic}</h1>
                             <span className="detail-date">
@@ -149,7 +160,7 @@ export function StoryDetail() {
                                 className={`tab-button ${activeTab === 'diagram' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('diagram')}
                             >
-                                📐 Architecture Diagram
+                                📐 Architecture
                             </button>
                         )}
                         <button
@@ -234,11 +245,16 @@ export function StoryDetail() {
                         {activeTab === 'visual' && (
                             <div className="visual-view">
                                 {story.image_path ? (
-                                    <img
-                                        src={getFullImageUrl(story.image_path)}
-                                        alt={story.topic}
-                                        className="story-image-full"
-                                    />
+                                    <div className="visual-image-wrapper" onClick={toggleModal}>
+                                        <img
+                                            src={getFullImageUrl(story.image_path)}
+                                            alt={story.topic}
+                                            className="story-image-full clickable"
+                                        />
+                                        <div className="image-overlay-hint">
+                                            <span>🔍 Tap to expand</span>
+                                        </div>
+                                    </div>
                                 ) : (
                                     <div className="no-visual">
                                         <p>No visual generated for this story.</p>
@@ -287,6 +303,23 @@ export function StoryDetail() {
                     </div>
                 </div>
             </aside>
+
+            {/* Image Modal */}
+            {isModalOpen && story.image_path && (
+                <div className="image-modal-overlay" onClick={toggleModal}>
+                    <button className="image-modal-close" onClick={toggleModal}>×</button>
+                    <div className="image-modal-content" onClick={e => e.stopPropagation()}>
+                        <img
+                            src={getFullImageUrl(story.image_path)}
+                            alt={story.topic}
+                        />
+                        <div className="image-modal-caption">
+                            {story.topic}
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
+
