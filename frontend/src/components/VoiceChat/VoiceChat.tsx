@@ -307,10 +307,16 @@ export default function VoiceChat({
 
               case 'video_connection_ready':
                 // Backend has prepared video connection token
-                console.log('Video connection ready, establishing direct connection...');
+                console.log('🎥 Video connection ready, establishing direct connection...');
+                console.log('   Full message:', JSON.stringify(data, null, 2));
                 if (data.video_connection) {
                   const { token, endpoint, modalities } = data.video_connection;
+                  console.log('   Token length:', token?.length || 0, 'characters');
+                  console.log('   Endpoint:', endpoint);
+                  console.log('   Modalities:', modalities);
                   establishVideoConnection(token, endpoint, modalities);
+                } else {
+                  console.warn('⚠️ video_connection_ready received but no video_connection data');
                 }
                 break;
 
@@ -394,24 +400,26 @@ export default function VoiceChat({
       // Reset video chunks
       videoChunksRef.current = [];
 
-      // Build WebSocket URL with token authentication
+      // Build WebSocket URL
       // Endpoint format: wss://zimax.services.ai.azure.com/api/projects/zimax/voice-live/realtime?api-version=2025-10-01&model=gpt-realtime
-      // Azure VoiceLive WebSocket requires token for authentication
-      // Since WebSocket API doesn't support custom headers in browser, we use token as query parameter
+      // Azure VoiceLive WebSocket authentication:
+      // - For unified endpoints: token is an API key, use as query parameter
+      // - For direct endpoints: token might be Bearer token, but browser WebSocket can't set headers
+      // We'll try api-key query parameter first (works for unified endpoints)
       const separator = endpoint.includes('?') ? '&' : '?';
       const wsUrl = `${endpoint}${separator}api-key=${encodeURIComponent(token)}`;
-      console.log('Connecting to Azure for video:', wsUrl.substring(0, 100) + '...');
+      console.log('🎥 Connecting to Azure for video:', wsUrl.substring(0, 100) + '...');
+      console.log('   Token length:', token.length, 'characters');
 
       const videoWs = new WebSocket(wsUrl);
       videoWsRef.current = videoWs;
 
       videoWs.onopen = () => {
-        console.log('✅ Video connection established');
+        console.log('✅ Video WebSocket connection opened');
         
-        // First, authenticate with token
-        // Azure VoiceLive expects authentication in the first message or via headers
-        // Since we can't set headers in browser WebSocket, we'll send auth in first message
-        const authMessage = {
+        // Send session configuration
+        // Azure VoiceLive expects session.update as first message after connection
+        const sessionConfig = {
           type: 'session.update',
           session: {
             modalities: modalities,
@@ -438,21 +446,27 @@ export default function VoiceChat({
           }
         };
         
-        // Note: Token authentication might need to be handled differently
-        // Some Azure endpoints require token in Authorization header (not possible with browser WebSocket)
-        // Or token might be passed in URL query parameter
-        // For now, we'll send the session config and see if Azure accepts it
-        videoWs.send(JSON.stringify(authMessage));
-        console.log('Video session configuration sent');
+        videoWs.send(JSON.stringify(sessionConfig));
+        console.log('📤 Video session configuration sent:', JSON.stringify(sessionConfig, null, 2));
       };
 
       videoWs.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+          console.log('📥 Video WebSocket message received:', data.type, data);
           
           switch (data.type) {
+            case 'session.updated':
+              console.log('✅ Video session updated successfully');
+              // Session is ready, can now send requests
+              // Note: Video will only appear when there's a response
+              // The audio connection will trigger responses, which will generate video
+              // We don't need to send anything here - just wait for response events
+              break;
+
             case 'response.video.delta':
               // Streaming video chunk (base64)
+              console.log('📹 Video chunk received');
               if (data.delta) {
                 // Convert base64 to blob
                 const binaryString = atob(data.delta);
@@ -467,6 +481,7 @@ export default function VoiceChat({
 
             case 'response.video.done':
               // Final video URL or assembled video
+              console.log('✅ Video done event received:', data);
               if (data.url) {
                 // Direct URL provided
                 setAvatarVideoUrl(data.url);
@@ -489,26 +504,35 @@ export default function VoiceChat({
               break;
 
             case 'error':
-              console.error('Video connection error:', data);
+              console.error('❌ Video connection error:', data);
               // Don't fail the entire connection - video is optional
               break;
 
             default:
-              // Ignore other events (text transcripts, etc.)
+              // Log all other events for debugging
+              console.log('📋 Video WebSocket event:', data.type, data);
               break;
           }
         } catch (e) {
-          console.error('Failed to parse video message:', e);
+          console.error('❌ Failed to parse video message:', e, event.data);
         }
       };
 
       videoWs.onerror = (error) => {
-        console.error('Video WebSocket error:', error);
+        console.error('❌ Video WebSocket error:', error);
+        // Log more details if available
+        if (videoWs.readyState === WebSocket.CLOSED) {
+          console.error('   WebSocket closed unexpectedly');
+        }
         // Don't fail the entire connection - video is optional
       };
 
-      videoWs.onclose = () => {
-        console.log('Video connection closed');
+      videoWs.onclose = (event) => {
+        console.log('🔌 Video connection closed:', {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean
+        });
         videoWsRef.current = null;
       };
 
