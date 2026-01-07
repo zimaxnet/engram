@@ -38,6 +38,25 @@ VOICE_MEMORY_TIMEOUT = 2.0
 VOICE_PERSIST_TIMEOUT = 10.0
 
 
+# -----------------------------------------------------------------------------
+# VoiceLive v2: Token Request/Response Models
+# -----------------------------------------------------------------------------
+
+class TokenRequest(BaseModel):
+    """Request body for realtime token endpoint"""
+    agent_id: str = "elena"
+    session_id: Optional[str] = None
+    modalities: Optional[list[str]] = None  # Optional: defaults to ["audio", "text"], can be ["video", "text"] for video-only
+
+
+class TokenResponse(BaseModel):
+    """Ephemeral token response for WebRTC connection"""
+    token: str
+    endpoint: str
+    expires_at: Optional[str] = None
+    token_type: Optional[str] = None  # "api_key" or "jwt" to indicate token type
+
+
 def validate_voicelive_endpoint(endpoint: str) -> tuple[bool, str]:
     """
     Validate and detect VoiceLive endpoint type.
@@ -941,6 +960,7 @@ async def _generate_token_with_failsafe_for_browser(
         api_key = credential.key
     
     if api_key:
+        logger.info(f"📋 Strategy 1 (Browser): API key found (length: {len(api_key)} chars)")
         logger.info(f"📋 Strategy 1 (Browser): API key with API version {api_version}")
         try:
             # For unified endpoints, API key can be used directly in WebSocket query parameter
@@ -988,19 +1008,6 @@ async def _generate_token_with_failsafe_for_browser(
     
     logger.warning("❌ All browser-optimized token generation strategies failed.")
     return None
-
-class TokenRequest(BaseModel):
-    """Request body for realtime token endpoint"""
-    agent_id: str = "elena"
-    session_id: Optional[str] = None
-    modalities: Optional[list[str]] = None  # Optional: defaults to ["audio", "text"], can be ["video", "text"] for video-only
-
-
-class TokenResponse(BaseModel):
-    """Ephemeral token response for WebRTC connection"""
-    token: str
-    endpoint: str
-    expires_at: Optional[str] = None
 
 
 async def _generate_token_with_failsafe(
