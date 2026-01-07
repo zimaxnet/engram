@@ -1,6 +1,6 @@
 {
     "name": "WebRTC Avatar Video Architecture",
-    "version": "1.0.0",
+    "version": "0.9.0",
     "description": "WebRTC-based video avatar streaming for Elena agent using Azure Speech VoiceLive",
     "components": {
         "browser": {
@@ -20,7 +20,7 @@
                 "ice_credentials": {
                     "path": "/api/v1/voice/avatar/ice-credentials",
                     "method": "POST",
-                    "description": "Fetch ICE relay token from Azure Speech"
+                    "description": "Fetch ICE relay token from Azure Speech (Regional)"
                 },
                 "websocket": {
                     "path": "/api/v1/voice/voicelive/{session_id}",
@@ -39,10 +39,11 @@
             "type": "azure_service",
             "endpoints": {
                 "ice_relay": {
-                    "url": "https://{region}.tts.speech.microsoft.com/cognitiveservices/avatar/relay/token/v1",
+                    "url": "https://eastus2.tts.speech.microsoft.com/cognitiveservices/avatar/relay/token/v1",
                     "auth": [
-                        "api-key",
-                        "bearer-token"
+                        "AZURE_SPEECH_KEY (Required - Dedicated Resource)",
+                        "Ocp-Apim-Subscription-Key (Legacy/Incompatible)",
+                        "Bearer Token (Managed Identity - Fallback)"
                     ]
                 }
             }
@@ -58,7 +59,7 @@
             "step": 1,
             "from": "browser",
             "to": "backend",
-            "action": "GET /avatar/ice-credentials"
+            "action": "POST /avatar/ice-credentials"
         },
         {
             "step": 2,
@@ -115,7 +116,7 @@
     },
     "authentication": {
         "user_auth": "Azure CIAM (engramai.onmicrosoft.com) via Google login",
-        "backend_auth": "DefaultAzureCredential (Managed Identity or API Key)",
+        "backend_auth": "Hybrid (VoiceLive API Key + Regional Speech Endpoint)",
         "scope": "https://cognitiveservices.azure.com/.default"
     }
 }

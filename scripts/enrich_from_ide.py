@@ -36,6 +36,7 @@ def enrich_memory(
     speaker: str = "user",
     agent_id: str = "ide-agent",
     channel: str = "ide",
+    metadata: dict = {},
 ) -> dict:
     """Push context to Engram memory via the /enrich endpoint."""
     
@@ -59,6 +60,7 @@ def enrich_memory(
         "speaker": speaker,
         "agent_id": agent_id,
         "channel": channel,
+        "metadata": metadata,
     }
     
     headers = {
@@ -89,8 +91,17 @@ def main():
     parser.add_argument("--speaker", choices=["user", "assistant"], default="user", help="Speaker role")
     parser.add_argument("--agent", "-a", default="ide-agent", help="Agent ID (default: ide-agent)")
     parser.add_argument("--channel", "-c", default="ide", help="Channel name (default: ide)")
+    parser.add_argument("--metadata", "-m", help="JSON string of metadata (e.g. '{\"Category\":\"Bugfix\"}')")
     
     args = parser.parse_args()
+    
+    metadata = {}
+    if args.metadata:
+        try:
+            metadata = json.loads(args.metadata)
+        except json.JSONDecodeError as e:
+            print(f"❌ Error parsing metadata JSON: {e}", file=sys.stderr)
+            sys.exit(1)
     
     print(f"Enriching memory: {args.text[:80]}...")
     
@@ -100,6 +111,7 @@ def main():
         speaker=args.speaker,
         agent_id=args.agent,
         channel=args.channel,
+        metadata=metadata,
     )
     
     if result.get("success"):
