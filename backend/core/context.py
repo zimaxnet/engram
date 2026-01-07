@@ -137,6 +137,7 @@ class EpisodicState(BaseModel):
     # Compatibility with legacy tests expecting a raw messages list
     messages: list[dict] = Field(default_factory=list, description="Raw message list (legacy compatibility)")
     summary: str = Field("", description="Compressed narrative of conversation so far")
+    metadata: dict = Field(default_factory=dict, description="Additional metadata (agent_id, project_id, etc.)")
 
     # Configuration
     max_turns: int = Field(10, description="Maximum turns to keep in window")

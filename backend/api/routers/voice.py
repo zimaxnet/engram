@@ -270,6 +270,22 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
         agent_config = session["voice_config"]
         
         # ---------------------------------------------------------------------
+        # CRITICAL: Ensure user exists in Zep before creating session
+        # ---------------------------------------------------------------------
+        try:
+            await memory_client.get_or_create_user(
+                user_id=security.user_id,
+                metadata={
+                    "tenant_id": security.tenant_id,
+                    "email": security.email,
+                    "display_name": security.display_name,
+                }
+            )
+            logger.info(f"Ensured user exists in Zep: {security.user_id}")
+        except Exception as e:
+            logger.warning(f"Failed to ensure user {security.user_id} exists in Zep: {e}. Voice session may fail.")
+        
+        # ---------------------------------------------------------------------
         # Enrichment: Fetch user context (facts) from Zep to personalize the session.
         # We do this once at session start to avoid latency during the call.
         # ---------------------------------------------------------------------
