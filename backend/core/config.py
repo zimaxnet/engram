@@ -101,14 +101,6 @@ class Settings(BaseSettings):
     azure_voicelive_api_version: str = Field("2025-10-01", alias="AZURE_VOICELIVE_API_VERSION")
 
     # ==========================================================================
-    # Azure Speech Service (for ICE/TURN relay tokens - avatar video)
-    # ==========================================================================
-    # Speech service key and region for WebRTC avatar ICE credentials
-    # This is separate from VoiceLive - Speech service provides TURN relay tokens
-    azure_speech_key: Optional[str] = Field(None, alias="AZURE_SPEECH_KEY")
-    azure_speech_region: str = Field("eastus2", alias="AZURE_SPEECH_REGION")
-
-    # ==========================================================================
     # Multi-Model LLM Integration (Sage Agent)
     # ==========================================================================
     # Anthropic Claude for story generation

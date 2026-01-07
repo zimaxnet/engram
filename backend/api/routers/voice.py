@@ -985,31 +985,32 @@ async def get_avatar_ice_credentials(
     """
     from azure.identity import DefaultAzureCredential
     from azure.core.credentials import AzureKeyCredential
-    from backend.core import get_settings
     
-    settings = get_settings()
-    
-    # Check if Speech service is configured
-    if not settings.azure_speech_key and not settings.azure_speech_region:
+    if not voicelive_service.is_configured:
         raise HTTPException(
             status_code=503,
-            detail="Azure Speech service not configured. Set AZURE_SPEECH_KEY and AZURE_SPEECH_REGION."
+            detail="VoiceLive service not configured. Set AZURE_VOICELIVE_ENDPOINT."
         )
     
-    # Use configured region
-    region = settings.azure_speech_region
+    # Use the VoiceLive endpoint for unified access to avatar ICE
+    # For Azure AI Foundry unified endpoints, avatar relay is available through the project
+    endpoint = voicelive_service.endpoint.rstrip('/')
+    project_name = voicelive_service.project_name or 'zimax'
     
-    # Build the ICE relay token URL
-    ice_token_url = f"https://{region}.tts.speech.microsoft.com/cognitiveservices/avatar/relay/token/v1"
+    # Build ICE relay URL using unified endpoint pattern
+    # Format: https://{resource}.services.ai.azure.com/api/projects/{project}/voice-live/avatar/relay/token/v1
+    ice_token_url = f"{endpoint}/api/projects/{project_name}/voice-live/avatar/relay/token/v1"
     
     try:
+        # Get credential from VoiceLive service (same as used for voice)
+        credential = voicelive_service.get_credential()
+        
         async with httpx.AsyncClient(timeout=10.0) as client:
-            if settings.azure_speech_key:
-                # Use Speech API key
-                headers = {"Ocp-Apim-Subscription-Key": settings.azure_speech_key}
+            if isinstance(credential, AzureKeyCredential):
+                # API key authentication
+                headers = {"api-key": credential.key}
             else:
-                # Fall back to DefaultAzureCredential (Managed Identity)
-                credential = DefaultAzureCredential()
+                # Managed Identity / DefaultAzureCredential
                 token = credential.get_token("https://cognitiveservices.azure.com/.default")
                 headers = {"Authorization": f"Bearer {token.token}"}
             
