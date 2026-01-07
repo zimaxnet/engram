@@ -985,6 +985,9 @@ async def get_avatar_ice_credentials(
     """
     from azure.identity import DefaultAzureCredential
     from azure.core.credentials import AzureKeyCredential
+    from backend.core.config import get_settings
+    
+    settings = get_settings()
     
     if not voicelive_service.is_configured:
         raise HTTPException(
