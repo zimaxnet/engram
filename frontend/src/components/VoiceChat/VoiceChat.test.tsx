@@ -106,10 +106,10 @@ describe('VoiceChat Component', () => {
     render(<VoiceChat {...defaultProps} />);
     expect(screen.getByRole('button')).toBeInTheDocument();
 
-    // Should create WebSocket connection to backend proxy
+    // Should create WebSocket connection to backend proxy (with optional token query param)
     await waitFor(() => {
       expect(MockWebSocket).toHaveBeenCalledWith(
-        expect.stringMatching(/^ws:\/\/localhost:8082\/api\/v1\/voice\/voicelive\/voice-/),
+        expect.stringMatching(/^ws:\/\/localhost:8082\/api\/v1\/voice\/voicelive\/voice-.*(\?token=.*)?$/),
         undefined
       );
     });
@@ -235,6 +235,8 @@ describe('VoiceChat Component', () => {
       expect(onStatusChange).toHaveBeenCalledWith('error');
     }, { timeout: 3000 });
 
-    expect(screen.getByText(/Voice connection error/i)).toBeInTheDocument();
+    // Check for error message (use getAllByText since there may be multiple elements)
+    const errorElements = screen.getAllByText(/Voice connection error/i);
+    expect(errorElements.length).toBeGreaterThan(0);
   });
 });
