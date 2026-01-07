@@ -55,7 +55,8 @@ export default function VoiceChat({
   const [avatarVideoUrl, setAvatarVideoUrl] = useState<string | undefined>(undefined);
 
   const wsRef = useRef<WebSocket | null>(null);
-  const videoWsRef = useRef<WebSocket | null>(null); // Direct video connection to Azure
+  const videoWsRef = useRef<WebSocket | null>(null); // Fallback: Direct WebSocket to Azure (deprecated)
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null); // WebRTC for avatar video
   const processorRef = useRef<ScriptProcessorNode | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const playbackContextRef = useRef<AudioContext | null>(null);
@@ -63,7 +64,7 @@ export default function VoiceChat({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const animationFrameRef = useRef<number>(0);
   const streamRef = useRef<MediaStream | null>(null);
-  const videoChunksRef = useRef<Blob[]>([]); // For assembling video chunks
+  const videoElementRef = useRef<HTMLVideoElement | null>(null); // For WebRTC video stream
 
   // Buffers for current turn
   const assistantTranscriptRef = useRef('');
@@ -90,7 +91,7 @@ export default function VoiceChat({
     onStatusChangeRef.current = onStatusChange;
     onAvatarVideoRef.current = onAvatarVideo;
   }, [onMessage, onVisemes, onStatusChange, onAvatarVideo]);
-  
+
   // Notify parent when avatar video URL changes
   useEffect(() => {
     if (onAvatarVideoRef.current) {
@@ -184,25 +185,25 @@ export default function VoiceChat({
           console.warn('Failed to get access token for voice WebSocket:', error);
           // Continue without token - backend will handle authentication
         }
-        
+
         // Connect to backend WebSocket proxy endpoint
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8082';
         let wsUrl = apiUrl.replace(/^http/, 'ws') + `/api/v1/voice/voicelive/${activeSessionId}`;
-        
+
         // Append token as query parameter if available
         if (token) {
           wsUrl += `?token=${encodeURIComponent(token)}`;
         } else {
           console.warn('No access token available for voice WebSocket - connection may fail if AUTH_REQUIRED=true');
         }
-        
+
         const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
           if (!mounted) return;
           setConnectionStatus('connected');
           onStatusChangeRef.current?.('connected');
-          
+
           // Backend handles agent configuration automatically based on session
           // If we need to switch agent, send agent message
           if (agentId) {
@@ -215,7 +216,7 @@ export default function VoiceChat({
 
         ws.onmessage = (event) => {
           if (!mounted) return;
-          
+
           try {
             const data = JSON.parse(event.data);
 
@@ -306,17 +307,26 @@ export default function VoiceChat({
                 break;
 
               case 'video_connection_ready':
-                // Backend has prepared video connection token
-                console.log('🎥 Video connection ready, establishing direct connection...');
-                console.log('   Full message:', JSON.stringify(data, null, 2));
-                if (data.video_connection) {
-                  const { token, endpoint, modalities } = data.video_connection;
-                  console.log('   Token length:', token?.length || 0, 'characters');
-                  console.log('   Endpoint:', endpoint);
-                  console.log('   Modalities:', modalities);
-                  establishVideoConnection(token, endpoint, modalities);
-                } else {
-                  console.warn('⚠️ video_connection_ready received but no video_connection data');
+                // Backend has prepared video connection - use WebRTC instead of direct WebSocket
+                console.log('🎥 Video connection ready, establishing WebRTC connection...');
+                // Don't use the old WebSocket approach - use WebRTC
+                // The backend message is just a signal to start WebRTC negotiation
+                establishWebRTCVideoConnection();
+                break;
+
+              case 'avatar_sdp_answer':
+                // Backend returns SDP answer for WebRTC avatar
+                console.log('📥 Received SDP answer for avatar');
+                if (data.sdp) {
+                  handleSdpAnswer(data.sdp);
+                }
+                break;
+
+              case 'remote_ice_candidate':
+                // Backend forwards remote ICE candidate
+                console.log('🧊 Received remote ICE candidate');
+                if (data.candidate) {
+                  handleRemoteIceCandidate(data.candidate);
                 }
                 break;
 
@@ -388,181 +398,164 @@ export default function VoiceChat({
     };
   }, [activeSessionId]);
 
-  // Establish direct video connection to Azure
-  const establishVideoConnection = useCallback((token: string, endpoint: string, modalities: string[]) => {
+  // NOTE: Old WebSocket-based establishVideoConnection removed
+  // Using WebRTC-based establishWebRTCVideoConnection instead (see below)
+
+  // NEW: Establish WebRTC video connection for avatar
+  // This is the proper implementation using WebRTC instead of broken WebSocket
+  const establishWebRTCVideoConnection = useCallback(async () => {
+    console.log('🎥 Starting WebRTC avatar video connection...');
+
     try {
-      // Close existing video connection if any
-      if (videoWsRef.current) {
-        videoWsRef.current.close();
-        videoWsRef.current = null;
+      // Close existing connections
+      if (peerConnectionRef.current) {
+        peerConnectionRef.current.close();
+        peerConnectionRef.current = null;
       }
 
-      // Reset video chunks
-      videoChunksRef.current = [];
+      // 1. Fetch ICE credentials from backend
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8082';
+      console.log('📡 Fetching ICE credentials from backend...');
 
-      // Build WebSocket URL
-      // Endpoint format: wss://zimax.services.ai.azure.com/api/projects/zimax/voice-live/realtime?api-version=2025-10-01&model=gpt-realtime
-      // Azure VoiceLive WebSocket authentication for unified endpoints:
-      // - Managed Identity token (JWT): Use as Bearer token, but browser WebSocket can't set headers
-      // - API key: Use as api-key query parameter
-      // 
-      // Since browser WebSocket can't set Authorization header, we have two options:
-      // 1. If token is JWT (starts with "eyJ"), try using it as Bearer in first message (not supported by Azure)
-      // 2. Use API key from environment if available (but we don't have it in frontend)
-      // 3. Actually, Azure unified endpoints might accept Bearer token as query parameter with different name
-      //
-      // Let's try: For JWT tokens, Azure might accept them via a different mechanism
-      // But actually, the backend should return an API key for video connections, not a Bearer token
-      // 
-      // Check if token looks like JWT (starts with "eyJ") or API key
-      const isJWT = token.startsWith('eyJ');
-      const separator = endpoint.includes('?') ? '&' : '?';
-      
-      let wsUrl: string;
-      if (isJWT) {
-        // JWT token - Azure might not accept this via query parameter
-        // Try using it as Authorization header would be used, but we can't set headers
-        // Alternative: Try as 'token' query parameter (some Azure endpoints support this)
-        console.warn('⚠️ Token is JWT (Bearer token), browser WebSocket cannot set Authorization header');
-        console.warn('   Trying as query parameter - this may not work for unified endpoints');
-        wsUrl = `${endpoint}${separator}token=${encodeURIComponent(token)}`;
+      const iceResponse = await fetch(`${apiUrl}/api/v1/voice/avatar/ice-credentials`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ agent_id: agentId }),
+      });
+
+      if (!iceResponse.ok) {
+        const errorText = await iceResponse.text();
+        console.error('❌ Failed to get ICE credentials:', iceResponse.status, errorText);
+        return;
+      }
+
+      const iceConfig = await iceResponse.json();
+      console.log('✅ ICE credentials received:', {
+        urls: iceConfig.urls,
+        username: iceConfig.username?.substring(0, 10) + '...',
+        ttl: iceConfig.ttl,
+      });
+
+      // 2. Create WebRTC peer connection with ICE servers
+      const peerConnection = new RTCPeerConnection({
+        iceServers: [{
+          urls: iceConfig.urls,
+          username: iceConfig.username,
+          credential: iceConfig.credential,
+        }],
+      });
+      peerConnectionRef.current = peerConnection;
+
+      // 3. Set up track handlers for video/audio streams
+      peerConnection.ontrack = (event) => {
+        console.log('📹 WebRTC track received:', event.track.kind);
+
+        if (event.track.kind === 'video') {
+          let videoElement = videoElementRef.current;
+          if (!videoElement) {
+            videoElement = document.createElement('video');
+            videoElement.id = 'avatar-video-player';
+            videoElement.autoplay = true;
+            videoElement.playsInline = true;
+            videoElement.muted = false;
+            videoElementRef.current = videoElement;
+          }
+
+          videoElement.srcObject = event.streams[0];
+          console.log('✅ Avatar video stream connected');
+          setIsSpeaking(true);
+          setAvatarVideoUrl('webrtc://connected');
+        }
+
+        if (event.track.kind === 'audio') {
+          const audioElement = document.createElement('audio');
+          audioElement.id = 'avatar-audio-player';
+          audioElement.srcObject = event.streams[0];
+          audioElement.autoplay = true;
+          console.log('✅ Avatar audio stream connected');
+        }
+      };
+
+      // 4. ICE candidate handling
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+          console.log('🧊 ICE candidate:', event.candidate.type);
+          if (wsRef.current?.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify({
+              type: 'ice_candidate',
+              candidate: event.candidate.toJSON(),
+            }));
+          }
+        }
+      };
+
+      peerConnection.oniceconnectionstatechange = () => {
+        console.log('🔗 ICE connection state:', peerConnection.iceConnectionState);
+        if (peerConnection.iceConnectionState === 'connected') {
+          console.log('✅ WebRTC avatar connected!');
+        } else if (peerConnection.iceConnectionState === 'failed') {
+          console.error('❌ WebRTC connection failed');
+        }
+      };
+
+      // 5. Add transceivers to receive video/audio
+      peerConnection.addTransceiver('video', { direction: 'recvonly' });
+      peerConnection.addTransceiver('audio', { direction: 'recvonly' });
+
+      // 6. Create offer
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+      console.log('📤 SDP offer created');
+
+      // 7. Send offer to backend for avatar session negotiation
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({
+          type: 'avatar_connect',
+          sdp: offer.sdp,
+          agent_id: agentId,
+        }));
+        console.log('📤 SDP offer sent to backend for avatar negotiation');
       } else {
-        // API key - use as api-key query parameter
-        wsUrl = `${endpoint}${separator}api-key=${encodeURIComponent(token)}`;
+        console.warn('⚠️ Main WebSocket not connected, cannot send SDP offer');
       }
-      
-      console.log('🎥 Connecting to Azure for video:', wsUrl.substring(0, 100) + '...');
-      console.log('   Token type:', isJWT ? 'JWT (Bearer)' : 'API Key');
-      console.log('   Token length:', token.length, 'characters');
-
-      const videoWs = new WebSocket(wsUrl);
-      videoWsRef.current = videoWs;
-
-      videoWs.onopen = () => {
-        console.log('✅ Video WebSocket connection opened');
-        
-        // Send session configuration
-        // Azure VoiceLive expects session.update as first message after connection
-        const sessionConfig = {
-          type: 'session.update',
-          session: {
-            modalities: modalities,
-            instructions: 'You are Elena Vasquez, a business analyst. Speak naturally and professionally.',
-            voice: 'en-US-Ava:DragonHDLatestNeural',
-            input_audio_format: 'pcm16',
-            output_audio_format: 'pcm16',
-            turn_detection: {
-              type: 'server_vad',
-              threshold: 0.6,
-              prefix_padding_ms: 300,
-              silence_duration_ms: 800,
-            },
-            // Avatar configuration for Elena
-            ...(modalities.includes('video') ? {
-              avatar: {
-                avatar_id: 'en-US-JennyNeural',
-                style: 'professional',
-                emotion: 'neutral',
-                resolution: '1080p',
-                background: 'transparent',
-              }
-            } : {}),
-          }
-        };
-        
-        videoWs.send(JSON.stringify(sessionConfig));
-        console.log('📤 Video session configuration sent:', JSON.stringify(sessionConfig, null, 2));
-      };
-
-      videoWs.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          console.log('📥 Video WebSocket message received:', data.type, data);
-          
-          switch (data.type) {
-            case 'session.updated':
-              console.log('✅ Video session updated successfully');
-              // Session is ready, can now send requests
-              // Note: Video will only appear when there's a response
-              // The audio connection will trigger responses, which will generate video
-              // We don't need to send anything here - just wait for response events
-              break;
-
-            case 'response.video.delta':
-              // Streaming video chunk (base64)
-              console.log('📹 Video chunk received');
-              if (data.delta) {
-                // Convert base64 to blob
-                const binaryString = atob(data.delta);
-                const bytes = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) {
-                  bytes[i] = binaryString.charCodeAt(i);
-                }
-                const blob = new Blob([bytes], { type: 'video/mp4' });
-                videoChunksRef.current.push(blob);
-              }
-              break;
-
-            case 'response.video.done':
-              // Final video URL or assembled video
-              console.log('✅ Video done event received:', data);
-              if (data.url) {
-                // Direct URL provided
-                setAvatarVideoUrl(data.url);
-                onAvatarVideoRef.current?.(data.url);
-                console.log('✅ Avatar video URL received:', data.url);
-              } else if (videoChunksRef.current.length > 0) {
-                // Assemble chunks into blob URL
-                const fullBlob = new Blob(videoChunksRef.current, { type: 'video/mp4' });
-                const blobUrl = URL.createObjectURL(fullBlob);
-                setAvatarVideoUrl(blobUrl);
-                onAvatarVideoRef.current?.(blobUrl);
-                console.log('✅ Avatar video assembled from chunks');
-                videoChunksRef.current = []; // Clear chunks
-              }
-              setIsSpeaking(true);
-              break;
-
-            case 'response.done':
-              setIsSpeaking(false);
-              break;
-
-            case 'error':
-              console.error('❌ Video connection error:', data);
-              // Don't fail the entire connection - video is optional
-              break;
-
-            default:
-              // Log all other events for debugging
-              console.log('📋 Video WebSocket event:', data.type, data);
-              break;
-          }
-        } catch (e) {
-          console.error('❌ Failed to parse video message:', e, event.data);
-        }
-      };
-
-      videoWs.onerror = (error) => {
-        console.error('❌ Video WebSocket error:', error);
-        // Log more details if available
-        if (videoWs.readyState === WebSocket.CLOSED) {
-          console.error('   WebSocket closed unexpectedly');
-        }
-        // Don't fail the entire connection - video is optional
-      };
-
-      videoWs.onclose = (event) => {
-        console.log('🔌 Video connection closed:', {
-          code: event.code,
-          reason: event.reason,
-          wasClean: event.wasClean
-        });
-        videoWsRef.current = null;
-      };
 
     } catch (error) {
-      console.error('Failed to establish video connection:', error);
-      // Don't fail the entire connection - video is optional
+      console.error('❌ Failed to establish WebRTC video connection:', error);
+    }
+  }, [agentId]);
+
+  // Handle SDP answer from backend (for WebRTC avatar)
+  const handleSdpAnswer = useCallback(async (sdp: string) => {
+    if (!peerConnectionRef.current) {
+      console.warn('⚠️ No peer connection to apply SDP answer');
+      return;
+    }
+
+    try {
+      await peerConnectionRef.current.setRemoteDescription({
+        type: 'answer',
+        sdp: sdp,
+      });
+      console.log('✅ SDP answer applied to peer connection');
+    } catch (error) {
+      console.error('❌ Failed to apply SDP answer:', error);
+    }
+  }, []);
+
+  // Handle remote ICE candidate from backend
+  const handleRemoteIceCandidate = useCallback(async (candidate: RTCIceCandidateInit) => {
+    if (!peerConnectionRef.current) {
+      console.warn('⚠️ No peer connection to add ICE candidate');
+      return;
+    }
+
+    try {
+      await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+      console.log('✅ Remote ICE candidate added');
+    } catch (error) {
+      console.error('❌ Failed to add ICE candidate:', error);
     }
   }, []);
 

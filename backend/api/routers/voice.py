@@ -57,6 +57,14 @@ class TokenResponse(BaseModel):
     token_type: Optional[str] = None  # "api_key" or "jwt" to indicate token type
 
 
+class IceCredentialsResponse(BaseModel):
+    """ICE server credentials for WebRTC peer connection"""
+    urls: list[str]
+    username: str
+    credential: str
+    ttl: Optional[int] = None  # Time-to-live in seconds
+
+
 def validate_voicelive_endpoint(endpoint: str) -> tuple[bool, str]:
     """
     Validate and detect VoiceLive endpoint type.
@@ -812,6 +820,54 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                         # Cancel current response
                         await voicelive_connection.response.cancel()
                     
+                    elif msg_type == "avatar_connect":
+                        # WebRTC: Browser is requesting avatar video connection
+                        # Receives SDP offer and agent_id from browser
+                        sdp_offer = data.get("sdp")
+                        avatar_agent_id = data.get("agent_id", "elena")
+                        
+                        logger.info(f"📹 WebRTC avatar connect request for agent: {avatar_agent_id}")
+                        logger.info(f"   SDP offer length: {len(sdp_offer) if sdp_offer else 0} chars")
+                        
+                        # TODO: Full WebRTC implementation requires:
+                        # 1. Create avatar session with Azure Speech SDK
+                        # 2. Exchange SDP offer/answer
+                        # 3. Forward ICE candidates
+                        #
+                        # For now, we log the request and send a placeholder response
+                        # The actual WebRTC negotiation happens between browser and Azure
+                        # once we forward the credentials properly
+                        
+                        if sdp_offer:
+                            # Send acknowledgment - avatar WebRTC requires Azure Speech SDK
+                            # The browser has already fetched ICE credentials
+                            # Real implementation needs to proxy the SDP exchange
+                            await websocket.send_json({
+                                "type": "avatar_status",
+                                "status": "negotiating",
+                                "message": "Avatar WebRTC negotiation in progress",
+                            })
+                            
+                            # Note: Full implementation would use Azure Speech SDK's 
+                            # AvatarSynthesizer to negotiate the WebRTC connection
+                            # and return the SDP answer
+                            logger.info(f"📹 Avatar WebRTC SDP exchange initiated (SDK integration pending)")
+                        else:
+                            await websocket.send_json({
+                                "type": "error",
+                                "message": "No SDP offer provided for avatar connection",
+                            })
+                    
+                    elif msg_type == "ice_candidate":
+                        # WebRTC: Browser is sending an ICE candidate
+                        candidate = data.get("candidate")
+                        if candidate:
+                            logger.info(f"🧊 Received ICE candidate from browser: {candidate.get('type', 'unknown')}")
+                            # TODO: Forward to Azure Speech avatar session
+                            # For now, just acknowledge receipt
+                        else:
+                            logger.warning("⚠️  ICE candidate message received but no candidate data")
+                    
             except WebSocketDisconnect:
                 logger.info(f"VoiceLive WebSocket disconnected: {session_id}")
             
@@ -903,6 +959,102 @@ async def get_voice_status():
             },
         },
     }
+
+
+# -----------------------------------------------------------------------------
+# WebRTC Avatar: ICE Server Credentials Endpoint
+# -----------------------------------------------------------------------------
+
+class AvatarIceRequest(BaseModel):
+    """Request for avatar ICE credentials"""
+    agent_id: str = "elena"
+
+
+@router.post("/avatar/ice-credentials", response_model=IceCredentialsResponse)
+async def get_avatar_ice_credentials(
+    request: AvatarIceRequest = AvatarIceRequest(),
+):
+    """
+    Get ICE server credentials for WebRTC avatar connection.
+    
+    The browser needs these credentials to establish a WebRTC peer connection
+    for real-time avatar video streaming. The ICE server handles NAT traversal.
+    
+    Authentication: Uses backend's Managed Identity or API key (not user token).
+    This is secure because the ICE credentials are short-lived relay tokens.
+    """
+    from azure.identity import DefaultAzureCredential
+    from azure.core.credentials import AzureKeyCredential
+    
+    if not voicelive_service.is_configured:
+        raise HTTPException(
+            status_code=503,
+            detail="VoiceLive service not configured. Set AZURE_VOICELIVE_ENDPOINT."
+        )
+    
+    # Determine the Speech service region from endpoint
+    # Endpoint format: https://zimax.services.ai.azure.com or https://eastus2.tts.speech.microsoft.com
+    endpoint = voicelive_service.endpoint.rstrip('/')
+    
+    # For unified endpoints, we need to extract region or use default
+    if "services.ai.azure.com" in endpoint:
+        # Unified endpoint - use the project's region (default to eastus2)
+        region = "eastus2"  # TODO: Extract from Azure resource configuration
+    elif "tts.speech.microsoft.com" in endpoint:
+        # Direct Speech endpoint - extract region from URL
+        import re
+        match = re.match(r"https://(\w+)\.tts\.speech\.microsoft\.com", endpoint)
+        region = match.group(1) if match else "eastus2"
+    else:
+        region = "eastus2"
+    
+    # Build the ICE relay token URL
+    ice_token_url = f"https://{region}.tts.speech.microsoft.com/cognitiveservices/avatar/relay/token/v1"
+    
+    try:
+        # Get credential - prefer API key for simplicity, fall back to Managed Identity
+        credential = voicelive_service.get_credential()
+        
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            if isinstance(credential, AzureKeyCredential):
+                # API key authentication
+                headers = {"Ocp-Apim-Subscription-Key": credential.key}
+            else:
+                # Managed Identity / DefaultAzureCredential
+                # Get token for Cognitive Services scope
+                token = credential.get_token("https://cognitiveservices.azure.com/.default")
+                headers = {"Authorization": f"Bearer {token.token}"}
+            
+            logger.info(f"Fetching ICE credentials from: {ice_token_url}")
+            response = await client.get(ice_token_url, headers=headers)
+            
+            if response.status_code != 200:
+                logger.error(f"ICE token request failed: {response.status_code} - {response.text}")
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=f"Failed to get ICE credentials: {response.text[:200]}"
+                )
+            
+            data = response.json()
+            logger.info(f"ICE credentials obtained successfully")
+            
+            # Azure returns: {Urls: [...], Username: "...", Credential: "..."}
+            # Normalize to lowercase keys
+            return IceCredentialsResponse(
+                urls=data.get("Urls", data.get("urls", [])),
+                username=data.get("Username", data.get("username", "")),
+                credential=data.get("Credential", data.get("credential", "")),
+                ttl=data.get("Ttl", data.get("ttl")),
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get ICE credentials: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get ICE credentials: {str(e)}"
+        )
 
 
 # -----------------------------------------------------------------------------
