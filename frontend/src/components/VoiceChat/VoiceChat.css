@@ -30,14 +30,14 @@
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  box-shadow: 
+  box-shadow:
     0 4px 20px rgba(0, 212, 255, 0.3),
     inset 0 0 0 2px rgba(255, 255, 255, 0.1);
 }
 
 .voice-button:hover:not(:disabled) {
   transform: scale(1.05);
-  box-shadow: 
+  box-shadow:
     0 6px 30px rgba(0, 212, 255, 0.4),
     inset 0 0 0 2px rgba(255, 255, 255, 0.2);
 }
@@ -59,13 +59,16 @@
 }
 
 @keyframes pulse-green {
-  0%, 100% {
-    box-shadow: 
+
+  0%,
+  100% {
+    box-shadow:
       0 4px 20px rgba(16, 185, 129, 0.3),
       inset 0 0 0 2px rgba(255, 255, 255, 0.1);
   }
+
   50% {
-    box-shadow: 
+    box-shadow:
       0 4px 40px rgba(16, 185, 129, 0.5),
       inset 0 0 0 2px rgba(255, 255, 255, 0.2);
   }
@@ -84,16 +87,24 @@
 }
 
 @keyframes pulse-purple {
-  0%, 100% {
-    box-shadow: 
+
+  0%,
+  100% {
+    box-shadow:
       0 4px 20px rgba(139, 92, 246, 0.3),
       inset 0 0 0 2px rgba(255, 255, 255, 0.1);
   }
+
   50% {
-    box-shadow: 
+    box-shadow:
       0 4px 40px rgba(139, 92, 246, 0.5),
       inset 0 0 0 2px rgba(255, 255, 255, 0.2);
   }
+}
+
+/* Hidden Element */
+.hidden-audio {
+  display: none;
 }
 
 /* Voice Ring (Audio Level Visualization) */
@@ -104,6 +115,10 @@
   border: 3px solid rgba(16, 185, 129, 0.6);
   transition: transform 0.1s ease-out, opacity 0.3s ease;
   pointer-events: none;
+
+  /* Dynamic values from CSS variables */
+  transform: scale(var(--scale, 1));
+  opacity: var(--opacity, 0);
 }
 
 /* Voice Icon */
@@ -159,6 +174,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -200,9 +216,19 @@
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-5px);
+  }
+
+  75% {
+    transform: translateX(5px);
+  }
 }
 
 /* Responsive */
@@ -211,10 +237,9 @@
     width: 70px;
     height: 70px;
   }
-  
+
   .voice-icon {
     width: 28px;
     height: 28px;
   }
 }
-

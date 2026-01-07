@@ -667,7 +667,7 @@ export default function VoiceChat({
 
   return (
     <div className="voice-chat">
-      <audio ref={audioRef} style={{ display: 'none' }} />
+      <audio ref={audioRef} className="hidden-audio" />
 
       {/* Voice Button */}
       <div className="voice-button-container">
@@ -693,9 +693,9 @@ export default function VoiceChat({
           <div
             className="voice-ring"
             style={{
-              transform: `scale(${1 + audioLevel * 0.5})`,
-              opacity: isListening ? 0.8 : 0
-            }}
+              '--scale': 1 + audioLevel * 0.5,
+              '--opacity': isListening ? 0.8 : 0
+            } as React.CSSProperties}
           />
 
           <div className="voice-icon">
