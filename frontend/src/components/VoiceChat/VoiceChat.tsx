@@ -394,16 +394,14 @@ export default function VoiceChat({
       // Reset video chunks
       videoChunksRef.current = [];
 
-      // Build WebSocket URL
+      // Build WebSocket URL with token authentication
       // Endpoint format: wss://zimax.services.ai.azure.com/api/projects/zimax/voice-live/realtime?api-version=2025-10-01&model=gpt-realtime
-      // For authentication, we use the token in the Authorization header or as api-key header
-      const wsUrl = endpoint;
+      // Azure VoiceLive WebSocket requires token for authentication
+      // Since WebSocket API doesn't support custom headers in browser, we use token as query parameter
+      const separator = endpoint.includes('?') ? '&' : '?';
+      const wsUrl = `${endpoint}${separator}api-key=${encodeURIComponent(token)}`;
       console.log('Connecting to Azure for video:', wsUrl.substring(0, 100) + '...');
 
-      // Azure VoiceLive WebSocket requires token in Authorization header or as api-key
-      // Since WebSocket API doesn't support custom headers in browser, we'll use the token
-      // as a query parameter or in the first message (depending on Azure's requirements)
-      // For now, try connecting with token in URL (some endpoints support this)
       const videoWs = new WebSocket(wsUrl);
       videoWsRef.current = videoWs;
 
