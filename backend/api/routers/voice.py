@@ -324,42 +324,56 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                 ),
             }
             
-            # Add avatar support for Elena (with graceful fallback)
+            # Video routing: Direct to browser (not through backend)
+            # Audio and transcripts: Through backend for memory persistence
             avatar_enabled = False
+            video_direct_url = None
             if enable_avatar:
-                try:
-                    # Try to add VIDEO modality and avatar configuration
-                    modalities.append(Modality.VIDEO)
-                    # Avatar configuration - match Elena's Foundry avatar settings
-                    session_kwargs["avatar"] = {
-                        "avatar_id": "en-US-JennyNeural",  # Match Elena's voice
-                        "style": "professional",
-                        "emotion": "neutral",
-                        "resolution": "1080p",
-                        "background": "transparent",
-                    }
-                    logger.info(f"VoiceLive avatar enabled for {session['agent_id']}")
-                    avatar_enabled = True
-                except Exception as e:
-                    logger.warning(f"Failed to configure avatar, falling back to audio-only: {e}")
-                    # Remove VIDEO modality if it was added
-                    if Modality.VIDEO in modalities:
-                        modalities.remove(Modality.VIDEO)
-                    if "avatar" in session_kwargs:
-                        del session_kwargs["avatar"]
+                logger.info(f"📹 Video will be routed directly to browser (bypassing backend)")
+                logger.info(f"   Audio and transcripts will continue through backend for memory persistence")
+                # Don't add VIDEO modality to backend connection - browser will connect directly
+                # Instead, we'll provide a token for direct video connection
+                avatar_enabled = True  # Mark as enabled so we can provide video connection info
             
             session_config = RequestSession(
                 modalities=modalities,
                 **session_kwargs
             )
             
+            # Log session configuration details for debugging
+            logger.info(f"📋 Session configuration:")
+            logger.info(f"   Modalities: {[str(m) for m in modalities]}")
+            logger.info(f"   Avatar enabled: {avatar_enabled}")
+            if avatar_enabled and "avatar" in session_kwargs:
+                logger.info(f"   Avatar config: {session_kwargs['avatar']}")
+            logger.info(f"   Voice: {session_kwargs.get('voice', 'N/A')}")
+            logger.info(f"   Instructions length: {len(session_kwargs.get('instructions', ''))}")
+            
             # Try to update session, fallback to audio-only if avatar fails
             try:
+                logger.info("🔄 Attempting to update VoiceLive session with current configuration...")
                 await voicelive_connection.session.update(session=session_config)
-                logger.info(f"VoiceLive session updated successfully (avatar={'enabled' if avatar_enabled else 'disabled'})")
+                logger.info(f"✅ VoiceLive session updated successfully (avatar={'enabled' if avatar_enabled else 'disabled'})")
             except Exception as e:
+                error_type = type(e).__name__
+                error_msg = str(e)
+                logger.error(f"❌ Session update failed:")
+                logger.error(f"   Error type: {error_type}")
+                logger.error(f"   Error message: {error_msg}")
+                logger.error(f"   Full exception:", exc_info=True)
+                
+                # Check if this is an HTTP error with response details
+                if hasattr(e, 'response'):
+                    try:
+                        response_text = getattr(e.response, 'text', 'N/A')
+                        status_code = getattr(e.response, 'status_code', 'N/A')
+                        logger.error(f"   HTTP Status: {status_code}")
+                        logger.error(f"   Response: {response_text[:500]}")  # First 500 chars
+                    except:
+                        pass
+                
                 if avatar_enabled and Modality.VIDEO in modalities:
-                    logger.warning(f"Session update with avatar failed, retrying without VIDEO modality: {e}")
+                    logger.warning(f"⚠️  Session update with avatar failed, retrying without VIDEO modality...")
                     # Retry without VIDEO modality
                     modalities.remove(Modality.VIDEO)
                     if "avatar" in session_kwargs:
@@ -368,25 +382,62 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                         modalities=modalities,
                         **session_kwargs
                     )
+                    logger.info(f"🔄 Retrying with audio-only configuration (modalities: {[str(m) for m in modalities]})")
                     try:
                         await voicelive_connection.session.update(session=session_config)
-                        logger.info("VoiceLive session updated successfully (audio-only fallback)")
+                        logger.info("✅ VoiceLive session updated successfully (audio-only fallback)")
                         avatar_enabled = False
                     except Exception as retry_error:
                         # If retry also fails, log but don't fail the connection - continue with audio
-                        logger.error(f"Session update failed even without VIDEO modality: {retry_error}. Continuing with existing session configuration.")
+                        logger.error(f"❌ Session update failed even without VIDEO modality:")
+                        logger.error(f"   Error type: {type(retry_error).__name__}")
+                        logger.error(f"   Error message: {str(retry_error)}")
+                        logger.error(f"   Full exception:", exc_info=True)
+                        if hasattr(retry_error, 'response'):
+                            try:
+                                response_text = getattr(retry_error.response, 'text', 'N/A')
+                                status_code = getattr(retry_error.response, 'status_code', 'N/A')
+                                logger.error(f"   HTTP Status: {status_code}")
+                                logger.error(f"   Response: {response_text[:500]}")
+                            except:
+                                pass
+                        logger.warning("   Continuing with existing session configuration (audio-only)")
                         avatar_enabled = False
                         # Don't raise - allow connection to continue with whatever session state exists
                 else:
                     # If avatar wasn't enabled or VIDEO not in modalities, this is a real error
-                    logger.error(f"VoiceLive session update failed: {e}")
+                    logger.error(f"❌ VoiceLive session update failed (non-avatar error)")
                     raise
             
-            # Send ready message
-            await websocket.send_json({
+            # Send ready message with video connection info if avatar is enabled
+            ready_message = {
                 "type": "agent_switched",
                 "agent_id": session["agent_id"],
-            })
+            }
+            
+            # If avatar is enabled, provide video connection token for direct browser connection
+            if avatar_enabled:
+                try:
+                    # Generate token for direct video connection
+                    video_token_request = TokenRequest(
+                        agent_id=session["agent_id"],
+                        modalities=["video", "text"]  # Video + text for video transcripts
+                    )
+                    video_token_response = await get_realtime_token(video_token_request)
+                    
+                    ready_message["video_connection"] = {
+                        "token": video_token_response.token,
+                        "endpoint": video_token_response.endpoint,
+                        "modalities": ["video", "text"],
+                    }
+                    logger.info(f"📹 Video connection token provided for direct browser connection")
+                    logger.info(f"   Endpoint: {video_token_response.endpoint}")
+                except Exception as e:
+                    logger.warning(f"⚠️  Failed to generate video connection token: {e}", exc_info=True)
+                    logger.warning(f"   Video will not be available, but audio will work")
+                    avatar_enabled = False
+            
+            await websocket.send_json(ready_message)
             
             # Create task to process VoiceLive events
             async def process_voicelive_events():
@@ -492,34 +543,9 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                                 "format": "audio/pcm16",
                             })
                         
-                        # Handle avatar video events (if VIDEO modality is enabled)
-                        # Handle avatar video events (only if avatar is enabled)
-                        elif avatar_enabled and hasattr(ServerEventType, 'RESPONSE_VIDEO_DELTA') and event.type == getattr(ServerEventType, 'RESPONSE_VIDEO_DELTA'):
-                            # Send avatar video chunk to client
-                            try:
-                                video_data = getattr(event, "delta", None) or getattr(event, "data", None)
-                                if video_data:
-                                    video_base64 = base64.b64encode(video_data).decode("utf-8")
-                                    await websocket.send_json({
-                                        "type": "avatar_video",
-                                        "data": video_base64,
-                                        "format": "video/mp4",
-                                    })
-                            except Exception as e:
-                                logger.warning(f"Failed to process avatar video delta: {e}")
-                        
-                        elif avatar_enabled and hasattr(ServerEventType, 'RESPONSE_VIDEO_DONE') and event.type == getattr(ServerEventType, 'RESPONSE_VIDEO_DONE'):
-                            # Avatar video complete - send final video URL if available
-                            try:
-                                video_url = getattr(event, "url", None) or getattr(event, "video_url", None)
-                                if video_url:
-                                    await websocket.send_json({
-                                        "type": "avatar_video_url",
-                                        "url": video_url,
-                                    })
-                                    logger.info(f"Avatar video URL received: {video_url}")
-                            except Exception as e:
-                                logger.warning(f"Failed to process avatar video URL: {e}")
+                        # Video events are NOT handled here - video goes directly to browser
+                        # Skip any video events that might come through (shouldn't happen without VIDEO modality)
+                        # This keeps the backend focused on audio and transcripts only
                         
                         elif event.type == ServerEventType.RESPONSE_AUDIO_TRANSCRIPT_DELTA:
                             delta = getattr(event, "delta", "") or ""
@@ -723,11 +749,39 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
         await websocket.close()
     
     except Exception as e:
-        logger.error(f"VoiceLive connection error: {e}")
-        await websocket.send_json({
-            "type": "error",
-            "message": f"VoiceLive connection failed: {str(e)}",
-        })
+        error_msg = str(e)
+        error_type = type(e).__name__
+        
+        # Log full error details for debugging
+        logger.error(f"❌ VoiceLive connection error (outer handler):")
+        logger.error(f"   Error type: {error_type}")
+        logger.error(f"   Error message: {error_msg}")
+        logger.error(f"   Full exception:", exc_info=True)
+        
+        # Check if this is an HTTP error with response details
+        if hasattr(e, 'response'):
+            try:
+                response_text = getattr(e.response, 'text', 'N/A')
+                status_code = getattr(e.response, 'status_code', 'N/A')
+                logger.error(f"   HTTP Status: {status_code}")
+                logger.error(f"   Response: {response_text[:1000]}")  # First 1000 chars
+            except:
+                pass
+        
+        # Don't expose VIDEO modality errors to user - we've already handled fallback
+        if "VIDEO" in error_msg.upper() or "avatar" in error_msg.lower():
+            logger.warning(f"⚠️  Avatar-related error (handled gracefully, user will see audio-only mode)")
+            # Send a user-friendly message instead of technical error
+            await websocket.send_json({
+                "type": "error",
+                "message": "Voice connection established (audio-only mode). Avatar video is not available.",
+            })
+        else:
+            logger.error(f"❌ Non-avatar connection error - this is a real failure")
+            await websocket.send_json({
+                "type": "error",
+                "message": f"Voice connection failed: {error_msg}",
+            })
         await websocket.close()
     
     finally:
@@ -765,6 +819,7 @@ class TokenRequest(BaseModel):
     """Request body for realtime token endpoint"""
     agent_id: str = "elena"
     session_id: Optional[str] = None
+    modalities: Optional[list[str]] = None  # Optional: defaults to ["audio", "text"], can be ["video", "text"] for video-only
 
 
 class TokenResponse(BaseModel):
@@ -809,21 +864,38 @@ async def get_realtime_token(request: TokenRequest):
     
     # Build session configuration for the ephemeral token
     # Note: Body must be flattened (not nested under "session") per Azure Realtime API spec
+    # Support both audio-only (backend proxy) and video-only (direct browser) connections
+    modalities = request.modalities if request.modalities else ["audio", "text"]
+    
     session_config = {
         "model": voicelive_service.model,
-        "modalities": ["audio", "text"],
+        "modalities": modalities,
         "instructions": agent_config.instructions,
         "voice": agent_config.voice_name,
-        "input_audio_transcription": {
+    }
+    
+    # Add audio-specific config only if audio is in modalities
+    if "audio" in modalities:
+        session_config["input_audio_transcription"] = {
             "model": "whisper-1"  # Enable input transcription
-        },
-        "turn_detection": {
+        }
+        session_config["turn_detection"] = {
             "type": "server_vad",
             "threshold": 0.6,
             "prefix_padding_ms": 300,
             "silence_duration_ms": 800,
-        },
-    }
+        }
+    
+    # Add video/avatar config if video is in modalities
+    if "video" in modalities and request.agent_id == "elena":
+        session_config["avatar"] = {
+            "avatar_id": "en-US-JennyNeural",  # Match Elena's voice
+            "style": "professional",
+            "emotion": "neutral",
+            "resolution": "1080p",
+            "background": "transparent",
+        }
+        logger.info(f"📹 Video/avatar configuration added for direct browser connection")
     
     # Validate required fields
     required_fields = ["model", "modalities", "instructions", "voice"]
