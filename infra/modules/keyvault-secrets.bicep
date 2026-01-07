@@ -136,12 +136,13 @@ resource entraTenantIdSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if
   }
 }
 
-// Azure AI Foundry Agent Service Endpoint (only create if Foundry is configured)
-resource foundryEndpointSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(azureFoundryAgentEndpoint)) {
+// Azure AI Foundry Agent Service Endpoint (always create - use placeholder if not configured)
+// Container App always references this secret, so it must exist
+resource foundryEndpointSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVault
   name: 'azure-foundry-agent-endpoint'
   properties: {
-    value: azureFoundryAgentEndpoint
+    value: empty(azureFoundryAgentEndpoint) ? 'placeholder-foundry-endpoint' : azureFoundryAgentEndpoint
     contentType: 'text/plain'
     attributes: {
       enabled: true
@@ -149,12 +150,12 @@ resource foundryEndpointSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = 
   }
 }
 
-// Azure AI Foundry Agent Service Project (only create if Foundry is configured)
-resource foundryProjectSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(azureFoundryAgentEndpoint)) {
+// Azure AI Foundry Agent Service Project (always create - use placeholder if not configured)
+resource foundryProjectSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVault
   name: 'azure-foundry-agent-project'
   properties: {
-    value: azureFoundryAgentProject
+    value: empty(azureFoundryAgentProject) ? 'placeholder-foundry-project' : azureFoundryAgentProject
     contentType: 'text/plain'
     attributes: {
       enabled: true
@@ -162,12 +163,12 @@ resource foundryProjectSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = i
   }
 }
 
-// Azure AI Foundry Agent Service API Key (only create if Foundry is configured)
-resource foundryKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(azureFoundryAgentEndpoint)) {
+// Azure AI Foundry Agent Service API Key (always create - use placeholder if not configured)
+resource foundryKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVault
   name: 'azure-foundry-agent-key'
   properties: {
-    value: azureFoundryAgentKey
+    value: empty(azureFoundryAgentKey) ? 'placeholder-foundry-key' : azureFoundryAgentKey
     contentType: 'text/plain'
     attributes: {
       enabled: true
@@ -175,12 +176,12 @@ resource foundryKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!
   }
 }
 
-// Elena Foundry Agent ID (only create if Foundry is configured)
-resource elenaAgentIdSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(azureFoundryAgentEndpoint)) {
+// Elena Foundry Agent ID (always create - use placeholder if not configured)
+resource elenaAgentIdSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVault
   name: 'elena-foundry-agent-id'
   properties: {
-    value: elenaFoundryAgentId
+    value: empty(elenaFoundryAgentId) ? 'placeholder-elena-agent-id' : elenaFoundryAgentId
     contentType: 'text/plain'
     attributes: {
       enabled: true
@@ -189,7 +190,7 @@ resource elenaAgentIdSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if 
 }
 
 // Outputs
-var baseSecretNames = [
+output secretNames array = [
   'postgres-password'
   'postgres-connection-string'
   'zep-api-key'
@@ -197,14 +198,9 @@ var baseSecretNames = [
   'entra-client-secret'
   'entra-client-id'
   'entra-tenant-id'
-]
-
-var foundrySecretNames = !empty(azureFoundryAgentEndpoint) ? [
   'azure-foundry-agent-endpoint'
   'azure-foundry-agent-project'
   'azure-foundry-agent-key'
   'elena-foundry-agent-id'
-] : []
-
-output secretNames array = concat(baseSecretNames, foundrySecretNames)
+]
 

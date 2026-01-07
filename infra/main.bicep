@@ -529,7 +529,6 @@ module backendModule 'modules/backend-aca.bicep' = {
     azureAiProjectName: azureAiProjectName
     azureAiModelRouter: azureAiModelRouter
     azureVoiceLiveEndpoint: 'https://zimax.services.ai.azure.com'
-    azureFoundryAgentEndpoint: azureFoundryAgentEndpoint
     registryUsername: registryUsername
     registryPassword: registryPassword
     keyVaultUri: keyVaultModule.outputs.keyVaultUri
