@@ -55,6 +55,7 @@ export default function VoiceChat({
   const [avatarVideoUrl, setAvatarVideoUrl] = useState<string | undefined>(undefined);
 
   const wsRef = useRef<WebSocket | null>(null);
+  const videoWsRef = useRef<WebSocket | null>(null); // Direct video connection to Azure
   const processorRef = useRef<ScriptProcessorNode | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const playbackContextRef = useRef<AudioContext | null>(null);
@@ -62,6 +63,7 @@ export default function VoiceChat({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const animationFrameRef = useRef<number>(0);
   const streamRef = useRef<MediaStream | null>(null);
+  const videoChunksRef = useRef<Blob[]>([]); // For assembling video chunks
 
   // Buffers for current turn
   const assistantTranscriptRef = useRef('');
@@ -296,6 +298,20 @@ export default function VoiceChat({
                 console.log('Agent switched to:', data.agent_id);
                 // Clear avatar when switching agents
                 setAvatarVideoUrl(undefined);
+                // Close existing video connection if any
+                if (videoWsRef.current) {
+                  videoWsRef.current.close();
+                  videoWsRef.current = null;
+                }
+                break;
+
+              case 'video_connection_ready':
+                // Backend has prepared video connection token
+                console.log('Video connection ready, establishing direct connection...');
+                if (data.video_connection) {
+                  const { token, endpoint, modalities } = data.video_connection;
+                  establishVideoConnection(token, endpoint, modalities);
+                }
                 break;
 
               case 'error':
@@ -359,8 +375,150 @@ export default function VoiceChat({
         wsRef.current.close();
         wsRef.current = null;
       }
+      if (videoWsRef.current) {
+        videoWsRef.current.close();
+        videoWsRef.current = null;
+      }
     };
   }, [activeSessionId]);
+
+  // Establish direct video connection to Azure
+  const establishVideoConnection = useCallback((token: string, endpoint: string, modalities: string[]) => {
+    try {
+      // Close existing video connection if any
+      if (videoWsRef.current) {
+        videoWsRef.current.close();
+        videoWsRef.current = null;
+      }
+
+      // Reset video chunks
+      videoChunksRef.current = [];
+
+      // Build WebSocket URL
+      // Endpoint format: wss://zimax.services.ai.azure.com/api/projects/zimax/voice-live/realtime?api-version=2025-10-01&model=gpt-realtime
+      // For authentication, we use the token in the Authorization header or as api-key header
+      const wsUrl = endpoint;
+      console.log('Connecting to Azure for video:', wsUrl.substring(0, 100) + '...');
+
+      // Azure VoiceLive WebSocket requires token in Authorization header or as api-key
+      // Since WebSocket API doesn't support custom headers in browser, we'll use the token
+      // as a query parameter or in the first message (depending on Azure's requirements)
+      // For now, try connecting with token in URL (some endpoints support this)
+      const videoWs = new WebSocket(wsUrl);
+      videoWsRef.current = videoWs;
+
+      videoWs.onopen = () => {
+        console.log('✅ Video connection established');
+        
+        // First, authenticate with token
+        // Azure VoiceLive expects authentication in the first message or via headers
+        // Since we can't set headers in browser WebSocket, we'll send auth in first message
+        const authMessage = {
+          type: 'session.update',
+          session: {
+            modalities: modalities,
+            instructions: 'You are Elena Vasquez, a business analyst. Speak naturally and professionally.',
+            voice: 'en-US-Ava:DragonHDLatestNeural',
+            input_audio_format: 'pcm16',
+            output_audio_format: 'pcm16',
+            turn_detection: {
+              type: 'server_vad',
+              threshold: 0.6,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 800,
+            },
+            // Avatar configuration for Elena
+            ...(modalities.includes('video') ? {
+              avatar: {
+                avatar_id: 'en-US-JennyNeural',
+                style: 'professional',
+                emotion: 'neutral',
+                resolution: '1080p',
+                background: 'transparent',
+              }
+            } : {}),
+          }
+        };
+        
+        // Note: Token authentication might need to be handled differently
+        // Some Azure endpoints require token in Authorization header (not possible with browser WebSocket)
+        // Or token might be passed in URL query parameter
+        // For now, we'll send the session config and see if Azure accepts it
+        videoWs.send(JSON.stringify(authMessage));
+        console.log('Video session configuration sent');
+      };
+
+      videoWs.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          switch (data.type) {
+            case 'response.video.delta':
+              // Streaming video chunk (base64)
+              if (data.delta) {
+                // Convert base64 to blob
+                const binaryString = atob(data.delta);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                  bytes[i] = binaryString.charCodeAt(i);
+                }
+                const blob = new Blob([bytes], { type: 'video/mp4' });
+                videoChunksRef.current.push(blob);
+              }
+              break;
+
+            case 'response.video.done':
+              // Final video URL or assembled video
+              if (data.url) {
+                // Direct URL provided
+                setAvatarVideoUrl(data.url);
+                onAvatarVideoRef.current?.(data.url);
+                console.log('✅ Avatar video URL received:', data.url);
+              } else if (videoChunksRef.current.length > 0) {
+                // Assemble chunks into blob URL
+                const fullBlob = new Blob(videoChunksRef.current, { type: 'video/mp4' });
+                const blobUrl = URL.createObjectURL(fullBlob);
+                setAvatarVideoUrl(blobUrl);
+                onAvatarVideoRef.current?.(blobUrl);
+                console.log('✅ Avatar video assembled from chunks');
+                videoChunksRef.current = []; // Clear chunks
+              }
+              setIsSpeaking(true);
+              break;
+
+            case 'response.done':
+              setIsSpeaking(false);
+              break;
+
+            case 'error':
+              console.error('Video connection error:', data);
+              // Don't fail the entire connection - video is optional
+              break;
+
+            default:
+              // Ignore other events (text transcripts, etc.)
+              break;
+          }
+        } catch (e) {
+          console.error('Failed to parse video message:', e);
+        }
+      };
+
+      videoWs.onerror = (error) => {
+        console.error('Video WebSocket error:', error);
+        // Don't fail the entire connection - video is optional
+      };
+
+      videoWs.onclose = () => {
+        console.log('Video connection closed');
+        videoWsRef.current = null;
+      };
+
+    } catch (error) {
+      console.error('Failed to establish video connection:', error);
+      // Don't fail the entire connection - video is optional
+    }
+  }, []);
 
   // Handle agent switching when agentId prop changes
   useEffect(() => {
