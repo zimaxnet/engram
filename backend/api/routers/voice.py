@@ -416,26 +416,48 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
             }
             
             # If avatar is enabled, provide video connection token for direct browser connection
+            # NOTE: Video token generation is optional - if it fails, audio still works
+            # We use asyncio.create_task to make it non-blocking so failures don't break connection
             if avatar_enabled:
-                try:
-                    # Generate token for direct video connection
-                    video_token_request = TokenRequest(
-                        agent_id=session["agent_id"],
-                        modalities=["video", "text"]  # Video + text for video transcripts
-                    )
-                    video_token_response = await get_realtime_token(video_token_request)
-                    
-                    ready_message["video_connection"] = {
-                        "token": video_token_response.token,
-                        "endpoint": video_token_response.endpoint,
-                        "modalities": ["video", "text"],
-                    }
-                    logger.info(f"📹 Video connection token provided for direct browser connection")
-                    logger.info(f"   Endpoint: {video_token_response.endpoint}")
-                except Exception as e:
-                    logger.warning(f"⚠️  Failed to generate video connection token: {e}", exc_info=True)
-                    logger.warning(f"   Video will not be available, but audio will work")
-                    avatar_enabled = False
+                async def _generate_video_token_safely():
+                    """Generate video token in background - failures don't affect connection."""
+                    try:
+                        # Generate token for direct video connection
+                        video_token_request = TokenRequest(
+                            agent_id=session["agent_id"],
+                            modalities=["video", "text"]  # Video + text for video transcripts
+                        )
+                        video_token_response = await get_realtime_token(video_token_request)
+                        
+                        # Send video connection info to client (if still connected)
+                        try:
+                            await websocket.send_json({
+                                "type": "video_connection_ready",
+                                "video_connection": {
+                                    "token": video_token_response.token,
+                                    "endpoint": video_token_response.endpoint,
+                                    "modalities": ["video", "text"],
+                                }
+                            })
+                            logger.info(f"📹 Video connection token provided for direct browser connection")
+                            logger.info(f"   Endpoint: {video_token_response.endpoint}")
+                        except Exception as send_error:
+                            logger.warning(f"⚠️  Failed to send video connection info: {send_error}")
+                    except HTTPException as e:
+                        # HTTPException from get_realtime_token - log but don't fail connection
+                        logger.warning(f"⚠️  Video token generation failed (HTTP {e.status_code}): {e.detail}")
+                        logger.warning(f"   Video will not be available, but audio will work")
+                    except Exception as e:
+                        # Any other exception - log but don't fail connection
+                        error_msg = str(e)
+                        logger.warning(f"⚠️  Failed to generate video connection token: {error_msg}")
+                        logger.warning(f"   Error type: {type(e).__name__}")
+                        logger.warning(f"   Video will not be available, but audio will work")
+                        # Don't log full traceback for video token failures - they're expected with unified endpoints
+                
+                # Start video token generation in background (non-blocking)
+                asyncio.create_task(_generate_video_token_safely())
+                logger.info(f"📹 Video token generation started in background (non-blocking)")
             
             await websocket.send_json(ready_message)
             
@@ -769,8 +791,19 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                 pass
         
         # Don't expose VIDEO modality errors to user - we've already handled fallback
-        if "VIDEO" in error_msg.upper() or "avatar" in error_msg.lower():
-            logger.warning(f"⚠️  Avatar-related error (handled gracefully, user will see audio-only mode)")
+        # Check for video-related errors (token generation, modality, etc.)
+        is_video_error = (
+            "VIDEO" in error_msg.upper() or 
+            "avatar" in error_msg.lower() or 
+            "video.*token" in error_msg.lower() or
+            "realtime/token" in error_msg or
+            "get_realtime_token" in error_msg or
+            "client_secrets" in error_msg
+        )
+        
+        if is_video_error:
+            logger.warning(f"⚠️  Avatar/video-related error (handled gracefully, user will see audio-only mode)")
+            logger.warning(f"   Original error: {error_msg[:200]}")
             # Send a user-friendly message instead of technical error
             await websocket.send_json({
                 "type": "error",
@@ -950,32 +983,99 @@ async def get_realtime_token(request: TokenRequest):
     logger.debug(f"Session config: {json.dumps(session_config, indent=2)}")
     
     try:
-        # Get API key
-        api_key = os.getenv("AZURE_VOICELIVE_KEY", "")
-        if not api_key:
-            raise HTTPException(status_code=503, detail="AZURE_VOICELIVE_KEY not configured")
+        # For unified endpoints (with or without project), the REST /client_secrets endpoint is not available.
+        # Use direct WebSocket authentication instead (Managed Identity or API key).
+        use_direct_websocket = endpoint_type == "unified"
         
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            # For project-based unified endpoints, try both api-key and Ocp-Apim-Subscription-Key headers
-            # The SDK uses api-key, but some endpoints may require Ocp-Apim-Subscription-Key
-            headers = {
-                "Content-Type": "application/json",
-            }
+        if use_direct_websocket:
+            # For project-based unified endpoints, the REST /client_secrets endpoint is not available.
+            # Instead, we use Managed Identity or API key directly for WebSocket authentication.
+            logger.info("Using direct WebSocket authentication for project-based unified endpoint")
             
-            # Add authentication header(s)
-            if project_name and endpoint_type == "unified":
-                # Project-based endpoints may require Ocp-Apim-Subscription-Key
-                headers["Ocp-Apim-Subscription-Key"] = api_key
-                headers["api-key"] = api_key  # Also include api-key for compatibility
+            # Get credential (Managed Identity preferred, fallback to API key)
+            credential = voicelive_service.get_credential()
+            
+            # Construct WebSocket URL for unified endpoint
+            ws_base = endpoint.replace("https://", "wss://").replace("http://", "ws://")
+            if project_name:
+                # Project-based unified endpoint
+                # Format: wss://<endpoint>/api/projects/<project>/voice-live/realtime?api-version=<version>&model=<model>
+                ws_url = f"{ws_base}/api/projects/{project_name}/voice-live/realtime?api-version={api_version}&model={voicelive_service.model}"
             else:
-                headers["api-key"] = api_key
+                # Standard unified endpoint (no project)
+                # Format: wss://<endpoint>/voice-live/realtime?api-version=<version>&model=<model>
+                ws_url = f"{ws_base}/voice-live/realtime?api-version={api_version}&model={voicelive_service.model}"
             
-            response = await client.post(
-                token_url,
-                headers=headers,
-                params={"api-version": api_version},
-                json=session_config,
+            logger.info(f"WebSocket URL for direct connection: {ws_url}")
+            
+            # Check credential type
+            from azure.identity import DefaultAzureCredential
+            from azure.core.credentials import AzureKeyCredential
+            
+            if isinstance(credential, DefaultAzureCredential):
+                # Use Managed Identity - get token for WebSocket authentication
+                try:
+                    token = credential.get_token("https://ai.azure.com/.default").token
+                    logger.info("✅ Got token from Managed Identity for WebSocket authentication")
+                    
+                    # Return connection details with token
+                    # The browser will use this token in the Authorization header when connecting via WebSocket
+                    return TokenResponse(
+                        token=token,
+                        endpoint=ws_url,
+                        expires_at=None,  # Token expiration handled by Azure
+                    )
+                except Exception as e:
+                    logger.warning(f"Managed Identity failed: {e}")
+                    logger.info("Falling back to API key authentication")
+                    # Fall through to API key check below
+                    credential = None  # Mark as failed so we check API key
+            # Check if we should use API key (either from credential or fallback)
+            if isinstance(credential, AzureKeyCredential):
+                # Use API key from credential
+                api_key = credential.key
+                logger.info("✅ Using API key for WebSocket authentication")
+            elif credential is None or isinstance(credential, DefaultAzureCredential):
+                # Managed Identity failed or not available - try API key from environment
+                api_key = os.getenv("AZURE_VOICELIVE_KEY", "")
+                if not api_key:
+                    raise HTTPException(
+                        status_code=503,
+                        detail="AZURE_VOICELIVE_KEY not configured and Managed Identity unavailable. Set AZURE_VOICELIVE_KEY for local development."
+                    )
+                logger.info("✅ Using API key from environment for WebSocket authentication")
+            else:
+                # Unknown credential type
+                logger.error(f"Unknown credential type: {type(credential)}")
+                raise HTTPException(
+                    status_code=503,
+                    detail="Unsupported credential type for project-based endpoints"
+                )
+            
+            # Return API key as "token" - browser will use it in api-key header
+            return TokenResponse(
+                token=api_key,  # Browser will use this as api-key header
+                endpoint=ws_url,
+                expires_at=None,
             )
+        else:
+            # Use REST endpoint for direct endpoints or non-project unified endpoints
+            api_key = os.getenv("AZURE_VOICELIVE_KEY", "")
+            if not api_key:
+                raise HTTPException(status_code=503, detail="AZURE_VOICELIVE_KEY not configured")
+            
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                headers = {
+                    "Content-Type": "application/json",
+                    "api-key": api_key,
+                }
+                
+                response = await client.post(
+                    token_url,
+                    headers=headers,
+                    params={"api-version": api_version},
+                    json=session_config,
+                )
             
             if response.status_code != 200:
                 # Log full error response for debugging
@@ -1013,9 +1113,18 @@ async def get_realtime_token(request: TokenRequest):
                 logger.error(f"No token in response: {data}")
                 raise HTTPException(status_code=502, detail="No ephemeral token in response")
             
+            # Build WebSocket endpoint URL
+            if endpoint_type == "direct":
+                ws_endpoint = endpoint.replace("https://", "wss://").replace("http://", "ws://")
+                ws_url = f"{ws_endpoint}/openai/realtime?api-version={api_version}&deployment={voicelive_service.model}"
+            else:
+                # Unified endpoint (non-project)
+                ws_endpoint = endpoint.replace("https://", "wss://").replace("http://", "ws://")
+                ws_url = f"{ws_endpoint}/voice-live/realtime?api-version={api_version}&model={voicelive_service.model}"
+            
             return TokenResponse(
                 token=ephemeral_token,
-                endpoint=endpoint,
+                endpoint=ws_url,
                 expires_at=data.get("expires_at"),
             )
             
