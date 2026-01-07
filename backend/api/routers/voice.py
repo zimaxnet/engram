@@ -1006,22 +1006,30 @@ async def get_avatar_ice_credentials(
             region = match.group(1)
 
     # 2. Use Regional Speech Endpoint for ICE Tokens
+    if settings.azure_speech_key:
+        region = settings.azure_speech_region
+    
     # Even with Unified resources, Avatar ICE tokens are often fetched from the regional Speech endpoint.
     ice_token_url = f"https://{region}.tts.speech.microsoft.com/cognitiveservices/avatar/relay/token/v1"
     
     try:
-        credential = voicelive_service.get_credential()
-        
         async with httpx.AsyncClient(timeout=10.0) as client:
+            credential = None
             headers = {}
-            if isinstance(credential, AzureKeyCredential):
-                # Try 'Ocp-Apim-Subscription-Key' first (Standard for Speech Service)
-                # If that fails, logic below could retry with 'api-key'.
-                headers = {"Ocp-Apim-Subscription-Key": credential.key}
+            
+            # Priority 1: Dedicated Speech Key (Required for Regional Endpoint)
+            if settings.azure_speech_key:
+                headers = {"Ocp-Apim-Subscription-Key": settings.azure_speech_key}
             else:
-                # Managed Identity
-                token = credential.get_token("https://cognitiveservices.azure.com/.default")
-                headers = {"Authorization": f"Bearer {token.token}"}
+                # Priority 2: Fallback to VoiceLive Service Credential (Unified Key or Managed Identity)
+                credential = voicelive_service.get_credential()
+                
+                if isinstance(credential, AzureKeyCredential):
+                    headers = {"Ocp-Apim-Subscription-Key": credential.key}
+                else:
+                    # Managed Identity
+                    token = credential.get_token("https://cognitiveservices.azure.com/.default")
+                    headers = {"Authorization": f"Bearer {token.token}"}
             
             logger.info(f"Fetching ICE credentials from: {ice_token_url}")
             response = await client.get(ice_token_url, headers=headers)
