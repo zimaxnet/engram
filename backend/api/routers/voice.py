@@ -992,48 +992,56 @@ async def get_avatar_ice_credentials(
             detail="VoiceLive service not configured. Set AZURE_VOICELIVE_ENDPOINT."
         )
     
-    # Use the VoiceLive endpoint for unified access to avatar ICE
-    # For Azure AI Foundry unified endpoints, avatar relay is available through the project
-    endpoint = voicelive_service.endpoint.rstrip('/')
-    project_name = voicelive_service.project_name or 'zimax'
+    # 1. Determine Region
+    # Unified endpoints (zimax.services.ai.azure.com) are usually in a region.
+    # We default to eastus2, or could parse from endpoint if it was a regional URL.
+    # Since we verified 'zimax' resource is in eastus2, we use that.
+    region = "eastus2" 
     
-    # Build ICE relay URL using unified endpoint pattern
-    # Format: https://{resource}.services.ai.azure.com/api/projects/{project}/voice-live/avatar/relay/token/v1
-    ice_token_url = f"{endpoint}/api/projects/{project_name}/voice-live/avatar/relay/token/v1"
+    # Check if endpoint implies a different region (e.g. westeurope.tts.speech...)
+    if ".tts.speech.microsoft.com" in voicelive_service.endpoint:
+        import re
+        match = re.search(r"https://(\w+)\.tts\.speech", voicelive_service.endpoint)
+        if match:
+            region = match.group(1)
+
+    # 2. Use Regional Speech Endpoint for ICE Tokens
+    # Even with Unified resources, Avatar ICE tokens are often fetched from the regional Speech endpoint.
+    ice_token_url = f"https://{region}.tts.speech.microsoft.com/cognitiveservices/avatar/relay/token/v1"
     
     try:
-        # Get credential from VoiceLive service (same as used for voice)
         credential = voicelive_service.get_credential()
         
         async with httpx.AsyncClient(timeout=10.0) as client:
+            headers = {}
             if isinstance(credential, AzureKeyCredential):
-                # API key authentication
-                headers = {"api-key": credential.key}
+                # Try 'Ocp-Apim-Subscription-Key' first (Standard for Speech Service)
+                # If that fails, logic below could retry with 'api-key'.
+                headers = {"Ocp-Apim-Subscription-Key": credential.key}
             else:
-                # Managed Identity / DefaultAzureCredential
+                # Managed Identity
                 token = credential.get_token("https://cognitiveservices.azure.com/.default")
                 headers = {"Authorization": f"Bearer {token.token}"}
             
             logger.info(f"Fetching ICE credentials from: {ice_token_url}")
             response = await client.get(ice_token_url, headers=headers)
             
-            if response.status_code != 200:
-                logger.error(f"ICE token request failed: {response.status_code} - {response.text}")
-                raise HTTPException(
-                    status_code=response.status_code,
-                    detail=f"Failed to get ICE credentials: {response.text[:200]}"
-                )
+            # Fallback: If 401 and we used Ocp-Apim, try api-key header
+            if response.status_code == 401 and isinstance(credential, AzureKeyCredential) and "Ocp-Apim-Subscription-Key" in headers:
+                logger.info("Retrying ICE token request with 'api-key' header...")
+                headers = {"api-key": credential.key}
+                response = await client.get(ice_token_url, headers=headers)
             
+            response.raise_for_status() # Raise an exception for 4xx/5xx responses
             data = response.json()
             logger.info(f"ICE credentials obtained successfully")
             
-            # Azure returns: {Urls: [...], Username: "...", Credential: "..."}
-            # Normalize to lowercase keys
+            # Azure returns: {Urls: [...], Username: "...", Password: "...", TurnTokenTtl: 0}
             return IceCredentialsResponse(
-                urls=data.get("Urls", data.get("urls", [])),
-                username=data.get("Username", data.get("username", "")),
-                credential=data.get("Credential", data.get("credential", "")),
-                ttl=data.get("Ttl", data.get("ttl")),
+                urls=data.get("Urls", []),
+                username=data.get("Username", ""),
+                credential=data.get("Password", ""),
+                ttl=data.get("TurnTokenTtl", 0)
             )
             
     except HTTPException:
