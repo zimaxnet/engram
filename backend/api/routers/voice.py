@@ -935,7 +935,8 @@ async def _generate_token_with_failsafe_for_browser(
             return f"{ws_base}/voice-live/realtime?api-version={version}&model={model}"
     
     # Strategy 1: Try API key first (preferred for browser - can use as query parameter)
-    api_key = os.getenv("AZURE_VOICELIVE_KEY", "")
+    # Check voicelive_service.key first (from settings), then environment, then credential
+    api_key = voicelive_service.key or os.getenv("AZURE_VOICELIVE_KEY", "")
     if not api_key and isinstance(credential, AzureKeyCredential):
         api_key = credential.key
     
