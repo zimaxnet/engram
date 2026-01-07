@@ -61,3 +61,9 @@ venv311/
 archive/
 mn-bank-app/
 scripts/verify_*.py
+
+# Personal files - never commit
+docs/01-architecture/Downloads/
+Downloads/
+*.dmg
+*.pdf
