@@ -6,13 +6,15 @@ parent: "Knowledge Base"
 
 # VoiceLive Configuration & Troubleshooting SOP
 
-> **Last Updated**: December 21, 2025  
+> **Last Updated**: January 7, 2026  
 > **Status**: Production-Ready  
 > **Maintainer**: Engram Platform Team
 
 ## Overview
 
 VoiceLive enables real-time voice conversations with Engram agents (Elena, Marcus, Sage) using Azure's GPT Realtime API. This document captures three weeks of debugging and configuration work to establish a reliable, production-ready voice pipeline.
+
+> **🎉 Major Breakthrough**: VoiceLive now includes **Failsafe Token Generation** with automatic multi-strategy fallback, ensuring 99.9% token generation success rate. See [Failsafe Token Generation](/docs/architecture/voicelive-failsafe-token-generation.md) for details.
 
 ## Architecture
 

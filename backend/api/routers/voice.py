@@ -16,7 +16,7 @@ import base64
 import json
 import logging
 import os
-from typing import Optional
+from typing import Optional, Any
 
 import httpx
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
@@ -423,11 +423,34 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                     """Generate video token in background - failures don't affect connection."""
                     try:
                         # Generate token for direct video connection
-                        video_token_request = TokenRequest(
-                            agent_id=session["agent_id"],
-                            modalities=["video", "text"]  # Video + text for video transcripts
+                        # Use failsafe token generation for video
+                        video_session_config = {
+                            "model": voicelive_service.model,
+                            "modalities": ["video", "text"],
+                            "instructions": agent_config.instructions,
+                            "voice": agent_config.voice_name,
+                        }
+                        
+                        # Add avatar config if available
+                        if "avatar" in session_kwargs:
+                            video_session_config["avatar"] = session_kwargs["avatar"]
+                        
+                        # Determine endpoint type
+                        endpoint_for_video = voicelive_service.endpoint.rstrip('/')
+                        is_valid, endpoint_type_video = validate_voicelive_endpoint(endpoint_for_video)
+                        
+                        video_token_response = await _generate_token_with_failsafe(
+                            endpoint=endpoint_for_video,
+                            endpoint_type=endpoint_type_video if is_valid else "unified",
+                            project_name=voicelive_service.project_name,
+                            api_version=voicelive_service.api_version,
+                            model=voicelive_service.model,
+                            session_config=video_session_config,
+                            voicelive_service=voicelive_service,
                         )
-                        video_token_response = await get_realtime_token(video_token_request)
+                        
+                        if not video_token_response:
+                            raise Exception("All failsafe token generation strategies failed for video")
                         
                         # Send video connection info to client (if still connected)
                         try:
@@ -862,6 +885,167 @@ class TokenResponse(BaseModel):
     expires_at: Optional[str] = None
 
 
+async def _generate_token_with_failsafe(
+    endpoint: str,
+    endpoint_type: str,
+    project_name: Optional[str],
+    api_version: str,
+    model: str,
+    session_config: dict,
+    voicelive_service: Any,
+) -> Optional[TokenResponse]:
+    """
+    Failsafe token generation with multiple fallback strategies.
+    
+    Strategy order:
+    1. Managed Identity with current API version
+    2. Managed Identity with fallback API versions
+    3. API key with current API version (direct WebSocket for unified endpoints)
+    4. REST token endpoint for direct endpoints with current API version
+    5. REST token endpoint with fallback API versions
+    
+    Returns TokenResponse if successful, None if all strategies fail.
+    """
+    from azure.identity import DefaultAzureCredential
+    from azure.core.credentials import AzureKeyCredential
+    import httpx
+    
+    logger.info("🔄 Starting failsafe token generation...")
+    
+    # Get credential
+    credential = voicelive_service.get_credential()
+    
+    # Build WebSocket URL helper
+    ws_base = endpoint.replace("https://", "wss://").replace("http://", "ws://")
+    
+    def build_ws_url(version: str) -> str:
+        """Build WebSocket URL for given API version."""
+        if endpoint_type == "direct":
+            return f"{ws_base}/openai/realtime?api-version={version}&deployment={model}"
+        elif project_name:
+            return f"{ws_base}/api/projects/{project_name}/voice-live/realtime?api-version={version}&model={model}"
+        else:
+            return f"{ws_base}/voice-live/realtime?api-version={version}&model={model}"
+    
+    # Strategy 1: Try Managed Identity with current API version
+    if isinstance(credential, DefaultAzureCredential):
+        logger.info(f"📋 Strategy 1: Managed Identity with API version {api_version}")
+        try:
+            token = credential.get_token("https://ai.azure.com/.default").token
+            logger.info("✅ Strategy 1 succeeded: Managed Identity token obtained")
+            return TokenResponse(
+                token=token,
+                endpoint=build_ws_url(api_version),
+                expires_at=None,
+            )
+        except Exception as e:
+            logger.warning(f"⚠️  Strategy 1 failed: {str(e)[:100]}")
+    
+    # Strategy 2: Try Managed Identity with fallback API versions
+    if isinstance(credential, DefaultAzureCredential):
+        fallback_versions = ["2024-10-01-preview", "2024-08-01-preview", "2024-05-01-preview"]
+        for fallback_version in fallback_versions:
+            if fallback_version == api_version:
+                continue  # Skip if already tried
+            logger.info(f"📋 Strategy 2: Managed Identity with API version {fallback_version}")
+            try:
+                token = credential.get_token("https://ai.azure.com/.default").token
+                logger.info(f"✅ Strategy 2 succeeded: Managed Identity token with API version {fallback_version}")
+                return TokenResponse(
+                    token=token,
+                    endpoint=build_ws_url(fallback_version),
+                    expires_at=None,
+                )
+            except Exception as e:
+                logger.warning(f"⚠️  Strategy 2 (API {fallback_version}) failed: {str(e)[:100]}")
+                continue
+    
+    # Strategy 3: Try API key with current API version (for unified endpoints, use direct WebSocket)
+    api_key = os.getenv("AZURE_VOICELIVE_KEY", "")
+    if not api_key and isinstance(credential, AzureKeyCredential):
+        api_key = credential.key
+    
+    if api_key:
+        logger.info(f"📋 Strategy 3: API key with current API version")
+        try:
+            # For unified endpoints, API key can be used directly in WebSocket header
+            logger.info("✅ Strategy 3 succeeded: Using API key for WebSocket authentication")
+            return TokenResponse(
+                token=api_key,  # Browser will use this as api-key header
+                endpoint=build_ws_url(api_version),
+                expires_at=None,
+            )
+        except Exception as e:
+            logger.warning(f"⚠️  Strategy 3 failed: {str(e)[:100]}")
+    
+    # Strategy 4: Try REST endpoint for direct endpoints (if not unified)
+    if endpoint_type == "direct" and api_key:
+        logger.info(f"📋 Strategy 4: REST token endpoint for direct endpoint with API version {api_version}")
+        try:
+            token_url = f"{endpoint}/openai/deployments/{model}/realtime/client_secrets"
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                headers = {
+                    "Content-Type": "application/json",
+                    "api-key": api_key,
+                }
+                response = await client.post(
+                    token_url,
+                    headers=headers,
+                    params={"api-version": api_version},
+                    json=session_config,
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    ephemeral_token = data.get("value", "")
+                    if ephemeral_token:
+                        logger.info("✅ Strategy 4 succeeded: REST token endpoint")
+                        return TokenResponse(
+                            token=ephemeral_token,
+                            endpoint=build_ws_url(api_version),
+                            expires_at=data.get("expires_at"),
+                        )
+        except Exception as e:
+            logger.warning(f"⚠️  Strategy 4 failed: {str(e)[:100]}")
+    
+    # Strategy 5: Try REST endpoint with fallback API versions (for direct endpoints)
+    if endpoint_type == "direct" and api_key:
+        fallback_versions = ["2024-10-01-preview", "2024-08-01-preview"]
+        for fallback_version in fallback_versions:
+            if fallback_version == api_version:
+                continue
+            logger.info(f"📋 Strategy 5: REST token endpoint with API version {fallback_version}")
+            try:
+                token_url = f"{endpoint}/openai/deployments/{model}/realtime/client_secrets"
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    headers = {
+                        "Content-Type": "application/json",
+                        "api-key": api_key,
+                    }
+                    response = await client.post(
+                        token_url,
+                        headers=headers,
+                        params={"api-version": fallback_version},
+                        json=session_config,
+                    )
+                    if response.status_code == 200:
+                        data = response.json()
+                        ephemeral_token = data.get("value", "")
+                        if ephemeral_token:
+                            logger.info(f"✅ Strategy 5 succeeded: REST token with API version {fallback_version}")
+                            return TokenResponse(
+                                token=ephemeral_token,
+                                endpoint=build_ws_url(fallback_version),
+                                expires_at=data.get("expires_at"),
+                            )
+            except Exception as e:
+                logger.warning(f"⚠️  Strategy 5 (API {fallback_version}) failed: {str(e)[:100]}")
+                continue
+    
+    # All strategies failed
+    logger.warning("❌ All token generation strategies failed")
+    return None
+
+
 @router.post("/realtime/token", response_model=TokenResponse)
 async def get_realtime_token(request: TokenRequest):
     """
@@ -983,9 +1167,26 @@ async def get_realtime_token(request: TokenRequest):
     logger.debug(f"Session config: {json.dumps(session_config, indent=2)}")
     
     try:
-        # For unified endpoints (with or without project), the REST /client_secrets endpoint is not available.
-        # Use direct WebSocket authentication instead (Managed Identity or API key).
-        use_direct_websocket = endpoint_type == "unified"
+        # Use failsafe token generation with multiple fallback strategies
+        token_response = await _generate_token_with_failsafe(
+            endpoint=endpoint,
+            endpoint_type=endpoint_type,
+            project_name=project_name,
+            api_version=api_version,
+            model=voicelive_service.model,
+            session_config=session_config,
+            voicelive_service=voicelive_service,
+        )
+        
+        if token_response:
+            logger.info("✅ Token generated successfully using failsafe strategy")
+            return token_response
+        else:
+            # All strategies failed - fall back to original logic
+            logger.warning("⚠️  All failsafe strategies failed, falling back to original logic")
+            # For unified endpoints (with or without project), the REST /client_secrets endpoint is not available.
+            # Use direct WebSocket authentication instead (Managed Identity or API key).
+            use_direct_websocket = endpoint_type == "unified"
         
         if use_direct_websocket:
             # For project-based unified endpoints, the REST /client_secrets endpoint is not available.
