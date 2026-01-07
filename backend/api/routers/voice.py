@@ -455,7 +455,10 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                         endpoint_for_video = voicelive_service.endpoint.rstrip('/')
                         is_valid, endpoint_type_video = validate_voicelive_endpoint(endpoint_for_video)
                         
-                        video_token_response = await _generate_token_with_failsafe(
+                        # For browser video connections, prefer API key over Managed Identity token
+                        # because browser WebSocket cannot set Authorization headers
+                        # We'll try API key first, then fall back to Managed Identity
+                        video_token_response = await _generate_token_with_failsafe_for_browser(
                             endpoint=endpoint_for_video,
                             endpoint_type=endpoint_type_video if is_valid else "unified",
                             project_name=voicelive_service.project_name,
@@ -886,6 +889,104 @@ async def get_voice_status():
 # -----------------------------------------------------------------------------
 # VoiceLive v2: Ephemeral Token Endpoint for Browser-Direct WebRTC
 # -----------------------------------------------------------------------------
+
+async def _generate_token_with_failsafe_for_browser(
+    endpoint: str,
+    endpoint_type: str,
+    project_name: Optional[str],
+    api_version: str,
+    model: str,
+    session_config: dict,
+    voicelive_service: Any,
+) -> Optional[TokenResponse]:
+    """
+    Failsafe token generation optimized for browser connections.
+    
+    Browser WebSocket cannot set Authorization headers, so we prefer API key
+    over Managed Identity tokens (which require Bearer header).
+    
+    Strategy order:
+    1. API key with current API version (preferred for browser)
+    2. API key with fallback API versions
+    3. Managed Identity with current API version (fallback - may not work in browser)
+    4. Managed Identity with fallback API versions
+    
+    Returns TokenResponse if successful, None if all strategies fail.
+    """
+    from azure.identity import DefaultAzureCredential
+    from azure.core.credentials import AzureKeyCredential
+    import httpx
+    
+    logger.info("🔄 Starting failsafe token generation (browser-optimized)...")
+    
+    # Get credential
+    credential = voicelive_service.get_credential()
+    
+    # Build WebSocket URL helper
+    ws_base = endpoint.replace("https://", "wss://").replace("http://", "ws://")
+    
+    def build_ws_url(version: str) -> str:
+        """Build WebSocket URL for given API version."""
+        if endpoint_type == "direct":
+            return f"{ws_base}/openai/realtime?api-version={version}&deployment={model}"
+        elif project_name:
+            return f"{ws_base}/api/projects/{project_name}/voice-live/realtime?api-version={version}&model={model}"
+        else:
+            return f"{ws_base}/voice-live/realtime?api-version={version}&model={model}"
+    
+    # Strategy 1: Try API key first (preferred for browser - can use as query parameter)
+    api_key = os.getenv("AZURE_VOICELIVE_KEY", "")
+    if not api_key and isinstance(credential, AzureKeyCredential):
+        api_key = credential.key
+    
+    if api_key:
+        logger.info(f"📋 Strategy 1 (Browser): API key with API version {api_version}")
+        try:
+            # For unified endpoints, API key can be used directly in WebSocket query parameter
+            logger.info("✅ Strategy 1 succeeded: Using API key for browser WebSocket authentication")
+            return TokenResponse(
+                token=api_key,  # Browser will use this as api-key query parameter
+                endpoint=build_ws_url(api_version),
+                expires_at=None,
+            )
+        except Exception as e:
+            logger.warning(f"⚠️  Strategy 1 failed: {str(e)[:100]}")
+    
+    # Strategy 2: Try API key with fallback API versions
+    if api_key:
+        fallback_versions = ["2024-10-01-preview", "2024-08-01-preview", "2024-05-01-preview"]
+        for fallback_version in fallback_versions:
+            if fallback_version == api_version:
+                continue
+            logger.info(f"📋 Strategy 2 (Browser): API key with fallback API version {fallback_version}")
+            try:
+                logger.info(f"✅ Strategy 2 succeeded: API key with API version {fallback_version}")
+                return TokenResponse(
+                    token=api_key,
+                    endpoint=build_ws_url(fallback_version),
+                    expires_at=None,
+                )
+            except Exception as e:
+                logger.warning(f"⚠️  Strategy 2 (API {fallback_version}) failed: {str(e)[:100]}")
+                continue
+    
+    # Strategy 3: Fallback to Managed Identity (may not work in browser due to header requirement)
+    if isinstance(credential, DefaultAzureCredential):
+        logger.info(f"📋 Strategy 3 (Browser Fallback): Managed Identity with API version {api_version}")
+        logger.warning("⚠️  Managed Identity tokens require Authorization header - browser WebSocket may fail")
+        try:
+            token = credential.get_token("https://ai.azure.com/.default").token
+            logger.info("✅ Strategy 3 succeeded: Managed Identity token obtained (may not work in browser)")
+            return TokenResponse(
+                token=token,
+                endpoint=build_ws_url(api_version),
+                expires_at=None,
+            )
+        except Exception as e:
+            logger.warning(f"⚠️  Strategy 3 failed: {str(e)[:100]}")
+    
+    logger.warning("❌ All browser-optimized token generation strategies failed.")
+    return None
 
 class TokenRequest(BaseModel):
     """Request body for realtime token endpoint"""

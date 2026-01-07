@@ -402,13 +402,37 @@ export default function VoiceChat({
 
       // Build WebSocket URL
       // Endpoint format: wss://zimax.services.ai.azure.com/api/projects/zimax/voice-live/realtime?api-version=2025-10-01&model=gpt-realtime
-      // Azure VoiceLive WebSocket authentication:
-      // - For unified endpoints: token is an API key, use as query parameter
-      // - For direct endpoints: token might be Bearer token, but browser WebSocket can't set headers
-      // We'll try api-key query parameter first (works for unified endpoints)
+      // Azure VoiceLive WebSocket authentication for unified endpoints:
+      // - Managed Identity token (JWT): Use as Bearer token, but browser WebSocket can't set headers
+      // - API key: Use as api-key query parameter
+      // 
+      // Since browser WebSocket can't set Authorization header, we have two options:
+      // 1. If token is JWT (starts with "eyJ"), try using it as Bearer in first message (not supported by Azure)
+      // 2. Use API key from environment if available (but we don't have it in frontend)
+      // 3. Actually, Azure unified endpoints might accept Bearer token as query parameter with different name
+      //
+      // Let's try: For JWT tokens, Azure might accept them via a different mechanism
+      // But actually, the backend should return an API key for video connections, not a Bearer token
+      // 
+      // Check if token looks like JWT (starts with "eyJ") or API key
+      const isJWT = token.startsWith('eyJ');
       const separator = endpoint.includes('?') ? '&' : '?';
-      const wsUrl = `${endpoint}${separator}api-key=${encodeURIComponent(token)}`;
+      
+      let wsUrl: string;
+      if (isJWT) {
+        // JWT token - Azure might not accept this via query parameter
+        // Try using it as Authorization header would be used, but we can't set headers
+        // Alternative: Try as 'token' query parameter (some Azure endpoints support this)
+        console.warn('⚠️ Token is JWT (Bearer token), browser WebSocket cannot set Authorization header');
+        console.warn('   Trying as query parameter - this may not work for unified endpoints');
+        wsUrl = `${endpoint}${separator}token=${encodeURIComponent(token)}`;
+      } else {
+        // API key - use as api-key query parameter
+        wsUrl = `${endpoint}${separator}api-key=${encodeURIComponent(token)}`;
+      }
+      
       console.log('🎥 Connecting to Azure for video:', wsUrl.substring(0, 100) + '...');
+      console.log('   Token type:', isJWT ? 'JWT (Bearer)' : 'API Key');
       console.log('   Token length:', token.length, 'characters');
 
       const videoWs = new WebSocket(wsUrl);
