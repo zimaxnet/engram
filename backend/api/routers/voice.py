@@ -324,24 +324,53 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                 ),
             }
             
-            # Add avatar support for Elena
+            # Add avatar support for Elena (with graceful fallback)
+            avatar_enabled = False
             if enable_avatar:
-                modalities.append(Modality.VIDEO)
-                # Avatar configuration - match Elena's Foundry avatar settings
-                session_kwargs["avatar"] = {
-                    "avatar_id": "en-US-JennyNeural",  # Match Elena's voice
-                    "style": "professional",
-                    "emotion": "neutral",
-                    "resolution": "1080p",
-                    "background": "transparent",
-                }
-                logger.info(f"VoiceLive avatar enabled for {session['agent_id']}")
+                try:
+                    # Try to add VIDEO modality and avatar configuration
+                    modalities.append(Modality.VIDEO)
+                    # Avatar configuration - match Elena's Foundry avatar settings
+                    session_kwargs["avatar"] = {
+                        "avatar_id": "en-US-JennyNeural",  # Match Elena's voice
+                        "style": "professional",
+                        "emotion": "neutral",
+                        "resolution": "1080p",
+                        "background": "transparent",
+                    }
+                    logger.info(f"VoiceLive avatar enabled for {session['agent_id']}")
+                    avatar_enabled = True
+                except Exception as e:
+                    logger.warning(f"Failed to configure avatar, falling back to audio-only: {e}")
+                    # Remove VIDEO modality if it was added
+                    if Modality.VIDEO in modalities:
+                        modalities.remove(Modality.VIDEO)
+                    if "avatar" in session_kwargs:
+                        del session_kwargs["avatar"]
             
             session_config = RequestSession(
                 modalities=modalities,
                 **session_kwargs
             )
-            await voicelive_connection.session.update(session=session_config)
+            
+            # Try to update session, fallback to audio-only if avatar fails
+            try:
+                await voicelive_connection.session.update(session=session_config)
+            except Exception as e:
+                if avatar_enabled and Modality.VIDEO in modalities:
+                    logger.warning(f"Session update with avatar failed, retrying without VIDEO modality: {e}")
+                    # Retry without VIDEO modality
+                    modalities.remove(Modality.VIDEO)
+                    if "avatar" in session_kwargs:
+                        del session_kwargs["avatar"]
+                    session_config = RequestSession(
+                        modalities=modalities,
+                        **session_kwargs
+                    )
+                    await voicelive_connection.session.update(session=session_config)
+                    avatar_enabled = False
+                else:
+                    raise
             
             # Send ready message
             await websocket.send_json({
@@ -351,6 +380,8 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
             
             # Create task to process VoiceLive events
             async def process_voicelive_events():
+                # Track avatar support status for event handling
+                nonlocal avatar_enabled
                 # Buffers for accumulating transcript deltas into complete turns
                 user_transcript_buf = ""
                 assistant_text_buf = ""
