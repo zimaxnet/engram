@@ -84,8 +84,8 @@ jobs:
             ghcr.io/${{ github.repository }}/backend:latest
             ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
-      
+          cache-to: type=gha,mode=min
+
       - name: Build and push worker image
         uses: docker/build-push-action@v5
         with:
@@ -98,7 +98,7 @@ jobs:
           build-args: |
             WORKER_MODE=true
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-to: type=gha,mode=min
 
   # E2E tests moved to separate workflow: e2e-tests.yml
   # Run manually via workflow_dispatch or after deployment
