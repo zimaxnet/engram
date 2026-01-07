@@ -985,43 +985,31 @@ async def get_avatar_ice_credentials(
     """
     from azure.identity import DefaultAzureCredential
     from azure.core.credentials import AzureKeyCredential
+    from backend.core import get_settings
     
-    if not voicelive_service.is_configured:
+    settings = get_settings()
+    
+    # Check if Speech service is configured
+    if not settings.azure_speech_key and not settings.azure_speech_region:
         raise HTTPException(
             status_code=503,
-            detail="VoiceLive service not configured. Set AZURE_VOICELIVE_ENDPOINT."
+            detail="Azure Speech service not configured. Set AZURE_SPEECH_KEY and AZURE_SPEECH_REGION."
         )
     
-    # Determine the Speech service region from endpoint
-    # Endpoint format: https://zimax.services.ai.azure.com or https://eastus2.tts.speech.microsoft.com
-    endpoint = voicelive_service.endpoint.rstrip('/')
-    
-    # For unified endpoints, we need to extract region or use default
-    if "services.ai.azure.com" in endpoint:
-        # Unified endpoint - use the project's region (default to eastus2)
-        region = "eastus2"  # TODO: Extract from Azure resource configuration
-    elif "tts.speech.microsoft.com" in endpoint:
-        # Direct Speech endpoint - extract region from URL
-        import re
-        match = re.match(r"https://(\w+)\.tts\.speech\.microsoft\.com", endpoint)
-        region = match.group(1) if match else "eastus2"
-    else:
-        region = "eastus2"
+    # Use configured region
+    region = settings.azure_speech_region
     
     # Build the ICE relay token URL
     ice_token_url = f"https://{region}.tts.speech.microsoft.com/cognitiveservices/avatar/relay/token/v1"
     
     try:
-        # Get credential - prefer API key for simplicity, fall back to Managed Identity
-        credential = voicelive_service.get_credential()
-        
         async with httpx.AsyncClient(timeout=10.0) as client:
-            if isinstance(credential, AzureKeyCredential):
-                # API key authentication
-                headers = {"Ocp-Apim-Subscription-Key": credential.key}
+            if settings.azure_speech_key:
+                # Use Speech API key
+                headers = {"Ocp-Apim-Subscription-Key": settings.azure_speech_key}
             else:
-                # Managed Identity / DefaultAzureCredential
-                # Get token for Cognitive Services scope
+                # Fall back to DefaultAzureCredential (Managed Identity)
+                credential = DefaultAzureCredential()
                 token = credential.get_token("https://cognitiveservices.azure.com/.default")
                 headers = {"Authorization": f"Bearer {token.token}"}
             
