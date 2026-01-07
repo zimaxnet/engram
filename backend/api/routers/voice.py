@@ -16,7 +16,7 @@ import base64
 import json
 import logging
 import os
-from typing import Optional, Any
+from typing import Optional, Any, List
 
 import httpx
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
@@ -59,7 +59,7 @@ class TokenResponse(BaseModel):
 
 class IceCredentialsResponse(BaseModel):
     """ICE server credentials for WebRTC peer connection"""
-    urls: list[str]
+    urls: List[str]
     username: str
     credential: str
     ttl: Optional[int] = None  # Time-to-live in seconds
