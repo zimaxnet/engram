@@ -55,6 +55,11 @@ def convert_langchain_tool_to_foundry(tool) -> dict:
     name = tool.name if hasattr(tool, 'name') else str(tool)
     description = tool.description if hasattr(tool, 'description') else ""
     
+    # Sanitize tool name to match Foundry pattern: ^[a-zA-Z0-9_\.-]+$
+    # Replace any invalid characters with underscores
+    import re
+    name = re.sub(r'[^a-zA-Z0-9_\.-]', '_', name)
+    
     # Get parameters schema
     parameters = {
         "type": "object",
@@ -73,12 +78,15 @@ def convert_langchain_tool_to_foundry(tool) -> dict:
         except Exception as e:
             logger.warning(f"Could not extract schema from tool {name}: {e}")
     
-    # Foundry expects tools with "type" at root level
+    # Foundry expects tools with "type" at root level and "function" nested
+    # Structure: {"type": "function", "function": {"name": "...", "description": "...", "parameters": {...}}}
     return {
         "type": "function",
-        "name": name,
-        "description": description,
-        "parameters": parameters,
+        "function": {
+            "name": name,
+            "description": description,
+            "parameters": parameters,
+        }
     }
 
 

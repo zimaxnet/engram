@@ -305,6 +305,7 @@ And I should [secondary outcome]
 """
 
 
+@tool("delegate_to_sage")
 async def delegate_to_sage(topic: str, context: Optional[str] = None) -> str:
     """
     Delegate a storytelling or visualization task to Sage Meridian via a Temporal workflow.

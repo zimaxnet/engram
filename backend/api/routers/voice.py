@@ -483,26 +483,33 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                             })
                         
                         # Handle avatar video events (if VIDEO modality is enabled)
-                        elif hasattr(ServerEventType, 'RESPONSE_VIDEO_DELTA') and event.type == getattr(ServerEventType, 'RESPONSE_VIDEO_DELTA'):
+                        # Handle avatar video events (only if avatar is enabled)
+                        elif avatar_enabled and hasattr(ServerEventType, 'RESPONSE_VIDEO_DELTA') and event.type == getattr(ServerEventType, 'RESPONSE_VIDEO_DELTA'):
                             # Send avatar video chunk to client
-                            video_data = getattr(event, "delta", None) or getattr(event, "data", None)
-                            if video_data:
-                                video_base64 = base64.b64encode(video_data).decode("utf-8")
-                                await websocket.send_json({
-                                    "type": "avatar_video",
-                                    "data": video_base64,
-                                    "format": "video/mp4",
-                                })
+                            try:
+                                video_data = getattr(event, "delta", None) or getattr(event, "data", None)
+                                if video_data:
+                                    video_base64 = base64.b64encode(video_data).decode("utf-8")
+                                    await websocket.send_json({
+                                        "type": "avatar_video",
+                                        "data": video_base64,
+                                        "format": "video/mp4",
+                                    })
+                            except Exception as e:
+                                logger.warning(f"Failed to process avatar video delta: {e}")
                         
-                        elif hasattr(ServerEventType, 'RESPONSE_VIDEO_DONE') and event.type == getattr(ServerEventType, 'RESPONSE_VIDEO_DONE'):
+                        elif avatar_enabled and hasattr(ServerEventType, 'RESPONSE_VIDEO_DONE') and event.type == getattr(ServerEventType, 'RESPONSE_VIDEO_DONE'):
                             # Avatar video complete - send final video URL if available
-                            video_url = getattr(event, "url", None) or getattr(event, "video_url", None)
-                            if video_url:
-                                await websocket.send_json({
-                                    "type": "avatar_video_url",
-                                    "url": video_url,
-                                })
-                                logger.info(f"Avatar video URL received: {video_url}")
+                            try:
+                                video_url = getattr(event, "url", None) or getattr(event, "video_url", None)
+                                if video_url:
+                                    await websocket.send_json({
+                                        "type": "avatar_video_url",
+                                        "url": video_url,
+                                    })
+                                    logger.info(f"Avatar video URL received: {video_url}")
+                            except Exception as e:
+                                logger.warning(f"Failed to process avatar video URL: {e}")
                         
                         elif event.type == ServerEventType.RESPONSE_AUDIO_TRANSCRIPT_DELTA:
                             delta = getattr(event, "delta", "") or ""
