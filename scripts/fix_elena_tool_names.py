@@ -86,6 +86,26 @@ def fix_tool_names(agent_data):
     print(f"\nFixing {len(tools)} tools...")
     print("-" * 60)
     
+    # Expected tool names in order (for tool at index 6: delegate_to_sage)
+    expected_tool_names = [
+        "analyze_requirements",
+        "stakeholder_mapping",
+        "create_user_story",
+        "trigger_ingestion",
+        "run_golden_thread",
+        "search_memory",
+        "delegate_to_sage",  # Index 6 - this was the problematic one
+        "send_email",
+        "list_emails",
+        "list_onedrive_files",
+        "save_to_onedrive",
+        "create_github_issue",
+        "update_github_issue",
+        "get_project_status",
+        "list_my_tasks",
+        "close_task",
+    ]
+    
     for i, tool in enumerate(tools):
         # Handle different tool structures
         if isinstance(tool, dict):
@@ -93,25 +113,63 @@ def fix_tool_names(agent_data):
             if "function" in tool:
                 tool_name = tool["function"].get("name", "")
                 if tool_name:
-                    sanitized_name = sanitize_tool_name(tool_name)
-                    if sanitized_name != tool_name:
-                        print(f"  Tool {i}: '{tool_name}' → '{sanitized_name}'")
-                        tool["function"]["name"] = sanitized_name
-                        updated_count += 1
-                    else:
+                    # If name is invalid (like function object string) or doesn't match expected, use expected name
+                    expected_name = expected_tool_names[i] if i < len(expected_tool_names) else None
+                    if expected_name and tool_name != expected_name:
+                        # Check if current name is invalid or just wrong
+                        if not re.match(r'^[a-zA-Z0-9_\.-]+$', tool_name) or tool_name.startswith('_function_'):
+                            print(f"  Tool {i}: '{tool_name}' → '{expected_name}' (using expected name)")
+                            tool["function"]["name"] = expected_name
+                            updated_count += 1
+                        else:
+                            sanitized_name = sanitize_tool_name(tool_name)
+                            if sanitized_name != tool_name:
+                                print(f"  Tool {i}: '{tool_name}' → '{sanitized_name}'")
+                                tool["function"]["name"] = sanitized_name
+                                updated_count += 1
+                            else:
+                                print(f"  Tool {i}: '{tool_name}' ✅")
+                    elif expected_name and tool_name == expected_name:
                         print(f"  Tool {i}: '{tool_name}' ✅")
+                    else:
+                        sanitized_name = sanitize_tool_name(tool_name)
+                        if sanitized_name != tool_name:
+                            print(f"  Tool {i}: '{tool_name}' → '{sanitized_name}'")
+                            tool["function"]["name"] = sanitized_name
+                            updated_count += 1
+                        else:
+                            print(f"  Tool {i}: '{tool_name}' ✅")
                 fixed_tools.append(tool)
             # Check if it's the flat structure: {"type": "function", "name": ...}
             elif "name" in tool:
                 tool_name = tool.get("name", "")
                 if tool_name:
-                    sanitized_name = sanitize_tool_name(tool_name)
-                    if sanitized_name != tool_name:
-                        print(f"  Tool {i}: '{tool_name}' → '{sanitized_name}'")
-                        tool["name"] = sanitized_name
-                        updated_count += 1
-                    else:
+                    # If name is invalid or doesn't match expected, use expected name
+                    expected_name = expected_tool_names[i] if i < len(expected_tool_names) else None
+                    if expected_name and tool_name != expected_name:
+                        # Check if current name is invalid or just wrong
+                        if not re.match(r'^[a-zA-Z0-9_\.-]+$', tool_name) or tool_name.startswith('_function_'):
+                            print(f"  Tool {i}: '{tool_name}' → '{expected_name}' (using expected name)")
+                            tool["name"] = expected_name
+                            updated_count += 1
+                        else:
+                            sanitized_name = sanitize_tool_name(tool_name)
+                            if sanitized_name != tool_name:
+                                print(f"  Tool {i}: '{tool_name}' → '{sanitized_name}'")
+                                tool["name"] = sanitized_name
+                                updated_count += 1
+                            else:
+                                print(f"  Tool {i}: '{tool_name}' ✅")
+                    elif expected_name and tool_name == expected_name:
                         print(f"  Tool {i}: '{tool_name}' ✅")
+                    else:
+                        sanitized_name = sanitize_tool_name(tool_name)
+                        if sanitized_name != tool_name:
+                            print(f"  Tool {i}: '{tool_name}' → '{sanitized_name}'")
+                            tool["name"] = sanitized_name
+                            updated_count += 1
+                        else:
+                            print(f"  Tool {i}: '{tool_name}' ✅")
                 fixed_tools.append(tool)
             else:
                 print(f"  Tool {i}: ⚠️  No name found, skipping")

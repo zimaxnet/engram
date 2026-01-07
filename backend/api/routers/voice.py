@@ -356,6 +356,7 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
             # Try to update session, fallback to audio-only if avatar fails
             try:
                 await voicelive_connection.session.update(session=session_config)
+                logger.info(f"VoiceLive session updated successfully (avatar={'enabled' if avatar_enabled else 'disabled'})")
             except Exception as e:
                 if avatar_enabled and Modality.VIDEO in modalities:
                     logger.warning(f"Session update with avatar failed, retrying without VIDEO modality: {e}")
@@ -367,9 +368,18 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                         modalities=modalities,
                         **session_kwargs
                     )
-                    await voicelive_connection.session.update(session=session_config)
-                    avatar_enabled = False
+                    try:
+                        await voicelive_connection.session.update(session=session_config)
+                        logger.info("VoiceLive session updated successfully (audio-only fallback)")
+                        avatar_enabled = False
+                    except Exception as retry_error:
+                        # If retry also fails, log but don't fail the connection - continue with audio
+                        logger.error(f"Session update failed even without VIDEO modality: {retry_error}. Continuing with existing session configuration.")
+                        avatar_enabled = False
+                        # Don't raise - allow connection to continue with whatever session state exists
                 else:
+                    # If avatar wasn't enabled or VIDEO not in modalities, this is a real error
+                    logger.error(f"VoiceLive session update failed: {e}")
                     raise
             
             # Send ready message
