@@ -9,7 +9,7 @@ pydantic-settings>=2.1.0
 # Authentication
 msal>=1.26.0
 python-jose[cryptography]
-azure-ai-voicelive[aiohttp]>=3.3.0
+
 
 # Azure Services
 azure-identity>=1.15.0
