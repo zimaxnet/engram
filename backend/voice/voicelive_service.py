@@ -51,7 +51,12 @@ class VoiceLiveService:
         self._key = self.settings.azure_voicelive_key
         self._model = self.settings.azure_voicelive_model
         self._project_name = self.settings.azure_voicelive_project_name
+        self._project_name = self.settings.azure_voicelive_project_name
         self._api_version = self.settings.azure_voicelive_api_version
+        
+        # Speech Service credentials (for Avatar WebRTC)
+        self._speech_key = self.settings.azure_speech_key
+        self._speech_region = self.settings.azure_speech_region
         
         # Voice configurations per agent
         self._agent_voices = {
@@ -96,6 +101,16 @@ class VoiceLiveService:
     def api_version(self) -> str:
         """Get the VoiceLive API version"""
         return self._api_version
+    
+    @property
+    def speech_key(self) -> Optional[str]:
+        """Get the dedicated Azure Speech Service key (required for Avatar)"""
+        return self._speech_key
+        
+    @property
+    def speech_region(self) -> Optional[str]:
+        """Get the Azure Speech Service region"""
+        return self._speech_region
     
     @property
     def is_configured(self) -> bool:

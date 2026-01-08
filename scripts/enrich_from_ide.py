@@ -44,8 +44,24 @@ def enrich_memory(
     api_token = os.getenv("ENGRAM_API_TOKEN")
     
     if not api_token:
-        print("ERROR: ENGRAM_API_TOKEN environment variable required", file=sys.stderr)
-        sys.exit(1)
+        # Try to fetch from Azure CLI
+        try:
+            import subprocess
+            # Use the verified staging resource ID or fallback
+            resource_id = os.getenv("ENGRAM_API_RESOURCE", "api://317f549d-67bb-4f73-90a3-ac0ebf95a420")
+            print(f"   Fetching Azure token for {resource_id}...", file=sys.stderr)
+            
+            result = subprocess.run(
+                ["az", "account", "get-access-token", "--resource", resource_id, "--query", "accessToken", "-o", "tsv"],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            api_token = result.stdout.strip()
+        except Exception as e:
+            print(f"⚠️  Failed to auto-fetch Azure token: {e}", file=sys.stderr)
+            print("ERROR: ENGRAM_API_TOKEN environment variable required or 'az login' must be active.", file=sys.stderr)
+            sys.exit(1)
     
     # Generate session ID if not provided
     if not session_id:

@@ -31,6 +31,42 @@ The Engram Document Ingestion Strategy enables enterprises to ingest documents f
 
 ---
 
+## Antigravity Ingestion Router (New)
+
+> **Context Ecology Architecture** — Documents classified by Truth Value
+
+![Antigravity Router Architecture](/docs/architecture/engram-antigravity-ingestion-router.png)
+
+The **Antigravity Router** replaces the generic Unstructured-for-everything approach with intelligent routing based on document type:
+
+| Class | Name | Engine | Decay Rate | Use Case |
+|-------|------|--------|------------|----------|
+| **A** | Immutable Truth | IBM Docling | 0.01 | Safety manuals, specs, ISO docs |
+| **B** | Ephemeral Chatter | Unstructured.io | 0.80 | Email, PPT, meeting notes |
+| **C** | Operational | Pandas | 0.99 | CSV logs, JSON telemetry |
+
+### NIST SP 800-60 Classification
+
+Every ingested document receives sensitivity classification:
+
+- 🔴 **High Impact** — PII, safety-critical, credentials
+- 🟡 **Moderate Impact** — Business confidential, specifications  
+- 🟢 **Low Impact** — General communications
+
+### 16 Enterprise Connectors
+
+| Category | Connectors |
+|----------|------------|
+| Cloud Storage | S3, Azure Blob, GCS |
+| Collaboration | SharePoint, Drive, OneDrive, Confluence |
+| Ticketing | ServiceNow, Jira, GitHub |
+| Messaging | Slack, Teams, Email |
+| Data | Database, Webhook, Local |
+
+See: [Antigravity Router Story](/stories/antigravity-ingestion-router)
+
+---
+
 ## Tri-Search Architecture
 
 Every ingested document is indexed into **three search layers**, enabling comprehensive retrieval via Reciprocal Rank Fusion (RRF):

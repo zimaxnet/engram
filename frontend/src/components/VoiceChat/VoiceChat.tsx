@@ -32,6 +32,7 @@ interface VoiceChatProps {
   onVisemes?: (visemes: Viseme[]) => void;
   onStatusChange?: (status: 'connecting' | 'connected' | 'error') => void;
   onAvatarVideo?: (url: string | undefined) => void;  // Callback for avatar video URL
+  onAvatarStream?: (stream: MediaStream | null) => void; // Callback for WebRTC stream
   disabled?: boolean;
 }
 
@@ -42,6 +43,7 @@ export default function VoiceChat({
   onVisemes,
   onStatusChange,
   onAvatarVideo,
+  onAvatarStream,
   disabled = false
 }: VoiceChatProps) {
   const [isListening, setIsListening] = useState(false);
@@ -75,6 +77,7 @@ export default function VoiceChat({
   const onVisemesRef = useRef(onVisemes);
   const onStatusChangeRef = useRef(onStatusChange);
   const onAvatarVideoRef = useRef(onAvatarVideo);
+  const onAvatarStreamRef = useRef(onAvatarStream);
 
   // Generate local session ID if not provided
   const [localSessionId] = useState(() => `voice-${Date.now()}`);
@@ -90,9 +93,10 @@ export default function VoiceChat({
     onVisemesRef.current = onVisemes;
     onStatusChangeRef.current = onStatusChange;
     onAvatarVideoRef.current = onAvatarVideo;
-  }, [onMessage, onVisemes, onStatusChange, onAvatarVideo]);
+    onAvatarStreamRef.current = onAvatarStream;
+  }, [onMessage, onVisemes, onStatusChange, onAvatarVideo, onAvatarStream]);
 
-  // Notify parent when avatar video URL changes
+  // Notify parent when avatar video URL changes (legacy support)
   useEffect(() => {
     if (onAvatarVideoRef.current) {
       onAvatarVideoRef.current(avatarVideoUrl);
@@ -121,6 +125,14 @@ export default function VoiceChat({
     setIsSpeaking(true);
     const audioData = audioQueueRef.current.shift();
     if (!audioData) return;
+
+    if (playbackContextRef.current.state === 'suspended') {
+      try {
+        playbackContextRef.current.resume();
+      } catch (e) {
+        console.warn("Failed to resume playback context:", e);
+      }
+    }
 
     const buffer = playbackContextRef.current.createBuffer(1, audioData.length, 24000);
     buffer.getChannelData(0).set(audioData);
@@ -299,6 +311,9 @@ export default function VoiceChat({
                 console.log('Agent switched to:', data.agent_id);
                 // Clear avatar when switching agents
                 setAvatarVideoUrl(undefined);
+                if (onAvatarStreamRef.current) {
+                  onAvatarStreamRef.current(null);
+                }
                 // Close existing video connection if any
                 if (videoWsRef.current) {
                   videoWsRef.current.close();
@@ -315,7 +330,8 @@ export default function VoiceChat({
                 break;
 
               case 'avatar_sdp_answer':
-                // Backend returns SDP answer for WebRTC avatar
+              case 'avatar_answer':
+                // Backend returns SDP answer for WebRTC avatar (both naming conventions supported)
                 console.log('📥 Received SDP answer for avatar');
                 if (data.sdp) {
                   handleSdpAnswer(data.sdp);
@@ -327,6 +343,16 @@ export default function VoiceChat({
                 console.log('🧊 Received remote ICE candidate');
                 if (data.candidate) {
                   handleRemoteIceCandidate(data.candidate);
+                }
+                break;
+
+              case 'avatar_status':
+                // Avatar status update (e.g., negotiating, connected)
+                console.log('Avatar Status:', data.status, data.message);
+                if (data.status === 'negotiating') {
+                  // status is negotiating
+                } else if (data.status === 'ready') {
+                  setAvatarVideoUrl('webrtc://ready');
                 }
                 break;
 
@@ -453,20 +479,15 @@ export default function VoiceChat({
         console.log('📹 WebRTC track received:', event.track.kind);
 
         if (event.track.kind === 'video') {
-          let videoElement = videoElementRef.current;
-          if (!videoElement) {
-            videoElement = document.createElement('video');
-            videoElement.id = 'avatar-video-player';
-            videoElement.autoplay = true;
-            videoElement.playsInline = true;
-            videoElement.muted = false;
-            videoElementRef.current = videoElement;
-          }
-
-          videoElement.srcObject = event.streams[0];
+          const stream = event.streams[0];
           console.log('✅ Avatar video stream connected');
           setIsSpeaking(true);
           setAvatarVideoUrl('webrtc://connected');
+
+          // Pass stream to parent for rendering
+          if (onAvatarStreamRef.current) {
+            onAvatarStreamRef.current(stream);
+          }
         }
 
         if (event.track.kind === 'audio') {

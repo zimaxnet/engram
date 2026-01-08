@@ -53,6 +53,7 @@ interface AvatarDisplayProps {
   showName?: boolean;
   size?: 'sm' | 'md' | 'lg';
   avatarVideoUrl?: string | undefined;  // Foundry avatar video URL (if available)
+  avatarStream?: MediaStream | null;    // WebRTC avatar stream
 }
 
 const AGENT_INFO = {
@@ -87,6 +88,7 @@ export default function AvatarDisplay({
   showName = true,
   size = 'md',
   avatarVideoUrl,
+  avatarStream,
 }: AvatarDisplayProps) {
   const [mouthShape, setMouthShape] = useState(VISEME_MOUTH_SHAPES[0]);
   const [imageError, setImageError] = useState(false);
@@ -94,14 +96,23 @@ export default function AvatarDisplay({
   const animationFrameRef = useRef<number>(0);
   const mouthShapeRef = useRef(mouthShape);
   const prevIsSpeakingRef = useRef(isSpeaking);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-  const agent = AGENT_INFO[agentId];
+  const agent = AGENT_INFO[agentId] || AGENT_INFO['elena'];
 
-  // Track previous speaking state (no setState in effect)
-  // Mouth overlay is only rendered when isSpeaking is true, so reset is unnecessary
+  if (!agent) {
+    console.error(`Invalid agentId: ${agentId}`);
+    return null;
+  }
+
+  // Attach WebRTC stream to video element
   useEffect(() => {
-    prevIsSpeakingRef.current = isSpeaking;
-  }, [isSpeaking]);
+    if (videoRef.current && avatarStream) {
+      videoRef.current.srcObject = avatarStream;
+      // Ensure video plays when stream is attached
+      videoRef.current.play().catch(e => console.error("Auto-play failed:", e));
+    }
+  }, [avatarStream]);
 
 
   // Animate visemes when speaking
@@ -187,7 +198,16 @@ export default function AvatarDisplay({
 
         {/* Avatar Image/Video/Placeholder */}
         <div className="avatar-image">
-          {avatarVideoUrl ? (
+          {avatarStream ? (
+            // WebRTC Avatar Stream
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              className="avatar-video"
+              style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+            />
+          ) : avatarVideoUrl ? (
             // Show Foundry avatar video if available
             <video
               src={avatarVideoUrl}

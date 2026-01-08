@@ -27,6 +27,7 @@ interface VisualPanelProps {
 
 export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessage, sessionId }: VisualPanelProps) {
   const [voiceAvatarVideoUrl, setVoiceAvatarVideoUrl] = useState<string | undefined>(undefined);
+  const [avatarStream, setAvatarStream] = useState<MediaStream | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [currentVisemes, setCurrentVisemes] = useState<Viseme[]>([])
   const [expression, setExpression] = useState<'neutral' | 'smile' | 'thinking' | 'listening'>('neutral')
@@ -99,6 +100,7 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
           showName={true}
           size="lg"
           avatarVideoUrl={voiceAvatarVideoUrl}  // VoiceLive avatar video URL
+          avatarStream={avatarStream} // WebRTC stream
         />
 
         {/* Voice Chat Component */}
@@ -109,7 +111,7 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
                 className="voice-activate-btn"
                 onClick={() => setVoiceReady(true)}
               >
-                🎙️ Activate Voice
+                🎙️ Activate Avatar
               </button>
             ) : (
               <VoiceChat
@@ -119,6 +121,7 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
                 onVisemes={handleVisemes}
                 onStatusChange={setVoiceStatus}
                 onAvatarVideo={setVoiceAvatarVideoUrl}
+                onAvatarStream={setAvatarStream}
                 disabled={!voiceEnabled}
               />
             )}
@@ -180,8 +183,10 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
         <h4 className="card-title">Model Configuration</h4>
         <div className="config-content">
           <div className="config-row">
-            <span className="config-label">Model</span>
+            <span className="config-label" id="model-select-label">Model</span>
             <select
+              title="Select Model"
+              aria-labelledby="model-select-label"
               value={model}
               onChange={(e) => onModelChange(e.target.value)}
               className="config-select"
@@ -190,9 +195,11 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
             </select>
           </div>
           <div className="config-row">
-            <span className="config-label">Temperature</span>
+            <span className="config-label" id="temp-label">Temperature</span>
             <div className="config-slider-container">
               <input
+                title="Temperature"
+                aria-labelledby="temp-label"
                 type="range"
                 min="0"
                 max="100"
@@ -203,9 +210,11 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
             </div>
           </div>
           <div className="config-row">
-            <span className="config-label">Max Tokens</span>
+            <span className="config-label" id="tokens-label">Max Tokens</span>
             <div className="config-slider-container">
               <input
+                title="Max Tokens"
+                aria-labelledby="tokens-label"
                 type="range"
                 min="0"
                 max="100"
@@ -216,8 +225,12 @@ export function VisualPanel({ agent, metrics, model, onModelChange, onVoiceMessa
             </div>
           </div>
           <div className="config-row">
-            <span className="config-label">Voice</span>
-            <select className="config-select">
+            <span className="config-label" id="voice-select-label">Voice</span>
+            <select
+              title="Select Voice"
+              aria-labelledby="voice-select-label"
+              className="config-select"
+            >
               <option value="jenny">Jenny (Elena)</option>
               <option value="guy">Guy (Marcus)</option>
             </select>

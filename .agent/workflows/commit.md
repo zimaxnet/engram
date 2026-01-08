@@ -17,14 +17,21 @@ git add -A && git status
 1. **Enrich memory with full context** (REQUIRED):
 
 ```bash
-# Capture the work context and enrich to Zep
-./scripts/api-call.sh POST /api/v1/memory/enrich '{
-  "text": "[SUMMARIZE: What was worked on, files changed, key decisions made, issues created]",
-  "session_id": "commit-[HASH]",
-  "speaker": "assistant",
-  "agent_id": "antigravity",
-  "channel": "git"
-}'
+# Recommended: Use the robust enrichment script
+./scripts/enrich-commit.sh
+```
+
+> [!NOTE]
+> If you encounter authentication errors, you may need to log in to Azure once with the correct scope:
+>
+> ```bash
+> az login --tenant "8838531d-55dd-4018-8341-77705f4845f4" --scope "api://317f549d-67bb-4f73-90a3-ac0ebf95a420/.default"
+> ```
+
+Alternatively, for manual API calls (not recommended):
+
+```bash
+./scripts/api-call.sh POST /api/v1/memory/enrich ...
 ```
 
 Alternatively, use the enrichment script:

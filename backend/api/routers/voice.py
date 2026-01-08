@@ -84,6 +84,9 @@ def validate_voicelive_endpoint(endpoint: str) -> tuple[bool, str]:
         return True, "unified"
     elif "openai.azure.com" in endpoint_lower:
         return True, "direct"
+    elif "azure-api.net" in endpoint_lower:
+        # Support Azure APIM gateways (treat as unified/project-based)
+        return True, "unified"
     else:
         return False, "invalid"
 
@@ -822,36 +825,49 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                     
                     elif msg_type == "avatar_connect":
                         # WebRTC: Browser is requesting avatar video connection
-                        # Receives SDP offer and agent_id from browser
+                        # Uses aiortc to handle SDP offer/answer exchange
                         sdp_offer = data.get("sdp")
                         avatar_agent_id = data.get("agent_id", "elena")
+                        ice_servers_data = data.get("ice_servers", [])
                         
                         logger.info(f"📹 WebRTC avatar connect request for agent: {avatar_agent_id}")
                         logger.info(f"   SDP offer length: {len(sdp_offer) if sdp_offer else 0} chars")
                         
-                        # TODO: Full WebRTC implementation requires:
-                        # 1. Create avatar session with Azure Speech SDK
-                        # 2. Exchange SDP offer/answer
-                        # 3. Forward ICE candidates
-                        #
-                        # For now, we log the request and send a placeholder response
-                        # The actual WebRTC negotiation happens between browser and Azure
-                        # once we forward the credentials properly
-                        
                         if sdp_offer:
-                            # Send acknowledgment - avatar WebRTC requires Azure Speech SDK
-                            # The browser has already fetched ICE credentials
-                            # Real implementation needs to proxy the SDP exchange
-                            await websocket.send_json({
-                                "type": "avatar_status",
-                                "status": "negotiating",
-                                "message": "Avatar WebRTC negotiation in progress",
-                            })
-                            
-                            # Note: Full implementation would use Azure Speech SDK's 
-                            # AvatarSynthesizer to negotiate the WebRTC connection
-                            # and return the SDP answer
-                            logger.info(f"📹 Avatar WebRTC SDP exchange initiated (SDK integration pending)")
+                            try:
+                                from backend.voice.webrtc_signaling import webrtc_signaling_service
+                                
+                                # Create/get WebRTC session for this user
+                                rtc_session = webrtc_signaling_service.create_session(
+                                    session_id=session_id,
+                                    ice_servers=ice_servers_data if ice_servers_data else None,
+                                    on_track=None  # Tracks go directly to browser via WebRTC
+                                )
+                                
+                                # Process SDP offer and generate answer
+                                sdp_answer = await rtc_session.handle_offer(sdp_offer)
+                                
+                                logger.info(f"✅ WebRTC SDP answer generated ({len(sdp_answer)} chars)")
+                                
+                                # Send answer back to browser
+                                await websocket.send_json({
+                                    "type": "avatar_answer",
+                                    "sdp": sdp_answer,
+                                })
+                                
+                                await websocket.send_json({
+                                    "type": "avatar_status",
+                                    "status": "connected",
+                                    "message": "WebRTC connection established",
+                                })
+                                
+                            except Exception as e:
+                                logger.error(f"❌ Avatar WebRTC negotiation error: {e}")
+                                logger.error("Full traceback:", exc_info=True)
+                                await websocket.send_json({
+                                    "type": "error",
+                                    "message": f"WebRTC negotiation failed: {str(e)}",
+                                })
                         else:
                             await websocket.send_json({
                                 "type": "error",
@@ -862,9 +878,14 @@ async def voicelive_websocket(websocket: WebSocket, session_id: str):
                         # WebRTC: Browser is sending an ICE candidate
                         candidate = data.get("candidate")
                         if candidate:
-                            logger.info(f"🧊 Received ICE candidate from browser: {candidate.get('type', 'unknown')}")
-                            # TODO: Forward to Azure Speech avatar session
-                            # For now, just acknowledge receipt
+                            logger.info(f"🧊 Received ICE candidate from browser")
+                            try:
+                                from backend.voice.webrtc_signaling import webrtc_signaling_service
+                                rtc_session = webrtc_signaling_service.get_session(session_id)
+                                if rtc_session:
+                                    await rtc_session.add_ice_candidate(candidate)
+                            except Exception as e:
+                                logger.warning(f"Failed to add ICE candidate: {e}")
                         else:
                             logger.warning("⚠️  ICE candidate message received but no candidate data")
                     

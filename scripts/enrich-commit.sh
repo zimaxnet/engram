@@ -53,9 +53,19 @@ echo "   Files: ${FILES_CHANGED}"
 API_URL="${ENGRAM_API_URL:-https://api.engram.work}"
 
 # Check if we have a token or need to get one
+# Check if we have a token or need to get one
 if [ -z "$ENGRAM_API_TOKEN" ]; then
     echo "   Getting Azure AD token..."
-    ENGRAM_API_TOKEN=$(az account get-access-token --resource "api://engram" --query accessToken -o tsv 2>/dev/null || echo "")
+    # Capture both stdout and stderr
+    # Default to staging app ID if not set
+    RESOURCE_ID="${ENGRAM_API_RESOURCE:-api://317f549d-67bb-4f73-90a3-ac0ebf95a420}"
+    if ! TOKEN_OUTPUT=$(az account get-access-token --resource "$RESOURCE_ID" --query accessToken -o tsv 2>&1); then
+        echo "⚠️  Failed to acquire Azure token:"
+        echo "$TOKEN_OUTPUT" | sed 's/^/   /'
+        ENGRAM_API_TOKEN=""
+    else
+        ENGRAM_API_TOKEN="$TOKEN_OUTPUT"
+    fi
 fi
 
 if [ -z "$ENGRAM_API_TOKEN" ]; then

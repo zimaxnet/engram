@@ -217,6 +217,21 @@ def configure_logging() -> None:
 
     console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
+    
+    # Create file handler for debugging accessibility
+    try:
+        import os
+        log_dir = "backend/logs"
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir, exist_ok=True)
+            
+        file_handler = logging.FileHandler(f"{log_dir}/app.log", encoding="utf-8")
+        file_handler.setLevel(logging.DEBUG) # Always capture debug in file
+        file_handler.setFormatter(JsonFormatter()) # Use JSON for easier parsing
+        root_logger.addHandler(file_handler)
+        root_logger.info(f"File logging enabled: {log_dir}/app.log")
+    except Exception as e:
+        root_logger.warning(f"Failed to enable file logging: {e}")
 
     # Configure specific loggers
     # Reduce noise from libraries

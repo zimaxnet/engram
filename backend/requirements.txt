@@ -8,7 +8,8 @@ pydantic-settings>=2.1.0
 
 # Authentication
 msal>=1.26.0
-python-jose[cryptography]>=3.3.0
+python-jose[cryptography]
+azure-ai-voicelive[aiohttp]>=3.3.0
 
 # Azure Services
 azure-identity>=1.15.0
@@ -18,6 +19,11 @@ numpy>=1.26.0
 
 # Azure AI VoiceLive (Real-time Voice)
 azure-ai-voicelive[aiohttp]>=1.0.0
+azure-cognitiveservices-speech>=1.34.0
+
+# WebRTC for Avatar Video (aiortc-based signaling)
+aiortc>=1.6.0
+av>=10.0.0
 
 # Agent Framework
 langchain>=0.1.0
