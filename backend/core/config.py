@@ -101,10 +101,8 @@ class Settings(BaseSettings):
     # Project name for unified endpoints (optional, used for project-based endpoints)
     # When using Azure AI Foundry projects, set this to the project name (e.g., "zimax")
     azure_voicelive_project_name: Optional[str] = Field("zimax", alias="AZURE_VOICELIVE_PROJECT_NAME")
-    # API version for Realtime API
-    # Use "2025-10-01" for latest features (140+ languages, Neural HD voices, improved VAD, 4K avatars)
-    # Use "2024-10-01-preview" for legacy compatibility
-    azure_voicelive_api_version: str = Field("2025-10-01", alias="AZURE_VOICELIVE_API_VERSION")
+    # Use "2024-10-01-preview" for Realtime API public preview
+    azure_voicelive_api_version: str = Field("2024-10-01-preview", alias="AZURE_VOICELIVE_API_VERSION")
 
     # ==========================================================================
     # Multi-Model LLM Integration (Sage Agent)
