@@ -66,7 +66,7 @@ export default function VoiceChat({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const animationFrameRef = useRef<number>(0);
   const streamRef = useRef<MediaStream | null>(null);
-  const videoElementRef = useRef<HTMLVideoElement | null>(null); // For WebRTC video stream
+
 
   // Buffers for current turn
   const assistantTranscriptRef = useRef('');

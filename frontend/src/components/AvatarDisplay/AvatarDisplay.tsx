@@ -95,7 +95,7 @@ export default function AvatarDisplay({
   const animationStartTime = useRef<number>(0);
   const animationFrameRef = useRef<number>(0);
   const mouthShapeRef = useRef(mouthShape);
-  const prevIsSpeakingRef = useRef(isSpeaking);
+
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const agent = AGENT_INFO[agentId] || AGENT_INFO['elena'];
