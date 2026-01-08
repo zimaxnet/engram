@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import './VoiceInteractionPage.css';
 import VoiceChat from '../../components/VoiceChat/VoiceChat';
+import AvatarDisplay from '../../components/AvatarDisplay/AvatarDisplay';
 import type { AgentId } from '../../types';
 
 interface VoiceInteractionPageProps {
@@ -7,93 +9,123 @@ interface VoiceInteractionPageProps {
   sessionId: string;
 }
 
+/**
+ * Mobile-First Voice Interaction Page
+ * 
+ * Elena's avatar is front-and-center with WebRTC video streaming.
+ * Push-to-talk interface optimized for touch devices.
+ */
 export function VoiceInteractionPage({ activeAgent, sessionId }: VoiceInteractionPageProps) {
   const [status, setStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
+  const [isSpeaking] = useState(false); // TODO: Wire up when VoiceChat exposes speaking state
+  const [avatarStream, setAvatarStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  return (
-    <div className="voice-interaction-container" style={{
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100%',
-      gap: '1.5rem',
-      padding: '2rem',
-    }}>
-      <div>
-        <h1 style={{ marginBottom: '0.5rem' }}>Voice Interaction</h1>
-        <p style={{
-          color: 'var(--color-text-dim)',
-          fontSize: '0.95rem',
-          margin: 0,
-        }}>
-          Interact with {activeAgent === 'elena' ? 'Elena' : 'Marcus'} using voice. Press and hold to speak.
-        </p>
-      </div>
+  // Video element ref for WebRTC stream
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-      <div style={{
-        flex: 1,
-        background: 'var(--glass-bg)',
-        border: '1px solid var(--glass-border)',
-        borderRadius: '12px',
-        padding: '2rem',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '400px',
-      }}>
-        {status === 'error' && error && (
-          <div style={{
-            color: 'var(--color-error)',
-            marginBottom: '1rem',
-            textAlign: 'center',
-          }}>
+  // Attach WebRTC stream to video element
+  useEffect(() => {
+    if (videoRef.current && avatarStream) {
+      videoRef.current.srcObject = avatarStream;
+      videoRef.current.play().catch(e => console.warn('Video autoplay blocked:', e));
+    }
+  }, [avatarStream]);
+
+  // Handle avatar stream from VoiceChat
+  const handleAvatarStream = useCallback((stream: MediaStream | null) => {
+    setAvatarStream(stream);
+    if (stream) {
+      console.log('📹 Avatar video stream received');
+    }
+  }, []);
+
+  // Handle status changes
+  const handleStatusChange = useCallback((newStatus: 'connecting' | 'connected' | 'error') => {
+    setStatus(newStatus);
+    if (newStatus === 'error') {
+      setError('Voice connection failed. Check your network and try again.');
+    } else {
+      setError(null);
+    }
+  }, []);
+
+  const agentName = activeAgent === 'elena' ? 'Dr. Elena Vasquez'
+    : activeAgent === 'marcus' ? 'Marcus Chen'
+      : 'Sage Meridian';
+
+  const agentRole = activeAgent === 'elena' ? 'Business Analyst'
+    : activeAgent === 'marcus' ? 'Project Manager'
+      : 'Storyteller';
+
+  return (
+    <div className="voice-page">
+      {/* Avatar Section - Mobile: Top, Desktop: Left */}
+      <section className="avatar-section">
+        <div className={`avatar-container ${isSpeaking ? 'speaking' : ''}`}>
+          {avatarStream ? (
+            // WebRTC Video Stream
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted={false}
+              className="avatar-video-stream"
+            />
+          ) : (
+            // Fallback to static avatar
+            <AvatarDisplay
+              agentId={activeAgent}
+              isSpeaking={isSpeaking}
+              expression={status === 'connected' ? 'neutral' : 'thinking'}
+              showName={false}
+              size="lg"
+              avatarStream={avatarStream}
+            />
+          )}
+        </div>
+
+        <div className="agent-info">
+          <h2>{agentName}</h2>
+          <p className="role">{agentRole}</p>
+
+          <div className="connection-status">
+            <span className={`status-dot ${isSpeaking ? 'speaking' :
+              status === 'connected' ? 'connected' :
+                status === 'connecting' ? 'connecting' : 'error'
+              }`} />
+            <span>
+              {isSpeaking ? 'Speaking...' :
+                status === 'connected' ? 'Ready' :
+                  status === 'connecting' ? 'Connecting...' : 'Disconnected'}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* Controls Section - Mobile: Bottom, Desktop: Right */}
+      <section className="controls-section">
+        {error && (
+          <div className="error-banner">
             <p>{error}</p>
-            <button
-              onClick={() => {
-                setError(null);
-                setStatus('connecting');
-              }}
-              style={{
-                marginTop: '1rem',
-                padding: '0.5rem 1rem',
-                background: 'var(--color-accent)',
-                color: 'var(--color-text)',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-              }}
-            >
-              Retry
+            <button onClick={() => {
+              setError(null);
+              setStatus('connecting');
+            }}>
+              Retry Connection
             </button>
           </div>
         )}
 
-        {status !== 'error' && (
-          <VoiceChat
-            agentId={activeAgent}
-            sessionId={sessionId}
-            disabled={status !== 'connected'}
-            onStatusChange={setStatus}
-          />
-        )}
-      </div>
-
-      <div style={{
-        background: 'var(--glass-bg)',
-        border: '1px solid var(--glass-border)',
-        borderRadius: '8px',
-        padding: '1rem',
-        fontSize: '0.875rem',
-        color: 'var(--color-text-dim)',
-      }}>
-        <p><strong>Connection Status:</strong> {status}</p>
-        <p style={{ margin: '0.5rem 0 0' }}>
-          {status === 'connected' ? '🟢 Connected and ready for voice input' : 
-           status === 'connecting' ? '🟡 Connecting to voice service...' :
-           '🔴 Connection error'}
-        </p>
-      </div>
+        {/* VoiceChat handles the push-to-talk and audio processing */}
+        <VoiceChat
+          agentId={activeAgent}
+          sessionId={sessionId}
+          disabled={status !== 'connected'}
+          onStatusChange={handleStatusChange}
+          onAvatarStream={handleAvatarStream}
+        />
+      </section>
     </div>
   );
 }

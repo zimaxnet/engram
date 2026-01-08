@@ -1017,10 +1017,9 @@ async def get_avatar_ice_credentials(
         )
     
     # 1. Determine Region
-    # Unified endpoints (zimax.services.ai.azure.com) are usually in a region.
-    # We default to eastus2, or could parse from endpoint if it was a regional URL.
-    # Since we verified 'zimax' resource is in eastus2, we use that.
-    region = "eastus2" 
+    # Real-time Avatar requires: westus2, northeurope, or southeastasia
+    # Default to westus2 as it's the primary avatar-capable region
+    region = "westus2" 
     
     # Check if endpoint implies a different region (e.g. westeurope.tts.speech...)
     if ".tts.speech.microsoft.com" in voicelive_service.endpoint:

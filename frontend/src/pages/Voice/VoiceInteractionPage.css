@@ -1,0 +1,271 @@
+/* VoiceInteractionPage - Mobile-First Avatar Experience */
+
+.voice-page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    overflow: hidden;
+}
+
+/* Mobile: Avatar fills the screen */
+.avatar-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    position: relative;
+    min-height: 60vh;
+}
+
+/* Avatar container - large and centered */
+.avatar-container {
+    width: min(80vw, 320px);
+    height: min(80vw, 320px);
+    position: relative;
+}
+
+/* Video element for WebRTC avatar stream */
+.avatar-video-stream {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #1e293b;
+    box-shadow:
+        0 0 0 4px rgba(99, 102, 241, 0.3),
+        0 0 60px rgba(99, 102, 241, 0.2);
+}
+
+/* Glow effect when speaking */
+.avatar-container.speaking .avatar-video-stream {
+    box-shadow:
+        0 0 0 4px rgba(99, 102, 241, 0.6),
+        0 0 80px rgba(99, 102, 241, 0.4),
+        0 0 120px rgba(99, 102, 241, 0.2);
+    animation: avatarPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes avatarPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.02);
+    }
+}
+
+/* Agent info below avatar */
+.agent-info {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: #e2e8f0;
+}
+
+.agent-info h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.agent-info .role {
+    margin: 0.25rem 0 0;
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+/* Status indicator */
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding: 0.35rem 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 999px;
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #64748b;
+}
+
+.status-dot.connected {
+    background: #22c55e;
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+.status-dot.speaking {
+    background: #6366f1;
+    animation: statusPulse 1s ease-in-out infinite;
+}
+
+.status-dot.connecting {
+    background: #f59e0b;
+    animation: statusPulse 0.5s ease-in-out infinite;
+}
+
+.status-dot.error {
+    background: #ef4444;
+}
+
+@keyframes statusPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Controls section at bottom */
+.controls-section {
+    padding: 1.5rem;
+    background: rgba(15, 23, 42, 0.8);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Transcript display */
+.transcript-display {
+    max-height: 80px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    font-size: 0.9rem;
+    color: #e2e8f0;
+}
+
+.transcript-display:empty {
+    display: none;
+}
+
+.transcript-label {
+    color: #6366f1;
+    font-weight: 500;
+    margin-right: 0.5rem;
+}
+
+/* Push-to-talk button - large, touch-friendly */
+.ptt-button {
+    width: 100%;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    border: none;
+    border-radius: 16px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    touch-action: none;
+    /* Prevent scroll on touch */
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.ptt-button:active {
+    transform: scale(0.98);
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+}
+
+.ptt-button:disabled {
+    background: #475569;
+    cursor: not-allowed;
+}
+
+.ptt-button.listening {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    animation: listeningPulse 1s ease-in-out infinite;
+}
+
+@keyframes listeningPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 0 20px rgba(34, 197, 94, 0);
+    }
+}
+
+.ptt-button svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Desktop: Side-by-side layout */
+@media (min-width: 768px) {
+    .voice-page {
+        flex-direction: row;
+    }
+
+    .avatar-section {
+        flex: 1;
+        min-height: 0;
+        /* Firefox compatibility */
+    }
+
+    .controls-section {
+        width: 360px;
+        flex-shrink: 0;
+        border-top: none;
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+    }
+
+    .transcript-display {
+        flex: 1;
+        max-height: none;
+        margin-bottom: 1.5rem;
+    }
+
+    .avatar-container {
+        width: min(50vw, 400px);
+        height: min(50vw, 400px);
+    }
+}
+
+/* Error state */
+.error-banner {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    color: #fca5a5;
+    text-align: center;
+}
+
+.error-banner button {
+    margin-top: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    color: #fca5a5;
+    cursor: pointer;
+}

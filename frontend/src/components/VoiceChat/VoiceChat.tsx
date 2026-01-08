@@ -465,12 +465,15 @@ export default function VoiceChat({
       });
 
       // 2. Create WebRTC peer connection with ICE servers
+      // CRITICAL: Force relay transport for Azure Avatar (required for NAT traversal)
+      // See docs/architecture/azure-avatar-integration.md for details
       const peerConnection = new RTCPeerConnection({
         iceServers: [{
           urls: iceConfig.urls,
           username: iceConfig.username,
           credential: iceConfig.credential,
         }],
+        iceTransportPolicy: 'relay',  // Force TURN relay (required for Azure Avatar)
       });
       peerConnectionRef.current = peerConnection;
 
