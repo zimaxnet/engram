@@ -1058,10 +1058,16 @@ async def get_avatar_ice_credentials(
             response = await client.get(ice_token_url, headers=headers)
             
             # Fallback: If 401 and we used Ocp-Apim, try api-key header
-            if response.status_code == 401 and isinstance(credential, AzureKeyCredential) and "Ocp-Apim-Subscription-Key" in headers:
+            if response.status_code == 401 and "Ocp-Apim-Subscription-Key" in headers:
                 logger.info("Retrying ICE token request with 'api-key' header...")
-                headers = {"api-key": credential.key}
-                response = await client.get(ice_token_url, headers=headers)
+                # Get key from headers or credential
+                key = headers.get("Ocp-Apim-Subscription-Key")
+                if not key and isinstance(credential, AzureKeyCredential):
+                    key = credential.key
+                
+                if key:
+                    headers = {"api-key": key}
+                    response = await client.get(ice_token_url, headers=headers)
             
             response.raise_for_status() # Raise an exception for 4xx/5xx responses
             data = response.json()
