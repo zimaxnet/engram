@@ -273,6 +273,8 @@ class KeyVaultSettings:
             "azure-foundry-agent-project": "azure_foundry_agent_project",
             "azure-foundry-agent-key": "azure_foundry_agent_key",
             "elena-foundry-agent-id": "elena_foundry_agent_id",
+            # Azure Speech Service Key (Regional)
+            "azure-speech-key": "azure_speech_key",
         }
 
         for secret_name, setting_attr in secret_mappings.items():
