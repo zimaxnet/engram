@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     # Azure Speech Service (for ICE/TURN relay tokens - avatar video)
     # ==========================================================================
     azure_speech_key: Optional[str] = Field(None, alias="AZURE_SPEECH_KEY")
-    azure_speech_region: str = Field("eastus2", alias="AZURE_SPEECH_REGION")
+    azure_speech_region: str = Field("westus2", alias="AZURE_SPEECH_REGION")
 
     # ==========================================================================
     # Azure OpenAI (Legacy / Chat)
