@@ -45,6 +45,7 @@ function createWelcomeMessage(agent: Agent): Message {
 
 // Voice Chat Overlay Styles
 import VoiceChat from '../VoiceChat/VoiceChat';
+import AvatarDisplay from '../AvatarDisplay/AvatarDisplay';
 
 const overlayStyles: CSSProperties = {
   position: 'fixed',
@@ -95,6 +96,15 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
 
   // Voice Live Mode State
   const [isVoiceOpen, setIsVoiceOpen] = useState(false)
+  const [avatarStream, setAvatarStream] = useState<MediaStream | null>(null)
+  const [isAvatarSpeaking, setIsAvatarSpeaking] = useState(false)
+
+  // Auto-open voice mode on mount (Mobile-first experience)
+  useEffect(() => {
+    if (agent.voiceEnabled) {
+      setIsVoiceOpen(true);
+    }
+  }, [agent.id, agent.voiceEnabled]);
 
   // Initialize local sessionId once (used when caller doesn't supply a shared sessionId)
   const [localSessionId] = useState<string>(() =>
@@ -126,15 +136,15 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
       // 1. We have a sessionId prop (not a local one)
       // 2. We haven't loaded history for this sessionId yet
       // 3. We only have the welcome message
-      if (sessionIdProp && 
-          sessionIdProp !== loadedSessionId && 
-          messages.length === 1 && 
-          messages[0].role === 'assistant' &&
-          messages[0].id === initialMessage.id) {
+      if (sessionIdProp &&
+        sessionIdProp !== loadedSessionId &&
+        messages.length === 1 &&
+        messages[0].role === 'assistant' &&
+        messages[0].id === initialMessage.id) {
         try {
           const { getEpisode } = await import('../../services/api')
           const episodeData = await getEpisode(sessionIdProp)
-          
+
           if (episodeData?.transcript && episodeData.transcript.length > 0) {
             // Convert transcript to Message format
             const loadedMessages: Message[] = episodeData.transcript.map((msg: { role: string; content: string }, index: number) => ({
@@ -145,7 +155,7 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
               agentName: msg.role === 'assistant' ? agent.name : undefined,
               timestamp: new Date(), // Transcript doesn't include timestamps, use current time
             }))
-            
+
             // Replace welcome message with loaded history
             setMessages(loadedMessages)
             setLoadedSessionId(sessionIdProp)
@@ -160,7 +170,7 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
         }
       }
     }
-    
+
     loadSessionHistory()
   }, [sessionIdProp, agent.id, agent.name, loadedSessionId, messages, initialMessage.id])
 
@@ -441,6 +451,18 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
               WebkitBackdropFilter: 'blur(16px)',
             }}>
               <h3 style={{ margin: 0, fontWeight: 600 }}>Speaking with {agent.name}</h3>
+
+              {/* Avatar Display (WebRTC Video) */}
+              <div style={{ width: '200px', height: '200px', margin: '0 0' }}>
+                <AvatarDisplay
+                  agentId={agent.id as 'elena' | 'marcus' | 'sage'}
+                  isSpeaking={isAvatarSpeaking}
+                  avatarStream={avatarStream}
+                  size="lg"
+                  showName={false}
+                />
+              </div>
+
               <VoiceChat
                 agentId={agent.id}
                 sessionId={sessionId}
@@ -449,6 +471,8 @@ export function ChatPanel({ agent, sessionId: sessionIdProp, onMetricsUpdate }: 
                     // Optional: handle error state
                   }
                 }}
+                onAvatarStream={setAvatarStream}
+                onSpeaking={setIsAvatarSpeaking}
               />
               <p style={{
                 fontSize: '0.875rem',

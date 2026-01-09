@@ -33,6 +33,7 @@ interface VoiceChatProps {
   onStatusChange?: (status: 'connecting' | 'connected' | 'error') => void;
   onAvatarVideo?: (url: string | undefined) => void;  // Callback for avatar video URL
   onAvatarStream?: (stream: MediaStream | null) => void; // Callback for WebRTC stream
+  onSpeaking?: (speaking: boolean) => void;
   disabled?: boolean;
 }
 
@@ -44,6 +45,7 @@ export default function VoiceChat({
   onStatusChange,
   onAvatarVideo,
   onAvatarStream,
+  onSpeaking,
   disabled = false
 }: VoiceChatProps) {
   const [isListening, setIsListening] = useState(false);
@@ -102,6 +104,11 @@ export default function VoiceChat({
       onAvatarVideoRef.current(avatarVideoUrl);
     }
   }, [avatarVideoUrl]);
+
+  // Notify parent of speaking state changes
+  useEffect(() => {
+    onSpeaking?.(isSpeaking);
+  }, [isSpeaking, onSpeaking]);
 
   // Audio Playback Context
   useEffect(() => {

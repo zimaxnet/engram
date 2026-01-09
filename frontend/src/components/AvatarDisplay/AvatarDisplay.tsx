@@ -235,8 +235,8 @@ export default function AvatarDisplay({
           )}
         </div>
 
-        {/* Animated Mouth Overlay (CSS-based) */}
-        {isSpeaking && (
+        {/* Animated Mouth Overlay (CSS-based) - mute if video is playing */}
+        {isSpeaking && !avatarStream && !avatarVideoUrl && (
           <div
             className="avatar-mouth"
             style={{
