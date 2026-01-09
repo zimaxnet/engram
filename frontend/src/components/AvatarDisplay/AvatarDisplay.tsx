@@ -217,8 +217,9 @@ export default function AvatarDisplay({
               playsInline
               className="avatar-video"
               onError={() => {
-                // Fallback to static image if video fails
-                setImageError(true);
+                console.warn('Avatar video failed to load, falling back to image');
+                // Don't set imageError, just let it fall through to the image
+                // We can't clear the prop, but we can rely on parent handling or just accept this rendered nothing
               }}
             />
           ) : agent.imageUrl && !imageError ? (

@@ -492,7 +492,7 @@ export default function VoiceChat({
           const stream = event.streams[0];
           console.log('✅ Avatar video stream connected');
           setIsSpeaking(true);
-          setAvatarVideoUrl('webrtc://connected');
+          // setAvatarVideoUrl('webrtc://connected'); // Removed: connection handled via onAvatarStream
 
           // Pass stream to parent for rendering
           if (onAvatarStreamRef.current) {
