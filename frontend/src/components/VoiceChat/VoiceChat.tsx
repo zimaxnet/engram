@@ -480,7 +480,7 @@ export default function VoiceChat({
           username: iceConfig.username,
           credential: iceConfig.credential,
         }],
-        iceTransportPolicy: 'relay',  // Force TURN relay (required for Azure Avatar)
+        // iceTransportPolicy: 'relay', // Relaxed: Allow all transport types (P2P + Relay) to improve connection success
       });
       peerConnectionRef.current = peerConnection;
 

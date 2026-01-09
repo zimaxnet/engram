@@ -238,13 +238,28 @@ export default function AvatarDisplay({
 
         {/* Animated Mouth Overlay (CSS-based) - mute if video is playing */}
         {isSpeaking && !avatarStream && !avatarVideoUrl && (
-          <div
-            className="avatar-mouth"
-            style={{
-              '--jaw-open': mouthShape.jawOpen,
-              '--mouth-width': mouthShape.mouthWidth,
-            } as React.CSSProperties & Record<string, string | number>}
-          />
+          <>
+            <div
+              className="avatar-mouth"
+              style={{
+                '--jaw-open': mouthShape.jawOpen,
+                '--mouth-width': mouthShape.mouthWidth,
+              } as React.CSSProperties & Record<string, string | number>}
+            />
+            {/* Connection Status Indicator - Only show if we expect video but don't have it yet */}
+            {/* We assume if isSpeaking is true, we should eventually have video if enabled */}
+            <div style={{
+              position: 'absolute',
+              top: '10px',
+              right: '10px',
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              backgroundColor: '#f59e0b', // Amber for connecting/fallback
+              boxShadow: '0 0 8px #f59e0b',
+              zIndex: 10
+            }} title="Video Connecting / Fallback Mode" />
+          </>
         )}
 
         {/* Expression Indicator */}
