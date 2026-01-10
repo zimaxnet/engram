@@ -127,7 +127,7 @@ class AntigravityRouter:
         if ext in CLASS_A_EXTENSIONS:
             if self._is_technical_document(filename, file_path):
                 return DataClass.CLASS_A_TRUTH, f"Extension {ext} + technical keywords -> Docling"
-            # Default PDFs to Class A for GE Vernova context
+            # Default PDFs to Class A for industrial context
             return DataClass.CLASS_A_TRUTH, f"Extension {ext} (default) -> Docling"
         
         # CLASS B: Ephemeral Chatter

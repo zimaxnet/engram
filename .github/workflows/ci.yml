@@ -15,6 +15,48 @@ on:
         type: boolean
 
 jobs:
+  # =============================================================================
+  # DCO (Developer Certificate of Origin) Check
+  # Ensures all commits are signed-off for open source compliance
+  # =============================================================================
+  dco-check:
+    name: DCO Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check DCO Sign-Off
+        run: |
+          # Get all commits in the PR
+          COMMITS=$(git rev-list origin/${{ github.base_ref }}..${{ github.event.pull_request.head.sha }})
+          FAILED=0
+          
+          for COMMIT in $COMMITS; do
+            MESSAGE=$(git log -1 --format=%B $COMMIT)
+            if ! echo "$MESSAGE" | grep -q "^Signed-off-by: .* <.*>"; then
+              echo "❌ Commit $COMMIT is missing DCO sign-off"
+              echo "   Message: $(git log -1 --format=%s $COMMIT)"
+              FAILED=1
+            else
+              echo "✅ Commit $COMMIT has DCO sign-off"
+            fi
+          done
+          
+          if [ $FAILED -eq 1 ]; then
+            echo ""
+            echo "❌ DCO check failed. Please sign off your commits with:"
+            echo "   git commit --amend --signoff"
+            echo "   or"
+            echo "   git rebase --signoff HEAD~N"
+            exit 1
+          fi
+          
+          echo ""
+          echo "✅ All commits have DCO sign-off"
+
   frontend-test:
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.skip_tests == false) }}
     runs-on: ubuntu-latest
@@ -99,6 +141,94 @@ jobs:
             WORKER_MODE=true
           cache-from: type=gha
           cache-to: type=gha,mode=min
+
+  # =============================================================================
+  # Security Scanning (SBOM + Vulnerability)
+  # NIST 800-161 Compliance: SR-3, SR-4, SR-5
+  # =============================================================================
+  security-scan:
+    name: SBOM & Vulnerability Scan
+    runs-on: ubuntu-latest
+    needs: build-images
+    if: needs.build-images.result == 'success'
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      # Generate SBOM for Backend Image
+      - name: Generate SBOM (Backend)
+        uses: anchore/sbom-action@v0
+        with:
+          image: ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
+          format: spdx-json
+          output-file: sbom-backend.spdx.json
+          artifact-name: sbom-backend.spdx.json
+      
+      # Generate SBOM for Worker Image
+      - name: Generate SBOM (Worker)
+        uses: anchore/sbom-action@v0
+        with:
+          image: ghcr.io/${{ github.repository }}/worker:${{ github.sha }}
+          format: spdx-json
+          output-file: sbom-worker.spdx.json
+          artifact-name: sbom-worker.spdx.json
+      
+      # Vulnerability Scan - Backend
+      - name: Scan Backend for Vulnerabilities
+        uses: anchore/scan-action@v3
+        id: scan-backend
+        with:
+          image: ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
+          fail-build: true
+          severity-cutoff: high
+          output-format: sarif
+      
+      - name: Upload Backend Scan Results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: ${{ steps.scan-backend.outputs.sarif }}
+          category: backend-vulnerabilities
+      
+      # Vulnerability Scan - Worker
+      - name: Scan Worker for Vulnerabilities
+        uses: anchore/scan-action@v3
+        id: scan-worker
+        with:
+          image: ghcr.io/${{ github.repository }}/worker:${{ github.sha }}
+          fail-build: true
+          severity-cutoff: high
+          output-format: sarif
+      
+      - name: Upload Worker Scan Results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: ${{ steps.scan-worker.outputs.sarif }}
+          category: worker-vulnerabilities
+      
+      - name: Security Scan Summary
+        if: always()
+        run: |
+          echo "## 🔒 Security Scan Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Image | SBOM Generated | Vulnerability Scan |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|----------------|-------------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | ✅ sbom-backend.spdx.json | ${{ steps.scan-backend.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Worker | ✅ sbom-worker.spdx.json | ${{ steps.scan-worker.outcome == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📋 NIST 800-161 Controls: SR-3, SR-4, SR-5" >> $GITHUB_STEP_SUMMARY
 
   # E2E tests moved to separate workflow: e2e-tests.yml
   # Run manually via workflow_dispatch or after deployment

@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Engram AI Periodic Table - Interactive Matrix</title>
+    <style>
+        :root {
+            --strong: #10b981;
+            --emerging: #f59e0b;
+            --gap: #ef4444;
+            --unique: #8b5cf6;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .legend-dot.strong {
+            background: var(--strong);
+        }
+
+        .legend-dot.emerging {
+            background: var(--emerging);
+        }
+
+        .legend-dot.gap {
+            background: var(--gap);
+        }
+
+        .legend-dot.unique {
+            background: var(--unique);
+            box-shadow: 0 0 10px var(--unique);
+        }
+
+        .matrix-container {
+            overflow-x: auto;
+            margin: 2rem 0;
+        }
+
+        .matrix {
+            display: grid;
+            grid-template-columns: 140px repeat(5, 1fr);
+            gap: 4px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header-cell {
+            background: var(--bg-card);
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .row-header {
+            background: var(--bg-card);
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            writing-mode: horizontal-tb;
+        }
+
+        .element {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            min-height: 140px;
+            position: relative;
+        }
+
+        .element:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .element.strong {
+            border-color: var(--strong);
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(16, 185, 129, 0.1) 100%);
+        }
+
+        .element.emerging {
+            border-color: var(--emerging);
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(245, 158, 11, 0.1) 100%);
+        }
+
+        .element.gap {
+            border-color: var(--gap);
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(239, 68, 68, 0.1) 100%);
+        }
+
+        .element.unique {
+            border-color: var(--unique);
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(139, 92, 246, 0.2) 100%);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+        }
+
+        .element.empty {
+            background: transparent;
+            border: 1px dashed var(--border);
+            opacity: 0.3;
+            cursor: default;
+        }
+
+        .symbol {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .name {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .component {
+            font-size: 0.75rem;
+            color: var(--text-primary);
+            opacity: 0.9;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin-top: 0.5rem;
+            font-weight: 600;
+        }
+
+        .status-badge.strong {
+            background: var(--strong);
+            color: white;
+        }
+
+        .status-badge.emerging {
+            background: var(--emerging);
+            color: black;
+        }
+
+        .status-badge.gap {
+            background: var(--gap);
+            color: white;
+        }
+
+        .status-badge.unique {
+            background: var(--unique);
+            color: white;
+        }
+
+        /* Context Series Block (Lanthanides Style) */
+        .context-series-section {
+            margin: 3rem auto;
+            max-width: 1200px;
+            padding: 2rem;
+        }
+
+        .context-series-title {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 1rem;
+        }
+
+        .context-series-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .context-element {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 2px solid var(--unique);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            min-height: 180px;
+        }
+
+        .context-element:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 40px rgba(139, 92, 246, 0.4);
+            border-color: var(--unique);
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(139, 92, 246, 0.2) 100%);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 2.5rem;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 2px solid var(--border);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .modal-symbol {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-name {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: var(--border);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            line-height: 1.8;
+        }
+
+        .modal-section {
+            margin-bottom: 2rem;
+        }
+
+        .modal-section h3 {
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+            border-left: 4px solid var(--unique);
+            padding-left: 0.75rem;
+        }
+
+        .modal-section p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .modal-section ul {
+            color: var(--text-secondary);
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal-section li {
+            margin-bottom: 0.5rem;
+        }
+
+        .classification-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .classification-base {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--strong);
+        }
+
+        .classification-behavioral {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--emerging);
+        }
+
+        .classification-structural {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--unique);
+        }
+
+        .classification-safety {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--gap);
+        }
+
+        .classification-measurement {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .classification-primitive {
+            background: rgba(168, 85, 247, 0.2);
+            color: #a78bfa;
+        }
+
+        .summary {
+            max-width: 800px;
+            margin: 3rem auto;
+            text-align: center;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+        }
+
+        .stat-number.strong {
+            color: var(--strong);
+        }
+
+        .stat-number.emerging {
+            color: var(--emerging);
+        }
+
+        .stat-number.gap {
+            color: var(--gap);
+        }
+
+        .stat-number.unique {
+            color: var(--unique);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        footer .dashboards {
+            margin-bottom: 1.5rem;
+        }
+
+        footer .dashboards h3 {
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        footer .dashboards a,
+        footer .attribution a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+
+        footer .dashboards a:hover,
+        footer .attribution a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Engram AI Periodic Table</h1>
+        <p class="subtitle">Interactive Competitive Matrix — Enterprise Industrial AI</p>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-dot strong"></div>
+                <span>Strong</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot emerging"></div>
+                <span>Emerging</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot gap"></div>
+                <span>Gap</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot unique"></div>
+                <span>Unique Differentiator</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="matrix-container">
+        <div class="matrix">
+            <!-- Header Row -->
+            <div class="header-cell"></div>
+            <div class="header-cell">C1<br>Reactive</div>
+            <div class="header-cell">C2<br>Retrieval</div>
+            <div class="header-cell">C3<br>Orchestration</div>
+            <div class="header-cell">C4<br>Validation</div>
+            <div class="header-cell">C5<br>Models</div>
+
+            <!-- Row 1: Primitives -->
+            <div class="row-header">R1<br>Primitives</div>
+
+            <div class="element strong" data-element="Pr">
+                <div class="symbol">Pr</div>
+                <div class="name">Prompts</div>
+                <div class="component">Agent System Prompts</div>
+                <span class="status-badge strong">STRONG</span>
+            </div>
+
+            <div class="element strong" data-element="Em">
+                <div class="symbol">Em</div>
+                <div class="name">Embeddings</div>
+                <div class="component">Zep Embedding Layer</div>
+                <span class="status-badge strong">STRONG</span>
+            </div>
+
+            <div class="element empty"></div>
+            <div class="element empty"></div>
+
+            <div class="element strong" data-element="Lg">
+                <div class="symbol">Lg</div>
+                <div class="name">LLM</div>
+                <div class="component">Multi-model Orchestration</div>
+                <span class="status-badge strong">STRONG</span>
+            </div>
+
+            <!-- Row 2: Compositions -->
+            <div class="row-header">R2<br>Compositions</div>
+
+            <div class="element strong" data-element="Fc">
+                <div class="symbol">Fc</div>
+                <div class="name">Function Call</div>
+                <div class="component">MCP Tools (40+)</div>
+                <span class="status-badge strong">STRONG</span>
+            </div>
+
+            <div class="element strong" data-element="Vx">
+                <div class="symbol">Vx</div>
+                <div class="name">Vector</div>
+                <div class="component">Zep Tri-Search</div>
+                <span class="status-badge strong">STRONG</span>
+            </div>
+
+            <div class="element strong" data-element="Rg">
+                <div class="symbol">Rg</div>
+                <div class="name">RAG</div>
+                <div class="component">Context Assembly</div>
+                <span class="status-badge strong">STRONG</span>
+            </div>
+
+            <div class="element strong" data-element="Gr">
+                <div class="symbol">Gr</div>
+                <div class="name">Guardrails</div>
+                <div class="component">Azure Entra ID</div>
+                <span class="status-badge strong">STRONG</span>
+            </div>
+
+            <div class="element strong" data-element="Mm">
+                <div class="symbol">Mm</div>
+                <div class="name">Multimodal</div>
+                <div class="component">Imagen + VoiceLive</div>
+                <span class="status-badge strong">STRONG</span>
+            </div>
+
+            <!-- Row 3: Deployment -->
+            <div class="row-header">R3<br>Deployment</div>
+
+            <div class="element strong" data-element="Ag">
+                <div class="symbol">Ag</div>
+                <div class="name">Agent</div>
+                <div class="component">Elena, Marcus, Sage</div>
+                <span class="status-badge strong">STRONG</span>
+            </div>
+
+            <div class="element gap" data-element="Ft">
+                <div class="symbol">Ft</div>
+                <div class="name">Finetune</div>
+                <div class="component">Not implemented</div>
+                <span class="status-badge gap">GAP</span>
+            </div>
+
+            <div class="element strong" data-element="Fw">
+                <div class="symbol">Fw</div>
+                <div class="name">Framework</div>
+                <div class="component">Temporal Workflows</div>
+                <span class="status-badge strong">STRONG</span>
+            </div>
+
+            <div class="element emerging" data-element="Rt">
+                <div class="symbol">Rt</div>
+                <div class="name">Red-team</div>
+                <div class="component">Basic validation</div>
+                <span class="status-badge emerging">EMERGING</span>
+            </div>
+
+            <div class="element gap" data-element="Sm">
+                <div class="symbol">Sm</div>
+                <div class="name">Small</div>
+                <div class="component">Not implemented</div>
+                <span class="status-badge gap">GAP</span>
+            </div>
+
+            <!-- Row 4: Emerging -->
+            <div class="row-header">R4<br>Emerging</div>
+
+            <div class="element strong" data-element="Ma">
+                <div class="symbol">Ma</div>
+                <div class="name">Multi-agent</div>
+                <div class="component">Agent Delegation</div>
+                <span class="status-badge strong">STRONG</span>
+            </div>
+
+            <div class="element strong" data-element="Sy">
+                <div class="symbol">Sy</div>
+                <div class="name">Synthetic</div>
+                <div class="component">Story + Visual Gen</div>
+                <span class="status-badge strong">STRONG</span>
+            </div>
+
+            <div class="element unique" data-element="Gk">
+                <div class="symbol">⭐ Gk</div>
+                <div class="name">Graph Knowledge</div>
+                <div class="component">Zep Temporal KG</div>
+                <span class="status-badge unique">UNIQUE</span>
+            </div>
+
+            <div class="element gap" data-element="In">
+                <div class="symbol">In</div>
+                <div class="name">Interpret</div>
+                <div class="component">Not implemented</div>
+                <span class="status-badge gap">GAP</span>
+            </div>
+
+            <div class="element strong" data-element="Th">
+                <div class="symbol">Th</div>
+                <div class="name">Thinking</div>
+                <div class="component">Extended Reasoning</div>
+                <span class="status-badge strong">STRONG</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Series Block (Lanthanides Style) -->
+    <div class="context-series-section">
+        <h2 class="context-series-title">The Context Series — Industrial AI Elements</h2>
+        <div class="context-series-grid">
+            <div class="context-element" data-element="Ec">
+                <div class="symbol">Ec</div>
+                <div class="name">Context Ecology</div>
+                <div class="component">Temporal Lifecycle</div>
+                <span class="status-badge strong">STRONG</span>
+            </div>
+
+            <div class="context-element" data-element="Ea">
+                <div class="symbol">Ea</div>
+                <div class="name">Emergence</div>
+                <div class="component">Agent Synthesis</div>
+                <span class="status-badge unique">UNIQUE</span>
+            </div>
+
+            <div class="context-element" data-element="Kv">
+                <div class="symbol">Kv</div>
+                <div class="name">Keyword Vector</div>
+                <div class="component">Entity-Action-Context</div>
+                <span class="status-badge unique">UNIQUE</span>
+            </div>
+
+            <div class="context-element" data-element="Mp">
+                <div class="symbol">Mp</div>
+                <div class="name">Provenance</div>
+                <div class="component">Memory Audit Trail</div>
+                <span class="status-badge strong">STRONG</span>
+            </div>
+
+            <div class="context-element" data-element="Vr">
+                <div class="symbol">Vr</div>
+                <div class="name">Resonance</div>
+                <div class="component">Historical Matching</div>
+                <span class="status-badge emerging">EMERGING</span>
+            </div>
+
+            <div class="context-element" data-element="Mw">
+                <div class="symbol">Mw</div>
+                <div class="name">Memory Wall</div>
+                <div class="component">Theoretical Barrier</div>
+                <span class="status-badge gap">BARRIER</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="summary">
+        <h2>Competitive Position</h2>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-number strong">14</div>
+                <div class="stat-label">Strong</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number unique">3</div>
+                <div class="stat-label">Unique</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number emerging">2</div>
+                <div class="stat-label">Emerging</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number gap">3</div>
+                <div class="stat-label">Gaps</div>
+            </div>
+        </div>
+        <p style="margin-top: 1.5rem; color: var(--text-secondary);">
+            Engram demonstrates <strong style="color: var(--strong);">Strong</strong> implementation in 80% of AI
+            Periodic Table elements.<br>
+            <strong style="color: var(--unique);">Context Series (Ea, Kv, Gk)</strong> represents the core industrial
+            differentiator for enterprise AI.
+        </p>
+    </div>
+
+    <!-- Modal -->
+    <div id="elementModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <div id="modalSymbol" class="modal-symbol"></div>
+                    <div id="modalName" class="modal-name"></div>
+                    <div id="modalClassification"></div>
+                </div>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalBody" class="modal-body"></div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="dashboards">
+            <h3>🔗 Dashboards</h3>
+            <p>
+                <a href="https://portal.azure.com" target="_blank">Azure Portal</a> |
+                <a href="https://temporal.engram.work" target="_blank">Temporal UI</a> |
+                <a href="https://cloud.getzep.com" target="_blank">Zep Cloud</a> |
+                <a href="https://entra.microsoft.com" target="_blank">Entra ID</a>
+            </p>
+        </div>
+        <div class="attribution">
+            <p>Engram AI Platform — AI Periodic Table Analysis</p>
+            <p>Framework: <a href="https://youtu.be/ESBMgZHzfG0?si=Q2GME-RqGHjGaz_6" target="_blank">Martin Keen's AI
+                    Periodic Table</a> (IBM Master Inventor)</p>
+            <p>Updated: January 7, 2026 | Added Context Series (Lanthanides Block) with Interactive Details</p>
+        </div>
+    </footer>
+
+    <script>
+        // Element Specifications Database
+        const elementSpecs = {
+            // Row 1: Primitives
+            'Pr': {
+                symbol: 'Pr',
+                name: 'Prompts',
+                classification: 'Primitive',
+                classificationClass: 'classification-primitive',
+                definition: 'Structured instructions that define agent behavior, personality, and decision-making frameworks. System prompts establish the cognitive boundaries and operational parameters for AI agents.',
+                industrialValue: 'Enables consistent, predictable agent behavior across safety-critical industrial systems. Prompts encode domain expertise and safety protocols directly into agent reasoning.',
+                reactivity: 'Prompts serve as the foundation for all agent interactions. They define the initial state and behavioral constraints.',
+                bondsWith: ['Agent (Ag)', 'LLM (Lg)', 'Guardrails (Gr)'],
+                component: 'Agent System Prompts',
+                status: 'strong'
+            },
+            'Em': {
+                symbol: 'Em',
+                name: 'Embeddings',
+                classification: 'Primitive',
+                classificationClass: 'classification-primitive',
+                definition: 'Dense vector representations that encode semantic meaning of text, enabling similarity search and semantic understanding. The embedding layer transforms unstructured text into numerical vectors that capture semantic relationships.',
+                industrialValue: 'Allows ingestion of 50+ years of legacy engineering documentation into searchable vector space. Critical for matching historical maintenance patterns with current operational anomalies.',
+                reactivity: 'Embeddings enable vector search (Vx) and RAG (Rg) operations. They are the foundation of semantic retrieval.',
+                bondsWith: ['Vector (Vx)', 'RAG (Rg)', 'Keyword Vector (Kv)'],
+                component: 'Zep Embedding Layer',
+                status: 'strong'
+            },
+            'Lg': {
+                symbol: 'Lg',
+                name: 'LLM (Large Language Model)',
+                classification: 'Primitive',
+                classificationClass: 'classification-primitive',
+                definition: 'Foundation language models that generate coherent text and execute reasoning tasks. Multi-model orchestration allows dynamic selection of optimal models based on task requirements.',
+                industrialValue: 'Provides the core reasoning capability for complex engineering analysis. Multi-model approach ensures both speed (smaller models) and accuracy (larger models) based on criticality.',
+                reactivity: 'LLMs consume prompts (Pr) and context from RAG (Rg) to generate outputs. They are the "engine" of the AI system.',
+                bondsWith: ['Prompts (Pr)', 'RAG (Rg)', 'Agent (Ag)', 'Thinking (Th)'],
+                component: 'Multi-model Orchestration',
+                status: 'strong'
+            },
+            // Row 2: Compositions
+            'Fc': {
+                symbol: 'Fc',
+                name: 'Function Call',
+                classification: 'Structural Compound',
+                classificationClass: 'classification-structural',
+                definition: 'The mechanism by which agents invoke external tools and APIs to perform actions beyond text generation. Function calling enables agents to interact with real-world systems.',
+                industrialValue: 'Allows agents to query databases, control machinery, retrieve sensor data, and execute maintenance procedures. MCP (Model Context Protocol) tools provide standardized interfaces.',
+                reactivity: 'Function calls require Memory Provenance (Mp) for safety-critical operations. They are orchestrated by agents (Ag) within workflows (Fw).',
+                bondsWith: ['Agent (Ag)', 'Provenance (Mp)', 'Framework (Fw)'],
+                component: 'MCP Tools (40+)',
+                status: 'strong'
+            },
+            'Vx': {
+                symbol: 'Vx',
+                name: 'Vector',
+                classification: 'Structural Compound',
+                classificationClass: 'classification-structural',
+                definition: 'Vector similarity search using embeddings to find semantically related content. Zep Tri-Search combines dense vectors, sparse keywords, and metadata filters for precision.',
+                industrialValue: 'Enables real-time retrieval of relevant historical maintenance logs, schematics, and protocols. Tri-search approach provides high precision for engineering documentation.',
+                reactivity: 'Vector search is enhanced by Keyword Vector (Kv) for precision. It feeds into RAG (Rg) for context assembly.',
+                bondsWith: ['Embeddings (Em)', 'RAG (Rg)', 'Keyword Vector (Kv)'],
+                component: 'Zep Tri-Search',
+                status: 'strong'
+            },
+            'Rg': {
+                symbol: 'Rg',
+                name: 'RAG (Retrieval-Augmented Generation)',
+                classification: 'Structural Compound',
+                classificationClass: 'classification-structural',
+                definition: 'The process of retrieving relevant context from memory and injecting it into LLM prompts to ground responses in factual information. Context assembly ensures responses are based on actual data rather than training knowledge alone.',
+                industrialValue: 'Critical for maintaining accuracy in industrial systems. RAG ensures recommendations are based on actual maintenance records, sensor data, and engineering manuals rather than generic training data.',
+                reactivity: 'RAG depends on Vector (Vx) and Embeddings (Em) for retrieval. It is enhanced by Keyword Vector (Kv) for precision.',
+                bondsWith: ['Vector (Vx)', 'Embeddings (Em)', 'Keyword Vector (Kv)', 'LLM (Lg)'],
+                component: 'Context Assembly',
+                status: 'strong'
+            },
+            'Gr': {
+                symbol: 'Gr',
+                name: 'Guardrails',
+                classification: 'Safety / Isotope',
+                classificationClass: 'classification-safety',
+                definition: 'Safety mechanisms that prevent unsafe actions and ensure compliance with security policies. Azure Entra ID integration provides enterprise authentication and authorization.',
+                industrialValue: 'Non-negotiable requirement for industrial deployment. Guardrails prevent unauthorized actions and ensure all operations are auditable and compliant with safety regulations.',
+                reactivity: 'Guardrails stabilize Emergent AI (Ea) by preventing unsafe behaviors. They are prerequisite for Function Call (Fc) operations.',
+                bondsWith: ['Agent (Ag)', 'Emergence (Ea)', 'Provenance (Mp)'],
+                component: 'Azure Entra ID',
+                status: 'strong'
+            },
+            'Mm': {
+                symbol: 'Mm',
+                name: 'Multimodal',
+                classification: 'Structural Compound',
+                classificationClass: 'classification-structural',
+                definition: 'The capability to process and generate multiple media types including text, images, and audio. Imagen provides image generation, VoiceLive enables real-time voice interaction.',
+                industrialValue: 'Enables natural human-AI interaction through voice for field technicians, and visual documentation generation for maintenance procedures. Reduces cognitive load on operators.',
+                reactivity: 'Multimodal capabilities enhance Agent (Ag) interactions. Voice input feeds directly into agent reasoning pipelines.',
+                bondsWith: ['Agent (Ag)', 'LLM (Lg)'],
+                component: 'Imagen + VoiceLive',
+                status: 'strong'
+            },
+            // Row 3: Deployment
+            'Ag': {
+                symbol: 'Ag',
+                name: 'Agent',
+                classification: 'Behavioral Property',
+                classificationClass: 'classification-behavioral',
+                definition: 'Autonomous AI systems that can reason, plan, and execute tasks. Engram agents (Elena, Marcus, Sage) each have specialized roles and can delegate to one another.',
+                industrialValue: 'Enables autonomous monitoring and response to grid anomalies. Agents can coordinate complex maintenance procedures that require multiple steps and decisions.',
+                reactivity: 'Agents require Context Ecology (Ec) to function. They catalyze Emergent AI (Ea) when multiple agents interact.',
+                bondsWith: ['Context Ecology (Ec)', 'Multi-agent (Ma)', 'Emergence (Ea)', 'Framework (Fw)'],
+                component: 'Elena, Marcus, Sage',
+                status: 'strong'
+            },
+            'Ft': {
+                symbol: 'Ft',
+                name: 'Finetune',
+                classification: 'Deployment Technique',
+                classificationClass: 'classification-primitive',
+                definition: 'The process of training foundation models on domain-specific data to improve performance on specialized tasks. Currently not implemented in Engram.',
+                industrialValue: 'Could enable more precise responses for domain-specific terminology and procedures. However, current RAG approach provides similar benefits with less maintenance overhead.',
+                reactivity: 'Finetuning would modify LLM (Lg) behavior directly. Alternative approach uses RAG (Rg) for domain adaptation.',
+                bondsWith: ['LLM (Lg)'],
+                component: 'Not implemented',
+                status: 'gap'
+            },
+            'Fw': {
+                symbol: 'Fw',
+                name: 'Framework',
+                classification: 'Structural Compound',
+                classificationClass: 'classification-structural',
+                definition: 'Orchestration framework that manages complex, long-running workflows. Temporal provides durable execution, retries, and state management for distributed systems.',
+                industrialValue: 'Enables reliable execution of multi-step maintenance procedures that may take hours or days. Temporal ensures no step is lost even if systems restart.',
+                reactivity: 'Framework orchestrates Agent (Ag) execution and Function Calls (Fc). It provides the infrastructure for complex workflows.',
+                bondsWith: ['Agent (Ag)', 'Function Call (Fc)'],
+                component: 'Temporal Workflows',
+                status: 'strong'
+            },
+            'Rt': {
+                symbol: 'Rt',
+                name: 'Red-team',
+                classification: 'Safety / Isotope',
+                classificationClass: 'classification-safety',
+                definition: 'Security testing where adversarial agents attempt to break system safety mechanisms. Basic validation is in place but comprehensive red-teaming is emerging.',
+                industrialValue: 'Critical for identifying vulnerabilities before deployment in safety-critical infrastructure. Red-teaming ensures guardrails and provenance systems cannot be bypassed.',
+                reactivity: 'Red-teaming validates Guardrails (Gr) and Provenance (Mp) systems. It identifies gaps before production deployment.',
+                bondsWith: ['Guardrails (Gr)', 'Provenance (Mp)'],
+                component: 'Basic validation',
+                status: 'emerging'
+            },
+            'Sm': {
+                symbol: 'Sm',
+                name: 'Small',
+                classification: 'Deployment Technique',
+                classificationClass: 'classification-primitive',
+                definition: 'Smaller, optimized models that can run on edge devices with limited compute. Currently not implemented but represents a gap for field deployment.',
+                industrialValue: 'Could enable AI agents to run directly on field devices (turbines, transformers) without requiring cloud connectivity. Critical for remote locations.',
+                reactivity: 'Small models would complement LLM (Lg) for edge scenarios. Would require quantization and model distillation techniques.',
+                bondsWith: ['LLM (Lg)'],
+                component: 'Not implemented',
+                status: 'gap'
+            },
+            // Row 4: Emerging
+            'Ma': {
+                symbol: 'Ma',
+                name: 'Multi-agent',
+                classification: 'Behavioral Property',
+                classificationClass: 'classification-behavioral',
+                definition: 'Systems where multiple specialized agents collaborate to solve complex problems. Agent delegation allows agents to hand off tasks to more appropriate specialists.',
+                industrialValue: 'Enables handling of complex scenarios that require multiple areas of expertise. For example, a safety agent, efficiency agent, and compliance agent can negotiate optimal solutions.',
+                reactivity: 'Multi-agent systems catalyze Emergent AI (Ea). Agents must operate within shared Context Ecology (Ec).',
+                bondsWith: ['Agent (Ag)', 'Emergence (Ea)', 'Context Ecology (Ec)'],
+                component: 'Agent Delegation',
+                status: 'strong'
+            },
+            'Sy': {
+                symbol: 'Sy',
+                name: 'Synthetic',
+                classification: 'Structural Compound',
+                classificationClass: 'classification-structural',
+                definition: 'Generation of synthetic training data, stories, and visuals. Story generation creates narrative scenarios, visual generation produces images from descriptions.',
+                industrialValue: 'Enables creation of training scenarios for edge cases that may not exist in historical data. Visual generation helps technicians understand complex procedures.',
+                reactivity: 'Synthetic generation enhances LLM (Lg) training data and Multimodal (Mm) capabilities.',
+                bondsWith: ['LLM (Lg)', 'Multimodal (Mm)'],
+                component: 'Story + Visual Gen',
+                status: 'strong'
+            },
+            'Gk': {
+                symbol: 'Gk',
+                name: 'Graph Knowledge',
+                classification: 'Structural Compound',
+                classificationClass: 'classification-structural',
+                definition: 'Temporal knowledge graph that stores relationships between entities over time. Zep Temporal KG enables understanding of "when" and "why" relationships exist, not just "what" they are.',
+                industrialValue: 'Enables understanding of causal relationships in complex systems. For example, understanding that a pressure drop in 2018 led to a specific maintenance procedure, and that same pattern appearing now suggests similar intervention.',
+                reactivity: 'Graph Knowledge enhances RAG (Rg) with temporal context. It enables Vector Resonance (Vr) calculations.',
+                bondsWith: ['RAG (Rg)', 'Vector Resonance (Vr)', 'Keyword Vector (Kv)'],
+                component: 'Zep Temporal KG',
+                status: 'unique'
+            },
+            'In': {
+                symbol: 'In',
+                name: 'Interpret',
+                classification: 'Measurement / Signal',
+                classificationClass: 'classification-measurement',
+                definition: 'Explainability techniques that reveal how models make decisions. Currently not implemented but represents an important gap for regulatory compliance.',
+                industrialValue: 'Required for explaining AI decisions to regulators and safety boards. "Why did you recommend shutting down this turbine?" must be answerable.',
+                reactivity: 'Interpret would complement Provenance (Mp) by explaining not just "what" source was used, but "how" it influenced the decision.',
+                bondsWith: ['Provenance (Mp)', 'Thinking (Th)'],
+                component: 'Not implemented',
+                status: 'gap'
+            },
+            'Th': {
+                symbol: 'Th',
+                name: 'Thinking',
+                classification: 'Behavioral Property',
+                classificationClass: 'classification-behavioral',
+                definition: 'Extended reasoning capabilities that allow models to "think through" problems step-by-step. Chain-of-thought and tree-of-thought reasoning enable complex problem solving.',
+                industrialValue: 'Critical for handling novel scenarios that don\'t match historical patterns. Extended reasoning allows agents to synthesize solutions from first principles.',
+                reactivity: 'Thinking enhances LLM (Lg) problem-solving. It is prerequisite for Emergent AI (Ea) in novel scenarios.',
+                bondsWith: ['LLM (Lg)', 'Emergence (Ea)'],
+                component: 'Extended Reasoning',
+                status: 'strong'
+            },
+            // Context Series
+            'Ec': {
+                symbol: 'Ec',
+                name: 'Context Ecology',
+                classification: 'Environmental Base / Medium',
+                classificationClass: 'classification-base',
+                definition: 'The dynamic environment in which all other AI agents and data reside. In this ecology, data is not a static file; it is a living entity with a lifecycle, decay rate, and relational gravity.',
+                industrialValue: 'Moves enterprises from "Data Management" (storing files) to "Context Management" (understanding the active state of operations). Enables understanding that a sensor reading from 1995 has low currency but high historical resonance, while an alert from 5 minutes ago has high urgency and immediate decay.',
+                reactivity: 'All agents (Ag) must function within a defined Ecology. The ecology determines data currency, relevance decay, and relational importance.',
+                bondsWith: ['Agent (Ag)', 'Multi-agent (Ma)'],
+                opposes: ['Static Storage (Data Lakes)'],
+                component: 'Temporal Lifecycle',
+                status: 'strong'
+            },
+            'Ea': {
+                symbol: 'Ea',
+                name: 'Emergence',
+                classification: 'Behavioral Property',
+                classificationClass: 'classification-behavioral',
+                definition: 'Intelligence that arises from the interaction of multiple specialized agents negotiating a solution, rather than from a single top-down instruction. Emergent behaviors are not explicitly programmed but synthesize from agent interactions within shared context.',
+                industrialValue: 'Allows the system to handle "Black Swan" events (unforeseen failures) by synthesizing a new solution from first principles, rather than failing because no specific rule was written. For example, agents for "Safety," "Load," and "Supply" can negotiate the best outcome in real-time without explicit "if-then" rules for every scenario.',
+                reactivity: 'Catalyzed by Multi-Agent Systems (Ma) when agents interact within Context Ecology (Ec). Stabilized by Guardrails (Gr) to prevent unsafe emergent behaviors.',
+                catalyzedBy: ['Multi-Agent Systems (Ma)', 'Context Ecology (Ec)'],
+                stabilizedBy: ['Guardrails (Gr)'],
+                component: 'Agent Synthesis',
+                status: 'unique'
+            },
+            'Kv': {
+                symbol: 'Kv',
+                name: 'Keyword Vector',
+                classification: 'Structural Compound',
+                classificationClass: 'classification-structural',
+                definition: 'A proprietary data structure utilizing the "Entity-Action-Context" triad. It bridges the gap between rigid SQL databases and fuzzy Vector Searches. Documents are ingested not as "blobs" of text, but as vectors of relationships that preserve semantic precision.',
+                industrialValue: 'The only mechanism capable of ingesting 50 years of legacy engineering manuals while retaining the precision needed to distinguish between a "test procedure" and an "emergency protocol." Allows understanding that a "pressure drop" (Action) in a "H-Class Turbine" (Entity) has a different meaning during "Startup" vs. "Peak Load" (Context).',
+                reactivity: 'Enhances Retrieval (Rg) by making it precise rather than probabilistic. Works in concert with Graph Knowledge (Gk) to provide temporal context.',
+                enhances: ['Retrieval (Rg)', 'Vector (Vx)'],
+                bondsWith: ['Graph Knowledge (Gk)', 'Vector Resonance (Vr)'],
+                component: 'Entity-Action-Context',
+                status: 'unique'
+            },
+            'Mp': {
+                symbol: 'Mp',
+                name: 'Memory Provenance',
+                classification: 'Safety / Isotope',
+                classificationClass: 'classification-safety',
+                definition: 'The immutable audit trail linking a specific AI output back to its source memory (e.g., "This recommendation came from Manual X, Page 42, accessed at timestamp Y"). Every output generated by our systems must carry this trail.',
+                industrialValue: 'The non-negotiable requirement for deployment in safety-critical infrastructure. "Black Box" AI is illegal in many industrial contexts; Provenance makes it transparent. If the AI recommends a maintenance action, it must cite the Provenance ID. The rule: No Provenance, No Execution.',
+                reactivity: 'Prerequisite for Action/Function Call (Fc). No execution without provenance. Works with Guardrails (Gr) to ensure all actions are auditable.',
+                prerequisiteFor: ['Action/Function Call (Fc)'],
+                bondsWith: ['Guardrails (Gr)', 'Red-team (Rt)'],
+                component: 'Memory Audit Trail',
+                status: 'strong'
+            },
+            'Vr': {
+                symbol: 'Vr',
+                name: 'Vector Resonance',
+                classification: 'Measurement / Signal',
+                classificationClass: 'classification-measurement',
+                definition: 'A metric indicating the strength of the match between a current operational anomaly and a historical pattern within the Knowledge Graph. High resonance means we have seen this exact (or very similar) failure mode before.',
+                industrialValue: 'Provides a confidence score for predictive maintenance. "High Resonance" means historical data strongly supports the current diagnosis. "Low Resonance" suggests a novel scenario requiring extended reasoning or emergent synthesis.',
+                reactivity: 'Output of Keyword Vector (Kv) analysis within Graph Knowledge (Gk). High resonance triggers established protocols; low resonance triggers Emergent AI (Ea) pathways.',
+                outputOf: ['Keyword Vector (Kv)', 'Graph Knowledge (Gk)'],
+                triggers: ['High: Established Protocols', 'Low: Emergent AI (Ea)'],
+                component: 'Historical Matching',
+                status: 'emerging'
+            },
+            'Mw': {
+                symbol: 'Mw',
+                name: 'Memory Wall',
+                classification: 'Theoretical Limit / Barrier',
+                classificationClass: 'classification-base',
+                definition: 'The boundary where standard LLMs fail because they cannot retain enough relevant context to make a coherent decision. This is the fundamental problem that Context Series elements are designed to solve.',
+                industrialValue: 'Defines the problem space. Industrial AI requires access to terabytes of sensor data, decades of maintenance logs, and thousands of engineering documents. Standard LLMs cannot process this volume. All Context Series elements (Ec, Ea, Kv, Mp, Vr) work together to break through this wall.',
+                reactivity: 'The Memory Wall is what Context Ecology (Ec), Keyword Vector (Kv), and Graph Knowledge (Gk) are designed to overcome. It represents the limit of traditional approaches.',
+                overcomeBy: ['Context Ecology (Ec)', 'Keyword Vector (Kv)', 'Graph Knowledge (Gk)', 'RAG (Rg)'],
+                component: 'Theoretical Barrier',
+                status: 'gap'
+            }
+        };
+
+        // Modal Functions
+        function openModal(elementKey) {
+            const spec = elementSpecs[elementKey];
+            if (!spec) return;
+
+            const modal = document.getElementById('elementModal');
+            const modalSymbol = document.getElementById('modalSymbol');
+            const modalName = document.getElementById('modalName');
+            const modalClassification = document.getElementById('modalClassification');
+            const modalBody = document.getElementById('modalBody');
+
+            modalSymbol.textContent = spec.symbol;
+            modalName.textContent = spec.name;
+
+            modalClassification.innerHTML = `<span class="classification-badge ${spec.classificationClass}">${spec.classification}</span>`;
+
+            let html = `
+                <div class="modal-section">
+                    <h3>Definition</h3>
+                    <p>${spec.definition}</p>
+                </div>
+                
+                <div class="modal-section">
+                    <h3>Industrial Value</h3>
+                    <p>${spec.industrialValue}</p>
+                </div>
+                
+                <div class="modal-section">
+                    <h3>Reactivity & Bonds</h3>
+                    <p>${spec.reactivity || 'N/A'}</p>
+                    ${spec.bondsWith ? `<p><strong>Bonds with:</strong> ${spec.bondsWith.join(', ')}</p>` : ''}
+                    ${spec.catalyzedBy ? `<p><strong>Catalyzed by:</strong> ${spec.catalyzedBy.join(', ')}</p>` : ''}
+                    ${spec.stabilizedBy ? `<p><strong>Stabilized by:</strong> ${spec.stabilizedBy.join(', ')}</p>` : ''}
+                    ${spec.enhances ? `<p><strong>Enhances:</strong> ${spec.enhances.join(', ')}</p>` : ''}
+                    ${spec.prerequisiteFor ? `<p><strong>Prerequisite for:</strong> ${spec.prerequisiteFor.join(', ')}</p>` : ''}
+                    ${spec.outputOf ? `<p><strong>Output of:</strong> ${spec.outputOf.join(', ')}</p>` : ''}
+                    ${spec.triggers ? `<p><strong>Triggers:</strong> ${spec.triggers.join(', ')}</p>` : ''}
+                    ${spec.opposes ? `<p><strong>Opposes:</strong> ${spec.opposes.join(', ')}</p>` : ''}
+                    ${spec.overcomeBy ? `<p><strong>Overcome by:</strong> ${spec.overcomeBy.join(', ')}</p>` : ''}
+                </div>
+                
+                <div class="modal-section">
+                    <h3>Implementation</h3>
+                    <p><strong>Component:</strong> ${spec.component}</p>
+                    <p><strong>Status:</strong> <span class="status-badge ${spec.status}">${spec.status.toUpperCase()}</span></p>
+                </div>
+            `;
+
+            modalBody.innerHTML = html;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('elementModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close modal on outside click
+        document.getElementById('elementModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Add click handlers to all elements
+        document.addEventListener('DOMContentLoaded', function () {
+            const elements = document.querySelectorAll('.element[data-element], .context-element[data-element]');
+            elements.forEach(element => {
+                element.addEventListener('click', function () {
+                    const elementKey = this.getAttribute('data-element');
+                    openModal(elementKey);
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

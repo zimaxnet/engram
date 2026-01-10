@@ -3,7 +3,7 @@ ANTIGRAVITY INGESTION ROUTER (v1.0)
 -----------------------------------
 System: Engram Context Ecology Platform
 Author: Zimax Networks LC / Principal Emergent AI Engineer
-Context: GE Vernova ARC / Industrial Safety
+Context: Industrial Safety / Enterprise
 
 MISSION:
 Defy data gravity by routing ingestion based on "Truth Value".
@@ -89,7 +89,7 @@ class AntigravityRouter:
         if ext in ['.pdf', '.scidoc']:
             if "manual" in filename or "spec" in filename or "iso" in filename or "safety" in filename:
                 return DataClass.CLASS_A_TRUTH
-            # Fallback for generic PDFs could be B, but default to A for GE Vernova context
+            # Fallback for generic PDFs could be B, but default to A for industrial context
             return DataClass.CLASS_A_TRUTH
 
         # HEURISTIC 3: Ephemeral Chatter
