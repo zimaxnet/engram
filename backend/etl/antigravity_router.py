@@ -1,11 +1,13 @@
 """
-Antigravity Ingestion Router
-============================
+Antigravity Ingestion Router (CtxEco-Lib)
+==========================================
 System: Engram Context Ecology Platform
 Author: Zimax Networks LC
 
 MISSION:
 Defy data gravity by routing ingestion based on "Truth Value".
+Documents are classified and routed to CtxGraph via OpenContextGraph API.
+
 - Class A (Immutable Truth) -> Docling (IBM) for structural fidelity.
 - Class B (Ephemeral Chatter) -> Unstructured.io for semantic chunking.
 - Class C (Operational Telemetry) -> Pandas for row-to-vector conversion.

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Persist Antigravity Conversations - Capture AI session artifacts to Memory Graph.
+Persist Antigravity Conversations - Capture AI session artifacts to CtxGraph.
 
 Scans the Antigravity brain directory for implementation plans and walkthroughs,
-then ingests them into Zep for future agent reference.
+then ingests them into CtxGraph (Zep temporal knowledge graph) for future agent reference.
 
 Usage:
     # Ingest all recent conversations
@@ -91,7 +91,7 @@ async def ingest_artifact(
     artifact: dict,
     env_name: str
 ):
-    """Ingest a single artifact into the Memory Graph."""
+    """Ingest a single artifact into CtxGraph."""
     conv_id = artifact["conversation_id"]
     artifact_type = artifact["artifact_type"]
     content = artifact["content"]
@@ -173,7 +173,7 @@ async def persist_conversations(
     conversation_id: str = None,
     dry_run: bool = False
 ):
-    """Persist Antigravity conversations to Memory Graph."""
+    """Persist Antigravity conversations to CtxGraph."""
     zep_url = apply_environment(env_name)
     
     print(f"🧠 Persist Antigravity Conversations")
@@ -219,7 +219,7 @@ async def persist_conversations(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Persist Antigravity conversations to Memory Graph",
+        description="Persist Antigravity conversations to CtxGraph",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

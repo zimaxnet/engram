@@ -72,7 +72,7 @@ See [Deployment Guide](docs/deployment.md) for full details.
 
 - **Brain Layer**: LangGraph agents (Elena, Marcus) for reasoning
 - **Spine Layer**: Temporal workflows for durable orchestration
-- **Memory Layer**: Zep + Graphiti for temporal knowledge graphs
+- **CtxGraph Layer**: Zep + Graphiti for temporal knowledge graphs (OpenContextGraph API)
 - **Frontend**: React + Vite with voice interaction
 - **Backend**: FastAPI with enterprise security
 
@@ -80,28 +80,29 @@ See [Deployment Guide](docs/deployment.md) for full details.
 
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
-| **Memory** | Zep (Temporal Knowledge Graph) | Episodic & semantic memory |
+| **CtxGraph** | Zep (Temporal Knowledge Graph) | Episodic & semantic memory |
 | **Orchestration** | Temporal (Durable Workflows) | Long-running, fault-tolerant workflows |
 | **Brain** | LangGraph Agents (python) | Agent reasoning & execution |
-| **ETL** | Unstructured.io | Document processing (PDF, DOCX) & Ingestion |
+| **ETL** | Antigravity Router (CtxEco-Lib) | Document processing & Class A/B/C ingestion |
 | **Frontend** | React + Vite | Premium UI with Sidebar Concept Explainer |
 | **Backend** | FastAPI | REST API & WebSocket server |
 
 ## System Capabilities
 
-### 1. Document Ingestion (ETL)
+### 1. Document Ingestion (Antigravity Router)
 
-Upload documents (PDF, DOCX, TXT) to the Knowledge Graph.
+Upload documents (PDF, DOCX, TXT) to **CtxGraph** via the Antigravity Router.
 
 - **Endpoint**: `POST /api/v1/etl/ingest`
-- **Process**: Partitioning -> Chunking -> Embedding -> Zep Memory
+- **Process**: Classification → Routing → Extraction → CtxGraph Memory
+- **Data Classes**: Class A (Immutable Truth), Class B (Ephemeral Stream), Class C (Operational Pulse)
 
-### 2. Episodic Memory
+### 2. CtxGraph Memory
 
-The agent "remembers" past conversations and facts.
+The agent "remembers" past conversations and facts via the temporal knowledge graph.
 
 - **View Transcripts**: See full history of past episodes.
-- **Search**: Hybrid search across semantic facts and episodic history.
+- **Search**: Hybrid search across semantic facts and episodic history (OpenContextGraph API).
 
 ## Documentation
 
@@ -146,9 +147,10 @@ R4 │   🟢 Ma      │   🟢 Sy      │     ⭐ Gk        │    🟡 In   
 
 ## Features
 
-- 🧠 **Context Engineering** - 4-layer enterprise context schema
+- 🧠 **CtxEco-Lib** - Context Ecology SDK with 4-layer enterprise schema
 - 🦴 **Durable Workflows** - Temporal-based orchestration
-- 💾 **Temporal Knowledge Graph** - Zep + Graphiti memory
+- 💾 **CtxGraph** - Temporal knowledge graph (Zep + Graphiti)
+- 🔄 **Antigravity Router** - Class A/B/C document ingestion
 - 🚦 **System Navigator** - Comprehensive admin & memory explorer UI
 - 🔑 **Foundry Key Auth** - Azure AI Services via key-only configuration
 - 🔐 **Enterprise Security** - Entra ID + RBAC

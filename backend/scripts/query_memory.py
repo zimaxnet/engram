@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Query Memory Script (Antigravity Interface)
+Query CtxGraph Script (Antigravity Interface)
 
 This script provides a CLI interface for AI Agents (Antigravity, Cursor, VSCode)
-to query Zep memory across any environment (local, Azure, staging).
+to query the CtxGraph (Zep temporal knowledge graph) across any environment.
 
 It exposes:
-1. Hybrid Search (Keyword + Semantic)
+1. Hybrid Search (Keyword + Semantic) via OpenContextGraph API
 2. Knowledge Graph Facts
 3. Recent Episodes
 
 Usage:
-    # Query local Zep (default)
+    # Query local CtxGraph (default)
     python -m backend.scripts.query_memory --query "voice live config"
     
-    # Query Azure production Zep
+    # Query Azure production CtxGraph
     python -m backend.scripts.query_memory --env azure --query "voice live config"
     
     # List Azure episodes
@@ -171,7 +171,7 @@ def list_environments():
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Query Engram Memory Graph (Local, Azure, K8s)",
+        description="Query CtxGraph (Engram Memory Graph) - Local, Azure, K8s",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

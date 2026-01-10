@@ -28,11 +28,11 @@ python -m backend.scripts.query_memory --env azure -q "voice live config"
 
 That simple `--env` flag became a bridge between worlds—local development and cloud deployment, isolated sessions and shared knowledge, individual insight and collective wisdom.
 
-### The Memory Graph: A Digital Synaptic Network
+### The CtxGraph: A Digital Synaptic Network
 
 ```mermaid
 graph TB
-    A[Local Development] -->|Git Hooks| B[Memory Graph]
+    A[Local Development] -->|Git Hooks| B[CtxGraph]
     C[Antigravity Sessions] -->|persist_conversation.py| B
     D[Quick Insights] -->|quick_ingest.py| B
     E[Azure Deployment] -->|Zep Cloud| B
@@ -109,7 +109,7 @@ In enterprise environments, knowledge often dies in:
 - **Documentation** that becomes outdated the moment it's written
 - **Individual developer minds** that leave when people change teams
 
-The Memory Graph transforms this scattered knowledge into a living, queryable repository that grows smarter with every interaction.
+The CtxGraph transforms this scattered knowledge into a living, queryable repository that grows smarter with every interaction.
 
 ### The ROI of Institutional Memory
 
@@ -118,14 +118,14 @@ Consider the typical enterprise scenario:
 | Traditional Approach | Vibe Coding Approach |
 |---------------------|---------------------|
 | Developer spends 2 hours re-discovering a solution | AI instantly recalls: "Sarah fixed this in commit abc123 last month" |
-| Team meeting to discuss architecture decisions | Memory Graph provides complete decision history and rationale |
+| Team meeting to discuss architecture decisions | CtxGraph provides complete decision history and rationale |
 | New team member takes weeks to understand codebase context | AI provides personalized onboarding based on actual project history |
 
 ## The Brain Metaphor: From Neurons to Knowledge Networks
 
 ### Synaptic Development
 
-Just as human brains strengthen neural pathways through repetition and association, the Memory Graph creates stronger connections between related concepts, problems, and solutions. Each query doesn't just retrieve information—it reinforces the relationships between ideas.
+Just as human brains strengthen neural pathways through repetition and association, the CtxGraph creates stronger connections between related concepts, problems, and solutions. Each query doesn't just retrieve information—it reinforces the relationships between ideas.
 
 ### Episodic vs. Semantic Memory
 
@@ -140,7 +140,7 @@ Over time, the episodic becomes semantic—specific debugging sessions become ge
 
 The Vibe Coding Breakthrough represents a fundamental shift in how we think about AI-assisted development. It's not just about having a smarter assistant—it's about creating a development environment that truly *learns* from every interaction, every commit, every moment of insight.
 
-As the Memory Graph grows, so does the collective intelligence of the entire development ecosystem. Each developer's insights become available to all. Each solution discovered becomes ammunition against future problems. Each "aha!" moment is preserved for eternity.
+As the CtxGraph grows, so does the collective intelligence of the entire development ecosystem. Each developer's insights become available to all. Each solution discovered becomes ammunition against future problems. Each "aha!" moment is preserved for eternity.
 
 **This is the future of software development: Not just coding, but *remembering*.**
 

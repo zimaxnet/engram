@@ -31,9 +31,9 @@ The Engram Document Ingestion Strategy enables enterprises to ingest documents f
 
 ---
 
-## Antigravity Ingestion Router (New)
+## Antigravity Ingestion Router (CtxEco-Lib)
 
-> **Context Ecology Architecture** — Documents classified by Truth Value
+> **Context Ecology Architecture** — Documents classified by Truth Value, routed to CtxGraph
 
 ![Antigravity Router Architecture](/docs/architecture/engram-antigravity-ingestion-router.png)
 
@@ -83,10 +83,10 @@ Every ingested document is indexed into **three search layers**, enabling compre
 - **Embedding Model**: `text-embedding-3-small` (1536 dims)
 - **Enables**: Conceptual similarity, paraphrase matching
 
-### 3. Graph Search (Knowledge Graph)
+### 3. Graph Search (CtxGraph / OpenContextGraph)
 
-- **Storage**: Zep facts per user
-- **Enables**: Entity relationships, temporal facts, multi-hop reasoning
+- **Storage**: CtxGraph (Zep facts per user)
+- **Enables**: Entity relationships, temporal facts, multi-hop reasoning (via OpenContextGraph API)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
