@@ -1,0 +1,51 @@
+# CODEOWNERS - Define code ownership for review requirements
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# ==============================================================================
+# SECURITY CRITICAL - Requires Derek's approval
+# ==============================================================================
+
+# Authentication & Authorization
+/backend/api/middleware/auth.py @derekbmoore
+/backend/api/middleware/ @derekbmoore
+
+# Core Security Context
+/backend/core/context.py @derekbmoore
+/backend/core/ @derekbmoore
+
+# Infrastructure & Secrets
+/infra/ @derekbmoore
+/.github/workflows/ @derekbmoore
+/.env* @derekbmoore
+
+# ==============================================================================
+# HIGH SENSITIVITY - Memory & Data Layer
+# ==============================================================================
+
+# Memory Client (Zep Integration)
+/backend/memory/ @derekbmoore
+
+# ETL & Document Ingestion
+/backend/etl/ @derekbmoore
+
+# Database Migrations
+/backend/db/ @derekbmoore
+
+# ==============================================================================
+# AGENT CODE - Requires architectural review
+# ==============================================================================
+
+/backend/agents/ @derekbmoore
+
+# ==============================================================================
+# DOCUMENTATION - Review for accuracy
+# ==============================================================================
+
+/docs/security/ @derekbmoore
+/docs/00-strategy/ @derekbmoore
+
+# ==============================================================================
+# DEFAULT - All other files
+# ==============================================================================
+
+* @derekbmoore
