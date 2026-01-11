@@ -1,5 +1,5 @@
 {
-    "title": "Engram AI Periodic Table",
+    "title": "openContextSchema AI Periodic Table",
     "subtitle": "Interactive Competitive Matrix — Enterprise Industrial AI",
     "updated": "2026-01-10",
     "framework_attribution": "Martin Keen's AI Periodic Table (IBM Master Inventor)",
@@ -201,7 +201,7 @@
             "classification": "Behavioral Property",
             "status": "strong",
             "component": "Elena, Marcus, Sage",
-            "definition": "Autonomous AI systems that can reason, plan, and execute tasks. Engram agents (Elena, Marcus, Sage) each have specialized roles and can delegate to one another.",
+            "definition": "Autonomous AI systems that can reason, plan, and execute tasks. openContextSchema agents (Elena, Marcus, Sage) each have specialized roles and can delegate to one another.",
             "industrialValue": "Enables autonomous monitoring and response to grid anomalies. Agents can coordinate complex maintenance procedures that require multiple steps and decisions.",
             "reactivity": "Agents require Context Ecology (Ec) to function. They catalyze Emergent AI (Ea) when multiple agents interact.",
             "bondsWith": [
@@ -219,7 +219,7 @@
             "classification": "Deployment Technique",
             "status": "gap",
             "component": "Not implemented",
-            "definition": "The process of training foundation models on domain-specific data to improve performance on specialized tasks. Currently not implemented in Engram.",
+            "definition": "The process of training foundation models on domain-specific data to improve performance on specialized tasks. Currently not implemented in openContextSchema.",
             "industrialValue": "Could enable more precise responses for domain-specific terminology and procedures. However, current RAG approach provides similar benefits with less maintenance overhead.",
             "reactivity": "Finetuning would modify LLM (Lg) behavior directly. Alternative approach uses RAG (Rg) for domain adaptation.",
             "bondsWith": [
@@ -358,7 +358,7 @@
     },
     "contextSeries": {
         "title": "The Context Series — Industrial AI Elements",
-        "description": "Lanthanide-style special elements representing Engram's core industrial differentiators",
+        "description": "Lanthanide-style special elements representing openContextSchema's core industrial differentiators",
         "elements": {
             "Ec": {
                 "symbol": "Ec",

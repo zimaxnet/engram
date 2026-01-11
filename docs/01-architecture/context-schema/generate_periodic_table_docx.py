@@ -58,7 +58,7 @@ summary_para.add_run(f"• Unique Differentiators: {stats['unique']} elements\n"
 summary_para.add_run(f"• Emerging: {stats['emerging']} elements\n")
 summary_para.add_run(f"• Gaps: {stats['gaps']} elements\n\n")
 summary_para.add_run(
-    "Engram demonstrates Strong implementation in 80% of AI Periodic Table elements. "
+    "openContextSchema demonstrates Strong implementation in 80% of AI Periodic Table elements. "
     "The Context Series (Ea, Kv, Gk) represents the core industrial differentiator for enterprise AI."
 )
 doc.add_page_break()
@@ -197,7 +197,7 @@ for elem in ordered_elements:
 # Part 2: Context Series
 doc.add_heading("Part II: The Context Series — Industrial AI Elements", level=1)
 doc.add_paragraph(
-    "The Context Series represents Engram's core industrial differentiators. "
+    "The Context Series represents openContextSchema's core industrial differentiators. "
     "Like the lanthanides in the periodic table, these elements form a special series that "
     "underlies and enables the main grid functionality. These elements are specifically designed "
     "to overcome the 'Memory Wall' limitation of traditional LLM approaches."
