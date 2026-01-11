@@ -1,0 +1,769 @@
+{
+  "directed": true,
+  "multigraph": true,
+  "graph": {},
+  "nodes": [
+    {
+      "type": "entity",
+      "url": "https://wiki.engram.work/",
+      "id": "Home"
+    },
+    {
+      "type": "entity",
+      "id": "wiki"
+    },
+    {
+      "type": "entity",
+      "id": "documentation"
+    },
+    {
+      "type": "entity",
+      "id": "home"
+    },
+    {
+      "type": "entity",
+      "url": "https://wiki.engram.work/architecture.html",
+      "id": "Architecture"
+    },
+    {
+      "type": "entity",
+      "id": "architecture"
+    },
+    {
+      "type": "entity",
+      "url": "https://wiki.engram.work/agents.html",
+      "id": "Agents"
+    },
+    {
+      "type": "entity",
+      "id": "agents"
+    },
+    {
+      "type": "entity",
+      "url": "https://wiki.engram.work/system-navigator.html",
+      "id": "System Navigator"
+    },
+    {
+      "type": "entity",
+      "id": "system navigator"
+    },
+    {
+      "type": "entity",
+      "url": "https://wiki.engram.work/connectors.html",
+      "id": "Connectors"
+    },
+    {
+      "type": "entity",
+      "id": "connectors"
+    },
+    {
+      "type": "entity",
+      "url": "https://wiki.engram.work/storage-strategy.html",
+      "id": "Storage Strategy"
+    },
+    {
+      "type": "entity",
+      "id": "storage strategy"
+    },
+    {
+      "type": "entity",
+      "url": "https://wiki.engram.work/deployment.html",
+      "id": "Deployment"
+    },
+    {
+      "type": "entity",
+      "id": "deployment"
+    },
+    {
+      "type": "entity",
+      "url": "https://wiki.engram.work/pricing.html",
+      "id": "Pricing"
+    },
+    {
+      "type": "entity",
+      "id": "pricing"
+    },
+    {
+      "type": "entity",
+      "url": "https://wiki.engram.work/poc-vs-enterprise.html",
+      "id": "Poc Vs Enterprise"
+    },
+    {
+      "type": "entity",
+      "id": "poc vs enterprise"
+    },
+    {
+      "type": "entity",
+      "url": "https://wiki.engram.work/enterprise-env-model.html",
+      "id": "Enterprise Env Model"
+    },
+    {
+      "type": "entity",
+      "id": "enterprise env model"
+    },
+    {
+      "type": "entity",
+      "url": "https://wiki.engram.work/finops.html",
+      "id": "Finops"
+    },
+    {
+      "type": "entity",
+      "id": "finops"
+    },
+    {
+      "type": "entity",
+      "url": "https://wiki.engram.work/temporal-enterprise-deployment.html",
+      "id": "Temporal Enterprise Deployment"
+    },
+    {
+      "type": "entity",
+      "id": "temporal enterprise deployment"
+    },
+    {
+      "type": "entity",
+      "url": "https://wiki.engram.work/zep-enterprise-deployment.html",
+      "id": "Zep Enterprise Deployment"
+    },
+    {
+      "type": "entity",
+      "id": "zep enterprise deployment"
+    },
+    {
+      "type": "entity",
+      "url": "https://wiki.engram.work/postgresql-blob-storage-enterprise-deployment.html",
+      "id": "Postgresql Blob Storage"
+    },
+    {
+      "type": "entity",
+      "id": "postgresql blob storage"
+    },
+    {
+      "type": "entity",
+      "url": "https://wiki.engram.work/unstructured-enterprise-deployment.html",
+      "id": "Unstructured Enterprise Deployment"
+    },
+    {
+      "type": "entity",
+      "id": "unstructured enterprise deployment"
+    },
+    {
+      "type": "entity",
+      "url": "https://wiki.engram.work/TESTING-GUIDE.html",
+      "id": "Testing Guide"
+    },
+    {
+      "type": "entity",
+      "id": "testing guide"
+    },
+    {
+      "type": "entity",
+      "url": "https://wiki.engram.work/LOCAL-TESTING-GUIDE.html",
+      "id": "Local Testing Guide"
+    },
+    {
+      "type": "entity",
+      "id": "local testing guide"
+    },
+    {
+      "type": "entity",
+      "url": "https://wiki.engram.work/app-insights-guide.html",
+      "id": "App Insights Guide"
+    },
+    {
+      "type": "entity",
+      "id": "app insights guide"
+    },
+    {
+      "type": "entity",
+      "url": "https://wiki.engram.work/visual-development.html",
+      "id": "Visual Development"
+    },
+    {
+      "type": "entity",
+      "id": "visual development"
+    },
+    {
+      "type": "entity",
+      "source": "local",
+      "id": "Knowledge Graph Implementation"
+    },
+    {
+      "type": "entity",
+      "id": "Knowledge Graph"
+    },
+    {
+      "type": "entity",
+      "id": "NetworkX"
+    },
+    {
+      "type": "entity",
+      "id": "Graphiti"
+    },
+    {
+      "type": "entity",
+      "id": "React"
+    },
+    {
+      "type": "entity",
+      "id": "Frontend"
+    },
+    {
+      "type": "entity",
+      "id": "Backend"
+    }
+  ],
+  "edges": [
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:51:56.211352",
+      "source": "Home",
+      "target": "wiki",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:51:56.211644",
+      "source": "Home",
+      "target": "documentation",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:51:56.211802",
+      "source": "Home",
+      "target": "home",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:51:57.500437",
+      "source": "Architecture",
+      "target": "wiki",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:51:57.500838",
+      "source": "Architecture",
+      "target": "documentation",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:51:57.500996",
+      "source": "Architecture",
+      "target": "architecture",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:51:58.483705",
+      "source": "Agents",
+      "target": "wiki",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:51:58.484129",
+      "source": "Agents",
+      "target": "documentation",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:51:58.484323",
+      "source": "Agents",
+      "target": "agents",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:51:59.343509",
+      "source": "System Navigator",
+      "target": "wiki",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:51:59.343958",
+      "source": "System Navigator",
+      "target": "documentation",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:51:59.344154",
+      "source": "System Navigator",
+      "target": "system navigator",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:00.356167",
+      "source": "Connectors",
+      "target": "wiki",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:00.356612",
+      "source": "Connectors",
+      "target": "documentation",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:00.356869",
+      "source": "Connectors",
+      "target": "connectors",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:01.199396",
+      "source": "Storage Strategy",
+      "target": "wiki",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:01.200245",
+      "source": "Storage Strategy",
+      "target": "documentation",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:01.200657",
+      "source": "Storage Strategy",
+      "target": "storage strategy",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:02.121194",
+      "source": "Deployment",
+      "target": "wiki",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:02.121677",
+      "source": "Deployment",
+      "target": "documentation",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:02.121978",
+      "source": "Deployment",
+      "target": "deployment",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:03.013567",
+      "source": "Pricing",
+      "target": "wiki",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:03.014866",
+      "source": "Pricing",
+      "target": "documentation",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:03.016550",
+      "source": "Pricing",
+      "target": "pricing",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:03.875246",
+      "source": "Poc Vs Enterprise",
+      "target": "wiki",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:03.876579",
+      "source": "Poc Vs Enterprise",
+      "target": "documentation",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:03.877552",
+      "source": "Poc Vs Enterprise",
+      "target": "poc vs enterprise",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:04.690848",
+      "source": "Enterprise Env Model",
+      "target": "wiki",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:04.691546",
+      "source": "Enterprise Env Model",
+      "target": "documentation",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:04.692033",
+      "source": "Enterprise Env Model",
+      "target": "enterprise env model",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:05.529929",
+      "source": "Finops",
+      "target": "wiki",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:05.530614",
+      "source": "Finops",
+      "target": "documentation",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:05.531080",
+      "source": "Finops",
+      "target": "finops",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:06.385828",
+      "source": "Temporal Enterprise Deployment",
+      "target": "wiki",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:06.386501",
+      "source": "Temporal Enterprise Deployment",
+      "target": "documentation",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:06.387049",
+      "source": "Temporal Enterprise Deployment",
+      "target": "temporal enterprise deployment",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:07.249075",
+      "source": "Zep Enterprise Deployment",
+      "target": "wiki",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:07.249725",
+      "source": "Zep Enterprise Deployment",
+      "target": "documentation",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:07.250180",
+      "source": "Zep Enterprise Deployment",
+      "target": "zep enterprise deployment",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:08.091139",
+      "source": "Postgresql Blob Storage",
+      "target": "wiki",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:08.092966",
+      "source": "Postgresql Blob Storage",
+      "target": "documentation",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:08.096504",
+      "source": "Postgresql Blob Storage",
+      "target": "postgresql blob storage",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:08.938611",
+      "source": "Unstructured Enterprise Deployment",
+      "target": "wiki",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:08.939394",
+      "source": "Unstructured Enterprise Deployment",
+      "target": "documentation",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:08.939909",
+      "source": "Unstructured Enterprise Deployment",
+      "target": "unstructured enterprise deployment",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:09.772654",
+      "source": "Testing Guide",
+      "target": "wiki",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:09.773475",
+      "source": "Testing Guide",
+      "target": "documentation",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:09.774004",
+      "source": "Testing Guide",
+      "target": "testing guide",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:10.603503",
+      "source": "Local Testing Guide",
+      "target": "wiki",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:10.605407",
+      "source": "Local Testing Guide",
+      "target": "documentation",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:10.605951",
+      "source": "Local Testing Guide",
+      "target": "local testing guide",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:11.420317",
+      "source": "App Insights Guide",
+      "target": "wiki",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:11.421124",
+      "source": "App Insights Guide",
+      "target": "documentation",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:11.421647",
+      "source": "App Insights Guide",
+      "target": "app insights guide",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:12.255257",
+      "source": "Visual Development",
+      "target": "wiki",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:12.256036",
+      "source": "Visual Development",
+      "target": "documentation",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T02:52:12.256943",
+      "source": "Visual Development",
+      "target": "visual development",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:36.715262",
+      "source": "Knowledge Graph Implementation",
+      "target": "Knowledge Graph",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:51.406796",
+      "source": "Knowledge Graph Implementation",
+      "target": "Knowledge Graph",
+      "key": 1
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:36.716427",
+      "source": "Knowledge Graph Implementation",
+      "target": "NetworkX",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:51.407708",
+      "source": "Knowledge Graph Implementation",
+      "target": "NetworkX",
+      "key": 1
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:36.717135",
+      "source": "Knowledge Graph Implementation",
+      "target": "Graphiti",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:51.408352",
+      "source": "Knowledge Graph Implementation",
+      "target": "Graphiti",
+      "key": 1
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:36.717794",
+      "source": "Knowledge Graph Implementation",
+      "target": "React",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:51.408941",
+      "source": "Knowledge Graph Implementation",
+      "target": "React",
+      "key": 1
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:36.718470",
+      "source": "Knowledge Graph Implementation",
+      "target": "Frontend",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:51.409539",
+      "source": "Knowledge Graph Implementation",
+      "target": "Frontend",
+      "key": 1
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:36.719106",
+      "source": "Knowledge Graph Implementation",
+      "target": "Backend",
+      "key": 0
+    },
+    {
+      "relationship": "has_topic",
+      "metadata": {},
+      "created_at": "2025-12-29T03:01:51.410139",
+      "source": "Knowledge Graph Implementation",
+      "target": "Backend",
+      "key": 1
+    }
+  ]
+}

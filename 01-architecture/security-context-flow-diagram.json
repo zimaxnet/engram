@@ -1,0 +1,598 @@
+{
+    "title": "SecurityContext: Enterprise Identity & Attribution Flow",
+    "description": "Comprehensive diagram showing how SecurityContext (Layer 1) flows through all systems, enforcing enterprise boundaries, enabling agent attribution, and ensuring consistent user identity across chat, voice, episodes, memory search, and graph knowledge. This is the foundation of Engram's enterprise security architecture.",
+    "style": {
+        "theme": "enterprise-security",
+        "palette": [
+            "#00d4ff",
+            "#10B981",
+            "#3B82F6",
+            "#F59E0B",
+            "#EF4444",
+            "#8B5CF6",
+            "#1a1f35"
+        ],
+        "annotations": "highlight-security-boundaries",
+        "background": "dark-gradient",
+        "emphasis": "security-context"
+    },
+    "actors": [
+        {
+            "id": "user",
+            "label": "Enterprise User",
+            "sublabel": "Sarah Chen\nsarah.chen@contoso.com",
+            "icon": "person-professional",
+            "position": "left",
+            "metadata": {
+                "role": "ANALYST",
+                "tenant": "contoso-corp",
+                "project": "project-delta"
+            }
+        },
+        {
+            "id": "azure_entra",
+            "label": "Azure Entra ID",
+            "sublabel": "Identity Provider\nJWT Token Issuer",
+            "icon": "cloud-identity",
+            "position": "left-center",
+            "color": "#00d4ff"
+        },
+        {
+            "id": "backend_auth",
+            "label": "Backend Auth Middleware",
+            "sublabel": "JWT Validation\nSecurityContext Creation",
+            "icon": "shield-lock",
+            "position": "center-left",
+            "color": "#10B981"
+        },
+        {
+            "id": "security_context",
+            "label": "SecurityContext",
+            "sublabel": "Layer 1: Identity & Permissions\nuser_id, tenant_id, roles, scopes",
+            "icon": "key-security",
+            "position": "center",
+            "color": "#00d4ff",
+            "highlight": true,
+            "metadata": {
+                "user_id": "sarah.chen@contoso.com",
+                "tenant_id": "contoso-corp",
+                "roles": ["ANALYST"],
+                "scopes": ["project-delta:read", "project-delta:write"],
+                "email": "sarah.chen@contoso.com",
+                "display_name": "Sarah Chen"
+            }
+        },
+        {
+            "id": "zep_user",
+            "label": "Zep User Creation",
+            "sublabel": "Ensure User Exists\nuser_id, tenant_id, email",
+            "icon": "database-user",
+            "position": "center-right",
+            "color": "#3B82F6"
+        },
+        {
+            "id": "chat_system",
+            "label": "Chat System",
+            "sublabel": "Conversations\nSession Management",
+            "icon": "chat-message",
+            "position": "right-top",
+            "color": "#10B981"
+        },
+        {
+            "id": "voice_system",
+            "label": "Voice System",
+            "sublabel": "Voice Interactions\nTranscripts",
+            "icon": "microphone",
+            "position": "right-center-top",
+            "color": "#10B981"
+        },
+        {
+            "id": "episodes_system",
+            "label": "Episodes System",
+            "sublabel": "Conversation Episodes\nSummaries",
+            "icon": "book-chapter",
+            "position": "right-center-bottom",
+            "color": "#10B981"
+        },
+        {
+            "id": "memory_search",
+            "label": "Memory Search",
+            "sublabel": "Semantic + Keyword\nGraph Knowledge",
+            "icon": "search-memory",
+            "position": "right-bottom",
+            "color": "#8B5CF6"
+        },
+        {
+            "id": "agent_marcus",
+            "label": "Marcus (PM Agent)",
+            "sublabel": "Project Manager\nRisk Assessment, Timelines",
+            "icon": "agent-pm",
+            "position": "bottom-center",
+            "color": "#a855f7",
+            "metadata": {
+                "agent_id": "marcus",
+                "attribution": "marcus-generated-content"
+            }
+        },
+        {
+            "id": "agent_elena",
+            "label": "Elena (BA Agent)",
+            "sublabel": "Business Analyst\nRequirements, Stakeholders",
+            "icon": "agent-ba",
+            "position": "bottom-left",
+            "color": "#00d4ff",
+            "metadata": {
+                "agent_id": "elena",
+                "attribution": "elena-generated-content"
+            }
+        },
+        {
+            "id": "zep_memory",
+            "label": "Zep Memory Store",
+            "sublabel": "Episodic + Semantic\nKnowledge Graph",
+            "icon": "database-memory",
+            "position": "bottom-right",
+            "color": "#3B82F6"
+        }
+    ],
+    "flow": [
+        {
+            "step": 1,
+            "from": "user",
+            "to": "azure_entra",
+            "action": "Authenticate",
+            "detail": "Google/Entra ID Login\nRequest: Access to Engram",
+            "status": "success",
+            "color": "#10B981",
+            "metadata": {
+                "method": "OAuth 2.0",
+                "provider": "Azure CIAM"
+            }
+        },
+        {
+            "step": 2,
+            "from": "azure_entra",
+            "to": "backend_auth",
+            "action": "Issue JWT Token",
+            "detail": "Claims: oid, tid, email, name, roles, scopes",
+            "status": "success",
+            "color": "#10B981",
+            "challenge": {
+                "highlight": true,
+                "title": "JWT Token Claims",
+                "description": "Token contains all identity information",
+                "claims": {
+                    "oid": "sarah.chen@contoso.com",
+                    "tid": "contoso-corp",
+                    "email": "sarah.chen@contoso.com",
+                    "name": "Sarah Chen",
+                    "roles": ["engram:analyst"],
+                    "scopes": ["project-delta:read", "project-delta:write"]
+                },
+                "color": "#00d4ff"
+            }
+        },
+        {
+            "step": 3,
+            "from": "backend_auth",
+            "to": "security_context",
+            "action": "Create SecurityContext",
+            "detail": "Extract claims from JWT\nMap to SecurityContext",
+            "status": "success",
+            "color": "#00d4ff",
+            "highlight": true,
+            "metadata": {
+                "user_id": "sarah.chen@contoso.com",
+                "tenant_id": "contoso-corp",
+                "roles": ["ANALYST"],
+                "scopes": ["project-delta:read", "project-delta:write"],
+                "email": "sarah.chen@contoso.com",
+                "display_name": "Sarah Chen"
+            }
+        },
+        {
+            "step": 4,
+            "from": "security_context",
+            "to": "zep_user",
+            "action": "Ensure User Exists",
+            "detail": "Create user in Zep if doesn't exist\nuser_id, tenant_id, email, display_name",
+            "status": "success",
+            "color": "#3B82F6",
+            "note": "CRITICAL: Ensures consistent identity across all systems",
+            "metadata": {
+                "operation": "get_or_create_user",
+                "user_id": "sarah.chen@contoso.com",
+                "tenant_id": "contoso-corp"
+            }
+        },
+        {
+            "step": 5,
+            "from": "security_context",
+            "to": "chat_system",
+            "action": "Create Chat Session",
+            "detail": "Session with user_id, tenant_id\nChannel: chat",
+            "status": "success",
+            "color": "#10B981",
+            "metadata": {
+                "session_id": "session-2024-12-31-001",
+                "user_id": "sarah.chen@contoso.com",
+                "tenant_id": "contoso-corp",
+                "channel": "chat"
+            },
+            "boundary": {
+                "enforced": true,
+                "tenant_id": "contoso-corp",
+                "user_id": "sarah.chen@contoso.com",
+                "scopes": ["project-delta:read"]
+            }
+        },
+        {
+            "step": 6,
+            "from": "security_context",
+            "to": "voice_system",
+            "action": "Create Voice Session",
+            "detail": "Session with user_id, tenant_id\nChannel: voice",
+            "status": "success",
+            "color": "#10B981",
+            "metadata": {
+                "session_id": "voice-2024-12-31-001",
+                "user_id": "sarah.chen@contoso.com",
+                "tenant_id": "contoso-corp",
+                "channel": "voice"
+            },
+            "boundary": {
+                "enforced": true,
+                "tenant_id": "contoso-corp",
+                "user_id": "sarah.chen@contoso.com"
+            }
+        },
+        {
+            "step": 7,
+            "from": "security_context",
+            "to": "episodes_system",
+            "action": "Create Episode Session",
+            "detail": "Session with user_id, tenant_id\nChannel: episode",
+            "status": "success",
+            "color": "#10B981",
+            "metadata": {
+                "session_id": "episode-2024-12-31-001",
+                "user_id": "sarah.chen@contoso.com",
+                "tenant_id": "contoso-corp",
+                "channel": "episode"
+            },
+            "boundary": {
+                "enforced": true,
+                "tenant_id": "contoso-corp",
+                "user_id": "sarah.chen@contoso.com",
+                "project": "project-delta"
+            }
+        },
+        {
+            "step": 8,
+            "from": "security_context",
+            "to": "memory_search",
+            "action": "Search Memory",
+            "detail": "Filtered by user_id, tenant_id\nSemantic + Keyword + Graph",
+            "status": "success",
+            "color": "#8B5CF6",
+            "metadata": {
+                "query": "Project Delta status",
+                "filters": {
+                    "user_id": "sarah.chen@contoso.com",
+                    "tenant_id": "contoso-corp",
+                    "scopes": ["project-delta:read"]
+                }
+            },
+            "boundary": {
+                "enforced": true,
+                "tenant_id": "contoso-corp",
+                "user_id": "sarah.chen@contoso.com",
+                "project_scope": "project-delta"
+            },
+            "note": "Only returns data user has access to"
+        },
+        {
+            "step": 9,
+            "from": "user",
+            "to": "agent_marcus",
+            "action": "Invoke Marcus",
+            "detail": "Request: Assess Project Delta risks",
+            "status": "success",
+            "color": "#a855f7",
+            "metadata": {
+                "request": "Assess Project Delta risks",
+                "user_id": "sarah.chen@contoso.com",
+                "tenant_id": "contoso-corp"
+            }
+        },
+        {
+            "step": 10,
+            "from": "security_context",
+            "to": "agent_marcus",
+            "action": "Pass SecurityContext",
+            "detail": "Marcus receives SecurityContext\nAll actions attributed to user",
+            "status": "success",
+            "color": "#a855f7",
+            "highlight": true,
+            "attribution": {
+                "enabled": true,
+                "agent_id": "marcus",
+                "invoked_by": "sarah.chen@contoso.com",
+                "tenant_id": "contoso-corp",
+                "project": "project-delta"
+            },
+            "note": "CRITICAL: Marcus's work is attributable to Sarah"
+        },
+        {
+            "step": 11,
+            "from": "agent_marcus",
+            "to": "zep_memory",
+            "action": "Persist Risk Assessment",
+            "detail": "Store with attribution\nuser_id, tenant_id, agent_id, project",
+            "status": "success",
+            "color": "#a855f7",
+            "metadata": {
+                "content": "Risk assessment for Project Delta...",
+                "agent_id": "marcus",
+                "created_by_user": "sarah.chen@contoso.com",
+                "tenant_id": "contoso-corp",
+                "project": "project-delta",
+                "attribution": "marcus-risk-assessment"
+            },
+            "attribution": {
+                "agent": "marcus",
+                "user": "sarah.chen@contoso.com",
+                "tenant": "contoso-corp",
+                "project": "project-delta"
+            }
+        },
+        {
+            "step": 12,
+            "from": "chat_system",
+            "to": "zep_memory",
+            "action": "Persist Conversation",
+            "detail": "Store messages with user_id, tenant_id",
+            "status": "success",
+            "color": "#10B981",
+            "metadata": {
+                "session_id": "session-2024-12-31-001",
+                "user_id": "sarah.chen@contoso.com",
+                "tenant_id": "contoso-corp"
+            }
+        },
+        {
+            "step": 13,
+            "from": "voice_system",
+            "to": "zep_memory",
+            "action": "Persist Transcript",
+            "detail": "Store transcripts with user_id, tenant_id",
+            "status": "success",
+            "color": "#10B981",
+            "metadata": {
+                "session_id": "voice-2024-12-31-001",
+                "user_id": "sarah.chen@contoso.com",
+                "tenant_id": "contoso-corp"
+            }
+        },
+        {
+            "step": 14,
+            "from": "episodes_system",
+            "to": "zep_memory",
+            "action": "Persist Episode",
+            "detail": "Store episodes with user_id, tenant_id, project",
+            "status": "success",
+            "color": "#10B981",
+            "metadata": {
+                "session_id": "episode-2024-12-31-001",
+                "user_id": "sarah.chen@contoso.com",
+                "tenant_id": "contoso-corp",
+                "project": "project-delta"
+            }
+        },
+        {
+            "step": 15,
+            "from": "memory_search",
+            "to": "zep_memory",
+            "action": "Query Memory",
+            "detail": "Search filtered by user_id, tenant_id, scopes",
+            "status": "success",
+            "color": "#8B5CF6",
+            "metadata": {
+                "query": "Project Delta status",
+                "filters": {
+                    "user_id": "sarah.chen@contoso.com",
+                    "tenant_id": "contoso-corp",
+                    "scopes": ["project-delta:read"]
+                }
+            },
+            "boundary": {
+                "enforced": true,
+                "tenant_isolation": true,
+                "project_scoping": true
+            }
+        }
+    ],
+    "security_boundaries": [
+        {
+            "id": "tenant_boundary",
+            "label": "Tenant Isolation",
+            "description": "Contoso Corp users cannot access Fabrikam Corp data",
+            "enforced_by": "tenant_id in SecurityContext",
+            "color": "#EF4444",
+            "scope": "All systems"
+        },
+        {
+            "id": "project_boundary",
+            "label": "Project Scoping",
+            "description": "Users only see data for projects they have access to",
+            "enforced_by": "scopes in SecurityContext",
+            "color": "#F59E0B",
+            "scope": "Memory search, Episodes, Agent actions"
+        },
+        {
+            "id": "user_boundary",
+            "label": "User Attribution",
+            "description": "All actions are attributable to the user who performed them",
+            "enforced_by": "user_id in SecurityContext",
+            "color": "#00d4ff",
+            "scope": "All systems"
+        },
+        {
+            "id": "role_boundary",
+            "label": "Role-Based Access",
+            "description": "ANALYST can read, ADMIN can modify system settings",
+            "enforced_by": "roles in SecurityContext",
+            "color": "#8B5CF6",
+            "scope": "All endpoints"
+        }
+    ],
+    "attribution_flow": [
+        {
+            "step": 1,
+            "agent": "marcus",
+            "action": "Assess Project Delta risks",
+            "invoked_by": "sarah.chen@contoso.com",
+            "tenant": "contoso-corp",
+            "project": "project-delta",
+            "result": "Risk assessment stored with full attribution",
+            "metadata": {
+                "agent_id": "marcus",
+                "user_id": "sarah.chen@contoso.com",
+                "tenant_id": "contoso-corp",
+                "project": "project-delta",
+                "attribution": "marcus-risk-assessment"
+            }
+        },
+        {
+            "step": 2,
+            "agent": "elena",
+            "action": "Analyze requirements",
+            "invoked_by": "sarah.chen@contoso.com",
+            "tenant": "contoso-corp",
+            "project": "project-delta",
+            "result": "Requirements analysis stored with full attribution",
+            "metadata": {
+                "agent_id": "elena",
+                "user_id": "sarah.chen@contoso.com",
+                "tenant_id": "contoso-corp",
+                "project": "project-delta",
+                "attribution": "elena-requirements-analysis"
+            }
+        }
+    ],
+    "enterprise_guarantees": [
+        {
+            "guarantee": "Multi-Tenant Isolation",
+            "enforced_by": "tenant_id in SecurityContext",
+            "result": "Contoso Corp users cannot access Fabrikam Corp data",
+            "color": "#EF4444"
+        },
+        {
+            "guarantee": "Project Scoping",
+            "enforced_by": "scopes in SecurityContext",
+            "result": "Users only see projects they have access to",
+            "color": "#F59E0B"
+        },
+        {
+            "guarantee": "User Attribution",
+            "enforced_by": "user_id in SecurityContext",
+            "result": "Every action is attributable to a user",
+            "color": "#00d4ff"
+        },
+        {
+            "guarantee": "Agent Attribution",
+            "enforced_by": "agent_id + user_id in metadata",
+            "result": "Marcus's work is traceable to who invoked him",
+            "color": "#a855f7"
+        },
+        {
+            "guarantee": "Role-Based Access Control",
+            "enforced_by": "roles in SecurityContext",
+            "result": "ANALYST can read, ADMIN can modify",
+            "color": "#8B5CF6"
+        }
+    ],
+    "key_insights": [
+        {
+            "insight": "SecurityContext is the single source of truth for identity",
+            "description": "All systems use the same SecurityContext, ensuring consistent identity",
+            "color": "#00d4ff"
+        },
+        {
+            "insight": "User creation in Zep ensures identity consistency",
+            "description": "Users are created in Zep before sessions, ensuring same user_id everywhere",
+            "color": "#3B82F6"
+        },
+        {
+            "insight": "Enterprise boundaries are enforced at SecurityContext layer",
+            "description": "Tenant isolation, project scoping, and RBAC are all enforced by SecurityContext",
+            "color": "#10B981"
+        },
+        {
+            "insight": "Agent actions are fully attributable",
+            "description": "Marcus's work includes user_id, tenant_id, agent_id, and project scopes",
+            "color": "#a855f7"
+        },
+        {
+            "insight": "All memory operations are scoped to user",
+            "description": "Semantic search, keyword search, and graph knowledge are filtered by SecurityContext",
+            "color": "#8B5CF6"
+        }
+    ],
+    "legend": [
+        {
+            "color": "#00d4ff",
+            "label": "SecurityContext (Layer 1)",
+            "description": "Identity & Permissions"
+        },
+        {
+            "color": "#10B981",
+            "label": "Success Flow",
+            "description": "Operations completed successfully"
+        },
+        {
+            "color": "#3B82F6",
+            "label": "Zep Operations",
+            "description": "Memory store operations"
+        },
+        {
+            "color": "#a855f7",
+            "label": "Agent Attribution",
+            "description": "Marcus/Elena actions with attribution"
+        },
+        {
+            "color": "#8B5CF6",
+            "label": "Memory Search",
+            "description": "Semantic + Keyword + Graph"
+        },
+        {
+            "color": "#EF4444",
+            "label": "Security Boundary",
+            "description": "Enforced isolation"
+        },
+        {
+            "color": "#F59E0B",
+            "label": "Project Scope",
+            "description": "Project-level access control"
+        }
+    ],
+    "visual_emphasis": {
+        "security_context": {
+            "highlight": true,
+            "glow": true,
+            "color": "#00d4ff",
+            "size": "large"
+        },
+        "boundaries": {
+            "show": true,
+            "style": "dashed",
+            "color": "#EF4444"
+        },
+        "attribution": {
+            "show": true,
+            "style": "highlighted",
+            "color": "#a855f7"
+        }
+    }
+}
+

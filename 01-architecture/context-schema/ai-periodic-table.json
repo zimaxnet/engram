@@ -1,0 +1,468 @@
+{
+    "title": "openContextSchema AI Periodic Table",
+    "subtitle": "Interactive Competitive Matrix — Enterprise Industrial AI",
+    "updated": "2026-01-10",
+    "framework_attribution": "Martin Keen's AI Periodic Table (IBM Master Inventor)",
+    "legend": {
+        "strong": "Strong implementation",
+        "emerging": "Emerging capability",
+        "gap": "Gap requiring attention",
+        "unique": "Unique differentiator"
+    },
+    "statistics": {
+        "strong": 14,
+        "unique": 3,
+        "emerging": 2,
+        "gaps": 3
+    },
+    "columns": [
+        {
+            "id": "C1",
+            "name": "Reactive"
+        },
+        {
+            "id": "C2",
+            "name": "Retrieval"
+        },
+        {
+            "id": "C3",
+            "name": "Orchestration"
+        },
+        {
+            "id": "C4",
+            "name": "Validation"
+        },
+        {
+            "id": "C5",
+            "name": "Models"
+        }
+    ],
+    "rows": [
+        {
+            "id": "R1",
+            "name": "Primitives"
+        },
+        {
+            "id": "R2",
+            "name": "Compositions"
+        },
+        {
+            "id": "R3",
+            "name": "Deployment"
+        },
+        {
+            "id": "R4",
+            "name": "Emerging"
+        }
+    ],
+    "elements": {
+        "Pr": {
+            "symbol": "Pr",
+            "name": "Prompts",
+            "row": "R1",
+            "column": "C1",
+            "classification": "Primitive",
+            "status": "strong",
+            "component": "Agent System Prompts",
+            "definition": "Structured instructions that define agent behavior, personality, and decision-making frameworks. System prompts establish the cognitive boundaries and operational parameters for AI agents.",
+            "industrialValue": "Enables consistent, predictable agent behavior across safety-critical industrial systems. Prompts encode domain expertise and safety protocols directly into agent reasoning.",
+            "reactivity": "Prompts serve as the foundation for all agent interactions. They define the initial state and behavioral constraints.",
+            "bondsWith": [
+                "Ag",
+                "Lg",
+                "Gr"
+            ]
+        },
+        "Em": {
+            "symbol": "Em",
+            "name": "Embeddings",
+            "row": "R1",
+            "column": "C2",
+            "classification": "Primitive",
+            "status": "strong",
+            "component": "Zep Embedding Layer",
+            "definition": "Dense vector representations that encode semantic meaning of text, enabling similarity search and semantic understanding. The embedding layer transforms unstructured text into numerical vectors that capture semantic relationships.",
+            "industrialValue": "Allows ingestion of 50+ years of legacy engineering documentation into searchable vector space. Critical for matching historical maintenance patterns with current operational anomalies.",
+            "reactivity": "Embeddings enable vector search (Vx) and RAG (Rg) operations. They are the foundation of semantic retrieval.",
+            "bondsWith": [
+                "Vx",
+                "Rg",
+                "Kv"
+            ]
+        },
+        "Lg": {
+            "symbol": "Lg",
+            "name": "LLM (Large Language Model)",
+            "row": "R1",
+            "column": "C5",
+            "classification": "Primitive",
+            "status": "strong",
+            "component": "Multi-model Orchestration",
+            "definition": "Foundation language models that generate coherent text and execute reasoning tasks. Multi-model orchestration allows dynamic selection of optimal models based on task requirements.",
+            "industrialValue": "Provides the core reasoning capability for complex engineering analysis. Multi-model approach ensures both speed (smaller models) and accuracy (larger models) based on criticality.",
+            "reactivity": "LLMs consume prompts (Pr) and context from RAG (Rg) to generate outputs. They are the 'engine' of the AI system.",
+            "bondsWith": [
+                "Pr",
+                "Rg",
+                "Ag",
+                "Th"
+            ]
+        },
+        "Fc": {
+            "symbol": "Fc",
+            "name": "Function Call",
+            "row": "R2",
+            "column": "C1",
+            "classification": "Structural Compound",
+            "status": "strong",
+            "component": "MCP Tools (40+)",
+            "definition": "The mechanism by which agents invoke external tools and APIs to perform actions beyond text generation. Function calling enables agents to interact with real-world systems.",
+            "industrialValue": "Allows agents to query databases, control machinery, retrieve sensor data, and execute maintenance procedures. MCP (Model Context Protocol) tools provide standardized interfaces.",
+            "reactivity": "Function calls require Memory Provenance (Mp) for safety-critical operations. They are orchestrated by agents (Ag) within workflows (Fw).",
+            "bondsWith": [
+                "Ag",
+                "Mp",
+                "Fw"
+            ]
+        },
+        "Vx": {
+            "symbol": "Vx",
+            "name": "Vector",
+            "row": "R2",
+            "column": "C2",
+            "classification": "Structural Compound",
+            "status": "strong",
+            "component": "Zep Tri-Search",
+            "definition": "Vector similarity search using embeddings to find semantically related content. Zep Tri-Search combines dense vectors, sparse keywords, and metadata filters for precision.",
+            "industrialValue": "Enables real-time retrieval of relevant historical maintenance logs, schematics, and protocols. Tri-search approach provides high precision for engineering documentation.",
+            "reactivity": "Vector search is enhanced by Keyword Vector (Kv) for precision. It feeds into RAG (Rg) for context assembly.",
+            "bondsWith": [
+                "Em",
+                "Rg",
+                "Kv"
+            ]
+        },
+        "Rg": {
+            "symbol": "Rg",
+            "name": "RAG (Retrieval-Augmented Generation)",
+            "row": "R2",
+            "column": "C3",
+            "classification": "Structural Compound",
+            "status": "strong",
+            "component": "Context Assembly",
+            "definition": "The process of retrieving relevant context from memory and injecting it into LLM prompts to ground responses in factual information. Context assembly ensures responses are based on actual data rather than training knowledge alone.",
+            "industrialValue": "Critical for maintaining accuracy in industrial systems. RAG ensures recommendations are based on actual maintenance records, sensor data, and engineering manuals rather than generic training data.",
+            "reactivity": "RAG depends on Vector (Vx) and Embeddings (Em) for retrieval. It is enhanced by Keyword Vector (Kv) for precision.",
+            "bondsWith": [
+                "Vx",
+                "Em",
+                "Kv",
+                "Lg"
+            ]
+        },
+        "Gr": {
+            "symbol": "Gr",
+            "name": "Guardrails",
+            "row": "R2",
+            "column": "C4",
+            "classification": "Safety / Isotope",
+            "status": "strong",
+            "component": "Azure Entra ID",
+            "definition": "Safety mechanisms that prevent unsafe actions and ensure compliance with security policies. Azure Entra ID integration provides enterprise authentication and authorization.",
+            "industrialValue": "Non-negotiable requirement for industrial deployment. Guardrails prevent unauthorized actions and ensure all operations are auditable and compliant with safety regulations.",
+            "reactivity": "Guardrails stabilize Emergent AI (Ea) by preventing unsafe behaviors. They are prerequisite for Function Call (Fc) operations.",
+            "bondsWith": [
+                "Ag",
+                "Ea",
+                "Mp"
+            ]
+        },
+        "Mm": {
+            "symbol": "Mm",
+            "name": "Multimodal",
+            "row": "R2",
+            "column": "C5",
+            "classification": "Structural Compound",
+            "status": "strong",
+            "component": "Imagen + VoiceLive",
+            "definition": "The capability to process and generate multiple media types including text, images, and audio. Imagen provides image generation, VoiceLive enables real-time voice interaction.",
+            "industrialValue": "Enables natural human-AI interaction through voice for field technicians, and visual documentation generation for maintenance procedures. Reduces cognitive load on operators.",
+            "reactivity": "Multimodal capabilities enhance Agent (Ag) interactions. Voice input feeds directly into agent reasoning pipelines.",
+            "bondsWith": [
+                "Ag",
+                "Lg"
+            ]
+        },
+        "Ag": {
+            "symbol": "Ag",
+            "name": "Agent",
+            "row": "R3",
+            "column": "C1",
+            "classification": "Behavioral Property",
+            "status": "strong",
+            "component": "Elena, Marcus, Sage",
+            "definition": "Autonomous AI systems that can reason, plan, and execute tasks. openContextSchema agents (Elena, Marcus, Sage) each have specialized roles and can delegate to one another.",
+            "industrialValue": "Enables autonomous monitoring and response to grid anomalies. Agents can coordinate complex maintenance procedures that require multiple steps and decisions.",
+            "reactivity": "Agents require Context Ecology (Ec) to function. They catalyze Emergent AI (Ea) when multiple agents interact.",
+            "bondsWith": [
+                "Ec",
+                "Ma",
+                "Ea",
+                "Fw"
+            ]
+        },
+        "Ft": {
+            "symbol": "Ft",
+            "name": "Finetune",
+            "row": "R3",
+            "column": "C2",
+            "classification": "Deployment Technique",
+            "status": "gap",
+            "component": "Not implemented",
+            "definition": "The process of training foundation models on domain-specific data to improve performance on specialized tasks. Currently not implemented in openContextSchema.",
+            "industrialValue": "Could enable more precise responses for domain-specific terminology and procedures. However, current RAG approach provides similar benefits with less maintenance overhead.",
+            "reactivity": "Finetuning would modify LLM (Lg) behavior directly. Alternative approach uses RAG (Rg) for domain adaptation.",
+            "bondsWith": [
+                "Lg"
+            ]
+        },
+        "Fw": {
+            "symbol": "Fw",
+            "name": "Framework",
+            "row": "R3",
+            "column": "C3",
+            "classification": "Structural Compound",
+            "status": "strong",
+            "component": "Temporal Workflows",
+            "definition": "Orchestration framework that manages complex, long-running workflows. Temporal provides durable execution, retries, and state management for distributed systems.",
+            "industrialValue": "Enables reliable execution of multi-step maintenance procedures that may take hours or days. Temporal ensures no step is lost even if systems restart.",
+            "reactivity": "Framework orchestrates Agent (Ag) execution and Function Calls (Fc). It provides the infrastructure for complex workflows.",
+            "bondsWith": [
+                "Ag",
+                "Fc"
+            ]
+        },
+        "Rt": {
+            "symbol": "Rt",
+            "name": "Red-team",
+            "row": "R3",
+            "column": "C4",
+            "classification": "Safety / Isotope",
+            "status": "emerging",
+            "component": "Basic validation",
+            "definition": "Security testing where adversarial agents attempt to break system safety mechanisms. Basic validation is in place but comprehensive red-teaming is emerging.",
+            "industrialValue": "Critical for identifying vulnerabilities before deployment in safety-critical infrastructure. Red-teaming ensures guardrails and provenance systems cannot be bypassed.",
+            "reactivity": "Red-teaming validates Guardrails (Gr) and Provenance (Mp) systems. It identifies gaps before production deployment.",
+            "bondsWith": [
+                "Gr",
+                "Mp"
+            ]
+        },
+        "Sm": {
+            "symbol": "Sm",
+            "name": "Small",
+            "row": "R3",
+            "column": "C5",
+            "classification": "Deployment Technique",
+            "status": "gap",
+            "component": "Not implemented",
+            "definition": "Smaller, optimized models that can run on edge devices with limited compute. Currently not implemented but represents a gap for field deployment.",
+            "industrialValue": "Could enable AI agents to run directly on field devices (turbines, transformers) without requiring cloud connectivity. Critical for remote locations.",
+            "reactivity": "Small models would complement LLM (Lg) for edge scenarios. Would require quantization and model distillation techniques.",
+            "bondsWith": [
+                "Lg"
+            ]
+        },
+        "Ma": {
+            "symbol": "Ma",
+            "name": "Multi-agent",
+            "row": "R4",
+            "column": "C1",
+            "classification": "Behavioral Property",
+            "status": "strong",
+            "component": "Agent Delegation",
+            "definition": "Systems where multiple specialized agents collaborate to solve complex problems. Agent delegation allows agents to hand off tasks to more appropriate specialists.",
+            "industrialValue": "Enables handling of complex scenarios that require multiple areas of expertise. For example, a safety agent, efficiency agent, and compliance agent can negotiate optimal solutions.",
+            "reactivity": "Multi-agent systems catalyze Emergent AI (Ea). Agents must operate within shared Context Ecology (Ec).",
+            "bondsWith": [
+                "Ag",
+                "Ea",
+                "Ec"
+            ]
+        },
+        "Sy": {
+            "symbol": "Sy",
+            "name": "Synthetic",
+            "row": "R4",
+            "column": "C2",
+            "classification": "Structural Compound",
+            "status": "strong",
+            "component": "Story + Visual Gen",
+            "definition": "Generation of synthetic training data, stories, and visuals. Story generation creates narrative scenarios, visual generation produces images from descriptions.",
+            "industrialValue": "Enables creation of training scenarios for edge cases that may not exist in historical data. Visual generation helps technicians understand complex procedures.",
+            "reactivity": "Synthetic generation enhances LLM (Lg) training data and Multimodal (Mm) capabilities.",
+            "bondsWith": [
+                "Lg",
+                "Mm"
+            ]
+        },
+        "Gk": {
+            "symbol": "Gk",
+            "name": "Graph Knowledge",
+            "row": "R4",
+            "column": "C3",
+            "classification": "Structural Compound",
+            "status": "unique",
+            "component": "Zep Temporal KG",
+            "definition": "Temporal knowledge graph that stores relationships between entities over time. Zep Temporal KG enables understanding of 'when' and 'why' relationships exist, not just 'what' they are.",
+            "industrialValue": "Enables understanding of causal relationships in complex systems. For example, understanding that a pressure drop in 2018 led to a specific maintenance procedure, and that same pattern appearing now suggests similar intervention.",
+            "reactivity": "Graph Knowledge enhances RAG (Rg) with temporal context. It enables Vector Resonance (Vr) calculations.",
+            "bondsWith": [
+                "Rg",
+                "Vr",
+                "Kv"
+            ]
+        },
+        "In": {
+            "symbol": "In",
+            "name": "Interpret",
+            "row": "R4",
+            "column": "C4",
+            "classification": "Measurement / Signal",
+            "status": "gap",
+            "component": "Not implemented",
+            "definition": "Explainability techniques that reveal how models make decisions. Currently not implemented but represents an important gap for regulatory compliance.",
+            "industrialValue": "Required for explaining AI decisions to regulators and safety boards. 'Why did you recommend shutting down this turbine?' must be answerable.",
+            "reactivity": "Interpret would complement Provenance (Mp) by explaining not just 'what' source was used, but 'how' it influenced the decision.",
+            "bondsWith": [
+                "Mp",
+                "Th"
+            ]
+        },
+        "Th": {
+            "symbol": "Th",
+            "name": "Thinking",
+            "row": "R4",
+            "column": "C5",
+            "classification": "Behavioral Property",
+            "status": "strong",
+            "component": "Extended Reasoning",
+            "definition": "Extended reasoning capabilities that allow models to 'think through' problems step-by-step. Chain-of-thought and tree-of-thought reasoning enable complex problem solving.",
+            "industrialValue": "Critical for handling novel scenarios that don't match historical patterns. Extended reasoning allows agents to synthesize solutions from first principles.",
+            "reactivity": "Thinking enhances LLM (Lg) problem-solving. It is prerequisite for Emergent AI (Ea) in novel scenarios.",
+            "bondsWith": [
+                "Lg",
+                "Ea"
+            ]
+        }
+    },
+    "contextSeries": {
+        "title": "The Context Series — Industrial AI Elements",
+        "description": "Lanthanide-style special elements representing openContextSchema's core industrial differentiators",
+        "elements": {
+            "Ec": {
+                "symbol": "Ec",
+                "name": "Context Ecology",
+                "classification": "Environmental Base / Medium",
+                "status": "strong",
+                "component": "Temporal Lifecycle",
+                "definition": "The dynamic environment in which all other AI agents and data reside. In this ecology, data is not a static file; it is a living entity with a lifecycle, decay rate, and relational gravity.",
+                "industrialValue": "Moves enterprises from 'Data Management' (storing files) to 'Context Management' (understanding the active state of operations). Enables understanding that a sensor reading from 1995 has low currency but high historical resonance, while an alert from 5 minutes ago has high urgency and immediate decay.",
+                "reactivity": "All agents (Ag) must function within a defined Ecology. The ecology determines data currency, relevance decay, and relational importance.",
+                "bondsWith": [
+                    "Ag",
+                    "Ma"
+                ],
+                "opposes": [
+                    "Static Storage (Data Lakes)"
+                ]
+            },
+            "Ea": {
+                "symbol": "Ea",
+                "name": "Emergence",
+                "classification": "Behavioral Property",
+                "status": "unique",
+                "component": "Agent Synthesis",
+                "definition": "Intelligence that arises from the interaction of multiple specialized agents negotiating a solution, rather than from a single top-down instruction. Emergent behaviors are not explicitly programmed but synthesize from agent interactions within shared context.",
+                "industrialValue": "Allows the system to handle 'Black Swan' events (unforeseen failures) by synthesizing a new solution from first principles, rather than failing because no specific rule was written. For example, agents for 'Safety,' 'Load,' and 'Supply' can negotiate the best outcome in real-time without explicit 'if-then' rules for every scenario.",
+                "reactivity": "Catalyzed by Multi-Agent Systems (Ma) when agents interact within Context Ecology (Ec). Stabilized by Guardrails (Gr) to prevent unsafe emergent behaviors.",
+                "catalyzedBy": [
+                    "Ma",
+                    "Ec"
+                ],
+                "stabilizedBy": [
+                    "Gr"
+                ]
+            },
+            "Kv": {
+                "symbol": "Kv",
+                "name": "Keyword Vector",
+                "classification": "Structural Compound",
+                "status": "unique",
+                "component": "Entity-Action-Context",
+                "definition": "A proprietary data structure utilizing the 'Entity-Action-Context' triad. It bridges the gap between rigid SQL databases and fuzzy Vector Searches. Documents are ingested not as 'blobs' of text, but as vectors of relationships that preserve semantic precision.",
+                "industrialValue": "The only mechanism capable of ingesting 50 years of legacy engineering manuals while retaining the precision needed to distinguish between a 'test procedure' and an 'emergency protocol.' Allows understanding that a 'pressure drop' (Action) in a 'H-Class Turbine' (Entity) has a different meaning during 'Startup' vs. 'Peak Load' (Context).",
+                "reactivity": "Enhances Retrieval (Rg) by making it precise rather than probabilistic. Works in concert with Graph Knowledge (Gk) to provide temporal context.",
+                "enhances": [
+                    "Rg",
+                    "Vx"
+                ],
+                "bondsWith": [
+                    "Gk",
+                    "Vr"
+                ]
+            },
+            "Mp": {
+                "symbol": "Mp",
+                "name": "Memory Provenance",
+                "classification": "Safety / Isotope",
+                "status": "strong",
+                "component": "Memory Audit Trail",
+                "definition": "The immutable audit trail linking a specific AI output back to its source memory (e.g., 'This recommendation came from Manual X, Page 42, accessed at timestamp Y'). Every output generated by our systems must carry this trail.",
+                "industrialValue": "The non-negotiable requirement for deployment in safety-critical infrastructure. 'Black Box' AI is illegal in many industrial contexts; Provenance makes it transparent. If the AI recommends a maintenance action, it must cite the Provenance ID. The rule: No Provenance, No Execution.",
+                "reactivity": "Prerequisite for Action/Function Call (Fc). No execution without provenance. Works with Guardrails (Gr) to ensure all actions are auditable.",
+                "prerequisiteFor": [
+                    "Fc"
+                ],
+                "bondsWith": [
+                    "Gr",
+                    "Rt"
+                ]
+            },
+            "Vr": {
+                "symbol": "Vr",
+                "name": "Vector Resonance",
+                "classification": "Measurement / Signal",
+                "status": "emerging",
+                "component": "Historical Matching",
+                "definition": "A metric indicating the strength of the match between a current operational anomaly and a historical pattern within the Knowledge Graph. High resonance means we have seen this exact (or very similar) failure mode before.",
+                "industrialValue": "Provides a confidence score for predictive maintenance. 'High Resonance' means historical data strongly supports the current diagnosis. 'Low Resonance' suggests a novel scenario requiring extended reasoning or emergent synthesis.",
+                "reactivity": "Output of Keyword Vector (Kv) analysis within Graph Knowledge (Gk). High resonance triggers established protocols; low resonance triggers Emergent AI (Ea) pathways.",
+                "outputOf": [
+                    "Kv",
+                    "Gk"
+                ],
+                "triggers": [
+                    "High: Established Protocols",
+                    "Low: Emergent AI (Ea)"
+                ]
+            },
+            "Mw": {
+                "symbol": "Mw",
+                "name": "Memory Wall",
+                "classification": "Theoretical Limit / Barrier",
+                "status": "gap",
+                "component": "Theoretical Barrier",
+                "definition": "The boundary where standard LLMs fail because they cannot retain enough relevant context to make a coherent decision. This is the fundamental problem that Context Series elements are designed to solve.",
+                "industrialValue": "Defines the problem space. Industrial AI requires access to terabytes of sensor data, decades of maintenance logs, and thousands of engineering documents. Standard LLMs cannot process this volume. All Context Series elements (Ec, Ea, Kv, Mp, Vr) work together to break through this wall.",
+                "reactivity": "The Memory Wall is what Context Ecology (Ec), Keyword Vector (Kv), and Graph Knowledge (Gk) are designed to overcome. It represents the limit of traditional approaches.",
+                "overcomeBy": [
+                    "Ec",
+                    "Kv",
+                    "Gk",
+                    "Rg"
+                ]
+            }
+        }
+    }
+}

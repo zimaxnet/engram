@@ -1,0 +1,122 @@
+{
+    "name": "WebRTC Avatar Video Architecture",
+    "version": "0.9.0",
+    "description": "WebRTC-based video avatar streaming for Elena agent using Azure Speech VoiceLive",
+    "components": {
+        "browser": {
+            "name": "Browser",
+            "type": "client",
+            "responsibilities": [
+                "Create RTCPeerConnection",
+                "Generate SDP offer",
+                "Handle video/audio tracks",
+                "Send ICE candidates"
+            ]
+        },
+        "backend": {
+            "name": "Engram Backend",
+            "type": "server",
+            "endpoints": {
+                "ice_credentials": {
+                    "path": "/api/v1/voice/avatar/ice-credentials",
+                    "method": "POST",
+                    "description": "Fetch ICE relay token from Azure Speech (Regional)"
+                },
+                "websocket": {
+                    "path": "/api/v1/voice/voicelive/{session_id}",
+                    "protocol": "WebSocket",
+                    "messages": {
+                        "avatar_connect": "Receives SDP offer from browser",
+                        "ice_candidate": "Receives ICE candidates from browser",
+                        "avatar_sdp_answer": "Sends SDP answer to browser",
+                        "remote_ice_candidate": "Sends remote ICE candidates to browser"
+                    }
+                }
+            }
+        },
+        "azure_speech": {
+            "name": "Azure Speech Service",
+            "type": "azure_service",
+            "endpoints": {
+                "ice_relay": {
+                    "url": "https://eastus2.tts.speech.microsoft.com/cognitiveservices/avatar/relay/token/v1",
+                    "auth": [
+                        "AZURE_SPEECH_KEY (Required - Dedicated Resource)",
+                        "Ocp-Apim-Subscription-Key (Legacy/Incompatible)",
+                        "Bearer Token (Managed Identity - Fallback)"
+                    ]
+                }
+            }
+        },
+        "azure_ice": {
+            "name": "Azure ICE Server",
+            "type": "turn_server",
+            "description": "TURN/STUN server for WebRTC NAT traversal"
+        }
+    },
+    "flow": [
+        {
+            "step": 1,
+            "from": "browser",
+            "to": "backend",
+            "action": "POST /avatar/ice-credentials"
+        },
+        {
+            "step": 2,
+            "from": "backend",
+            "to": "azure_speech",
+            "action": "GET relay/token/v1"
+        },
+        {
+            "step": 3,
+            "from": "azure_speech",
+            "to": "backend",
+            "action": "Return ICE credentials"
+        },
+        {
+            "step": 4,
+            "from": "backend",
+            "to": "browser",
+            "action": "Return ICE credentials"
+        },
+        {
+            "step": 5,
+            "from": "browser",
+            "to": "browser",
+            "action": "Create RTCPeerConnection with ICE"
+        },
+        {
+            "step": 6,
+            "from": "browser",
+            "to": "backend",
+            "action": "WS: avatar_connect (SDP offer)"
+        },
+        {
+            "step": 7,
+            "from": "backend",
+            "to": "browser",
+            "action": "WS: avatar_sdp_answer"
+        },
+        {
+            "step": 8,
+            "from": "browser",
+            "to": "azure_ice",
+            "action": "WebRTC video stream established"
+        }
+    ],
+    "agent": {
+        "id": "elena",
+        "avatar": {
+            "avatar_id": "en-US-JennyNeural",
+            "style": "professional",
+            "emotion": "neutral",
+            "resolution": "1080p",
+            "background": "transparent"
+        }
+    },
+    "authentication": {
+        "user_auth": "Azure CIAM (engramai.onmicrosoft.com) via Google login",
+        "backend_auth": "Hybrid (VoiceLive API Key + Regional Speech Endpoint)",
+        "scope": "https://cognitiveservices.azure.com/.default"
+    }
+}

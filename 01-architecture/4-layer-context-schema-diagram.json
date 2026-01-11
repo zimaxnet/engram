@@ -1,0 +1,666 @@
+{
+    "title": "4-Layer Enterprise Context Schema",
+    "subtitle": "Engram's Context Engineering Foundation",
+    "version": "1.0",
+    "theme": "dark",
+    "layout": "layered",
+    "nodes": [
+        {
+            "id": "user_request",
+            "label": "User Request",
+            "type": "trigger",
+            "icon": "arrow-right",
+            "position": {
+                "x": 400,
+                "y": 30
+            },
+            "description": "Incoming request (chat, voice, API)",
+            "style": {
+                "backgroundColor": "#3B82F6",
+                "borderColor": "#60A5FA"
+            }
+        },
+        {
+            "id": "layer1_section",
+            "label": "LAYER 1: SECURITY CONTEXT",
+            "type": "layer",
+            "icon": "shield",
+            "position": {
+                "x": 400,
+                "y": 120
+            },
+            "description": "WHO is the user? WHAT can they access?",
+            "style": {
+                "backgroundColor": "#EF4444",
+                "borderColor": "#F87171",
+                "borderWidth": 3
+            }
+        },
+        {
+            "id": "entra_id",
+            "label": "Azure Entra ID",
+            "type": "service",
+            "icon": "key",
+            "position": {
+                "x": 200,
+                "y": 180
+            },
+            "description": "JWT token authentication",
+            "parent": "layer1_section",
+            "style": {
+                "backgroundColor": "#DC2626",
+                "borderColor": "#EF4444"
+            }
+        },
+        {
+            "id": "rbac",
+            "label": "RBAC Engine",
+            "type": "service",
+            "icon": "users",
+            "position": {
+                "x": 400,
+                "y": 180
+            },
+            "description": "Role-based access control",
+            "parent": "layer1_section",
+            "style": {
+                "backgroundColor": "#DC2626",
+                "borderColor": "#EF4444"
+            }
+        },
+        {
+            "id": "tenant_isolation",
+            "label": "Tenant Isolation",
+            "type": "service",
+            "icon": "building",
+            "position": {
+                "x": 600,
+                "y": 180
+            },
+            "description": "Multi-tenant data separation",
+            "parent": "layer1_section",
+            "style": {
+                "backgroundColor": "#DC2626",
+                "borderColor": "#EF4444"
+            }
+        },
+        {
+            "id": "layer1_data",
+            "label": "SecurityContext",
+            "type": "data-model",
+            "icon": "code",
+            "position": {
+                "x": 400,
+                "y": 240
+            },
+            "description": "user_id, tenant_id, roles[], scopes[], session_id",
+            "parent": "layer1_section",
+            "style": {
+                "backgroundColor": "#B91C1C",
+                "borderColor": "#DC2626",
+                "fontFamily": "monospace"
+            }
+        },
+        {
+            "id": "layer2_section",
+            "label": "LAYER 2: EPISODIC STATE",
+            "type": "layer",
+            "icon": "clock",
+            "position": {
+                "x": 400,
+                "y": 320
+            },
+            "description": "WHAT happened in this conversation?",
+            "style": {
+                "backgroundColor": "#F59E0B",
+                "borderColor": "#FBBF24",
+                "borderWidth": 3
+            }
+        },
+        {
+            "id": "rolling_window",
+            "label": "Rolling Window",
+            "type": "service",
+            "icon": "list",
+            "position": {
+                "x": 250,
+                "y": 380
+            },
+            "description": "Keep last N turns in detail",
+            "parent": "layer2_section",
+            "style": {
+                "backgroundColor": "#D97706",
+                "borderColor": "#F59E0B"
+            }
+        },
+        {
+            "id": "compaction",
+            "label": "Summary Compaction",
+            "type": "service",
+            "icon": "compress",
+            "position": {
+                "x": 550,
+                "y": 380
+            },
+            "description": "Compress older turns to narrative",
+            "parent": "layer2_section",
+            "style": {
+                "backgroundColor": "#D97706",
+                "borderColor": "#F59E0B"
+            }
+        },
+        {
+            "id": "layer2_data",
+            "label": "EpisodicState",
+            "type": "data-model",
+            "icon": "code",
+            "position": {
+                "x": 400,
+                "y": 440
+            },
+            "description": "conversation_id, recent_turns[], summary, total_turns",
+            "parent": "layer2_section",
+            "style": {
+                "backgroundColor": "#B45309",
+                "borderColor": "#D97706",
+                "fontFamily": "monospace"
+            }
+        },
+        {
+            "id": "layer3_section",
+            "label": "LAYER 3: SEMANTIC KNOWLEDGE",
+            "type": "layer",
+            "icon": "brain",
+            "position": {
+                "x": 400,
+                "y": 520
+            },
+            "description": "WHAT do we know from long-term memory?",
+            "style": {
+                "backgroundColor": "#10B981",
+                "borderColor": "#34D399",
+                "borderWidth": 3
+            }
+        },
+        {
+            "id": "zep_search",
+            "label": "Zep Memory Search",
+            "type": "core-service",
+            "icon": "search",
+            "position": {
+                "x": 200,
+                "y": 580
+            },
+            "description": "Vector + keyword search across sessions",
+            "parent": "layer3_section",
+            "style": {
+                "backgroundColor": "#059669",
+                "borderColor": "#10B981",
+                "glow": true
+            }
+        },
+        {
+            "id": "knowledge_graph",
+            "label": "Knowledge Graph",
+            "type": "core-service",
+            "icon": "network",
+            "position": {
+                "x": 400,
+                "y": 580
+            },
+            "description": "Entities, relationships, facts",
+            "parent": "layer3_section",
+            "style": {
+                "backgroundColor": "#059669",
+                "borderColor": "#10B981",
+                "glow": true
+            }
+        },
+        {
+            "id": "confidence_scores",
+            "label": "Confidence Scoring",
+            "type": "service",
+            "icon": "chart",
+            "position": {
+                "x": 600,
+                "y": 580
+            },
+            "description": "Relevance ranking for retrieved facts",
+            "parent": "layer3_section",
+            "style": {
+                "backgroundColor": "#059669",
+                "borderColor": "#10B981"
+            }
+        },
+        {
+            "id": "layer3_data",
+            "label": "SemanticKnowledge",
+            "type": "data-model",
+            "icon": "code",
+            "position": {
+                "x": 400,
+                "y": 640
+            },
+            "description": "retrieved_facts[], entity_context{}, retrieval_scores{}",
+            "parent": "layer3_section",
+            "style": {
+                "backgroundColor": "#047857",
+                "borderColor": "#059669",
+                "fontFamily": "monospace"
+            }
+        },
+        {
+            "id": "layer4_section",
+            "label": "LAYER 4: OPERATIONAL STATE",
+            "type": "layer",
+            "icon": "cog",
+            "position": {
+                "x": 400,
+                "y": 720
+            },
+            "description": "WHAT are we doing right now?",
+            "style": {
+                "backgroundColor": "#8B5CF6",
+                "borderColor": "#A78BFA",
+                "borderWidth": 3
+            }
+        },
+        {
+            "id": "temporal_workflow",
+            "label": "Temporal Workflow",
+            "type": "core-service",
+            "icon": "workflow",
+            "position": {
+                "x": 200,
+                "y": 780
+            },
+            "description": "Durable execution with recovery",
+            "parent": "layer4_section",
+            "style": {
+                "backgroundColor": "#7C3AED",
+                "borderColor": "#8B5CF6",
+                "glow": true
+            }
+        },
+        {
+            "id": "plan_steps",
+            "label": "Plan Steps",
+            "type": "service",
+            "icon": "checklist",
+            "position": {
+                "x": 400,
+                "y": 780
+            },
+            "description": "current_plan[], step status tracking",
+            "parent": "layer4_section",
+            "style": {
+                "backgroundColor": "#7C3AED",
+                "borderColor": "#8B5CF6"
+            }
+        },
+        {
+            "id": "cost_tracking",
+            "label": "Cost Tracking",
+            "type": "service",
+            "icon": "dollar",
+            "position": {
+                "x": 600,
+                "y": 780
+            },
+            "description": "LLM calls, tokens, estimated USD",
+            "parent": "layer4_section",
+            "style": {
+                "backgroundColor": "#7C3AED",
+                "borderColor": "#8B5CF6"
+            }
+        },
+        {
+            "id": "layer4_data",
+            "label": "OperationalState",
+            "type": "data-model",
+            "icon": "code",
+            "position": {
+                "x": 400,
+                "y": 840
+            },
+            "description": "workflow_id, active_agent, current_plan[], total_tokens_used",
+            "parent": "layer4_section",
+            "style": {
+                "backgroundColor": "#6D28D9",
+                "borderColor": "#7C3AED",
+                "fontFamily": "monospace"
+            }
+        },
+        {
+            "id": "enterprise_context",
+            "label": "EnterpriseContext",
+            "type": "unified-model",
+            "icon": "cube",
+            "position": {
+                "x": 400,
+                "y": 920
+            },
+            "description": "The unified 4-layer context object (context.py:317-374)",
+            "style": {
+                "backgroundColor": "#EC4899",
+                "borderColor": "#F472B6",
+                "borderWidth": 4,
+                "glow": true,
+                "fontSize": "large"
+            }
+        },
+        {
+            "id": "agents",
+            "label": "LangGraph Agents",
+            "type": "consumer",
+            "icon": "robot",
+            "position": {
+                "x": 400,
+                "y": 1000
+            },
+            "description": "Elena & Marcus receive full context via to_llm_context()",
+            "style": {
+                "backgroundColor": "#06B6D4",
+                "borderColor": "#22D3EE"
+            }
+        },
+        {
+            "id": "response",
+            "label": "Response to User",
+            "type": "output",
+            "icon": "arrow-left",
+            "position": {
+                "x": 400,
+                "y": 1080
+            },
+            "description": "Grounded, secure, contextual response",
+            "style": {
+                "backgroundColor": "#3B82F6",
+                "borderColor": "#60A5FA"
+            }
+        }
+    ],
+    "connections": [
+        {
+            "from": "user_request",
+            "to": "layer1_section",
+            "label": "Authenticate",
+            "style": {
+                "strokeColor": "#F87171",
+                "animated": true
+            }
+        },
+        {
+            "from": "entra_id",
+            "to": "layer1_data",
+            "label": "",
+            "style": {
+                "strokeColor": "#EF4444"
+            }
+        },
+        {
+            "from": "rbac",
+            "to": "layer1_data",
+            "label": "",
+            "style": {
+                "strokeColor": "#EF4444"
+            }
+        },
+        {
+            "from": "tenant_isolation",
+            "to": "layer1_data",
+            "label": "",
+            "style": {
+                "strokeColor": "#EF4444"
+            }
+        },
+        {
+            "from": "layer1_data",
+            "to": "layer2_section",
+            "label": "Add User Turn",
+            "style": {
+                "strokeColor": "#FBBF24",
+                "animated": true
+            }
+        },
+        {
+            "from": "rolling_window",
+            "to": "layer2_data",
+            "label": "",
+            "style": {
+                "strokeColor": "#F59E0B"
+            }
+        },
+        {
+            "from": "compaction",
+            "to": "layer2_data",
+            "label": "",
+            "style": {
+                "strokeColor": "#F59E0B"
+            }
+        },
+        {
+            "from": "layer2_data",
+            "to": "layer3_section",
+            "label": "Enrich Memory",
+            "style": {
+                "strokeColor": "#34D399",
+                "animated": true
+            }
+        },
+        {
+            "from": "zep_search",
+            "to": "layer3_data",
+            "label": "",
+            "style": {
+                "strokeColor": "#10B981"
+            }
+        },
+        {
+            "from": "knowledge_graph",
+            "to": "layer3_data",
+            "label": "",
+            "style": {
+                "strokeColor": "#10B981"
+            }
+        },
+        {
+            "from": "confidence_scores",
+            "to": "layer3_data",
+            "label": "",
+            "style": {
+                "strokeColor": "#10B981"
+            }
+        },
+        {
+            "from": "layer3_data",
+            "to": "layer4_section",
+            "label": "Start Workflow",
+            "style": {
+                "strokeColor": "#A78BFA",
+                "animated": true
+            }
+        },
+        {
+            "from": "temporal_workflow",
+            "to": "layer4_data",
+            "label": "",
+            "style": {
+                "strokeColor": "#8B5CF6"
+            }
+        },
+        {
+            "from": "plan_steps",
+            "to": "layer4_data",
+            "label": "",
+            "style": {
+                "strokeColor": "#8B5CF6"
+            }
+        },
+        {
+            "from": "cost_tracking",
+            "to": "layer4_data",
+            "label": "",
+            "style": {
+                "strokeColor": "#8B5CF6"
+            }
+        },
+        {
+            "from": "layer1_data",
+            "to": "enterprise_context",
+            "label": "security",
+            "style": {
+                "strokeColor": "#F87171",
+                "strokeDash": "5,5"
+            }
+        },
+        {
+            "from": "layer2_data",
+            "to": "enterprise_context",
+            "label": "episodic",
+            "style": {
+                "strokeColor": "#FBBF24",
+                "strokeDash": "5,5"
+            }
+        },
+        {
+            "from": "layer3_data",
+            "to": "enterprise_context",
+            "label": "semantic",
+            "style": {
+                "strokeColor": "#34D399",
+                "strokeDash": "5,5"
+            }
+        },
+        {
+            "from": "layer4_data",
+            "to": "enterprise_context",
+            "label": "operational",
+            "style": {
+                "strokeColor": "#A78BFA",
+                "strokeDash": "5,5"
+            }
+        },
+        {
+            "from": "enterprise_context",
+            "to": "agents",
+            "label": "to_llm_context()",
+            "style": {
+                "strokeColor": "#22D3EE",
+                "animated": true
+            }
+        },
+        {
+            "from": "agents",
+            "to": "response",
+            "label": "Generate",
+            "style": {
+                "strokeColor": "#60A5FA"
+            }
+        },
+        {
+            "from": "response",
+            "to": "layer2_section",
+            "label": "Persist Turn",
+            "style": {
+                "strokeColor": "#FBBF24",
+                "strokeDash": "3,3"
+            }
+        }
+    ],
+    "annotations": [
+        {
+            "id": "origin_note",
+            "target": "enterprise_context",
+            "text": "ENGRAM-ORIGINAL DESIGN\nProposed by Elena in sess-arch-001\nNot from Zep or external frameworks",
+            "position": "right"
+        },
+        {
+            "id": "layer1_question",
+            "target": "layer1_section",
+            "text": "WHO is the user?\nWHAT can they access?",
+            "position": "left"
+        },
+        {
+            "id": "layer2_question",
+            "target": "layer2_section",
+            "text": "WHAT happened recently\nin this conversation?",
+            "position": "left"
+        },
+        {
+            "id": "layer3_question",
+            "target": "layer3_section",
+            "text": "WHAT do we know\nfrom long-term memory?",
+            "position": "left"
+        },
+        {
+            "id": "layer4_question",
+            "target": "layer4_section",
+            "text": "WHAT are we doing\nright now?",
+            "position": "left"
+        },
+        {
+            "id": "durability_note",
+            "target": "temporal_workflow",
+            "text": "Survives crashes, restarts\nAuto-retry with backoff",
+            "position": "bottom"
+        }
+    ],
+    "legend": [
+        {
+            "type": "layer",
+            "label": "Context Layer",
+            "colors": [
+                "#EF4444",
+                "#F59E0B",
+                "#10B981",
+                "#8B5CF6"
+            ]
+        },
+        {
+            "type": "core-service",
+            "label": "Core Service (Zep/Temporal)",
+            "color": "#059669"
+        },
+        {
+            "type": "data-model",
+            "label": "Pydantic Model",
+            "color": "#6D28D9"
+        },
+        {
+            "type": "unified-model",
+            "label": "EnterpriseContext",
+            "color": "#EC4899"
+        },
+        {
+            "type": "consumer",
+            "label": "Agent (LangGraph)",
+            "color": "#06B6D4"
+        }
+    ],
+    "scenario_callouts": [
+        {
+            "id": "scenario_sarah",
+            "title": "Example: Sarah Chen @ Contoso",
+            "steps": [
+                "1. Sarah authenticates → Layer 1 populates (analyst role, contoso tenant)",
+                "2. Sarah asks about Project Delta → Layer 2 captures turn",
+                "3. System searches Zep → Layer 3 retrieves facts",
+                "4. Temporal starts workflow → Layer 4 tracks execution",
+                "5. Elena responds with grounded context → All 4 layers unified"
+            ],
+            "position": {
+                "x": 750,
+                "y": 500
+            }
+        }
+    ],
+    "metadata": {
+        "generator": "Nano Banana Pro",
+        "created": "2024-12-21",
+        "author": "Engram Team",
+        "purpose": "Diagram for 4-Layer Enterprise Context Schema story",
+        "sourceDocument": "docs/4-layer-context-schema-story.md",
+        "codeReference": "backend/core/context.py"
+    }
+}

@@ -1,0 +1,263 @@
+{
+    "title": "Engram Authentication Flow - Post-Google Login Challenge",
+    "description": "Diagram showing the authentication flow and how the fix resolves token validation failures. The original issue was using a pre-configured JWKS endpoint that didn't match the token's issuer. The fix follows standard JWT validation by fetching JWKS from the token's issuer.",
+    "style": {
+        "theme": "enterprise-dark",
+        "palette": [
+            "#10B981",
+            "#3B82F6",
+            "#F59E0B",
+            "#EF4444",
+            "#8B5CF6"
+        ],
+        "annotations": "highlight-failures"
+    },
+    "actors": [
+        {
+            "id": "user",
+            "label": "User",
+            "icon": "person",
+            "position": "left"
+        },
+        {
+            "id": "frontend",
+            "label": "Engram Frontend",
+            "sublabel": "React + MSAL.js",
+            "icon": "browser",
+            "position": "left-center"
+        },
+        {
+            "id": "azure_ciam",
+            "label": "Azure CIAM",
+            "sublabel": "engramai.ciamlogin.com",
+            "icon": "cloud-identity",
+            "position": "center"
+        },
+        {
+            "id": "google",
+            "label": "Google IDP",
+            "sublabel": "accounts.google.com",
+            "icon": "google",
+            "position": "center-right"
+        },
+        {
+            "id": "backend",
+            "label": "Engram Backend",
+            "sublabel": "FastAPI + JWT Validation",
+            "icon": "server",
+            "position": "right"
+        }
+    ],
+    "flow": [
+        {
+            "step": 1,
+            "from": "user",
+            "to": "frontend",
+            "action": "Click 'Continue with Google'",
+            "status": "success",
+            "color": "#10B981"
+        },
+        {
+            "step": 2,
+            "from": "frontend",
+            "to": "azure_ciam",
+            "action": "Redirect to Azure CIAM",
+            "detail": "Authority: https://engramai.ciamlogin.com/{tenant_id}",
+            "status": "success",
+            "color": "#10B981"
+        },
+        {
+            "step": 3,
+            "from": "azure_ciam",
+            "to": "google",
+            "action": "Federated OAuth Redirect",
+            "detail": "Callback: https://engramai.ciamlogin.com/.../oauth2",
+            "status": "success",
+            "color": "#10B981",
+            "note": "Google REQUIRES 'engramai' in callback URI"
+        },
+        {
+            "step": 4,
+            "from": "google",
+            "to": "azure_ciam",
+            "action": "Return Authorization Code",
+            "status": "success",
+            "color": "#10B981"
+        },
+        {
+            "step": 5,
+            "from": "azure_ciam",
+            "to": "frontend",
+            "action": "Issue JWT Token",
+            "status": "success",
+            "color": "#10B981",
+            "challenge": {
+                "highlight": true,
+                "title": "TOKEN ISSUER FORMAT",
+                "description": "Azure CIAM issues token with GUID-based issuer (not named domain)",
+                "expected_by_config": "https://engramai.ciamlogin.com/.../v2.0",
+                "actual_from_azure": "https://6684288a-b805-4161-bf41-ba2121e51c90.ciamlogin.com/.../v2.0",
+                "note": "This is normal Azure CIAM behavior - fix handles it automatically",
+                "color": "#F59E0B"
+            }
+        },
+        {
+            "step": 6,
+            "from": "frontend",
+            "to": "backend",
+            "action": "API Request (Chat, Stories, Episodes, Voice)",
+            "detail": "Authorization: Bearer {token with GUID issuer}",
+            "status": "success",
+            "color": "#10B981"
+        },
+        {
+            "step": 7,
+            "from": "backend",
+            "to": "backend",
+            "action": "Decode Token (Unverified)",
+            "detail": "Extract issuer, audience, tenant ID from token claims",
+            "status": "success",
+            "color": "#10B981"
+        },
+        {
+            "step": 8,
+            "from": "backend",
+            "to": "azure_ciam",
+            "action": "Fetch JWKS from Token's Issuer",
+            "detail": "JWKS URI: {token_issuer}/discovery/v2.0/keys",
+            "status": "success",
+            "color": "#10B981",
+            "note": "Standard JWT validation - trust token's issuer"
+        },
+        {
+            "step": 9,
+            "from": "azure_ciam",
+            "to": "backend",
+            "action": "Return JWKS (Signing Keys)",
+            "status": "success",
+            "color": "#10B981"
+        },
+        {
+            "step": 10,
+            "from": "backend",
+            "to": "backend",
+            "action": "Validate Token",
+            "detail": "Verify signature, audience, issuer",
+            "status": "success",
+            "color": "#10B981",
+            "note": "Accepts token's own issuer if valid Azure CIAM"
+        },
+        {
+            "step": 11,
+            "from": "backend",
+            "to": "frontend",
+            "action": "Return 200 OK + Data",
+            "detail": "Chat, Stories, Episodes, Voice now work",
+            "status": "success",
+            "color": "#10B981"
+        },
+        {
+            "step": 12,
+            "from": "backend",
+            "to": "backend",
+            "action": "Validate Token Issuer (OLD - BEFORE FIX)",
+            "status": "failure",
+            "color": "#EF4444",
+            "deprecated": true,
+            "challenge": {
+                "highlight": true,
+                "title": "VALIDATION FAILED (Before Fix)",
+                "description": "Backend used pre-configured JWKS endpoint that didn't match token's issuer",
+                "configured_jwks": "https://engramai.ciamlogin.com/{tenant_id}/discovery/v2.0/keys",
+                "token_issuer": "https://6684288a-....ciamlogin.com/{tenant_id}/v2.0",
+                "problem": "JWKS from wrong endpoint, signing key (KID) not found",
+                "result": "401 Unauthorized",
+                "color": "#EF4444"
+            }
+        }
+    ],
+    "solution": {
+        "title": "Standard JWT Validation with Dynamic JWKS Fetching",
+        "description": "Backend follows proper JWT validation by fetching JWKS from the token's issuer, not a pre-configured endpoint. This handles Azure CIAM's GUID-based issuers automatically.",
+        "steps": [
+            {
+                "step": 1,
+                "action": "Decode token (unverified) to extract issuer",
+                "detail": "Get issuer, audience, tenant ID from token claims without verification"
+            },
+            {
+                "step": 2,
+                "action": "Derive JWKS endpoint from token's issuer",
+                "detail": "JWKS URI = {token_issuer}/discovery/v2.0/keys (standard JWT approach)"
+            },
+            {
+                "step": 3,
+                "action": "Fetch JWKS from token's issuer",
+                "detail": "This ensures we get the correct signing keys for the token, regardless of GUID vs Named domain"
+            },
+            {
+                "step": 4,
+                "action": "Find signing key (KID) in JWKS",
+                "detail": "Match token's 'kid' header to key in JWKS"
+            },
+            {
+                "step": 5,
+                "action": "Validate token signature, audience, issuer",
+                "detail": "Accept token's own issuer if it's a valid Azure CIAM issuer"
+            },
+            {
+                "step": 6,
+                "action": "Return authenticated user context",
+                "detail": "Chat, Stories, Episodes, Voice now work with proper authentication"
+            }
+        ],
+        "code_location": "backend/api/middleware/auth.py - validate_token() method",
+        "key_insight": "Trust the token's issuer and fetch JWKS from there (standard JWT validation), rather than using a pre-configured endpoint that may not match the token's actual issuer",
+        "improvements": [
+            "Handles both GUID-based and Named-domain issuers automatically",
+            "Follows OAuth 2.0 / JWT best practices",
+            "More robust than static issuer allowlist",
+            "Falls back to configured endpoint if issuer-based fetch fails"
+        ]
+    },
+    "environments": {
+        "development": {
+            "auth_required": false,
+            "behavior": "Bypass validation, return POC user"
+        },
+        "staging": {
+            "auth_required": false,
+            "behavior": "Bypass validation, return POC user"
+        },
+        "uat": {
+            "auth_required": true,
+            "behavior": "Full validation with Dynamic JWKS Fetching (Standard JWT)"
+        },
+        "production": {
+            "auth_required": true,
+            "behavior": "Full validation with Dynamic JWKS Fetching (Standard JWT)"
+        }
+    },
+    "legend": [
+        {
+            "color": "#10B981",
+            "label": "Success"
+        },
+        {
+            "color": "#3B82F6",
+            "label": "In Progress"
+        },
+        {
+            "color": "#F59E0B",
+            "label": "Warning/Challenge"
+        },
+        {
+            "color": "#EF4444",
+            "label": "Failure (Before Fix)"
+        },
+        {
+            "color": "#8B5CF6",
+            "label": "Solution Applied"
+        }
+    ]
+}

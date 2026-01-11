@@ -1,0 +1,96 @@
+{
+    "architecture": "Engram Authentication Flow (Hybrid)",
+    "components": [
+        {
+            "id": "frontend",
+            "name": "Engram Frontend (SPA)",
+            "technology": "React + MSAL.js",
+            "config": {
+                "clientId": "e32c6c40-615e-4a25-bc9e-944169e99697",
+                "authorityDomain": "engramai.ciamlogin.com",
+                "redirectUri": "https://engram.work"
+            }
+        },
+        {
+            "id": "azure_ciam",
+            "name": "Azure AD External ID (CIAM)",
+            "tenantId": "6684288a-b805-4161-bf41-ba2121e51c90",
+            "domainName": "engramai",
+            "tokenIssuer": "https://6684288a-b805-4161-bf41-ba2121e51c90.ciamlogin.com/6684288a-b805-4161-bf41-ba2121e51c90/v2.0"
+        },
+        {
+            "id": "google_idp",
+            "name": "Google Identity Provider",
+            "role": "Federated Auth",
+            "callbackConfig": {
+                "allowedUri": "https://engramai.ciamlogin.com/engramai.onmicrosoft.com/oauth2/authresp"
+            }
+        },
+        {
+            "id": "backend",
+            "name": "Engram Backend API",
+            "technology": "FastAPI + Python",
+            "middleware": "EntraIDAuth (Hybrid Validation)",
+            "validationLogic": {
+                "audience": [
+                    "e32c...",
+                    "api://e32c..."
+                ],
+                "validIssuers": [
+                    "https://engramai.ciamlogin.com/6684.../v2.0",
+                    "https://6684...ciamlogin.com/6684.../v2.0"
+                ]
+            }
+        }
+    ],
+    "flow": [
+        {
+            "step": 1,
+            "from": "frontend",
+            "to": "azure_ciam",
+            "action": "Sign In Request",
+            "details": "User clicks 'Continue with Google'. MSAL redirects to engramai.ciamlogin.com"
+        },
+        {
+            "step": 2,
+            "from": "azure_ciam",
+            "to": "google_idp",
+            "action": "Federated Redirect",
+            "details": "Azure redirects to accounts.google.com with callback URI containing 'engramai'"
+        },
+        {
+            "step": 3,
+            "from": "google_idp",
+            "to": "azure_ciam",
+            "action": "Auth Callback",
+            "details": "Google validates URI matches Whitelist and returns code to Azure"
+        },
+        {
+            "step": 4,
+            "from": "azure_ciam",
+            "to": "frontend",
+            "action": "Issue Token",
+            "details": "Azure issues JWT. IMPORTANT: Issuer claim contains Tenant GUID (6684...), not Name."
+        },
+        {
+            "step": 5,
+            "from": "frontend",
+            "to": "backend",
+            "action": "API Request",
+            "details": "Frontend sends Bearer Token with GUID Issuer"
+        },
+        {
+            "step": 6,
+            "from": "backend",
+            "to": "backend",
+            "action": "Validate Token",
+            "details": "Hybrid Logic: Accepts token because its issuer is in the 'valid_issuers' list (which includes the GUID)."
+        }
+    ],
+    "troubleshooting": {
+        "split_brain_issue": {
+            "description": "Infrastructure config requires Named Domain for Google Redirect, but Azure issues GUID-domained tokens.",
+            "resolution": "Configure Infra with Name (for Google), Patch Backend to accept GUID (for Azure)."
+        }
+    }
+}

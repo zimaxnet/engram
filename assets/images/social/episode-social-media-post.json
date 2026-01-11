@@ -1,0 +1,30 @@
+{
+    "session_id": "episode-social-media-engram-architecture-20251229",
+    "user_id": "derek",
+    "metadata": {
+        "summary": "Created a social media post documenting Engram's agentic AI architecture including 5 Azure Container Apps, Topics-based Knowledge Graph, PostgreSQL with pgvector, and Nano Banana Pro (Gemini 3) visual generation with Azure Files storage.",
+        "agent_id": "sage",
+        "topics": [
+            "Social Media",
+            "Architecture",
+            "Knowledge Graph",
+            "Nano Banana",
+            "Azure Files",
+            "Container Apps"
+        ],
+        "turn_count": 1,
+        "channel": "documentation",
+        "image_url": "docs/assets/images/social/engram-topics-social.png",
+        "wiki_url": "docs/assets/images/social/engram-agentic-ai-story.md"
+    },
+    "messages": [
+        {
+            "role": "user",
+            "content": "Create a social media story about everything implemented in Engram: realtime voice, keyword/semantic vectordb, knowledge graph, topics in episodes, all using PostgresDB plus 5 container apps and Azure Files for storing generated images from Nano Banana Pro."
+        },
+        {
+            "role": "assistant",
+            "content": "I've created a comprehensive social media post documenting Engram's architecture:\n\n**5 Container Apps:**\n1. Backend API (engram-api) - Central nervous system\n2. Worker (engram-worker) - Async task processing\n3. Zep Memory (engram-zep) - Memory layer\n4. Temporal Server - Workflow orchestration\n5. Temporal UI - Monitoring\n\n**Key Features:**\n- Topics Dropdown: Dynamically extracts unique topics from episodes, stored in Zep session metadata, auto-tagged via keyword mapping during ingestion\n- Knowledge Graph: Topics become entity nodes linked to Episode nodes via 'concerns' edges\n- PostgreSQL + pgvector: Handles transactional data and vector embeddings\n- Azure Files: Mounted to /app/docs for persistent image storage\n\n**Visual Storytelling (Sage + Nano Banana Pro):**\nSage, the visual storytelling agent, can autonomously:\n1. Write a narrative story based on context\n2. Generate a supporting image via Nano Banana Pro (Gemini 3's gemini-3-pro-image-preview)\n3. Store the image persistently on Azure Files\n\n**Artifacts Created:**\n- Image: docs/assets/images/social/engram-topics-social.png (uploaded to Azure Files)\n- Wiki Page: docs/assets/images/social/engram-agentic-ai-story.md\n- Image Spec: social_media_image_spec.json"
+        }
+    ]
+}

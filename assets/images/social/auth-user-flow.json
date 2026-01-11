@@ -1,0 +1,108 @@
+{
+    "session_id": "episode-auth-user-flow-20251230",
+    "user_id": "derek",
+    "metadata": {
+        "summary": "Implementation of the Unified Login Modal and resolution of the Split-Brain configuration. The flow unifies Google and Microsoft login under a single glassmorphic modal, leveraging CIAM federation.",
+        "agent_id": "sage",
+        "topics": [
+            "Authentication",
+            "User Flow",
+            "CIAM",
+            "Entra External ID",
+            "Configuration Sync"
+        ],
+        "turn_count": 1,
+        "channel": "documentation",
+        "image_url": "docs/assets/images/social/auth-flow-diagram.png",
+        "diagram_data": {
+            "title": "Unified Login User Flow",
+            "nodes": [
+                {
+                    "id": "start",
+                    "label": "User Clicks 'Sign In'",
+                    "type": "action"
+                },
+                {
+                    "id": "modal",
+                    "label": "Unified Login Modal",
+                    "type": "ui"
+                },
+                {
+                    "id": "google_btn",
+                    "label": "Continue with Google",
+                    "type": "action"
+                },
+                {
+                    "id": "microsoft_btn",
+                    "label": "Continue with Microsoft",
+                    "type": "action"
+                },
+                {
+                    "id": "ciam_fed",
+                    "label": "CIAM Federation (domain_hint)",
+                    "type": "process"
+                },
+                {
+                    "id": "google_idp",
+                    "label": "Google OAuth",
+                    "type": "system"
+                },
+                {
+                    "id": "msal_popup",
+                    "label": "MSAL Popup",
+                    "type": "ui"
+                },
+                {
+                    "id": "auth_success",
+                    "label": "Authenticated (JWT)",
+                    "type": "state"
+                }
+            ],
+            "edges": [
+                {
+                    "from": "start",
+                    "to": "modal"
+                },
+                {
+                    "from": "modal",
+                    "to": "google_btn"
+                },
+                {
+                    "from": "modal",
+                    "to": "microsoft_btn"
+                },
+                {
+                    "from": "google_btn",
+                    "to": "ciam_fed"
+                },
+                {
+                    "from": "ciam_fed",
+                    "to": "google_idp"
+                },
+                {
+                    "from": "google_idp",
+                    "to": "auth_success"
+                },
+                {
+                    "from": "microsoft_btn",
+                    "to": "msal_popup"
+                },
+                {
+                    "from": "msal_popup",
+                    "to": "auth_success"
+                }
+            ],
+            "visual_description": "A high-fidelity, futuristic diagram of a user authentication flow for a premium AI application called 'Engram'. \n\n**Style Framework:**\n- **Aesthetic**: Cyberpunk-lite, glassmorphism, dark mode interface.\n- **Background**: Deep obsidian/midnight blue gradient slightly textured with digital noise or grid lines.\n- **Nodes**: Floating, translucent glass cards with soft inner glow (neon blue and purple). Edges are rounded.\n- **Connectors**: Glowing data streams (cyan) with flowing particle effects indicating direction.\n\n**Visual Structure:**\n1. **Step 1 (Trigger)**: A user silhouette touches a glowing 'Sign In' button at the top.\n2. **Step 2 (The Modal)**: The central focus is a large, detailed glass card labeled 'Unified Login Modal'. Inside, distinct glowing zones for 'Continue with Google' (clean white/g-color accent) and 'Continue with Microsoft' (dark grey/ms-color accent).\n3. **Step 3 (Branching Paths)**:\n   - **Path A (Google)**: A beam of light shoots from the Google button to a cloud node labeled 'CIAM Federation'. This node pulses with 'domain_hint: google.com' metadata text floating nearby.\n   - **Path B (Microsoft)**: A beam shoots to a 'MSAL Popup' node.\n4. **Step 4 (Success)**: Both paths converge at the bottom into a golden/green radiant node labeled 'Authenticated Session (JWT)'.\n\n**Key Details to Highlight:**\n- The 'Split Brain Fix' concept: Visualize a small holographic wrench icon repairing a broken link between the 'CIAM' cloud and the 'App Registration' node, signifying the configuration fix.\n- Typography: Clean, sans-serif, technical font (like Inter or Roboto Mono) for all labels.\n- Lighting: Cinematic, rim-lighting on the glass edges."
+        }
+    },
+    "messages": [
+        {
+            "role": "user",
+            "content": "Create a user flow diagram for the new Unified Login system, covering the modal, Google/Microsoft options, and the fix for the cross-tenant app configuration."
+        },
+        {
+            "role": "assistant",
+            "content": "I have documented the Unified Login User Flow. This implementation consolidates authentication entry points and resolves the 'Split Brain' configuration issue by aligning the App Registration.\n\n### User Flow Diagram\n\n```mermaid\ngraph TD\n    Start[User Clicks 'Sign In'] --> Modal[Unified Login Modal]\n    Modal -->|Selects| Google[Continue with Google]\n    Modal -->|Selects| Microsoft[Continue with Microsoft]\n    \n    Google -->|domain_hint: google.com| CIAM[CIAM Federation]\n    CIAM --> GoogleIDP[Google OAuth]\n    GoogleIDP --> Success[Authenticated]\n    \n    Microsoft --> MSAL[MSAL Popup]\n    MSAL --> Success\n    \n    subgraph Configuration Fix\n    CIAM -.->|Requires| AppLink[App Linked to User Flow]\n    end\n```\n\n### Key Changes\n1. **Unified Modal**: Replaced separate buttons with a single entry point.\n2. **Federation**: Configured `domain_hint` to streamline Google login via CIAM.\n3. **Config Sync**: Synchronized Client ID (`e32c...`) across Local, Infra, and Secrets to resolve tenant mismatch."
+        }
+    ]
+}

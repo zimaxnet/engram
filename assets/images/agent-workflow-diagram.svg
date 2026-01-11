@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0e1a"/>
+      <stop offset="100%" style="stop-color:#1a1f35"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker id="arrowCyan" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00d4ff"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#a855f7"/>
+    </marker>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="800" fill="url(#bgGrad)"/>
+  
+  <!-- Title -->
+  <text x="600" y="50" font-family="Arial, sans-serif" font-size="36" fill="#e2e8f0" text-anchor="middle" font-weight="bold">AGENT COLLABORATION WORKFLOW</text>
+  <text x="600" y="85" font-family="Arial, sans-serif" font-size="18" fill="#94a3b8" text-anchor="middle">Elena & Marcus working together with intelligent handoffs</text>
+  
+  <!-- User -->
+  <g transform="translate(500, 120)">
+    <circle cx="100" cy="60" r="50" fill="rgba(255,255,255,0.1)" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="100" y="55" font-family="Arial, sans-serif" font-size="36" fill="#e2e8f0" text-anchor="middle">👤</text>
+    <text x="100" y="85" font-family="Arial, sans-serif" font-size="12" fill="#e2e8f0" text-anchor="middle">USER</text>
+    <text x="100" y="140" font-family="Arial, sans-serif" font-size="16" fill="#e2e8f0" text-anchor="middle" font-weight="bold">User Input</text>
+  </g>
+  
+  <!-- Arrow to Router -->
+  <line x1="600" y1="230" x2="600" y2="280" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="5,5"/>
+  
+  <!-- Router -->
+  <g transform="translate(450, 290)">
+    <rect width="300" height="100" rx="15" fill="rgba(255,255,255,0.05)" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="150" y="45" font-family="Arial, sans-serif" font-size="24" fill="#e2e8f0" text-anchor="middle" font-weight="bold">🔀 Agent Router</text>
+    <text x="150" y="75" font-family="Arial, sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">Context-aware routing & handoff detection</text>
+  </g>
+  
+  <!-- Arrows from Router -->
+  <line x1="500" y1="390" x2="320" y2="470" stroke="#00d4ff" stroke-width="3" marker-end="url(#arrowCyan)"/>
+  <line x1="700" y1="390" x2="880" y2="470" stroke="#a855f7" stroke-width="3" marker-end="url(#arrowPurple)"/>
+  
+  <!-- Labels on arrows -->
+  <text x="380" y="420" font-family="Arial, sans-serif" font-size="12" fill="#00d4ff" transform="rotate(-25 380 420)">Requirements, Analysis</text>
+  <text x="770" y="420" font-family="Arial, sans-serif" font-size="12" fill="#a855f7" transform="rotate(25 770 420)">Planning, Timelines</text>
+  
+  <!-- Elena -->
+  <g transform="translate(100, 480)">
+    <rect width="300" height="200" rx="20" fill="rgba(0,212,255,0.1)" stroke="#00d4ff" stroke-width="3" filter="url(#glow)"/>
+    
+    <!-- Avatar -->
+    <circle cx="150" cy="70" r="45" fill="rgba(0,212,255,0.2)" stroke="#00d4ff" stroke-width="2"/>
+    <text x="150" y="80" font-family="Arial, sans-serif" font-size="48" fill="#00d4ff" text-anchor="middle">E</text>
+    
+    <text x="150" y="140" font-family="Arial, sans-serif" font-size="20" fill="#00d4ff" text-anchor="middle" font-weight="bold">Dr. Elena Vasquez</text>
+    <text x="150" y="165" font-family="Arial, sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">Business Analyst</text>
+    
+    <!-- Tools -->
+    <text x="30" y="195" font-family="monospace" font-size="10" fill="#00d4ff">• analyze_requirements</text>
+    <text x="30" y="210" font-family="monospace" font-size="10" fill="#00d4ff">• stakeholder_mapping</text>
+    <text x="30" y="225" font-family="monospace" font-size="10" fill="#00d4ff">• create_user_story</text>
+  </g>
+  
+  <!-- Marcus -->
+  <g transform="translate(800, 480)">
+    <rect width="300" height="200" rx="20" fill="rgba(168,85,247,0.1)" stroke="#a855f7" stroke-width="3" filter="url(#glow)"/>
+    
+    <!-- Avatar -->
+    <circle cx="150" cy="70" r="45" fill="rgba(168,85,247,0.2)" stroke="#a855f7" stroke-width="2"/>
+    <text x="150" y="80" font-family="Arial, sans-serif" font-size="48" fill="#a855f7" text-anchor="middle">M</text>
+    
+    <text x="150" y="140" font-family="Arial, sans-serif" font-size="20" fill="#a855f7" text-anchor="middle" font-weight="bold">Marcus Chen</text>
+    <text x="150" y="165" font-family="Arial, sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">Project Manager</text>
+    
+    <!-- Tools -->
+    <text x="30" y="195" font-family="monospace" font-size="10" fill="#a855f7">• create_project_timeline</text>
+    <text x="30" y="210" font-family="monospace" font-size="10" fill="#a855f7">• assess_project_risks</text>
+    <text x="30" y="225" font-family="monospace" font-size="10" fill="#a855f7">• create_status_report</text>
+  </g>
+  
+  <!-- Handoff arrows -->
+  <g>
+    <path d="M 400 550 C 500 520, 700 520, 800 550" fill="none" stroke="#00d4ff" stroke-width="2" stroke-dasharray="8,4" marker-end="url(#arrowPurple)"/>
+    <text x="600" y="510" font-family="Arial, sans-serif" font-size="12" fill="#10b981" text-anchor="middle">"plan this project"</text>
+    
+    <path d="M 800 620 C 700 650, 500 650, 400 620" fill="none" stroke="#a855f7" stroke-width="2" stroke-dasharray="8,4" marker-end="url(#arrowCyan)"/>
+    <text x="600" y="670" font-family="Arial, sans-serif" font-size="12" fill="#10b981" text-anchor="middle">"analyze requirements"</text>
+  </g>
+  
+  <!-- Context transfer label -->
+  <rect x="500" y="570" width="200" height="40" rx="8" fill="rgba(16,185,129,0.2)" stroke="#10b981" stroke-width="1"/>
+  <text x="600" y="595" font-family="Arial, sans-serif" font-size="14" fill="#10b981" text-anchor="middle" font-weight="bold">Context Transfer</text>
+  
+  <!-- Legend -->
+  <g transform="translate(100, 720)">
+    <rect width="1000" height="60" rx="10" fill="rgba(255,255,255,0.03)" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="50" y="38" font-family="Arial, sans-serif" font-size="14" fill="#e2e8f0" font-weight="bold">Handoff Triggers:</text>
+    <text x="200" y="38" font-family="Arial, sans-serif" font-size="12" fill="#00d4ff">Elena → Marcus: "plan", "timeline", "schedule", "estimate"</text>
+    <text x="600" y="38" font-family="Arial, sans-serif" font-size="12" fill="#a855f7">Marcus → Elena: "requirements", "analyze", "stakeholder", "user story"</text>
+  </g>
+</svg>
+

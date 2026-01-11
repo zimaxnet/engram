@@ -1,0 +1,230 @@
+{
+    "title": "Engram Avatar System — High-Fidelity WebRTC Architecture",
+    "subtitle": "Real-time AI Video Streaming via Azure Speech & Managed Identity",
+    "version": "1.0",
+    "author": "Engram Platform Team",
+    "created": "2026-01-08",
+    "theme": "dark",
+    "layout": "flow",
+    "diagram_type": "architecture",
+    "description": "Architecture for the interactive AI Avatar system. Illustrates the full WebRTC negotiation flow between the User (Browser), Engram Backend (Signaling Proxy), and Azure AI Speech Service (Media Generation). Highlights the separation of control (Signal) and data (Media) planes.",
+    "legend": {
+        "node_types": {
+            "client": {
+                "label": "Client / User",
+                "color": "#60A5FA",
+                "description": "Browser running React Frontend"
+            },
+            "backend": {
+                "label": "Engram Backend",
+                "color": "#A855F7",
+                "description": "FastAPI Signaling Service"
+            },
+            "azure_service": {
+                "label": "Azure Service",
+                "color": "#00D4FF",
+                "description": "Cloud Infrastructure"
+            },
+            "security": {
+                "label": "Security",
+                "color": "#F59E0B",
+                "description": "Identity & Secrets"
+            }
+        },
+        "edge_styles": {
+            "signal": {
+                "stroke": "#A855F7",
+                "strokeWidth": 2,
+                "strokeDasharray": "5,5",
+                "description": "Signaling / Control Data (WebSocket/HTTP)"
+            },
+            "media": {
+                "stroke": "#22C55E",
+                "strokeWidth": 4,
+                "description": "High-Bandwidth Media Stream (RTP/UDP)"
+            },
+            "auth": {
+                "stroke": "#F59E0B",
+                "strokeWidth": 2,
+                "description": "Authentication Flow"
+            }
+        }
+    },
+    "nodes": [
+        {
+            "id": "browser",
+            "label": "Web Browser",
+            "sublabel": "React Frontend",
+            "type": "client",
+            "icon": "globe",
+            "emoji": "🌐",
+            "position": {
+                "x": 100,
+                "y": 200
+            },
+            "description": "User's device running VoiceChat.tsx. Captures microphone input, renders AvatarDisplay.tsx, and manages the RTCPeerConnection.",
+            "style": {
+                "borderColor": "#60A5FA"
+            }
+        },
+        {
+            "id": "backend_api",
+            "label": "Engram API",
+            "sublabel": "FastAPI /routers/voice",
+            "type": "backend",
+            "icon": "server",
+            "emoji": "⚙️",
+            "position": {
+                "x": 400,
+                "y": 200
+            },
+            "description": "Orchestrates the session. Authenticates the user, fetches ICE credentials, and proxies SDP offers/answers between Browser and Azure.",
+            "style": {
+                "borderColor": "#A855F7"
+            }
+        },
+        {
+            "id": "azure_speech",
+            "label": "Azure Speech",
+            "sublabel": "Avatar Service (West US 2)",
+            "type": "azure_service",
+            "icon": "cpu",
+            "emoji": "🗣️",
+            "position": {
+                "x": 800,
+                "y": 200
+            },
+            "description": "Generates real-time video frames from text/audio. Acts as the WebRTC 'Peer' ensuring sub-second latency via UDP.",
+            "style": {
+                "borderColor": "#00D4FF"
+            }
+        },
+        {
+            "id": "turn_server",
+            "label": "Azure TURN",
+            "sublabel": "Relay Service",
+            "type": "azure_service",
+            "icon": "radio-tower",
+            "emoji": "🗼",
+            "position": {
+                "x": 600,
+                "y": 400
+            },
+            "description": "Relays media traffic when direct P2P connections fail due to restrictive firewalls or NATs.",
+            "style": {
+                "borderColor": "#00D4FF"
+            }
+        },
+        {
+            "id": "key_vault",
+            "label": "Key Vault",
+            "sublabel": "Secret Store",
+            "type": "security",
+            "icon": "key",
+            "emoji": "🔐",
+            "position": {
+                "x": 400,
+                "y": 50
+            },
+            "description": "Securely stores AZURE_SPEECH_KEY. Accessed via Managed Identity.",
+            "style": {
+                "borderColor": "#F59E0B"
+            }
+        }
+    ],
+    "edges": [
+        {
+            "id": "e1_auth",
+            "source": "backend_api",
+            "target": "key_vault",
+            "label": "Get Secret",
+            "type": "auth",
+            "style": {
+                "stroke": "#F59E0B"
+            }
+        },
+        {
+            "id": "e2_signal_req",
+            "source": "browser",
+            "target": "backend_api",
+            "label": "1. Limit ICE Creds",
+            "type": "signal",
+            "style": {
+                "stroke": "#A855F7",
+                "strokeDasharray": "5,5"
+            }
+        },
+        {
+            "id": "e3_sdp_offer",
+            "source": "browser",
+            "target": "backend_api",
+            "label": "2. SDP Offer (WS)",
+            "type": "signal",
+            "style": {
+                "stroke": "#A855F7",
+                "strokeDasharray": "5,5"
+            }
+        },
+        {
+            "id": "e4_proxy_offer",
+            "source": "backend_api",
+            "target": "azure_speech",
+            "label": "3. Proxy Offer",
+            "type": "signal",
+            "style": {
+                "stroke": "#A855F7",
+                "strokeDasharray": "5,5"
+            }
+        },
+        {
+            "id": "e5_media_direct",
+            "source": "browser",
+            "target": "azure_speech",
+            "label": "Media Stream (RTP)",
+            "type": "media",
+            "style": {
+                "stroke": "#22C55E",
+                "strokeWidth": 4
+            }
+        },
+        {
+            "id": "e6_media_relay",
+            "source": "browser",
+            "target": "turn_server",
+            "label": "Media (Fallback)",
+            "type": "media",
+            "style": {
+                "stroke": "#22C55E",
+                "strokeWidth": 2,
+                "strokeDasharray": "2,2"
+            }
+        }
+    ],
+    "annotations": [
+        {
+            "id": "note_region",
+            "type": "badge",
+            "position": {
+                "x": 800,
+                "y": 140
+            },
+            "text": "📍 West US 2",
+            "style": {
+                "backgroundColor": "#1e3a8a",
+                "textColor": "#93c5fd"
+            }
+        },
+        {
+            "id": "note_latency",
+            "type": "callout",
+            "position": {
+                "x": 600,
+                "y": 280
+            },
+            "text": "Target Latency: <500ms",
+            "style": {
+                "textColor": "#22C55E"
+            }
+        }
+    ]
+}

@@ -1,0 +1,767 @@
+<!DOCTYPE html> <html lang="en-US"> <head> <meta charset="UTF-8"> <meta http-equiv="X-UA-Compatible" content="IE=Edge"> <link rel="stylesheet" href="/assets/css/just-the-docs-default.css"> <link rel="stylesheet" href="/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet"> <style id="jtd-nav-activation"> .site-nav > ul.nav-list:first-child > li > a, .site-nav > ul.nav-list:first-child > li > ul > li:not(:nth-child(30)) > a, .site-nav > ul.nav-list:first-child > li > ul > li > ul > li a { background-image: none; } .site-nav > ul.nav-list:not(:first-child) a, .site-nav li.external a { background-image: none; } .site-nav > ul.nav-list:first-child > li:nth-child(5) > ul > li:nth-child(30) > a { font-weight: 600; text-decoration: none; }.site-nav > ul.nav-list:first-child > li:nth-child(5) > button svg, .site-nav > ul.nav-list:first-child > li:nth-child(5) > ul > li:nth-child(30) > button svg { transform: rotate(-90deg); }.site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(5) > ul.nav-list, .site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(5) > ul.nav-list > li.nav-list-item:nth-child(30) > ul.nav-list { display: block; } </style> <script src="/assets/js/vendor/lunr.min.js"></script> <script src="/assets/js/just-the-docs.js"></script> <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Begin Jekyll SEO tag v2.8.0 --> <title>tools/postgres-sku-calculator.py | Engram - Context Engineering Platform</title> <meta name="generator" content="Jekyll v4.4.1" /> <meta property="og:title" content="tools/postgres-sku-calculator.py" /> <meta property="og:locale" content="en_US" /> <meta name="description" content="Enterprise AI Memory &amp; Cognition Platform" /> <meta property="og:description" content="Enterprise AI Memory &amp; Cognition Platform" /> <link rel="canonical" href="https://wiki.engram.work/03-operations/postgresql-blob-storage-enterprise-deployment.html" /> <meta property="og:url" content="https://wiki.engram.work/03-operations/postgresql-blob-storage-enterprise-deployment.html" /> <meta property="og:site_name" content="Engram - Context Engineering Platform" /> <meta property="og:type" content="website" /> <meta name="twitter:card" content="summary" /> <meta property="twitter:title" content="tools/postgres-sku-calculator.py" /> <script type="application/ld+json"> {"@context":"https://schema.org","@type":"WebPage","description":"Enterprise AI Memory &amp; Cognition Platform","headline":"tools/postgres-sku-calculator.py","url":"https://wiki.engram.work/03-operations/postgresql-blob-storage-enterprise-deployment.html"}</script> <!-- End Jekyll SEO tag --> </head> <body> <a class="skip-to-main" href="#main-content">Skip to main content</a> <svg xmlns="http://www.w3.org/2000/svg" class="d-none"> <symbol id="svg-link" viewBox="0 0 24 24"> <title>Link</title> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"> <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path> </svg> </symbol> <symbol id="svg-menu" viewBox="0 0 24 24"> <title>Menu</title> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"> <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line> </svg> </symbol> <symbol id="svg-arrow-right" viewBox="0 0 24 24"> <title>Expand</title> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"> <polyline points="9 18 15 12 9 6"></polyline> </svg> </symbol> <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE --> <symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link"> <title id="svg-external-link-title">(external link)</title> <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line> </symbol> <symbol id="svg-doc" viewBox="0 0 24 24"> <title>Document</title> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file"> <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline> </svg> </symbol> <symbol id="svg-search" viewBox="0 0 24 24"> <title>Search</title> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"> <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line> </svg> </symbol> <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md --> <symbol id="svg-copy" viewBox="0 0 16 16"> <title>Copy</title> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16"> <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/> <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/> </svg> </symbol> <symbol id="svg-copied" viewBox="0 0 16 16"> <title>Copied</title> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16"> <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/> <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/> </svg> </symbol> </svg> <header class="side-bar"> <div class="site-header"> <a href="/" class="site-title lh-tight"> Engram - Context Engineering Platform </a> <button id="menu-button" class="site-button btn-reset" aria-label="Menu" aria-expanded="false"> <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg> </button> </div> <nav aria-label="Main" id="site-nav" class="site-nav"> <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="Strategy submenu" aria-expanded="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/00-strategy/" class="nav-list-link">Strategy</a><ul class="nav-list"><li class="nav-list-item"><a href="/00-strategy/Production-Grade-Agentic-System-Layers.docx.html" class="nav-list-link">**The Enterprise Agentic Stack: An Exhaustive Architectural Framework for Production-Grade Autonomous Systems**</a></li><li class="nav-list-item"><a href="/00-strategy/ai-periodic-table-roadmap.html" class="nav-list-link">AI Periodic Table Roadmap</a></li><li class="nav-list-item"><a href="/00-strategy/engram-pricing-deployment-levels.html" class="nav-list-link">Deploy infrastructure</a></li><li class="nav-list-item"><a href="/00-strategy/REORGANIZATION-COMPLETE.html" class="nav-list-link">Documentation Reorganization - Complete</a></li><li class="nav-list-item"><a href="/00-strategy/REORGANIZATION-PLAN.html" class="nav-list-link">Documentation Reorganization Plan</a></li><li class="nav-list-item"><a href="/00-strategy/business-plan-ai-periodic-table.html" class="nav-list-link">Engram AI Periodic Table Business Plan</a></li><li class="nav-list-item"><a href="/00-strategy/engram-press-briefing.html" class="nav-list-link">Engram Press Briefing</a></li><li class="nav-list-item"><a href="/00-strategy/UI_DESIGN_REFERENCE.html" class="nav-list-link">Engram UI Design Reference</a></li><li class="nav-list-item"><a href="/00-strategy/Engram_Context_Engineering_GTM_Research_Paper_v2.html" class="nav-list-link">Executive Summary</a></li><li class="nav-list-item"><a href="/00-strategy/next-steps.html" class="nav-list-link">Next Steps - Engram Platform Development</a></li><li class="nav-list-item"><a href="/00-strategy/pricing.html" class="nav-list-link">Pricing</a></li><li class="nav-list-item"><a href="/00-strategy/Production-Grade-Agentic-System-Layers.html" class="nav-list-link">Production Grade Agentic System Layers</a></li><li class="nav-list-item"><a href="/00-strategy/Production-Grade-System-Implementation-Plan.html" class="nav-list-link">Production-Grade Agentic System Implementation Plan</a></li><li class="nav-list-item"><a href="/00-strategy/Project-Tracking-Setup.html" class="nav-list-link">Project Tracking Setup Guide</a></li></ul></li><li class="nav-list-item"><a href="/" class="nav-list-link">Home</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="Architecture submenu" aria-expanded="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/01-architecture/" class="nav-list-link">Architecture</a><ul class="nav-list"><li class="nav-list-item"><a href="/architecture/agent-user-isolation.html" class="nav-list-link">Agent & User Isolation with Project-Based Access Control</a></li><li class="nav-list-item"><a href="/architecture/azure-foundry-agent-service-integration.html" class="nav-list-link">Azure AI Foundry Agent Service Integration</a></li><li class="nav-list-item"><a href="/architecture/foundry-integration-impact-analysis.html" class="nav-list-link">Foundry Agent Service Integration - Impact Analysis</a></li><li class="nav-list-item"><a href="/architecture/foundry-poc-implementation.html" class="nav-list-link">Foundry Agent Service POC - Implementation Summary</a></li><li class="nav-list-item"><a href="/architecture/foundry-thread-integration-complete.html" class="nav-list-link">Foundry Thread Integration - Complete</a></li><li class="nav-list-item"><a href="/architecture/foundry-agent-integration.html" class="nav-list-link">Using Foundry-Created Agents in Engram</a></li><li class="nav-list-item"><a href="/architecture/elena-foundry-migration.html" class="nav-list-link">Elena Foundry Migration Guide</a></li><li class="nav-list-item"><a href="/architecture/configuration-source-of-truth.html" class="nav-list-link">Configuration Source of Truth Strategy</a></li><li class="nav-list-item"><a href="/architecture/foundry-configuration-setup.html" class="nav-list-link">Foundry Configuration Setup - Source of Truth</a></li><li class="nav-list-item"><a href="/architecture/foundry-additional-features.html" class="nav-list-link">Additional Foundry Features We Can Leverage</a></li><li class="nav-list-item"><a href="/architecture/foundry-features-roadmap.html" class="nav-list-link">Foundry Features Roadmap</a></li><li class="nav-list-item"><a href="/architecture/elena-foundry-migration-complete.html" class="nav-list-link">Elena Foundry Migration - Complete</a></li><li class="nav-list-item"><a href="/architecture/elena-tool-endpoints-configured.html" class="nav-list-link">Elena Tool Endpoints - Configured</a></li><li class="nav-list-item"><a href="/architecture/elena-avatar-configuration.html" class="nav-list-link">Elena Avatar Configuration - Azure AI Foundry</a></li><li class="nav-list-item"><a href="/architecture/elena-avatar-frontend-integration.html" class="nav-list-link">Elena Avatar Frontend Integration</a></li><li class="nav-list-item"><a href="/architecture/foundry-multi-agent-orchestration-research.html" class="nav-list-link">Multi-Agent Orchestration Research - Foundry Integration</a></li><li class="nav-list-item"><a href="/architecture/foundry-m365-integration-research.html" class="nav-list-link">Microsoft 365 Integration Research - Teams & Outlook</a></li><li class="nav-list-item"><a href="/architecture/voicelive-avatar-integration.html" class="nav-list-link">VoiceLive Avatar Integration</a></li><li class="nav-list-item"><a href="/architecture/voicelive-avatar-integration-complete.html" class="nav-list-link">VoiceLive Avatar Integration Complete</a></li><li class="nav-list-item"><a href="/architecture/foundry-iq-poc-implementation.html" class="nav-list-link">Foundry IQ POC Implementation</a></li><li class="nav-list-item"><a href="/architecture/foundry-iq-integration-summary.html" class="nav-list-link">Foundry IQ Integration Summary</a></li><li class="nav-list-item"><a href="/01-architecture/ai-periodic-table-analysis.html" class="nav-list-link">AI Periodic Table Analysis</a></li><li class="nav-list-item"><a href="/01-architecture/ai-periodic-table-matrix.html" class="nav-list-link">AI Periodic Table Matrix</a></li><li class="nav-list-item"><a href="/01-architecture/agents.html" class="nav-list-link">Agent Personas</a></li><li class="nav-list-item"><a href="/01-architecture/Agentic-System-Maturity-Assessment.html" class="nav-list-link">Agentic System Maturity Assessment</a></li><li class="nav-list-item"><a href="/01-architecture/concept-authentication.html" class="nav-list-link">Authentication & Security Architecture</a></li><li class="nav-list-item"><a href="/01-architecture/authentication-architecture-evolution.html" class="nav-list-link">Authentication Architecture Evolution</a></li><li class="nav-list-item"><a href="/01-architecture/auth-configuration-verification.html" class="nav-list-link">Authentication Configuration Verification</a></li><li class="nav-list-item"><a href="/01-architecture/user-identity-flow-comprehensive.html" class="nav-list-link">Comprehensive User Identity Flow Architecture</a></li><li class="nav-list-item"><a href="/01-architecture/README.html" class="nav-list-link">Diagrams Directory</a></li><li class="nav-list-item"><a href="/01-architecture/authentication-analysis.html" class="nav-list-link">Engram Authentication Architecture Analysis</a></li><li class="nav-list-item"><a href="/01-architecture/memory-architecture.html" class="nav-list-link">Engram Memory Architecture: Zep & Agents</a></li><li class="nav-list-item"><a href="/01-architecture/architecture_summary.html" class="nav-list-link">Engram System Architecture & Migration Context</a></li><li class="nav-list-item"><a href="/01-architecture/enterprise-auth-strategy.html" class="nav-list-link">Enterprise Authentication Strategy: From POC to Production</a></li><li class="nav-list-item"><a href="/01-architecture/enterprise-env-model.html" class="nav-list-link">Enterprise Env Model</a></li><li class="nav-list-item"><a href="/01-architecture/entra-external-id.html" class="nav-list-link">Entra External ID Authentication</a></li><li class="nav-list-item"><a href="/01-architecture/memory-enrichment-workflow.html" class="nav-list-link">Memory Enrichment Workflow: Sessions, Episodes, Stories, and Chat</a></li><li class="nav-list-item"><a href="/01-architecture/security-context-enterprise-architecture.html" class="nav-list-link">SecurityContext: The Foundation of Enterprise Identity & Attribution</a></li><li class="nav-list-item"><a href="/01-architecture/sessions-vs-episodes.html" class="nav-list-link">Sessions vs Episodes: Clarifying the Distinction</a></li><li class="nav-list-item"><a href="/01-architecture/system-navigator.html" class="nav-list-link">System Navigator</a></li><li class="nav-list-item"><a href="/01-architecture/4-layer-context-schema-story.html" class="nav-list-link">The 4-Layer Context Schema: A Complete Story</a></li><li class="nav-list-item"><a href="/01-architecture/brain-spine-story.html" class="nav-list-link">The Brain & Spine: Engram's Context Engineering Architecture</a></li><li class="nav-list-item"><a href="/01-architecture/self-enriching-workflow.html" class="nav-list-link">The Self-Enriching Workflow: Recursive Engineering</a></li><li class="nav-list-item"><a href="/01-architecture/user-identity-fixes-required.html" class="nav-list-link">User Identity Fixes Required</a></li><li class="nav-list-item"><a href="/01-architecture/user-identity-summary.html" class="nav-list-link">User Identity Flow - Executive Summary</a></li><li class="nav-list-item"><a href="/architecture/voicelive-failsafe-token-generation.html" class="nav-list-link">VoiceLive Failsafe Token Generation</a></li><li class="nav-list-item"><a href="/architecture/voicelive-failsafe-breakthrough-summary.html" class="nav-list-link">VoiceLive Failsafe Token Generation - Breakthrough Summary</a></li><li class="nav-list-item"><a href="/01-architecture/voicelive-v2-architecture.html" class="nav-list-link">VoiceLive v2 Architecture Diagram</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="Developer Guide submenu" aria-expanded="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/02-developer/" class="nav-list-link">Developer Guide</a><ul class="nav-list"><li class="nav-list-item"><a href="/02-developer/agent-memory-access-confirmed.html" class="nav-list-link">Agent Memory Access - Confirmed ✅</a></li><li class="nav-list-item"><a href="/02-developer/background-tasks-user-id-test.html" class="nav-list-link">Background Tasks User ID Preservation Test</a></li><li class="nav-list-item"><a href="/02-developer/engram-capabilities.html" class="nav-list-link">Engram Engine Capabilities for AI Agents</a></li><li class="nav-list-item"><a href="/02-developer/engram-enterprise-platform-deployment.html" class="nav-list-link">Engram Enterprise Platform Deployment Strategy</a></li><li class="nav-list-item"><a href="/02-developer/TESTING-GUIDE.html" class="nav-list-link">Engram Platform - Complete Testing Guide</a></li><li class="nav-list-item"><a href="/02-developer/engram-pricing-deployment-levels.html" class="nav-list-link">Engram Platform Pricing & Deployment Levels</a></li><li class="nav-list-item"><a href="/02-developer/GitHub-Integration-Authorization.html" class="nav-list-link">GitHub Integration Authorization Guide</a></li><li class="nav-list-item"><a href="/02-developer/GitHub-Projects-Integration.html" class="nav-list-link">GitHub Projects Integration for Engram Context Engine</a></li><li class="nav-list-item"><a href="/02-developer/How-to-Create-GitHub-Projects-Story.html" class="nav-list-link">How to Create GitHub Projects Story via Agent Delegation</a></li><li class="nav-list-item"><a href="/02-developer/ide-integration.html" class="nav-list-link">IDE Integration: Memory Enrichment</a></li><li class="nav-list-item"><a href="/02-developer/LOCAL-TESTING-GUIDE.html" class="nav-list-link">Local Testing Guide</a></li><li class="nav-list-item"><a href="/02-developer/mcp-tools-user-id-test.html" class="nav-list-link">MCP Tools User ID Attribution Test</a></li><li class="nav-list-item"><a href="/02-developer/memory-episode-access.html" class="nav-list-link">Memory Episode Access for Troubleshooting</a></li><li class="nav-list-item"><a href="/02-developer/navigation-ui-enterprise-deployment.html" class="nav-list-link">Navigation UI Enterprise Deployment Strategy</a></li><li class="nav-list-item"><a href="/02-developer/postgresql-blob-storage-enterprise-deployment.html" class="nav-list-link">PostgreSQL & Blob Storage Enterprise Deployment Strategy</a></li><li class="nav-list-item"><a href="/02-developer/temporal-enterprise-deployment.html" class="nav-list-link">Temporal Enterprise Deployment Strategy</a></li><li class="nav-list-item"><a href="/02-developer/test-in-separate-terminal.html" class="nav-list-link">Testing VoiceLive in a Separate Terminal</a></li><li class="nav-list-item"><a href="/02-developer/unstructured-enterprise-deployment.html" class="nav-list-link">Unstructured Enterprise Deployment Strategy</a></li><li class="nav-list-item"><a href="/02-developer/user-identity-testing-summary.html" class="nav-list-link">User Identity Testing Summary</a></li><li class="nav-list-item"><a href="/02-developer/voice-websocket-auth-test.html" class="nav-list-link">Voice WebSocket Authentication Test</a></li><li class="nav-list-item"><a href="/02-developer/zep-enterprise-deployment.html" class="nav-list-link">Zep Enterprise Deployment Strategy</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="Operations submenu" aria-expanded="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/03-operations/" class="nav-list-link">Operations</a><ul class="nav-list"><li class="nav-list-item"><a href="/03-operations/app-insights-guide.html" class="nav-list-link">Application Insights Setup Guide</a></li><li class="nav-list-item"><a href="/03-operations/azure-postgresql.html" class="nav-list-link">Azure Database for PostgreSQL</a></li><li class="nav-list-item"><a href="/03-operations/horizondb-testing.html" class="nav-list-link">Azure HorizonDB Testing Plan</a></li><li class="nav-list-item"><a href="/03-operations/background-tasks-guidelines.html" class="nav-list-link">Background Tasks - User Context Guidelines</a></li><li class="nav-list-item"><a href="/03-operations/commit-guidelines.html" class="nav-list-link">Commit Guidelines - Preventing Rapid Multiple Commits</a></li><li class="nav-list-item"><a href="/03-operations/config-alignment.html" class="nav-list-link">Configuration Alignment - Source of Truth</a></li><li class="nav-list-item"><a href="/03-operations/quick-reference.html" class="nav-list-link">Configuration Quick Reference</a></li><li class="nav-list-item"><a href="/03-operations/container-apps-revision-mode-costs.html" class="nav-list-link">Container Apps Revision Mode: Cost Implications</a></li><li class="nav-list-item"><a href="/03-operations/deployment.html" class="nav-list-link">Deployment Guide</a></li><li class="nav-list-item"><a href="/03-operations/business-plan.html" class="nav-list-link">Engram Business Operations Plan</a></li><li class="nav-list-item"><a href="/03-operations/enterprise_poc_guide.html" class="nav-list-link">Engram Enterprise POC Guide</a></li><li class="nav-list-item"><a href="/03-operations/engram-enterprise-platform-deployment.html" class="nav-list-link">Engram Enterprise Platform Deployment</a></li><li class="nav-list-item"><a href="/03-operations/pricing-features.html" class="nav-list-link">Engram Pricing & Features Research</a></li><li class="nav-list-item"><a href="/03-operations/enterprise-auth-robustness-plan.html" class="nav-list-link">Enterprise Authentication Robustness Plan</a></li><li class="nav-list-item"><a href="/03-operations/data-plane-tagging.html" class="nav-list-link">Enterprise Data Plane Split & Tagging Schema</a></li><li class="nav-list-item"><a href="/03-operations/enterprise-stability-analysis.html" class="nav-list-link">Enterprise Dev/Test Environment Stability Analysis</a></li><li class="nav-list-item"><a href="/03-operations/finops-bau-implementation.html" class="nav-list-link">FinOps Analysis: Enterprise BAU Implementation</a></li><li class="nav-list-item"><a href="/03-operations/finops.html" class="nav-list-link">FinOps Strategy</a></li><li class="nav-list-item"><a href="/03-operations/github-secrets.html" class="nav-list-link">GitHub Secrets Configuration Guide</a></li><li class="nav-list-item"><a href="/03-operations/setup-secrets-guide.html" class="nav-list-link">GitHub Secrets Setup Guide</a></li><li class="nav-list-item"><a href="/03-operations/how-to-work-with-marcus.html" class="nav-list-link">How to Work with Marcus on Stability Tasks</a></li><li class="nav-list-item"><a href="/03-operations/local-testing.html" class="nav-list-link">Local Testing Guide</a></li><li class="nav-list-item"><a href="/03-operations/marcus-validation-prompt.html" class="nav-list-link">Marcus Validation Prompt</a></li><li class="nav-list-item"><a href="/03-operations/nist-ai-rmf-mapping.html" class="nav-list-link">NIST AI Risk Management Framework (RMF) Compliance Map</a></li><li class="nav-list-item"><a href="/03-operations/navigation-ui-enterprise-deployment.html" class="nav-list-link">Navigation UI Enterprise Deployment</a></li><li class="nav-list-item"><a href="/03-operations/storage-strategy.html" class="nav-list-link">Storage Strategy & Scale: Postgres/pgvector for Zep</a></li><li class="nav-list-item"><a href="/03-operations/unstructured-enterprise-deployment.html" class="nav-list-link">Unstructured Enterprise Deployment</a></li><li class="nav-list-item"><a href="/03-operations/vendor-monitoring.html" class="nav-list-link">Vendor Documentation & Release Monitoring</a></li><li class="nav-list-item"><a href="/03-operations/zep-enterprise-deployment.html" class="nav-list-link">Zep Enterprise Deployment</a></li><li class="nav-list-item"><a href="/03-operations/postgresql-blob-storage-enterprise-deployment.html" class="nav-list-link">tools/postgres-sku-calculator.py</a></li><li class="nav-list-item"><a href="/03-operations/temporal-enterprise-deployment.html" class="nav-list-link">tools/shard-calculator.py</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="Feature Specs submenu" aria-expanded="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/04-features/" class="nav-list-link">Feature Specs</a><ul class="nav-list"><li class="nav-list-item"><a href="/04-features/connectors-plan.html" class="nav-list-link">Connector Roadmap: Sources & Destinations</a></li><li class="nav-list-item"><a href="/04-features/document-ingestion-strategy.html" class="nav-list-link">Document Ingestion Strategy</a></li><li class="nav-list-item"><a href="/04-features/sage-visual-implementation-report.html" class="nav-list-link">Enablement Report: Sage Visual Storytelling & Delegation</a></li><li class="nav-list-item"><a href="/04-features/knowledge-graph-implementation.html" class="nav-list-link">Knowledge Graph Implementation</a></li><li class="nav-list-item"><a href="/04-features/002-structured-document-scanning.html" class="nav-list-link">Mobile Feature Spec: Structured Document Scanning</a></li><li class="nav-list-item"><a href="/04-features/001-visual-art-ingestion.html" class="nav-list-link">Mobile Feature Spec: Visual Art Ingestion</a></li><li class="nav-list-item"><a href="/04-features/vibe-coding-breakthrough.html" class="nav-list-link">The Vibe Coding Breakthrough</a></li><li class="nav-list-item"><a href="/04-features/visual-development.html" class="nav-list-link">Visual Development</a></li><li class="nav-list-item"><a href="/04-features/voice-chat-integration.html" class="nav-list-link">Voice & Chat Integration</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="Knowledge Base submenu" aria-expanded="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/05-knowledge-base/" class="nav-list-link">Knowledge Base</a><ul class="nav-list"><li class="nav-list-item"><a href="/05-knowledge-base/ai-periodic-table.html" class="nav-list-link">AI Periodic Table — Engram Capability Matrix</a></li><li class="nav-list-item"><a href="/05-knowledge-base/api-version-model-version-mismatch.html" class="nav-list-link">API Version and Model Version Mismatch</a></li><li class="nav-list-item"><a href="/05-knowledge-base/auth-environments-nist-ai-rmf.html" class="nav-list-link">Auth Environments Nist AI Rmf</a></li><li class="nav-list-item"><a href="/05-knowledge-base/auth-aks.html" class="nav-list-link">AuthN/AuthZ SOP - AKS (Prod)</a></li><li class="nav-list-item"><a href="/05-knowledge-base/auth-aca.html" class="nav-list-link">AuthN/AuthZ SOP - Azure Container Apps</a></li><li class="nav-list-item"><a href="/05-knowledge-base/auth-entra.html" class="nav-list-link">AuthN/AuthZ SOP - Azure Entra ID</a></li><li class="nav-list-item"><a href="/05-knowledge-base/auth-cicd.html" class="nav-list-link">AuthN/AuthZ SOP - CI/CD</a></li><li class="nav-list-item"><a href="/05-knowledge-base/auth-api.html" class="nav-list-link">AuthN/AuthZ SOP - FastAPI / FastMCP</a></li><li class="nav-list-item"><a href="/05-knowledge-base/auth-keyvault.html" class="nav-list-link">AuthN/AuthZ SOP - Key Vault</a></li><li class="nav-list-item"><a href="/05-knowledge-base/auth-postgres.html" class="nav-list-link">AuthN/AuthZ SOP - PostgreSQL</a></li><li class="nav-list-item"><a href="/05-knowledge-base/auth-swa.html" class="nav-list-link">AuthN/AuthZ SOP - Static Web App (SWA)</a></li><li class="nav-list-item"><a href="/05-knowledge-base/auth-storage.html" class="nav-list-link">AuthN/AuthZ SOP - Storage (Blob)</a></li><li class="nav-list-item"><a href="/05-knowledge-base/auth-temporal.html" class="nav-list-link">AuthN/AuthZ SOP - Temporal</a></li><li class="nav-list-item"><a href="/05-knowledge-base/auth-zep.html" class="nav-list-link">AuthN/AuthZ SOP - Zep</a></li><li class="nav-list-item"><a href="/05-knowledge-base/auth-token-validation-fix.html" class="nav-list-link">Authentication Token Validation Fix</a></li><li class="nav-list-item"><a href="/05-knowledge-base/authentication-cors-success.html" class="nav-list-link">Authentication and CORS Fix - Success Confirmation</a></li><li class="nav-list-item"><a href="/05-knowledge-base/azure-ai-configuration.html" class="nav-list-link">Azure AI Configuration & Troubleshooting SOP</a></li><li class="nav-list-item"><a href="/05-knowledge-base/azure-ai-foundry-400-investigation.html" class="nav-list-link">Azure AI Foundry 400 Bad Request - Investigation</a></li><li class="nav-list-item"><a href="/05-knowledge-base/azure-foundry-chat-sop.html" class="nav-list-link">Azure Foundry Chat (Model Router) SOP</a></li><li class="nav-list-item"><a href="/05-knowledge-base/bug-fixing-progress-report.html" class="nav-list-link">Bug Fixing & Test Stabilization Progress Report</a></li><li class="nav-list-item"><a href="/05-knowledge-base/bypass-model-router.html" class="nav-list-link">Bypass Model Router - Use Direct Model</a></li><li class="nav-list-item"><a href="/05-knowledge-base/cors-configuration.html" class="nav-list-link">CORS Configuration SOP</a></li><li class="nav-list-item"><a href="/05-knowledge-base/cors-errors-january-2026.html" class="nav-list-link">CORS Errors - January 1, 2026</a></li><li class="nav-list-item"><a href="/05-knowledge-base/cors-fix-immediate-action.html" class="nav-list-link">CORS Fix - Immediate Action Required</a></li><li class="nav-list-item"><a href="/05-knowledge-base/cors-fix-remove-custom-middleware.html" class="nav-list-link">CORS Fix - Remove Custom Preflight Middleware</a></li><li class="nav-list-item"><a href="/05-knowledge-base/cors-preflight-400-fix.html" class="nav-list-link">CORS Preflight 400 Error Fix</a></li><li class="nav-list-item"><a href="/05-knowledge-base/cors-fix-final.html" class="nav-list-link">CORS Preflight Fix - Final Implementation</a></li><li class="nav-list-item"><a href="/05-knowledge-base/chat-backend-test-results.html" class="nav-list-link">Chat Backend Test Results</a></li><li class="nav-list-item"><a href="/05-knowledge-base/chat-deployment-issues-summary.html" class="nav-list-link">Chat Deployment Issues Summary</a></li><li class="nav-list-item"><a href="/05-knowledge-base/chat-endpoint-errors.html" class="nav-list-link">Chat Endpoint Errors - Analysis</a></li><li class="nav-list-item"><a href="/05-knowledge-base/chat-error-diagnosis.html" class="nav-list-link">Chat Error Diagnosis Guide</a></li><li class="nav-list-item"><a href="/05-knowledge-base/chat-fix-status.html" class="nav-list-link">Chat Fix Status - January 1, 2026</a></li><li class="nav-list-item"><a href="/05-knowledge-base/chat-model-router-enterprise-deployment.html" class="nav-list-link">Chat Model Router Enterprise Deployment Guide</a></li><li class="nav-list-item"><a href="/05-knowledge-base/chat-still-broken-after-parameter-fix.html" class="nav-list-link">Chat Still Broken After API Parameters Fix</a></li><li class="nav-list-item"><a href="/05-knowledge-base/chat-test-with-real-token.html" class="nav-list-link">Chat Test Results with Real JWT Token</a></li><li class="nav-list-item"><a href="/05-knowledge-base/chat-voice-errors-december-2025.html" class="nav-list-link">Chat and Voice Errors - December 2025</a></li><li class="nav-list-item"><a href="/05-knowledge-base/authentication-cors-complete-fix.html" class="nav-list-link">Complete Authentication and CORS Fix Documentation</a></li><li class="nav-list-item"><a href="/05-knowledge-base/deployment-conflicts.html" class="nav-list-link">Deployment Conflicts and Status Management</a></li><li class="nav-list-item"><a href="/05-knowledge-base/deployment-failure-chat-fix.html" class="nav-list-link">Deployment Failure - Chat Fix Not Deployed</a></li><li class="nav-list-item"><a href="/05-knowledge-base/disable-model-router-azure.html" class="nav-list-link">Disable Model Router in Azure Container Apps</a></li><li class="nav-list-item"><a href="/05-knowledge-base/auth-master.html" class="nav-list-link">Engram AuthN/AuthZ Master SOP</a></li><li class="nav-list-item"><a href="/05-knowledge-base/authentication-guide.html" class="nav-list-link">Engram Authentication Troubleshooting Guide</a></li><li class="nav-list-item"><a href="/05-knowledge-base/gpt-5.1-chat-api-parameters-fix.html" class="nav-list-link">GPT-5.1-chat API Parameters Fix</a></li><li class="nav-list-item"><a href="/05-knowledge-base/graph-knowledge-tri-search-summary.html" class="nav-list-link">Graph Knowledge & Tri-Search: Engram's Unique Differentiator</a></li><li class="nav-list-item"><a href="/05-knowledge-base/memory-query-interface.html" class="nav-list-link">Memory Query Interface</a></li><li class="nav-list-item"><a href="/05-knowledge-base/auth-swa-container-apps.html" class="nav-list-link">SOP: Azure SWA + Container Apps Authentication</a></li><li class="nav-list-item"><a href="/05-knowledge-base/stories-configuration.html" class="nav-list-link">Sage Stories Configuration & Troubleshooting SOP</a></li><li class="nav-list-item"><a href="/05-knowledge-base/sop-sage-story-generation.html" class="nav-list-link">Sage Story Generation SOP</a></li><li class="nav-list-item"><a href="/05-knowledge-base/secrets-management.html" class="nav-list-link">Secrets Management SOP</a></li><li class="nav-list-item"><a href="/05-knowledge-base/double-verification-flow.html" class="nav-list-link">Standard Operating Procedure: Double Tri-Search Verification</a></li><li class="nav-list-item"><a href="/05-knowledge-base/google_login_setup.html" class="nav-list-link">Standard Operating Procedure: Google Login Federation Setup</a></li><li class="nav-list-item"><a href="/05-knowledge-base/sage_nano_banana.html" class="nav-list-link">Standard Operating Procedure: Sage Visual & Memory Capabilities</a></li><li class="nav-list-item"><a href="/05-knowledge-base/temporal-integration-session-20251224.html" class="nav-list-link">Temporal Integration Journey - December 23-24, 2025</a></li><li class="nav-list-item"><a href="/05-knowledge-base/temporal-worker-postmortem.html" class="nav-list-link">Temporal Worker Container Misconfiguration</a></li><li class="nav-list-item"><a href="/05-knowledge-base/temporal-azure-configuration.html" class="nav-list-link">Temporal on Azure Container Apps: Complete Setup Guide</a></li><li class="nav-list-item"><a href="/05-knowledge-base/temporal-azure-research.html" class="nav-list-link">Temporal on Azure: Deep Dive Research</a></li><li class="nav-list-item"><a href="/05-knowledge-base/frontend-failed-to-fetch.html" class="nav-list-link">Troubleshooting Failed to fetch Error</a></li><li class="nav-list-item"><a href="/05-knowledge-base/chat-voice-episodes-401-errors.html" class="nav-list-link">Troubleshooting: Chat, VoiceLive, and Episodes Returning 401 Errors</a></li><li class="nav-list-item"><a href="/05-knowledge-base/user-identity-consistency-fix.html" class="nav-list-link">User Identity Consistency Fix</a></li><li class="nav-list-item"><a href="/05-knowledge-base/voice-chat-routing-episode-metadata-fix.html" class="nav-list-link">Voice & Chat Routing + Episode Metadata Fix</a></li><li class="nav-list-item"><a href="/05-knowledge-base/transcription-configuration.html" class="nav-list-link">Voice Transcription Configuration & Troubleshooting SOP</a></li><li class="nav-list-item"><a href="/05-knowledge-base/sop-voicelive-chat-environments.html" class="nav-list-link">VoiceLive & Chat SOP: Multi-Environment Deployment</a></li><li class="nav-list-item"><a href="/05-knowledge-base/voicelive-architecture-clarification.html" class="nav-list-link">VoiceLive Architecture Clarification</a></li><li class="nav-list-item"><a href="/05-knowledge-base/voicelive-configuration.html" class="nav-list-link">VoiceLive Configuration & Troubleshooting SOP</a></li><li class="nav-list-item"><a href="/05-knowledge-base/voice-live-configuration.html" class="nav-list-link">VoiceLive Configuration and Reference Implementation</a></li><li class="nav-list-item"><a href="/05-knowledge-base/voicelive-swa-validation-status.html" class="nav-list-link">VoiceLive SWA Validation Status</a></li><li class="nav-list-item"><a href="/05-knowledge-base/zep-memory-client-compatibility.html" class="nav-list-link">Zep Memory Client Method Compatibility</a></li></ul></li><li class="nav-list-item"><a href="/01-architecture/context-schema/" class="nav-list-link">4-Layer Context Schema</a></li><li class="nav-list-item"><a href="/05-knowledge-base/marcus/persona.html" class="nav-list-link">Agent Personas</a></li><li class="nav-list-item"><a href="/05-knowledge-base/elena/persona.html" class="nav-list-link">Agent Personas</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="Architecture submenu" aria-expanded="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/01-architecture/architecture.html" class="nav-list-link">Architecture</a><ul class="nav-list"><li class="nav-list-item"><a href="/architecture/agent-user-isolation.html" class="nav-list-link">Agent & User Isolation with Project-Based Access Control</a></li><li class="nav-list-item"><a href="/architecture/azure-foundry-agent-service-integration.html" class="nav-list-link">Azure AI Foundry Agent Service Integration</a></li><li class="nav-list-item"><a href="/architecture/foundry-integration-impact-analysis.html" class="nav-list-link">Foundry Agent Service Integration - Impact Analysis</a></li><li class="nav-list-item"><a href="/architecture/foundry-poc-implementation.html" class="nav-list-link">Foundry Agent Service POC - Implementation Summary</a></li><li class="nav-list-item"><a href="/architecture/foundry-thread-integration-complete.html" class="nav-list-link">Foundry Thread Integration - Complete</a></li><li class="nav-list-item"><a href="/architecture/foundry-agent-integration.html" class="nav-list-link">Using Foundry-Created Agents in Engram</a></li><li class="nav-list-item"><a href="/architecture/elena-foundry-migration.html" class="nav-list-link">Elena Foundry Migration Guide</a></li><li class="nav-list-item"><a href="/architecture/configuration-source-of-truth.html" class="nav-list-link">Configuration Source of Truth Strategy</a></li><li class="nav-list-item"><a href="/architecture/foundry-configuration-setup.html" class="nav-list-link">Foundry Configuration Setup - Source of Truth</a></li><li class="nav-list-item"><a href="/architecture/foundry-additional-features.html" class="nav-list-link">Additional Foundry Features We Can Leverage</a></li><li class="nav-list-item"><a href="/architecture/foundry-features-roadmap.html" class="nav-list-link">Foundry Features Roadmap</a></li><li class="nav-list-item"><a href="/architecture/elena-foundry-migration-complete.html" class="nav-list-link">Elena Foundry Migration - Complete</a></li><li class="nav-list-item"><a href="/architecture/elena-tool-endpoints-configured.html" class="nav-list-link">Elena Tool Endpoints - Configured</a></li><li class="nav-list-item"><a href="/architecture/elena-avatar-configuration.html" class="nav-list-link">Elena Avatar Configuration - Azure AI Foundry</a></li><li class="nav-list-item"><a href="/architecture/elena-avatar-frontend-integration.html" class="nav-list-link">Elena Avatar Frontend Integration</a></li><li class="nav-list-item"><a href="/architecture/foundry-multi-agent-orchestration-research.html" class="nav-list-link">Multi-Agent Orchestration Research - Foundry Integration</a></li><li class="nav-list-item"><a href="/architecture/foundry-m365-integration-research.html" class="nav-list-link">Microsoft 365 Integration Research - Teams & Outlook</a></li><li class="nav-list-item"><a href="/architecture/voicelive-avatar-integration.html" class="nav-list-link">VoiceLive Avatar Integration</a></li><li class="nav-list-item"><a href="/architecture/voicelive-avatar-integration-complete.html" class="nav-list-link">VoiceLive Avatar Integration Complete</a></li><li class="nav-list-item"><a href="/architecture/foundry-iq-poc-implementation.html" class="nav-list-link">Foundry IQ POC Implementation</a></li><li class="nav-list-item"><a href="/architecture/foundry-iq-integration-summary.html" class="nav-list-link">Foundry IQ Integration Summary</a></li><li class="nav-list-item"><a href="/01-architecture/ai-periodic-table-analysis.html" class="nav-list-link">AI Periodic Table Analysis</a></li><li class="nav-list-item"><a href="/01-architecture/ai-periodic-table-matrix.html" class="nav-list-link">AI Periodic Table Matrix</a></li><li class="nav-list-item"><a href="/01-architecture/agents.html" class="nav-list-link">Agent Personas</a></li><li class="nav-list-item"><a href="/01-architecture/Agentic-System-Maturity-Assessment.html" class="nav-list-link">Agentic System Maturity Assessment</a></li><li class="nav-list-item"><a href="/01-architecture/concept-authentication.html" class="nav-list-link">Authentication & Security Architecture</a></li><li class="nav-list-item"><a href="/01-architecture/authentication-architecture-evolution.html" class="nav-list-link">Authentication Architecture Evolution</a></li><li class="nav-list-item"><a href="/01-architecture/auth-configuration-verification.html" class="nav-list-link">Authentication Configuration Verification</a></li><li class="nav-list-item"><a href="/01-architecture/user-identity-flow-comprehensive.html" class="nav-list-link">Comprehensive User Identity Flow Architecture</a></li><li class="nav-list-item"><a href="/01-architecture/README.html" class="nav-list-link">Diagrams Directory</a></li><li class="nav-list-item"><a href="/01-architecture/authentication-analysis.html" class="nav-list-link">Engram Authentication Architecture Analysis</a></li><li class="nav-list-item"><a href="/01-architecture/memory-architecture.html" class="nav-list-link">Engram Memory Architecture: Zep & Agents</a></li><li class="nav-list-item"><a href="/01-architecture/architecture_summary.html" class="nav-list-link">Engram System Architecture & Migration Context</a></li><li class="nav-list-item"><a href="/01-architecture/enterprise-auth-strategy.html" class="nav-list-link">Enterprise Authentication Strategy: From POC to Production</a></li><li class="nav-list-item"><a href="/01-architecture/enterprise-env-model.html" class="nav-list-link">Enterprise Env Model</a></li><li class="nav-list-item"><a href="/01-architecture/entra-external-id.html" class="nav-list-link">Entra External ID Authentication</a></li><li class="nav-list-item"><a href="/01-architecture/memory-enrichment-workflow.html" class="nav-list-link">Memory Enrichment Workflow: Sessions, Episodes, Stories, and Chat</a></li><li class="nav-list-item"><a href="/01-architecture/security-context-enterprise-architecture.html" class="nav-list-link">SecurityContext: The Foundation of Enterprise Identity & Attribution</a></li><li class="nav-list-item"><a href="/01-architecture/sessions-vs-episodes.html" class="nav-list-link">Sessions vs Episodes: Clarifying the Distinction</a></li><li class="nav-list-item"><a href="/01-architecture/system-navigator.html" class="nav-list-link">System Navigator</a></li><li class="nav-list-item"><a href="/01-architecture/4-layer-context-schema-story.html" class="nav-list-link">The 4-Layer Context Schema: A Complete Story</a></li><li class="nav-list-item"><a href="/01-architecture/brain-spine-story.html" class="nav-list-link">The Brain & Spine: Engram's Context Engineering Architecture</a></li><li class="nav-list-item"><a href="/01-architecture/self-enriching-workflow.html" class="nav-list-link">The Self-Enriching Workflow: Recursive Engineering</a></li><li class="nav-list-item"><a href="/01-architecture/user-identity-fixes-required.html" class="nav-list-link">User Identity Fixes Required</a></li><li class="nav-list-item"><a href="/01-architecture/user-identity-summary.html" class="nav-list-link">User Identity Flow - Executive Summary</a></li><li class="nav-list-item"><a href="/architecture/voicelive-failsafe-token-generation.html" class="nav-list-link">VoiceLive Failsafe Token Generation</a></li><li class="nav-list-item"><a href="/architecture/voicelive-failsafe-breakthrough-summary.html" class="nav-list-link">VoiceLive Failsafe Token Generation - Breakthrough Summary</a></li><li class="nav-list-item"><a href="/01-architecture/voicelive-v2-architecture.html" class="nav-list-link">VoiceLive v2 Architecture Diagram</a></li></ul></li><li class="nav-list-item"><a href="/01-architecture/authentication/" class="nav-list-link">Authentication & Security</a></li><li class="nav-list-item"><a href="/01-architecture/brain-spine/" class="nav-list-link">Brain + Spine Architecture</a></li></ul> </nav> <div class="d-md-block d-none"> <div class="site-footer"> This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll. </div> </div> </header> <div class="main" id="top"> <div id="main-header" class="main-header"> <div class="search" role="search"> <div class="search-input-wrap"> <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search Engram - Context Engineering Platform" autocomplete="off"> <label for="search-input" class="search-label"> <span class="sr-only">Search Engram - Context Engineering Platform</span> <svg viewBox="0 0 24 24" class="search-icon" aria-hidden="true"><use xlink:href="#svg-search"></use></svg> </label> </div> <div id="search-results" class="search-results"></div> </div> <nav aria-label="Auxiliary" class="aux-nav"> <ul class="aux-nav-list"> <li class="aux-nav-list-item"> <a href="https://github.com/zimaxnet/engram" class="site-button" > GitHub Repository </a> </li> </ul> </nav> </div> <div class="main-content-wrap"> <nav aria-label="Breadcrumb" class="breadcrumb-nav"> <ol class="breadcrumb-nav-list"> <li class="breadcrumb-nav-list-item"><a href="/03-operations/">Operations</a></li> <li class="breadcrumb-nav-list-item"><span>tools/postgres-sku-calculator.py</span></li> </ol> </nav> <div id="main-content" class="main-content"> <main> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    # PostgreSQL &amp; Azure Blob Storage Enterprise Deployment Strategy for Engram Platform
+</code></pre></div></div> <h2 id="executive-summary"> <a href="#executive-summary" class="anchor-heading" aria-labelledby="executive-summary"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Executive Summary </h2> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        This document outlines Zimax Networks LC's strategy for deploying Azure Database for PostgreSQL Flexible Server (with pgvector) and Azure Blob Storage in customer environments (dev/test/UAT/prod). These services form the foundation of Engram's data storage architecture: PostgreSQL serves as the "System of Recall" (Zep memory layer), while Blob Storage serves as the "System of Record" (document artifacts). This plan addresses enterprise requirements including SKU selection, pgvector configuration, Blob Storage tier optimization, customer-managed key encryption, lifecycle management, and NIST AI RMF compliance.
+
+
+        
+        **Key Decision**: Azure Database for PostgreSQL Flexible Server + Azure Blob Storage for customer environments to enable:
+
+
+        
+            - Full control over database sizing and pgvector configuration
+            - Customer-managed encryption keys (BYOK)
+            - Data residency in customer-controlled Azure infrastructure
+            - Cost optimization through right-sizing and tier selection
+            - Integration with customer's existing Azure infrastructure
+</code></pre></div></div> <h3 id="table-of-contents"> <a href="#table-of-contents" class="anchor-heading" aria-labelledby="table-of-contents"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Table of Contents </h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>            - [1. PostgreSQL Flexible Server vs Alternatives: Enterprise Comparison](#section1)
+            - [2. PostgreSQL SKU Selection: Critical Sizing Strategy](#section2)
+            - [3. Azure Blob Storage Tier Selection: Cost Optimization Strategy](#section3)
+            - [4. Data Encryption: Customer-Managed Keys for Both Services](#section4)
+            - [5. Integration Patterns: PostgreSQL + Blob Storage](#section5)
+            - [6. NIST AI RMF Compliance Integration](#section6)
+            - [7. Operational Responsibilities](#section7)
+            - [8. Implementation Roadmap](#section8)
+            - [9. Risk Mitigation](#section9)
+            - [10. Success Metrics](#section10)
+            - [11. Next Steps](#section11)
+</code></pre></div></div> <h2 id="1-postgresql-flexible-server-vs-alternatives-enterprise-comparison"> <a href="#1-postgresql-flexible-server-vs-alternatives-enterprise-comparison" class="anchor-heading" aria-labelledby="1-postgresql-flexible-server-vs-alternatives-enterprise-comparison"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. PostgreSQL Flexible Server vs Alternatives: Enterprise Comparison </h2> <h3 id="service-comparison-matrix"> <a href="#service-comparison-matrix" class="anchor-heading" aria-labelledby="service-comparison-matrix"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Service Comparison Matrix </h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>                    Feature
+                    Flexible Server (Recommended)
+                    Single Server (Legacy)
+                    Self-Hosted on VM
+                    HorizonDB (Preview)
+                    Engram Requirement
+                
+            
+            
+                
+                    **Deployment**
+                    Fully managed Azure service
+                    Fully managed (legacy)
+                    Customer-managed VM
+                    Fully managed (preview)
+                    ✅ Required - Managed service
+                
+                
+                    **pgvector Support**
+                    Native extension support
+                    Native extension support
+                    Full control
+                    Enhanced vector search
+                    ✅ Required - pgvector essential
+                
+                
+                    **SKU Flexibility**
+                    Burstable, General Purpose, Memory Optimized
+                    Limited tiers
+                    Full control
+                    High-performance tiers
+                    ✅ Required - Right-sizing
+                
+                
+                    **High Availability**
+                    Zone-redundant (99.99% SLA)
+                    Built-in HA
+                    Customer-managed
+                    Multi-zone replication
+                    ✅ Required - Production HA
+                
+                
+                    **Encryption Keys**
+                    Customer-managed keys (CMK)
+                    Azure-managed only
+                    Full control
+                    Customer-managed keys
+                    ✅ **CRITICAL** - CMK required
+                
+                
+                    **Storage Scaling**
+                    Independent compute/storage
+                    Coupled
+                    Full control
+                    Auto-scaling storage
+                    ✅ Required - Flexible scaling
+                
+                
+                    **Cost Model**
+                    Pay-per-use, reserved capacity
+                    Pay-per-use
+                    Infrastructure costs
+                    Pay-per-use
+                    ✅ Required - Predictable costs
+                
+                
+                    **Stop/Start**
+                    Supported (dev/test)
+                    Not supported
+                    Full control
+                    Not supported
+                    ✅ Required - Scale-to-zero
+                
+                
+                    **Maintenance Windows**
+                    Customer-controlled
+                    Azure-managed
+                    Customer-controlled
+                    Azure-managed
+                    ✅ Required - Control
+                
+                
+                    **Compliance**
+                    SOC 2, HIPAA, PCI-DSS
+                    SOC 2, HIPAA
+                    Customer-managed
+                    SOC 2, HIPAA
+                    ✅ Required - Enterprise compliance
+                
+                
+                    **On-Call Support**
+                    Azure support + Zimax Networks LC
+                    Azure support
+                    Zimax Networks LC
+                    Azure support
+                    ✅ Zimax Networks LC provides support
+</code></pre></div></div> <h3 id="decision-rationale-for-flexible-server"> <a href="#decision-rationale-for-flexible-server" class="anchor-heading" aria-labelledby="decision-rationale-for-flexible-server"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Decision Rationale for Flexible Server </h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        **Why Azure Database for PostgreSQL Flexible Server for Customer Environments:**
+
+
+        
+            - **pgvector Native Support**: Flexible Server provides native support for pgvector extension, essential for Zep's vector similarity search. HorizonDB offers enhanced vector search but is in preview.
+            - **Customer-Managed Keys (CMK)**: Required for security assessments. Flexible Server supports CMK via Azure Key Vault, enabling full customer control over encryption keys.
+            - **Independent Scaling**: Compute and storage scale independently, allowing cost optimization. Single Server couples compute and storage.
+            - **Stop/Start Capability**: For dev/test environments, Flexible Server can be stopped when not in use, reducing costs. Single Server cannot be stopped.
+            - **Maintenance Control**: Flexible Server allows customer-controlled maintenance windows, critical for production environments.
+            - **Cost Predictability**: Flexible Server offers reserved capacity (up to 55% savings) and predictable pricing vs. self-hosted operational overhead.
+            - **High Availability**: Zone-redundant HA with 99.99% SLA meets enterprise requirements without customer-managed failover complexity.
+        
+        
+        **HorizonDB Consideration**: HorizonDB (preview) offers 3x performance improvement and enhanced vector search. Consider for future migration after GA, but Flexible Server is recommended for current deployments.
+</code></pre></div></div> <h2 id="2-postgresql-sku-selection-critical-sizing-strategy"> <a href="#2-postgresql-sku-selection-critical-sizing-strategy" class="anchor-heading" aria-labelledby="2-postgresql-sku-selection-critical-sizing-strategy"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. PostgreSQL SKU Selection: Critical Sizing Strategy </h2> <h3 id="the-challenge"> <a href="#the-challenge" class="anchor-heading" aria-labelledby="the-challenge"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Challenge </h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        PostgreSQL SKU selection is a **critical decision** that affects:
+
+
+        
+            - **Performance**: Insufficient compute leads to query latency and connection pool exhaustion
+            - **Cost**: Over-provisioning wastes budget; under-provisioning causes performance issues
+            - **Scalability**: SKU changes require downtime (though Flexible Server supports online scaling)
+            - **Vector Operations**: pgvector operations are compute-intensive; insufficient resources degrade RAG quality
+        
+        
+        Unlike Temporal's immutable history shard count, PostgreSQL SKUs can be scaled, but **initial sizing must be accurate** to avoid performance degradation and unnecessary scaling operations.
+</code></pre></div></div> <h3 id="sku-tier-comparison"> <a href="#sku-tier-comparison" class="anchor-heading" aria-labelledby="sku-tier-comparison"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> SKU Tier Comparison </h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>                    Tier
+                    Use Case
+                    vCores
+                    RAM
+                    Cost/Month
+                    Best For
+                
+            
+            
+                
+                    **Burstable (B-series)**
+                    Dev/test, low traffic
+                    1-2
+                    2-4GB
+                    $12-25
+                    Development, staging POC
+                
+                
+                    **General Purpose (D-series)**
+                    Production workloads
+                    2-64
+                    8-256GB
+                    $100-4000+
+                    Most production use cases
+                
+                
+                    **Memory Optimized (E-series)**
+                    High-performance, memory-intensive
+                    2-64
+                    16-512GB
+                    $200-8000+
+                    Large vector datasets, high concurrency
+</code></pre></div></div> <h3 id="engram-platform-sku-sizing"> <a href="#engram-platform-sku-sizing" class="anchor-heading" aria-labelledby="engram-platform-sku-sizing"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Engram Platform SKU Sizing </h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>                    Environment
+                    Expected Load
+                    Recommended SKU
+                    Rationale
+                
+            
+            
+                
+                    **Dev**
+                    100 sessions, 1K facts
+                    B1ms (1 vCore, 2GB)
+                    Minimal, cost-optimized, can stop/start
+                
+                
+                    **Test**
+                    500 sessions, 10K facts
+                    B2s (2 vCore, 4GB)
+                    Testing load scenarios
+                
+                
+                    **UAT**
+                    2K sessions, 100K facts
+                    D2s_v3 (2 vCore, 8GB)
+                    Production-like load, zone-redundant HA
+                
+                
+                    **Production**
+                    10K+ sessions, 1M+ facts
+                    D4s_v3 (4 vCore, 16GB) or higher
+                    Enterprise scale with headroom
+</code></pre></div></div> <h4 id="formula-applied-production"> <a href="#formula-applied-production" class="anchor-heading" aria-labelledby="formula-applied-production"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Formula Applied (Production) </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        ``` Compute Requirements: - Base: 2 vCores for PostgreSQL operations - Vector Operations: +1 vCore per 500K vectors (pgvector indexing/search) - Concurrent Connections: +0.5 vCore per 100 active connections
+</code></pre></div></div> <p>Memory Requirements:</p> <ul> <li>Base: 4GB for PostgreSQL</li> <li>Vector Indexes: +2GB per 1M vectors (HNSW index memory)</li> <li>Connection Pool: +100MB per 10 connections</li> </ul> <p>Production Example:</p> <ul> <li>1M vectors → 2 vCores (vector ops) + 2 vCores (base) = 4 vCores</li> <li>1M vectors → 2GB (indexes) + 4GB (base) + 2GB (connections) = 8GB minimum</li> <li>Recommended: D4s_v3 (4 vCore, 16GB) for headroom ```</li> </ul> <h3 id="storage-sizing-strategy"> <a href="#storage-sizing-strategy" class="anchor-heading" aria-labelledby="storage-sizing-strategy"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Storage Sizing Strategy </h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        **Storage Configuration**:
+
+
+        
+            - **Minimum**: 32GB (Flexible Server minimum)
+            - **Auto-grow**: Enabled (prevents over-provisioning)
+            - **IOPS**: Scales with storage size (3 IOPS per GB, up to 20,000 IOPS)
+</code></pre></div></div> <h4 id="storage-sizing-formula"> <a href="#storage-sizing-formula" class="anchor-heading" aria-labelledby="storage-sizing-formula"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Storage Sizing Formula </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        ``` Storage Required = (Data Size + Index Size + WAL + Growth) × Safety Factor
+</code></pre></div></div> <p>Where:</p> <ul> <li>Data Size = Episodic + Semantic memory (from Zep sizing)</li> <li>Index Size = Vector indexes (HNSW) + B-tree indexes</li> <li>WAL = Write-Ahead Log (typically 10-20% of data size)</li> <li>Growth = 30-day growth projection</li> <li>Safety Factor = 1.5-2.0 ```</li> </ul> <h3 id="management-strategy"> <a href="#management-strategy" class="anchor-heading" aria-labelledby="management-strategy"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Management Strategy </h3> <h4 id="1-pre-deployment-assessment"> <a href="#1-pre-deployment-assessment" class="anchor-heading" aria-labelledby="1-pre-deployment-assessment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Pre-Deployment Assessment </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        **PostgreSQL Sizing Tool** (to be built):
+
+
+        ``` # tools/postgres-sku-calculator.py def calculate_postgres_sku(
+expected_sessions: int,
+expected_facts: int,
+expected_concurrent_connections: int,
+growth_factor: float = 2.0 ) -&gt; dict:
+"""
+Calculate recommended PostgreSQL SKU and storage.
+
+Returns: SKU recommendation, vCores, RAM, storage
+"""
+# Calculate compute
+base_vcores = 2
+vector_vcores = math.ceil(expected_facts / 500000)
+connection_vcores = math.ceil(expected_concurrent_connections / 100) * 0.5
+total_vcores = math.ceil((base_vcores + vector_vcores + connection_vcores) * growth_factor)
+
+# Calculate memory
+base_memory_gb = 4
+vector_memory_gb = (expected_facts / 1000000) * 2
+connection_memory_gb = (expected_concurrent_connections / 10) * 0.1
+total_memory_gb = math.ceil((base_memory_gb + vector_memory_gb + connection_memory_gb) * growth_factor)
+
+# Map to Azure SKU
+if total_vcores  70% sustained
+            - Memory utilization &gt; 80%
+            - Connection pool &gt; 80% utilization
+            - Query latency p95 &gt; 500ms
+</code></pre></div></div> <h4 id="3-monitoring-and-alerting"> <a href="#3-monitoring-and-alerting" class="anchor-heading" aria-labelledby="3-monitoring-and-alerting"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Monitoring and Alerting </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        **Metrics to Track**:
+
+
+        
+            - `postgres_cpu_percent` - Alert if &gt; 70%
+            - `postgres_memory_percent` - Alert if &gt; 80%
+            - `postgres_connections_active` - Alert if &gt; 80% of max_connections
+            - `postgres_storage_percent` - Alert if &gt; 85%
+            - `postgres_query_duration_p95` - Alert if &gt; 500ms
+        
+        
+        **Alert Thresholds**:
+
+
+        
+            - **Warning**: CPU &gt; 60%, Memory &gt; 70%, Connections &gt; 70%
+            - **Critical**: CPU &gt; 80%, Memory &gt; 90%, Connections &gt; 90%, Storage &gt; 90%
+</code></pre></div></div> <h2 id="3-azure-blob-storage-tier-selection-cost-optimization-strategy"> <a href="#3-azure-blob-storage-tier-selection-cost-optimization-strategy" class="anchor-heading" aria-labelledby="3-azure-blob-storage-tier-selection-cost-optimization-strategy"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Azure Blob Storage Tier Selection: Cost Optimization Strategy </h2> <h3 id="the-challenge-1"> <a href="#the-challenge-1" class="anchor-heading" aria-labelledby="the-challenge-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> The Challenge </h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        Azure Blob Storage tier selection directly impacts cost and performance:
+
+
+        
+            - **Hot Tier**: High access costs, low storage costs (frequently accessed data)
+            - **Cool Tier**: Lower access costs, higher storage costs (infrequently accessed)
+            - **Archive Tier**: Lowest storage costs, highest retrieval costs (rarely accessed)
+            - **Immutable Policies**: Once set, cannot be easily changed (compliance requirement)
+        
+        
+        **Tier selection must be optimized** based on data access patterns to minimize costs while meeting performance requirements.
+</code></pre></div></div> <h3 id="blob-storage-tier-comparison"> <a href="#blob-storage-tier-comparison" class="anchor-heading" aria-labelledby="blob-storage-tier-comparison"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Blob Storage Tier Comparison </h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>                    Tier
+                    Use Case
+                    Storage Cost/GB
+                    Access Cost/10K
+                    Retrieval Time
+                    Min Retention
+                
+            
+            
+                
+                    **Hot**
+                    Frequently accessed documents
+                    $0.018
+                    $0.05
+                    Immediate
+                    None
+                
+                
+                    **Cool**
+                    Infrequently accessed (30+ days)
+                    $0.01
+                    $0.10
+                    Immediate
+                    30 days
+                
+                
+                    **Archive**
+                    Rarely accessed (180+ days)
+                    $0.002
+                    $5.00
+                    15 hours
+                    180 days
+</code></pre></div></div> <h3 id="engram-platform-tier-strategy"> <a href="#engram-platform-tier-strategy" class="anchor-heading" aria-labelledby="engram-platform-tier-strategy"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Engram Platform Tier Strategy </h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        **Two-Plane Architecture**:
+
+
+        
+            
+                
+                    Data Plane
+                    Tier Strategy
+                    Rationale
+                
+            
+            
+                
+                    **Record Plane (Blob Storage)**
+                    Hot → Cool → Archive lifecycle
+                    Documents accessed frequently initially, then archived
+                
+                
+                    **Recall Plane (PostgreSQL)**
+                    Always Hot (database)
+                    Vector search requires immediate access
+</code></pre></div></div> <h4 id="lifecycle-policy-configuration"> <a href="#lifecycle-policy-configuration" class="anchor-heading" aria-labelledby="lifecycle-policy-configuration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Lifecycle Policy Configuration </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        ``` {   "rules": [
+{
+  "name": "RecordPlaneLifecycle",
+  "enabled": true,
+  "type": "Lifecycle",
+  "definition": {
+    "filters": {
+      "blobTypes": ["blockBlob"],
+      "prefixMatch": ["record-plane/"]
+    },
+    "actions": {
+      "baseBlob": {
+        "tierToCool": {
+          "daysAfterModificationGreaterThan": 30
+        },
+        "tierToArchive": {
+          "daysAfterModificationGreaterThan": 90
+        },
+        "delete": {
+          "daysAfterModificationGreaterThan": 2555
+        }
+      }
+    }
+  }
+}   ] } ```
+</code></pre></div></div> <h3 id="management-strategy-1"> <a href="#management-strategy-1" class="anchor-heading" aria-labelledby="management-strategy-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Management Strategy </h3> <h4 id="1-pre-deployment-assessment-1"> <a href="#1-pre-deployment-assessment-1" class="anchor-heading" aria-labelledby="1-pre-deployment-assessment-1"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 1. Pre-Deployment Assessment </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        **Blob Storage Sizing Tool** (to be built):
+
+
+        ``` # tools/blob-sizer.py def calculate_blob_storage_requirements(
+expected_documents_per_month: int,
+avg_document_size_mb: float,
+retention_days: int,
+access_pattern: str  # "frequent", "moderate", "rare" ) -&gt; dict:
+"""
+Calculate Blob Storage requirements and tier recommendations.
+
+Returns: Storage size, tier distribution, estimated cost
+"""
+total_data_gb = (expected_documents_per_month * avg_document_size_mb * retention_days / 30) / 1024
+
+# Tier distribution based on access pattern
+if access_pattern == "frequent":
+    hot_pct, cool_pct, archive_pct = 0.7, 0.2, 0.1
+elif access_pattern == "moderate":
+    hot_pct, cool_pct, archive_pct = 0.3, 0.5, 0.2
+else:  # rare
+    hot_pct, cool_pct, archive_pct = 0.1, 0.3, 0.6
+
+return {
+    "total_storage_gb": total_data_gb,
+    "tier_distribution": {
+        "hot_gb": total_data_gb * hot_pct,
+        "cool_gb": total_data_gb * cool_pct,
+        "archive_gb": total_data_gb * archive_pct
+    },
+    "estimated_monthly_cost": calculate_cost(total_data_gb, hot_pct, cool_pct, archive_pct)
+} ```
+</code></pre></div></div> <h4 id="2-lifecycle-management"> <a href="#2-lifecycle-management" class="anchor-heading" aria-labelledby="2-lifecycle-management"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 2. Lifecycle Management </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        **Automated Tier Transitions**:
+
+
+        
+            - **Hot → Cool**: After 30 days of no access
+            - **Cool → Archive**: After 90 days of no access
+            - **Archive → Delete**: After 7 years (compliance retention)
+</code></pre></div></div> <h4 id="3-immutable-storage-compliance"> <a href="#3-immutable-storage-compliance" class="anchor-heading" aria-labelledby="3-immutable-storage-compliance"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 3. Immutable Storage (Compliance) </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        **Legal Hold &amp; Immutable Policies**:
+
+
+        
+            - **Legal Hold**: Prevents deletion/modification (compliance requirement)
+            - **Time-Based Retention**: WORM (Write Once, Read Many) policies
+            - **Configuration**: Set via Azure Portal or ARM/Bicep
+        
+        **Use Case**: Documents subject to legal hold or regulatory retention requirements.
+</code></pre></div></div> <h2 id="4-data-encryption-customer-managed-keys-for-both-services"> <a href="#4-data-encryption-customer-managed-keys-for-both-services" class="anchor-heading" aria-labelledby="4-data-encryption-customer-managed-keys-for-both-services"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 4. Data Encryption: Customer-Managed Keys for Both Services </h2> <h3 id="nist-ai-rmf-alignment"> <a href="#nist-ai-rmf-alignment" class="anchor-heading" aria-labelledby="nist-ai-rmf-alignment"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> NIST AI RMF Alignment </h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        Per [NIST AI RMF](https://www.nist.gov/itl/ai-risk-management-framework), data encryption requirements:
+
+
+        
+        **Govern Function**:
+
+
+        
+            - Establish encryption policies for database and blob storage data
+            - Define key management responsibilities
+        
+        
+        **Map Function**:
+
+
+        
+            - Identify sensitive data in PostgreSQL (memory data) and Blob Storage (documents)
+            - Map encryption requirements to data types
+        
+        
+        **Measure Function**:
+
+
+        
+            - Verify encryption at rest and in transit
+            - Audit key rotation and access
+        
+        
+        **Manage Function**:
+
+
+        
+            - Implement customer-managed key rotation
+            - Monitor encryption compliance
+</code></pre></div></div> <h3 id="encryption-architecture"> <a href="#encryption-architecture" class="anchor-heading" aria-labelledby="encryption-architecture"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Encryption Architecture </h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        ┌─────────────────────────────────────────────────────────┐ │                    Engram Platform                       │ ├─────────────────────────────────────────────────────────┤ │                                                          │ │  PostgreSQL (System of Recall)                           │ │         │                                                │ │         ▼                                                │ │  ┌──────────────────┐                                   │ │  │ PostgreSQL TDE    │ ← Database-level encryption       │ │  │ (Flexible Server) │   - Customer-managed keys        │ │  └──────────────────┘   - Azure Key Vault integration   │ │         │                                                │ │         ▼                                                │ │  ┌──────────────────┐                                   │ │  │ Azure Key Vault  │ ← Customer-managed encryption keys│ │  │ (Customer KMS)   │   - Full control over keys        │ │  └──────────────────┘   - Key rotation capability       │ │                                                          │ │  Azure Blob Storage (System of Record)                  │ │         │                                                │ │         ▼                                                │ │  ┌──────────────────┐                                   │ │  │ Blob Storage TDE  │ ← Storage-level encryption       │ │  │ (Storage Account)│   - Customer-managed keys        │ │  └──────────────────┘   - Azure Key Vault integration   │ │         │                                                │ │         ▼                                                │ │  ┌──────────────────┐                                   │ │  │ Azure Key Vault  │ ← Same customer-managed keys      │ │  │ (Customer KMS)   │   - Unified key management        │ │  └──────────────────┘                                   │ └─────────────────────────────────────────────────────────┘
+</code></pre></div></div> <h3 id="implementation-plan"> <a href="#implementation-plan" class="anchor-heading" aria-labelledby="implementation-plan"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Implementation Plan </h3> <h4 id="phase-1-postgresql-tde-with-customer-managed-keys"> <a href="#phase-1-postgresql-tde-with-customer-managed-keys" class="anchor-heading" aria-labelledby="phase-1-postgresql-tde-with-customer-managed-keys"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Phase 1: PostgreSQL TDE with Customer-Managed Keys </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        **Azure PostgreSQL Flexible Server TDE**:
+
+
+        
+            - Built-in TDE using Azure Key Vault
+            - Customer-managed keys (CMK) supported
+            - Zero application changes required
+</code></pre></div></div> <h4 id="phase-2-blob-storage-tde-with-customer-managed-keys"> <a href="#phase-2-blob-storage-tde-with-customer-managed-keys" class="anchor-heading" aria-labelledby="phase-2-blob-storage-tde-with-customer-managed-keys"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Phase 2: Blob Storage TDE with Customer-Managed Keys </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        **Azure Blob Storage TDE**:
+
+
+        
+            - Built-in encryption using Azure Key Vault
+            - Customer-managed keys (CMK) supported
+            - Applies to all blobs in storage account
+</code></pre></div></div> <h4 id="phase-3-unified-key-management"> <a href="#phase-3-unified-key-management" class="anchor-heading" aria-labelledby="phase-3-unified-key-management"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Phase 3: Unified Key Management </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        **Single Key Vault for Both Services**:
+
+
+        
+            - Use same customer-managed key for PostgreSQL and Blob Storage
+            - Simplifies key rotation and management
+            - Single audit trail for key access
+        
+        
+        **Key Rotation Strategy**:
+
+
+        
+            - **PostgreSQL TDE Key Rotation**: Azure PostgreSQL supports online key rotation
+            - **Blob Storage Key Rotation**: Update key version in storage account configuration
+            - **Dual-Key Support**: Maintain current + previous key during rotation
+            - **Automated Rotation**: Scheduled rotation (e.g., quarterly)
+</code></pre></div></div> <h2 id="5-integration-patterns-postgresql--blob-storage"> <a href="#5-integration-patterns-postgresql--blob-storage" class="anchor-heading" aria-labelledby="5-integration-patterns-postgresql--blob-storage"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 5. Integration Patterns: PostgreSQL + Blob Storage </h2> <h3 id="two-plane-architecture"> <a href="#two-plane-architecture" class="anchor-heading" aria-labelledby="two-plane-architecture"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Two-Plane Architecture </h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        **System of Record (Blob Storage)**:
+
+
+        
+            - Raw documents (PDF, DOCX, etc.)
+            - Parsed artifacts from Unstructured
+            - Provenance metadata
+            - Access control lists (ACLs)
+        
+        
+        **System of Recall (PostgreSQL)**:
+
+
+        
+            - Episodic memory (conversation sessions)
+            - Semantic memory (knowledge graph facts)
+            - Vector embeddings (for similarity search)
+            - Entity relationships
+</code></pre></div></div> <h3 id="data-flow"> <a href="#data-flow" class="anchor-heading" aria-labelledby="data-flow"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Data Flow </h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        Document Upload
+ │
+ ▼ ┌─────────────┐ │ Blob Storage│ ← Store raw document (System of Record) │  (Record)   │ └─────────────┘
+ │
+ ▼ ┌─────────────┐ │ Unstructured│ ← Process document │     OSS     │ └─────────────┘
+ │
+ ├──► Chunks → PostgreSQL (Zep) ← System of Recall
+ │              - Vector embeddings
+ │              - Facts, entities
+ │
+ └──► Parsed artifacts → Blob Storage (Record)
+              - Preserve for reprocessing
+              - Compliance/audit
+</code></pre></div></div> <h3 id="azure-storage-extension-integration"> <a href="#azure-storage-extension-integration" class="anchor-heading" aria-labelledby="azure-storage-extension-integration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Azure Storage Extension Integration </h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        **PostgreSQL → Blob Storage**:
+
+
+        
+            - Use `azure_storage` extension for data export
+            - Archive episodic memory to Blob Storage after retention period
+            - Export backup files to Blob Storage
+        
+        
+        **Blob Storage → PostgreSQL**:
+
+
+        
+            - Use `azure_storage` extension for data import
+            - Bulk import historical data
+            - Restore from backups
+</code></pre></div></div> <h2 id="6-nist-ai-rmf-compliance-integration"> <a href="#6-nist-ai-rmf-compliance-integration" class="anchor-heading" aria-labelledby="6-nist-ai-rmf-compliance-integration"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 6. NIST AI RMF Compliance Integration </h2> <h3 id="framework-mapping"> <a href="#framework-mapping" class="anchor-heading" aria-labelledby="framework-mapping"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Framework Mapping </h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>                    NIST AI RMF Function
+                    PostgreSQL Implementation
+                    Blob Storage Implementation
+                    Engram Controls
+                
+            
+            
+                
+                    **Govern**
+                    Database retention policies, access controls
+                    Blob lifecycle policies, immutable storage
+                    Customer-defined governance
+                
+                
+                    **Map**
+                    Data classification (episodic vs. semantic)
+                    Document classification, sensitivity tagging
+                    PII/PHI detection and handling
+                
+                
+                    **Measure**
+                    Database performance metrics, query latency
+                    Blob access patterns, tier utilization
+                    Cost, performance, security metrics
+                
+                
+                    **Manage**
+                    Database backups, PITR, key rotation
+                    Blob lifecycle management, deletion policies
+                    Data lifecycle management
+</code></pre></div></div> <h3 id="data-encryption-controls-nist-ai-rmf"> <a href="#data-encryption-controls-nist-ai-rmf" class="anchor-heading" aria-labelledby="data-encryption-controls-nist-ai-rmf"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Data Encryption Controls (NIST AI RMF) </h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        **Control ID**: AI-SEC-01 (Data Encryption)
+
+
+        
+        **Implementation**:
+
+
+        
+            ✅ **Encryption at Rest**: 
+                
+                    - PostgreSQL: TDE with customer-managed keys
+                    - Blob Storage: TDE with customer-managed keys
+                
+            
+            - ✅ **Encryption in Transit**: TLS 1.3 for all communications
+            - ✅ **Key Management**: Customer-managed keys via Azure Key Vault (unified)
+            - ✅ **Key Rotation**: Automated quarterly rotation for both services
+            - ✅ **Access Control**: RBAC, Private Endpoints, network isolation
+        
+        
+        **Evidence**:
+
+
+        
+            - PostgreSQL TDE configuration manifest
+            - Blob Storage TDE configuration manifest
+            - Key rotation workflow logs
+            - Encryption metadata in both services
+            - Audit logs of key access
+</code></pre></div></div> <h2 id="7-operational-responsibilities"> <a href="#7-operational-responsibilities" class="anchor-heading" aria-labelledby="7-operational-responsibilities"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 7. Operational Responsibilities </h2> <h3 id="zimax-networks-lc-support-model"> <a href="#zimax-networks-lc-support-model" class="anchor-heading" aria-labelledby="zimax-networks-lc-support-model"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Zimax Networks LC Support Model </h3> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        **For Customer Environments (dev/test/UAT/prod)**:
+
+
+        
+            
+                
+                    Responsibility
+                    Zimax Networks LC
+                    Customer
+                
+            
+            
+                
+                    PostgreSQL deployment
+                    ✅ SKU selection &amp; provisioning
+                    Infrastructure approval
+                
+                
+                    pgvector configuration
+                    ✅ Setup &amp; optimization
+                    Database access
+                
+                
+                    Blob Storage deployment
+                    ✅ Storage account setup
+                    Infrastructure approval
+                
+                
+                    Lifecycle policy configuration
+                    ✅ Tier optimization
+                    Access pattern requirements
+                
+                
+                    Encryption setup
+                    ✅ TDE configuration with CMK
+                    Key management
+                
+                
+                    Monitoring &amp; alerting
+                    ✅ Setup &amp; maintenance
+                    Alert response
+                
+                
+                    Backups &amp; disaster recovery
+                    ✅ Configuration &amp; testing
+                    RPO/RTO requirements
+                
+                
+                    Updates &amp; patches
+                    ✅ Planning &amp; execution
+                    Maintenance windows
+                
+                
+                    Troubleshooting
+                    ✅ 24/7 support
+                    Issue reporting
+                
+                
+                    Compliance documentation
+                    ✅ Preparation
+                    Audit participation
+                
+            
+        
+        
+        **Dedicated Resources Required**:
+
+
+        
+            - **PostgreSQL DBA**: SKU sizing, pgvector optimization, performance tuning
+            - **Storage Engineer**: Blob Storage tier optimization, lifecycle management
+            - **Security Engineer**: Encryption, compliance, NIST AI RMF
+            - **SRE**: Monitoring, alerting, incident response
+</code></pre></div></div> <h2 id="8-implementation-roadmap"> <a href="#8-implementation-roadmap" class="anchor-heading" aria-labelledby="8-implementation-roadmap"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 8. Implementation Roadmap </h2> <h4 id="phase-1-foundation-months-1-2"> <a href="#phase-1-foundation-months-1-2" class="anchor-heading" aria-labelledby="phase-1-foundation-months-1-2"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Phase 1: Foundation (Months 1-2) </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>                - Research and document PostgreSQL SKU sizing methodology
+                - Build PostgreSQL sizing calculator tool
+                - Research and document Blob Storage tier selection strategy
+                - Build Blob Storage sizing calculator tool
+                - Design unified encryption architecture
+</code></pre></div></div> <h4 id="phase-2-encryption-implementation-months-2-3"> <a href="#phase-2-encryption-implementation-months-2-3" class="anchor-heading" aria-labelledby="phase-2-encryption-implementation-months-2-3"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Phase 2: Encryption Implementation (Months 2-3) </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>                - Configure PostgreSQL TDE with customer-managed keys
+                - Configure Blob Storage TDE with customer-managed keys
+                - Create unified key rotation workflow
+                - Test encryption end-to-end
+</code></pre></div></div> <h4 id="phase-3-configuration-optimization-months-3-4"> <a href="#phase-3-configuration-optimization-months-3-4" class="anchor-heading" aria-labelledby="phase-3-configuration-optimization-months-3-4"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Phase 3: Configuration Optimization (Months 3-4) </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>                - Tune PostgreSQL SKU per environment
+                - Configure Blob Storage lifecycle policies
+                - Optimize pgvector indexes
+                - Document configuration procedures
+</code></pre></div></div> <h4 id="phase-4-compliance--documentation-months-4-5"> <a href="#phase-4-compliance--documentation-months-4-5" class="anchor-heading" aria-labelledby="phase-4-compliance--documentation-months-4-5"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Phase 4: Compliance &amp; Documentation (Months 4-5) </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>                - Map NIST AI RMF controls to implementation
+                - Create security assessment documentation
+                - Prepare audit evidence
+                - Train support team
+</code></pre></div></div> <h4 id="phase-5-production-deployment-months-5-6"> <a href="#phase-5-production-deployment-months-5-6" class="anchor-heading" aria-labelledby="phase-5-production-deployment-months-5-6"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Phase 5: Production Deployment (Months 5-6) </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>                - Deploy to customer dev environment
+                - Validate PostgreSQL SKU sizing
+                - Validate Blob Storage tier selection
+                - Test encryption with customer keys
+                - Gradual rollout to test/UAT/prod
+</code></pre></div></div> <h2 id="9-risk-mitigation"> <a href="#9-risk-mitigation" class="anchor-heading" aria-labelledby="9-risk-mitigation"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 9. Risk Mitigation </h2> <h4 id="risk-postgresql-under-sizing"> <a href="#risk-postgresql-under-sizing" class="anchor-heading" aria-labelledby="risk-postgresql-under-sizing"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Risk: PostgreSQL Under-Sizing </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>            **Mitigation**:
+
+
+            
+                - Conservative sizing (2x growth factor)
+                - Monitoring with early warning alerts
+                - Online SKU scaling (minimal downtime)
+                - Reserved capacity for predictable workloads
+</code></pre></div></div> <h4 id="risk-blob-storage-cost-overrun"> <a href="#risk-blob-storage-cost-overrun" class="anchor-heading" aria-labelledby="risk-blob-storage-cost-overrun"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Risk: Blob Storage Cost Overrun </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>            **Mitigation**:
+
+
+            
+                - Lifecycle policies to automate tier transitions
+                - Monitoring of tier distribution
+                - Cost alerts at 50%, 80%, 100% of budget
+                - Regular cost optimization reviews
+</code></pre></div></div> <h4 id="risk-encryption-key-compromise"> <a href="#risk-encryption-key-compromise" class="anchor-heading" aria-labelledby="risk-encryption-key-compromise"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Risk: Encryption Key Compromise </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>            **Mitigation**:
+
+
+            
+                - Unified key rotation workflow
+                - Dual-key support during rotation
+                - Audit logging of all key access
+                - Isolated Key Vault (separate security boundary)
+</code></pre></div></div> <h4 id="risk-data-loss"> <a href="#risk-data-loss" class="anchor-heading" aria-labelledby="risk-data-loss"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Risk: Data Loss </h4> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>            **Mitigation**:
+
+
+            
+                - Automated backups (PostgreSQL: PITR, Blob Storage: geo-redundant)
+                - Regular backup testing
+                - Disaster recovery procedures
+                - Immutable storage policies for compliance
+</code></pre></div></div> <h2 id="10-success-metrics"> <a href="#10-success-metrics" class="anchor-heading" aria-labelledby="10-success-metrics"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 10. Success Metrics </h2> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>                    Metric
+                    Target
+                    Measurement
+                
+            
+            
+                
+                    PostgreSQL CPU utilization
+                    &lt; 70%
+                    Azure Monitor metrics
+                
+                
+                    PostgreSQL memory utilization
+                    &lt; 80%
+                    Azure Monitor metrics
+                
+                
+                    PostgreSQL connection pool utilization
+                    &lt; 70%
+                    Application metrics
+                
+                
+                    Blob Storage cost per GB
+                    &lt; $0.015 (weighted average)
+                    Cost Management API
+                
+                
+                    Blob Storage tier distribution
+                    30% Hot, 50% Cool, 20% Archive
+                    Storage metrics
+                
+                
+                    Encryption coverage
+                    100% of data
+                    Audit logs
+                
+                
+                    Key rotation success rate
+                    100%
+                    Rotation workflow logs
+                
+                
+                    Backup success rate
+                    100%
+                    Backup job logs
+                
+                
+                    RPO achievement
+                    100%
+                    Backup validation
+                
+                
+                    Support response time
+                    &lt; 1 hour (P1)
+                    Incident tracking
+</code></pre></div></div> <h2 id="11-next-steps"> <a href="#11-next-steps" class="anchor-heading" aria-labelledby="11-next-steps"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> 11. Next Steps </h2> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>            - **Approve this strategy** for customer environment deployment
+            - **Allocate resources** for PostgreSQL DBA, Storage Engineer, Security Engineer, SRE
+            - **Begin Phase 1** implementation (sizing calculators, tier selection guide)
+            - **Engage with customer** infrastructure team for Azure integration requirements
+            - **Schedule security assessment** preparation timeline
+</code></pre></div></div> <h2 id="references"> <a href="#references" class="anchor-heading" aria-labelledby="references"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> References </h2> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>            - [Azure Database for PostgreSQL Flexible Server](https://learn.microsoft.com/azure/postgresql/flexible-server/)
+            - [PostgreSQL pgvector Extension](https://github.com/pgvector/pgvector)
+            - [Azure Blob Storage Documentation](https://learn.microsoft.com/azure/storage/blobs/)
+            - [Azure Blob Storage Lifecycle Management](https://learn.microsoft.com/azure/storage/blobs/lifecycle-management-overview)
+            - [Azure Key Vault Customer-Managed Keys](https://learn.microsoft.com/azure/key-vault/general/customer-managed-keys-overview)
+            - [NIST AI Risk Management Framework](https://www.nist.gov/itl/ai-risk-management-framework)
+</code></pre></div></div> </main> <hr> <footer> <p><a href="#top" id="back-to-top">Back to top</a></p> <div class="d-md-none"> <div class="mt-4 fs-2"> This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll. </div> </div> </footer> </div> </div> <div class="search-overlay"></div> </div> </body> </html>

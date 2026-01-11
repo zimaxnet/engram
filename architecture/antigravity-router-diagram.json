@@ -1,0 +1,977 @@
+{
+    "title": "Antigravity Ingestion Router — Class A/B/C Context Ecology",
+    "subtitle": "Truth Value routing with NIST SP 800-60 classification and 16 enterprise connectors",
+    "version": "2.0",
+    "author": "Engram Platform Team",
+    "created": "2026-01-08",
+    "theme": "dark",
+    "layout": "flow",
+    "diagram_type": "architecture",
+    "description": "The Antigravity Ingestion Router classifies documents by their inherent Truth Value and routes them to specialized extraction engines. Class A documents (safety manuals, specs) receive high-fidelity processing via IBM Docling. Class B documents (emails, presentations) receive semantic chunking via Unstructured.io. Class C data (logs, JSON) is converted directly to vectors via Pandas.",
+    "legend": {
+        "node_types": {
+            "connector": {
+                "label": "Data Source Connector",
+                "color": "#60A5FA",
+                "description": "Entry points for enterprise data ingestion"
+            },
+            "classifier": {
+                "label": "Data Classifier",
+                "color": "#A855F7",
+                "description": "NIST SP 800-60 / FIPS 199 sensitivity classification"
+            },
+            "router": {
+                "label": "Routing Logic",
+                "color": "#F59E0B",
+                "description": "Truth Value classification and engine selection"
+            },
+            "engine_a": {
+                "label": "Class A Engine",
+                "color": "#EF4444",
+                "description": "High-fidelity extraction for immutable truth"
+            },
+            "engine_b": {
+                "label": "Class B Engine",
+                "color": "#F59E0B",
+                "description": "Semantic chunking for ephemeral content"
+            },
+            "engine_c": {
+                "label": "Class C Engine",
+                "color": "#22C55E",
+                "description": "Structured data vectorization"
+            },
+            "metadata": {
+                "label": "Metadata Layer",
+                "color": "#A855F7",
+                "description": "Provenance and classification tagging"
+            },
+            "store": {
+                "label": "Storage System",
+                "color": "#8B5CF6",
+                "description": "Persistent memory and vector storage"
+            },
+            "agent": {
+                "label": "AI Agent",
+                "color": "#00D4FF",
+                "description": "Context-aware AI systems"
+            }
+        },
+        "edge_styles": {
+            "data_flow": {
+                "stroke": "#60A5FA",
+                "strokeWidth": 2,
+                "description": "Primary data movement"
+            },
+            "classification": {
+                "stroke": "#A855F7",
+                "strokeWidth": 2,
+                "description": "Classification decision"
+            },
+            "routing": {
+                "stroke": "#F59E0B",
+                "strokeWidth": 3,
+                "description": "Routing path"
+            },
+            "class_a_route": {
+                "stroke": "#EF4444",
+                "strokeWidth": 3,
+                "description": "Class A extraction path"
+            },
+            "class_b_route": {
+                "stroke": "#F59E0B",
+                "strokeWidth": 3,
+                "description": "Class B extraction path"
+            },
+            "class_c_route": {
+                "stroke": "#22C55E",
+                "strokeWidth": 3,
+                "description": "Class C extraction path"
+            },
+            "indexing": {
+                "stroke": "#8B5CF6",
+                "strokeWidth": 2,
+                "description": "Memory indexing"
+            },
+            "retrieval": {
+                "stroke": "#00D4FF",
+                "strokeWidth": 2,
+                "description": "Context retrieval"
+            }
+        }
+    },
+    "nodes": [
+        {
+            "id": "sources",
+            "label": "Data Sources",
+            "sublabel": "16 Enterprise Connectors",
+            "type": "connector",
+            "icon": "cloud",
+            "emoji": "☁️",
+            "position": {
+                "x": 100,
+                "y": 200
+            },
+            "size": {
+                "width": 180,
+                "height": 100
+            },
+            "description": "Unified connector layer supporting cloud storage (S3, Azure Blob, GCS), collaboration tools (SharePoint, Drive, OneDrive, Confluence), ticketing systems (ServiceNow, Jira, GitHub), messaging platforms (Slack, Teams, Email), databases, webhooks, and local uploads.",
+            "metadata": {
+                "connector_count": 16,
+                "categories": [
+                    "cloud_storage",
+                    "collaboration",
+                    "ticketing",
+                    "messaging",
+                    "database",
+                    "local"
+                ],
+                "supported_formats": [
+                    "PDF",
+                    "DOCX",
+                    "XLSX",
+                    "PPTX",
+                    "EML",
+                    "MSG",
+                    "HTML",
+                    "CSV",
+                    "JSON",
+                    "Parquet"
+                ]
+            },
+            "style": {
+                "backgroundColor": "#111827",
+                "borderColor": "#60A5FA",
+                "borderWidth": 2,
+                "textColor": "#E5E7EB",
+                "shadowColor": "rgba(96, 165, 250, 0.3)",
+                "shadowBlur": 12
+            }
+        },
+        {
+            "id": "classifier",
+            "label": "NIST Data Classifier",
+            "sublabel": "SP 800-60 / FIPS 199",
+            "type": "classifier",
+            "icon": "shield",
+            "emoji": "🛡️",
+            "position": {
+                "x": 340,
+                "y": 80
+            },
+            "size": {
+                "width": 200,
+                "height": 90
+            },
+            "description": "Classifies data sensitivity based on NIST SP 800-60 impact levels. Applies pattern matching against content and filenames to detect PII, PHI, credentials, and safety-critical information. Determines encryption requirements, retention policies, and compliance frameworks.",
+            "metadata": {
+                "sensitivity_levels": {
+                    "high": {
+                        "emoji": "🔴",
+                        "decay_rate": 0.01,
+                        "retention_days": 2555,
+                        "requires_encryption": true
+                    },
+                    "moderate": {
+                        "emoji": "🟡",
+                        "decay_rate": 0.30,
+                        "retention_days": 365,
+                        "requires_encryption": false
+                    },
+                    "low": {
+                        "emoji": "🟢",
+                        "decay_rate": 0.80,
+                        "retention_days": 90,
+                        "requires_encryption": false
+                    }
+                },
+                "data_categories": [
+                    "PII",
+                    "PHI",
+                    "CUI",
+                    "PCI",
+                    "Proprietary",
+                    "Safety",
+                    "Credential",
+                    "Public",
+                    "Internal"
+                ],
+                "compliance_frameworks": [
+                    "NIST SP 800-60",
+                    "FIPS 199",
+                    "HIPAA",
+                    "PCI-DSS",
+                    "ISO 45001"
+                ]
+            },
+            "style": {
+                "backgroundColor": "#111827",
+                "borderColor": "#A855F7",
+                "borderWidth": 2,
+                "textColor": "#E5E7EB",
+                "shadowColor": "rgba(168, 85, 247, 0.3)",
+                "shadowBlur": 12
+            }
+        },
+        {
+            "id": "router",
+            "label": "Antigravity Router",
+            "sublabel": "Truth Value Classification",
+            "type": "router",
+            "icon": "git-branch",
+            "emoji": "🌿",
+            "position": {
+                "x": 340,
+                "y": 220
+            },
+            "size": {
+                "width": 200,
+                "height": 100
+            },
+            "description": "Core routing engine that classifies documents by their inherent Truth Value. Uses filename heuristics and content patterns to determine optimal extraction engine. Supports explicit class override and fallback mechanisms when engines are unavailable.",
+            "metadata": {
+                "methods": [
+                    "classify(filename)",
+                    "ingest(file_path)",
+                    "ingest_bytes(content, filename)"
+                ],
+                "class_heuristics": {
+                    "CLASS_A_TRUTH": [
+                        "safety",
+                        "manual",
+                        "spec",
+                        "iso",
+                        "protocol",
+                        "engineering"
+                    ],
+                    "CLASS_B_CHATTER": [
+                        "email",
+                        "meeting",
+                        "presentation",
+                        "notes"
+                    ],
+                    "CLASS_C_OPS": [
+                        "log",
+                        "sensor",
+                        "telemetry",
+                        "analytics"
+                    ]
+                },
+                "fallback_chain": "Docling → Unstructured → Raw Text"
+            },
+            "style": {
+                "backgroundColor": "#111827",
+                "borderColor": "#F59E0B",
+                "borderWidth": 3,
+                "textColor": "#E5E7EB",
+                "shadowColor": "rgba(245, 158, 11, 0.4)",
+                "shadowBlur": 16,
+                "fontWeight": "bold"
+            }
+        },
+        {
+            "id": "class_a",
+            "label": "Class A: Immutable Truth",
+            "sublabel": "IBM Docling (TableFormer)",
+            "type": "engine_a",
+            "icon": "book",
+            "emoji": "📚",
+            "position": {
+                "x": 600,
+                "y": 60
+            },
+            "size": {
+                "width": 220,
+                "height": 100
+            },
+            "description": "High-fidelity document extraction using IBM Docling. Preserves table structure via TableFormer ML model. Extracts bounding box coordinates for every element, enabling precise citation to page/row/column. Best for safety protocols, engineering manuals, ISO standards, and legal contracts.",
+            "metadata": {
+                "engine": "docling",
+                "decay_rate": 0.01,
+                "supported_formats": [
+                    "PDF",
+                    "scidoc"
+                ],
+                "features": [
+                    "TableFormer reconstruction",
+                    "Bounding box provenance",
+                    "Multi-column layout preservation",
+                    "Figure/caption extraction"
+                ],
+                "model_size": "~2GB",
+                "use_cases": [
+                    "Safety manuals",
+                    "ISO standards",
+                    "Engineering specs",
+                    "Legal documents",
+                    "Scientific papers"
+                ]
+            },
+            "style": {
+                "backgroundColor": "#111827",
+                "borderColor": "#EF4444",
+                "borderWidth": 3,
+                "textColor": "#E5E7EB",
+                "shadowColor": "rgba(239, 68, 68, 0.4)",
+                "shadowBlur": 14,
+                "gradient": "linear-gradient(135deg, #111827, #1f1418)"
+            }
+        },
+        {
+            "id": "class_b",
+            "label": "Class B: Ephemeral Chatter",
+            "sublabel": "Unstructured.io",
+            "type": "engine_b",
+            "icon": "message-square",
+            "emoji": "💬",
+            "position": {
+                "x": 600,
+                "y": 190
+            },
+            "size": {
+                "width": 220,
+                "height": 100
+            },
+            "description": "Semantic chunking optimized for narrative content using Unstructured.io. Handles messy HTML, threaded conversations, and embedded media gracefully. Chunks by semantic headers rather than fixed character counts. Best for emails, presentations, meeting notes, and wiki pages.",
+            "metadata": {
+                "engine": "unstructured",
+                "decay_rate": 0.80,
+                "supported_formats": [
+                    "DOCX",
+                    "PPTX",
+                    "EML",
+                    "MSG",
+                    "HTML",
+                    "TXT"
+                ],
+                "features": [
+                    "Semantic header chunking",
+                    "Thread preservation",
+                    "HTML sanitization",
+                    "Image extraction"
+                ],
+                "strategies": [
+                    "auto",
+                    "hi_res",
+                    "fast"
+                ],
+                "use_cases": [
+                    "Email threads",
+                    "PowerPoint decks",
+                    "Meeting notes",
+                    "Wiki pages",
+                    "Chat exports"
+                ]
+            },
+            "style": {
+                "backgroundColor": "#111827",
+                "borderColor": "#F59E0B",
+                "borderWidth": 3,
+                "textColor": "#E5E7EB",
+                "shadowColor": "rgba(245, 158, 11, 0.4)",
+                "shadowBlur": 14,
+                "gradient": "linear-gradient(135deg, #111827, #1f1a14)"
+            }
+        },
+        {
+            "id": "class_c",
+            "label": "Class C: Operational",
+            "sublabel": "Pandas Vectorization",
+            "type": "engine_c",
+            "icon": "bar-chart",
+            "emoji": "📊",
+            "position": {
+                "x": 600,
+                "y": 320
+            },
+            "size": {
+                "width": 220,
+                "height": 100
+            },
+            "description": "Direct structured data conversion using Pandas. Bypasses text extraction entirely to preserve numeric precision. Converts rows directly to vectors with column-aware entity extraction. Best for CSV logs, JSON payloads, Parquet analytics, and sensor telemetry.",
+            "metadata": {
+                "engine": "pandas",
+                "decay_rate": 0.99,
+                "supported_formats": [
+                    "CSV",
+                    "JSON",
+                    "Parquet",
+                    "LOG"
+                ],
+                "features": [
+                    "Row-to-vector conversion",
+                    "Numeric preservation",
+                    "Column metadata",
+                    "Streaming support"
+                ],
+                "use_cases": [
+                    "Sensor data",
+                    "API logs",
+                    "Analytics exports",
+                    "Time series",
+                    "Telemetry streams"
+                ]
+            },
+            "style": {
+                "backgroundColor": "#111827",
+                "borderColor": "#22C55E",
+                "borderWidth": 3,
+                "textColor": "#E5E7EB",
+                "shadowColor": "rgba(34, 197, 94, 0.4)",
+                "shadowBlur": 14,
+                "gradient": "linear-gradient(135deg, #111827, #141f18)"
+            }
+        },
+        {
+            "id": "metadata",
+            "label": "Engram Metadata",
+            "sublabel": "Provenance & Classification",
+            "type": "metadata",
+            "icon": "tag",
+            "emoji": "🏷️",
+            "position": {
+                "x": 880,
+                "y": 190
+            },
+            "size": {
+                "width": 180,
+                "height": 100
+            },
+            "description": "Enriches every chunk with mandatory Engram metadata fields: provenance_id (source link), decay_rate (relevance half-life), sensitivity_level, data_categories, compliance_frameworks, and ingest_timestamp. Enables RBAC filtering and compliance auditing.",
+            "metadata": {
+                "required_fields": [
+                    {
+                        "name": "provenance_id",
+                        "type": "UUID",
+                        "description": "Immutable link to source file + location"
+                    },
+                    {
+                        "name": "data_class",
+                        "type": "enum",
+                        "description": "CLASS_A_TRUTH | CLASS_B_CHATTER | CLASS_C_OPS"
+                    },
+                    {
+                        "name": "decay_rate",
+                        "type": "float",
+                        "description": "Relevance half-life (0.0–1.0)"
+                    },
+                    {
+                        "name": "sensitivity_level",
+                        "type": "enum",
+                        "description": "high | moderate | low"
+                    },
+                    {
+                        "name": "data_categories",
+                        "type": "array",
+                        "description": "PII, PHI, Safety, etc."
+                    },
+                    {
+                        "name": "ingest_timestamp",
+                        "type": "ISO8601",
+                        "description": "UTC ingestion time"
+                    }
+                ]
+            },
+            "style": {
+                "backgroundColor": "#111827",
+                "borderColor": "#A855F7",
+                "borderWidth": 2,
+                "textColor": "#E5E7EB",
+                "shadowColor": "rgba(168, 85, 247, 0.3)",
+                "shadowBlur": 12
+            }
+        },
+        {
+            "id": "zep",
+            "label": "Zep Memory",
+            "sublabel": "Sessions • Episodes • Facts",
+            "type": "store",
+            "icon": "database",
+            "emoji": "🗄️",
+            "position": {
+                "x": 1100,
+                "y": 120
+            },
+            "size": {
+                "width": 160,
+                "height": 90
+            },
+            "description": "Persistent memory storage via Zep. Stores document sessions for keyword retrieval, creates episodes for conversation context, and extracts knowledge graph facts for relationship traversal.",
+            "metadata": {
+                "storage_layers": [
+                    "Sessions (keyword)",
+                    "Episodes (episodic)",
+                    "Facts (graph)"
+                ],
+                "session_pattern": "doc-upload-{uuid}",
+                "indexing": "Tri-search ready (K+V+G)"
+            },
+            "style": {
+                "backgroundColor": "#111827",
+                "borderColor": "#8B5CF6",
+                "borderWidth": 2,
+                "textColor": "#E5E7EB",
+                "shadowColor": "rgba(139, 92, 246, 0.3)",
+                "shadowBlur": 12
+            }
+        },
+        {
+            "id": "pgvector",
+            "label": "pgvector",
+            "sublabel": "Semantic Embeddings",
+            "type": "store",
+            "icon": "database",
+            "emoji": "🗄️",
+            "position": {
+                "x": 1100,
+                "y": 250
+            },
+            "size": {
+                "width": 160,
+                "height": 90
+            },
+            "description": "Vector storage via PostgreSQL + pgvector extension. Stores 1536-dimensional embeddings from Azure OpenAI text-embedding-3-small. Enables semantic similarity search with cosine distance.",
+            "metadata": {
+                "table": "memory_embeddings",
+                "dimensions": 1536,
+                "model": "text-embedding-3-small",
+                "index": "ivfflat",
+                "distance": "cosine"
+            },
+            "style": {
+                "backgroundColor": "#111827",
+                "borderColor": "#10B981",
+                "borderWidth": 2,
+                "textColor": "#E5E7EB",
+                "shadowColor": "rgba(16, 185, 129, 0.3)",
+                "shadowBlur": 12
+            }
+        },
+        {
+            "id": "agents",
+            "label": "AI Agents",
+            "sublabel": "Elena • Sage",
+            "type": "agent",
+            "icon": "bot",
+            "emoji": "🤖",
+            "position": {
+                "x": 1300,
+                "y": 185
+            },
+            "size": {
+                "width": 160,
+                "height": 100
+            },
+            "description": "Context-aware AI agents that query indexed memories. Elena handles conversation and voice interactions. Sage creates stories and documentation. Both leverage classification metadata for RBAC-filtered retrieval.",
+            "metadata": {
+                "agents": [
+                    {
+                        "name": "Elena",
+                        "role": "Conversational AI",
+                        "capabilities": [
+                            "Chat",
+                            "Voice",
+                            "Avatar"
+                        ]
+                    },
+                    {
+                        "name": "Sage",
+                        "role": "Storyteller",
+                        "capabilities": [
+                            "Stories",
+                            "Documentation",
+                            "Diagrams"
+                        ]
+                    }
+                ],
+                "retrieval": "RRF fusion (Keyword + Vector + Graph)"
+            },
+            "style": {
+                "backgroundColor": "#111827",
+                "borderColor": "#00D4FF",
+                "borderWidth": 2,
+                "textColor": "#E5E7EB",
+                "shadowColor": "rgba(0, 212, 255, 0.4)",
+                "shadowBlur": 16
+            }
+        }
+    ],
+    "edges": [
+        {
+            "id": "e_src_cls",
+            "source": "sources",
+            "target": "classifier",
+            "label": "file + content",
+            "type": "data_flow",
+            "style": {
+                "stroke": "#60A5FA",
+                "strokeWidth": 2
+            },
+            "arrowType": "arrow",
+            "description": "Raw file content sent for sensitivity classification"
+        },
+        {
+            "id": "e_src_rtr",
+            "source": "sources",
+            "target": "router",
+            "label": "ingest()",
+            "type": "data_flow",
+            "style": {
+                "stroke": "#60A5FA",
+                "strokeWidth": 2,
+                "strokeDasharray": "5,3"
+            },
+            "arrowType": "arrow",
+            "description": "Primary ingestion entry point"
+        },
+        {
+            "id": "e_cls_rtr",
+            "source": "classifier",
+            "target": "router",
+            "label": "sensitivity + categories",
+            "type": "classification",
+            "style": {
+                "stroke": "#A855F7",
+                "strokeWidth": 2
+            },
+            "arrowType": "arrow",
+            "description": "Classification result passed to router for metadata enrichment"
+        },
+        {
+            "id": "e_rtr_a",
+            "source": "router",
+            "target": "class_a",
+            "label": "PDF, specs → Docling",
+            "type": "class_a_route",
+            "style": {
+                "stroke": "#EF4444",
+                "strokeWidth": 3
+            },
+            "arrowType": "triangle",
+            "description": "High-fidelity documents routed to Docling engine",
+            "condition": "extension in [.pdf, .scidoc] OR filename contains [manual, safety, iso, spec]"
+        },
+        {
+            "id": "e_rtr_b",
+            "source": "router",
+            "target": "class_b",
+            "label": "Email, PPT → Unstructured",
+            "type": "class_b_route",
+            "style": {
+                "stroke": "#F59E0B",
+                "strokeWidth": 3
+            },
+            "arrowType": "triangle",
+            "description": "Narrative documents routed to Unstructured engine",
+            "condition": "extension in [.docx, .pptx, .eml, .msg, .html, .txt]"
+        },
+        {
+            "id": "e_rtr_c",
+            "source": "router",
+            "target": "class_c",
+            "label": "CSV, JSON → Pandas",
+            "type": "class_c_route",
+            "style": {
+                "stroke": "#22C55E",
+                "strokeWidth": 3
+            },
+            "arrowType": "triangle",
+            "description": "Structured data routed to Pandas engine",
+            "condition": "extension in [.csv, .json, .parquet, .log]"
+        },
+        {
+            "id": "e_a_meta",
+            "source": "class_a",
+            "target": "metadata",
+            "label": "chunks + bbox",
+            "type": "data_flow",
+            "style": {
+                "stroke": "#EF4444",
+                "strokeWidth": 2
+            },
+            "arrowType": "arrow",
+            "description": "Extracted chunks with bounding box coordinates"
+        },
+        {
+            "id": "e_b_meta",
+            "source": "class_b",
+            "target": "metadata",
+            "label": "chunks",
+            "type": "data_flow",
+            "style": {
+                "stroke": "#F59E0B",
+                "strokeWidth": 2
+            },
+            "arrowType": "arrow",
+            "description": "Semantically chunked content"
+        },
+        {
+            "id": "e_c_meta",
+            "source": "class_c",
+            "target": "metadata",
+            "label": "rows",
+            "type": "data_flow",
+            "style": {
+                "stroke": "#22C55E",
+                "strokeWidth": 2
+            },
+            "arrowType": "arrow",
+            "description": "Row-level vectors with column metadata"
+        },
+        {
+            "id": "e_meta_zep",
+            "source": "metadata",
+            "target": "zep",
+            "label": "index sessions",
+            "type": "indexing",
+            "style": {
+                "stroke": "#8B5CF6",
+                "strokeWidth": 2
+            },
+            "arrowType": "arrow",
+            "description": "Create Zep sessions and facts for keyword/graph retrieval"
+        },
+        {
+            "id": "e_meta_pg",
+            "source": "metadata",
+            "target": "pgvector",
+            "label": "embed vectors",
+            "type": "indexing",
+            "style": {
+                "stroke": "#10B981",
+                "strokeWidth": 2
+            },
+            "arrowType": "arrow",
+            "description": "Generate and store embeddings for semantic search"
+        },
+        {
+            "id": "e_zep_agents",
+            "source": "zep",
+            "target": "agents",
+            "label": "context",
+            "type": "retrieval",
+            "style": {
+                "stroke": "#00D4FF",
+                "strokeWidth": 2
+            },
+            "arrowType": "arrow",
+            "description": "Keyword and graph context retrieval"
+        },
+        {
+            "id": "e_pg_agents",
+            "source": "pgvector",
+            "target": "agents",
+            "label": "semantic search",
+            "type": "retrieval",
+            "style": {
+                "stroke": "#00D4FF",
+                "strokeWidth": 2
+            },
+            "arrowType": "arrow",
+            "description": "Vector similarity search results"
+        }
+    ],
+    "annotations": [
+        {
+            "id": "ann_decay",
+            "type": "callout",
+            "position": {
+                "x": 600,
+                "y": 430
+            },
+            "text": "Decay Rates: Class A = 0.01 (eternal) | Class B = 0.80 (days) | Class C = 0.99 (instant)",
+            "style": {
+                "backgroundColor": "#1f2937",
+                "textColor": "#9CA3AF",
+                "fontSize": 12
+            }
+        },
+        {
+            "id": "ann_nist",
+            "type": "badge",
+            "position": {
+                "x": 340,
+                "y": 10
+            },
+            "text": "🛡️ NIST SP 800-60 • FIPS 199 Compliant",
+            "style": {
+                "backgroundColor": "rgba(99, 102, 241, 0.2)",
+                "textColor": "#A5B4FC",
+                "borderRadius": 8
+            }
+        }
+    ],
+    "rendering_guidance": {
+        "canvas": {
+            "width": 1500,
+            "height": 500,
+            "padding": 30,
+            "backgroundColor": "#0a0a0f"
+        },
+        "grouping": [
+            {
+                "id": "g_input",
+                "label": "Data Input",
+                "members": [
+                    "sources"
+                ],
+                "bounds": {
+                    "x": 60,
+                    "y": 150,
+                    "width": 240,
+                    "height": 160
+                },
+                "style": {
+                    "backgroundColor": "rgba(96, 165, 250, 0.08)",
+                    "borderColor": "rgba(96, 165, 250, 0.3)",
+                    "borderRadius": 16
+                }
+            },
+            {
+                "id": "g_classify",
+                "label": "Classification",
+                "members": [
+                    "classifier",
+                    "router"
+                ],
+                "bounds": {
+                    "x": 300,
+                    "y": 40,
+                    "width": 280,
+                    "height": 320
+                },
+                "style": {
+                    "backgroundColor": "rgba(168, 85, 247, 0.08)",
+                    "borderColor": "rgba(168, 85, 247, 0.3)",
+                    "borderRadius": 16
+                }
+            },
+            {
+                "id": "g_engines",
+                "label": "Extraction Engines",
+                "members": [
+                    "class_a",
+                    "class_b",
+                    "class_c"
+                ],
+                "bounds": {
+                    "x": 560,
+                    "y": 20,
+                    "width": 300,
+                    "height": 430
+                },
+                "style": {
+                    "backgroundColor": "rgba(245, 158, 11, 0.06)",
+                    "borderColor": "rgba(245, 158, 11, 0.25)",
+                    "borderRadius": 16
+                }
+            },
+            {
+                "id": "g_index",
+                "label": "Indexing",
+                "members": [
+                    "metadata",
+                    "zep",
+                    "pgvector"
+                ],
+                "bounds": {
+                    "x": 840,
+                    "y": 80,
+                    "width": 460,
+                    "height": 300
+                },
+                "style": {
+                    "backgroundColor": "rgba(139, 92, 246, 0.06)",
+                    "borderColor": "rgba(139, 92, 246, 0.25)",
+                    "borderRadius": 16
+                }
+            },
+            {
+                "id": "g_output",
+                "label": "AI Agents",
+                "members": [
+                    "agents"
+                ],
+                "bounds": {
+                    "x": 1260,
+                    "y": 145,
+                    "width": 200,
+                    "height": 180
+                },
+                "style": {
+                    "backgroundColor": "rgba(0, 212, 255, 0.08)",
+                    "borderColor": "rgba(0, 212, 255, 0.3)",
+                    "borderRadius": 16
+                }
+            }
+        ],
+        "animation": {
+            "enabled": true,
+            "flow": {
+                "duration": 2000,
+                "easing": "ease-in-out",
+                "particles": true,
+                "particleColor": "#60A5FA"
+            }
+        },
+        "style": {
+            "defaultNode": {
+                "backgroundColor": "#111827",
+                "borderColor": "#374151",
+                "borderWidth": 2,
+                "borderRadius": 12,
+                "textColor": "#E5E7EB",
+                "fontFamily": "Inter, system-ui, sans-serif",
+                "fontSize": 14,
+                "padding": 16
+            },
+            "defaultEdge": {
+                "stroke": "#4B5563",
+                "strokeWidth": 2,
+                "opacity": 0.8
+            },
+            "title": {
+                "textColor": "#F9FAFB",
+                "fontSize": 28,
+                "fontWeight": "bold",
+                "fontFamily": "Inter, system-ui, sans-serif"
+            },
+            "subtitle": {
+                "textColor": "#9CA3AF",
+                "fontSize": 14,
+                "fontWeight": "normal"
+            },
+            "background": {
+                "type": "gradient",
+                "gradient": "radial-gradient(ellipse at 20% 30%, #1a1a2e 0%, #0a0a0f 70%)"
+            }
+        }
+    },
+    "interactivity": {
+        "nodeHover": {
+            "scale": 1.02,
+            "shadowBlur": 24,
+            "tooltip": true
+        },
+        "nodeClick": {
+            "expandDetails": true,
+            "highlightConnections": true
+        },
+        "zoomable": true,
+        "pannable": true,
+        "minZoom": 0.5,
+        "maxZoom": 2.0
+    },
+    "export_options": {
+        "formats": [
+            "PNG",
+            "SVG",
+            "PDF"
+        ],
+        "resolution": {
+            "width": 3000,
+            "height": 1000
+        },
+        "transparent_background": false
+    }
+}

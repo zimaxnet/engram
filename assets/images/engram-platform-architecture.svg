@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0e1a"/>
+      <stop offset="100%" style="stop-color:#1a1f35"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00d4ff;stop-opacity:0.8"/>
+      <stop offset="100%" style="stop-color:#00d4ff;stop-opacity:0.4"/>
+    </linearGradient>
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#a855f7;stop-opacity:0.8"/>
+      <stop offset="100%" style="stop-color:#a855f7;stop-opacity:0.4"/>
+    </linearGradient>
+    <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:0.8"/>
+      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:0.4"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1920" height="1080" fill="url(#bgGrad)"/>
+  
+  <!-- Title -->
+  <text x="960" y="80" font-family="Arial, sans-serif" font-size="48" fill="#e2e8f0" text-anchor="middle" font-weight="bold">ENGRAM CONTEXT ENGINEERING PLATFORM</text>
+  <text x="960" y="120" font-family="Arial, sans-serif" font-size="24" fill="#94a3b8" text-anchor="middle">Brain + Spine Architecture</text>
+  
+  <!-- Frontend Layer -->
+  <rect x="160" y="160" width="1600" height="100" rx="10" fill="rgba(59,130,246,0.2)" stroke="#3b82f6" stroke-width="2"/>
+  <text x="960" y="200" font-family="Arial, sans-serif" font-size="24" fill="#3b82f6" text-anchor="middle" font-weight="bold">FRONTEND</text>
+  <text x="960" y="235" font-family="Arial, sans-serif" font-size="16" fill="#94a3b8" text-anchor="middle">React UI • Voice Controls • Avatar Display</text>
+  
+  <!-- API Gateway -->
+  <rect x="560" y="300" width="800" height="80" rx="10" fill="rgba(16,185,129,0.2)" stroke="#10b981" stroke-width="2"/>
+  <text x="960" y="350" font-family="Arial, sans-serif" font-size="20" fill="#10b981" text-anchor="middle" font-weight="bold">API GATEWAY (FastAPI + Auth + RBAC)</text>
+  
+  <!-- Brain Layer -->
+  <g filter="url(#glow)">
+    <rect x="160" y="420" width="480" height="280" rx="15" fill="rgba(0,212,255,0.1)" stroke="#00d4ff" stroke-width="3"/>
+  </g>
+  <text x="400" y="470" font-family="Arial, sans-serif" font-size="28" fill="#00d4ff" text-anchor="middle" font-weight="bold">🧠 BRAIN</text>
+  <text x="400" y="500" font-family="Arial, sans-serif" font-size="16" fill="#94a3b8" text-anchor="middle">LangGraph Agents</text>
+  
+  <!-- Elena -->
+  <rect x="200" y="530" width="160" height="80" rx="8" fill="rgba(0,212,255,0.2)" stroke="#00d4ff" stroke-width="1"/>
+  <text x="280" y="570" font-family="Arial, sans-serif" font-size="14" fill="#00d4ff" text-anchor="middle" font-weight="bold">Elena</text>
+  <text x="280" y="590" font-family="Arial, sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">Business Analyst</text>
+  
+  <!-- Marcus -->
+  <rect x="400" y="530" width="160" height="80" rx="8" fill="rgba(168,85,247,0.2)" stroke="#a855f7" stroke-width="1"/>
+  <text x="480" y="570" font-family="Arial, sans-serif" font-size="14" fill="#a855f7" text-anchor="middle" font-weight="bold">Marcus</text>
+  <text x="480" y="590" font-family="Arial, sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">Project Manager</text>
+  
+  <!-- Router -->
+  <rect x="280" y="630" width="200" height="50" rx="8" fill="rgba(255,255,255,0.1)" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="380" y="660" font-family="Arial, sans-serif" font-size="14" fill="#e2e8f0" text-anchor="middle">Agent Router</text>
+  
+  <!-- Spine Layer -->
+  <g filter="url(#glow)">
+    <rect x="720" y="420" width="480" height="280" rx="15" fill="rgba(168,85,247,0.1)" stroke="#a855f7" stroke-width="3"/>
+  </g>
+  <text x="960" y="470" font-family="Arial, sans-serif" font-size="28" fill="#a855f7" text-anchor="middle" font-weight="bold">🦴 SPINE</text>
+  <text x="960" y="500" font-family="Arial, sans-serif" font-size="16" fill="#94a3b8" text-anchor="middle">Temporal Workflows</text>
+  
+  <!-- Workflow boxes -->
+  <rect x="760" y="530" width="180" height="60" rx="8" fill="rgba(168,85,247,0.2)" stroke="#a855f7" stroke-width="1"/>
+  <text x="850" y="565" font-family="Arial, sans-serif" font-size="14" fill="#a855f7" text-anchor="middle">AgentWorkflow</text>
+  
+  <rect x="980" y="530" width="180" height="60" rx="8" fill="rgba(168,85,247,0.2)" stroke="#a855f7" stroke-width="1"/>
+  <text x="1070" y="565" font-family="Arial, sans-serif" font-size="14" fill="#a855f7" text-anchor="middle">ConversationWorkflow</text>
+  
+  <rect x="870" y="620" width="180" height="60" rx="8" fill="rgba(168,85,247,0.2)" stroke="#a855f7" stroke-width="1"/>
+  <text x="960" y="655" font-family="Arial, sans-serif" font-size="14" fill="#a855f7" text-anchor="middle">ApprovalWorkflow</text>
+  
+  <!-- Memory Layer -->
+  <g filter="url(#glow)">
+    <rect x="1280" y="420" width="480" height="280" rx="15" fill="rgba(245,158,11,0.1)" stroke="#f59e0b" stroke-width="3"/>
+  </g>
+  <text x="1520" y="470" font-family="Arial, sans-serif" font-size="28" fill="#f59e0b" text-anchor="middle" font-weight="bold">💾 MEMORY</text>
+  <text x="1520" y="500" font-family="Arial, sans-serif" font-size="16" fill="#94a3b8" text-anchor="middle">Zep + Graphiti</text>
+  
+  <!-- Memory boxes -->
+  <rect x="1320" y="530" width="160" height="80" rx="8" fill="rgba(245,158,11,0.2)" stroke="#f59e0b" stroke-width="1"/>
+  <text x="1400" y="565" font-family="Arial, sans-serif" font-size="14" fill="#f59e0b" text-anchor="middle" font-weight="bold">Episodic</text>
+  <text x="1400" y="585" font-family="Arial, sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">Conversations</text>
+  
+  <rect x="1520" y="530" width="160" height="80" rx="8" fill="rgba(245,158,11,0.2)" stroke="#f59e0b" stroke-width="1"/>
+  <text x="1600" y="565" font-family="Arial, sans-serif" font-size="14" fill="#f59e0b" text-anchor="middle" font-weight="bold">Semantic</text>
+  <text x="1600" y="585" font-family="Arial, sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">Knowledge Graph</text>
+  
+  <rect x="1420" y="630" width="200" height="50" rx="8" fill="rgba(255,255,255,0.1)" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="1520" y="660" font-family="Arial, sans-serif" font-size="14" fill="#e2e8f0" text-anchor="middle">PostgreSQL + pgvector</text>
+  
+  <!-- Context Schema -->
+  <rect x="560" y="740" width="800" height="140" rx="10" fill="rgba(255,255,255,0.05)" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="960" y="780" font-family="Arial, sans-serif" font-size="20" fill="#e2e8f0" text-anchor="middle" font-weight="bold">4-LAYER CONTEXT SCHEMA</text>
+  
+  <rect x="590" y="800" width="170" height="60" rx="5" fill="rgba(239,68,68,0.2)" stroke="#ef4444" stroke-width="1"/>
+  <text x="675" y="835" font-family="Arial, sans-serif" font-size="12" fill="#ef4444" text-anchor="middle">1. Security</text>
+  
+  <rect x="780" y="800" width="170" height="60" rx="5" fill="rgba(245,158,11,0.2)" stroke="#f59e0b" stroke-width="1"/>
+  <text x="865" y="835" font-family="Arial, sans-serif" font-size="12" fill="#f59e0b" text-anchor="middle">2. Episodic</text>
+  
+  <rect x="970" y="800" width="170" height="60" rx="5" fill="rgba(16,185,129,0.2)" stroke="#10b981" stroke-width="1"/>
+  <text x="1055" y="835" font-family="Arial, sans-serif" font-size="12" fill="#10b981" text-anchor="middle">3. Semantic</text>
+  
+  <rect x="1160" y="800" width="170" height="60" rx="5" fill="rgba(59,130,246,0.2)" stroke="#3b82f6" stroke-width="1"/>
+  <text x="1245" y="835" font-family="Arial, sans-serif" font-size="12" fill="#3b82f6" text-anchor="middle">4. Operational</text>
+  
+  <!-- Infrastructure -->
+  <rect x="160" y="920" width="1600" height="100" rx="10" fill="rgba(107,114,128,0.2)" stroke="#6b7280" stroke-width="2"/>
+  <text x="960" y="960" font-family="Arial, sans-serif" font-size="24" fill="#6b7280" text-anchor="middle" font-weight="bold">INFRASTRUCTURE</text>
+  <text x="960" y="995" font-family="Arial, sans-serif" font-size="16" fill="#94a3b8" text-anchor="middle">Azure Container Apps • PostgreSQL • Key Vault • App Insights</text>
+  
+  <!-- Connection lines -->
+  <line x1="960" y1="260" x2="960" y2="300" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="640" y1="380" x2="640" y2="420" stroke="#00d4ff" stroke-width="2"/>
+  <line x1="960" y1="380" x2="960" y2="420" stroke="#a855f7" stroke-width="2"/>
+  <line x1="1280" y1="380" x2="1280" y2="420" stroke="#f59e0b" stroke-width="2"/>
+  <line x1="640" y1="700" x2="640" y2="740" stroke="#00d4ff" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="1280" y1="700" x2="1280" y2="740" stroke="#f59e0b" stroke-width="2" stroke-dasharray="5,5"/>
+</svg>
+

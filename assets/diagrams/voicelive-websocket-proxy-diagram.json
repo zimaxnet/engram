@@ -1,0 +1,642 @@
+{
+    "title": "VoiceLive WebSocket Proxy Architecture",
+    "subtitle": "Real-time Voice with Automatic Memory Ingestion",
+    "version": "2.0",
+    "theme": "dark",
+    "layout": "flow",
+    "nodes": [
+        {
+            "id": "browser_frontend",
+            "label": "Browser / Frontend",
+            "type": "client",
+            "icon": "globe",
+            "position": {
+                "x": 100,
+                "y": 400
+            },
+            "description": "VoiceChat component captures microphone audio and plays assistant audio",
+            "style": {
+                "backgroundColor": "#3B82F6",
+                "borderColor": "#60A5FA",
+                "borderWidth": 2
+            },
+            "details": {
+                "component": "VoiceChat.tsx",
+                "audio_format": "PCM16, 24kHz",
+                "protocol": "WebSocket (WSS)"
+            }
+        },
+        {
+            "id": "backend_websocket",
+            "label": "Backend WebSocket Proxy",
+            "type": "service",
+            "icon": "server",
+            "position": {
+                "x": 400,
+                "y": 400
+            },
+            "description": "FastAPI WebSocket endpoint: /api/v1/voice/voicelive/{session_id}",
+            "style": {
+                "backgroundColor": "#10B981",
+                "borderColor": "#34D399",
+                "borderWidth": 2,
+                "glow": true
+            },
+            "details": {
+                "endpoint": "/api/v1/voice/voicelive/{session_id}",
+                "file": "backend/api/routers/voice.py",
+                "function": "voicelive_websocket()",
+                "handles": "Audio proxying, event processing, memory persistence"
+            }
+        },
+        {
+            "id": "azure_voicelive",
+            "label": "Azure VoiceLive",
+            "type": "cloud-service",
+            "icon": "cloud",
+            "position": {
+                "x": 700,
+                "y": 400
+            },
+            "description": "Azure Cognitive Services - GPT Realtime API (gpt-realtime model)",
+            "style": {
+                "backgroundColor": "#8B5CF6",
+                "borderColor": "#A78BFA",
+                "borderWidth": 2,
+                "glow": true
+            },
+            "details": {
+                "endpoint": "https://zimax.services.ai.azure.com",
+                "model": "gpt-realtime",
+                "api_version": "2025-10-01",
+                "sdk": "azure-ai-voicelive[aiohttp]",
+                "features": "140+ languages, Neural HD voices, improved VAD, 4K avatars"
+            }
+        },
+        {
+            "id": "event_processor",
+            "label": "Event Processor",
+            "type": "component",
+            "icon": "cpu",
+            "position": {
+                "x": 400,
+                "y": 250
+            },
+            "description": "Processes VoiceLive events: transcripts, audio, visemes, VAD",
+            "style": {
+                "backgroundColor": "#F59E0B",
+                "borderColor": "#FBBF24"
+            },
+            "details": {
+                "function": "process_voicelive_events()",
+                "events": [
+                    "INPUT_AUDIO_BUFFER_SPEECH_STARTED",
+                    "INPUT_AUDIO_BUFFER_SPEECH_STOPPED",
+                    "CONVERSATION_ITEM_INPUT_AUDIO_TRANSCRIPTION_DELTA",
+                    "CONVERSATION_ITEM_INPUT_AUDIO_TRANSCRIPTION_COMPLETED",
+                    "RESPONSE_AUDIO_DELTA",
+                    "RESPONSE_AUDIO_TRANSCRIPT_DELTA",
+                    "RESPONSE_AUDIO_TRANSCRIPT_DONE",
+                    "RESPONSE_DONE"
+                ]
+            }
+        },
+        {
+            "id": "transcript_buffer",
+            "label": "Transcript Buffers",
+            "type": "data",
+            "icon": "database",
+            "position": {
+                "x": 400,
+                "y": 150
+            },
+            "description": "Accumulates transcript deltas into complete turns",
+            "style": {
+                "backgroundColor": "#6366F1",
+                "borderColor": "#818CF8",
+                "fontFamily": "monospace"
+            },
+            "details": {
+                "user_transcript_buf": "User speech-to-text accumulation",
+                "assistant_text_buf": "Assistant text response",
+                "assistant_audio_transcript_buf": "Assistant audio transcript"
+            }
+        },
+        {
+            "id": "enterprise_context",
+            "label": "EnterpriseContext",
+            "type": "data-model",
+            "icon": "cube",
+            "position": {
+                "x": 400,
+                "y": 550
+            },
+            "description": "4-layer context: Security, Episodic, Semantic, Operational",
+            "style": {
+                "backgroundColor": "#EC4899",
+                "borderColor": "#F472B6",
+                "borderWidth": 2,
+                "fontFamily": "monospace"
+            },
+            "details": {
+                "security": "user_id, tenant_id, roles, session_id",
+                "episodic": "conversation_id, recent_turns[], total_turns",
+                "semantic": "retrieved_facts[], entity_context",
+                "operational": "workflow_id, active_agent"
+            }
+        },
+        {
+            "id": "memory_persist",
+            "label": "Memory Persistence",
+            "type": "service",
+            "icon": "save",
+            "position": {
+                "x": 100,
+                "y": 550
+            },
+            "description": "Persists completed turns to Zep episodic memory",
+            "style": {
+                "backgroundColor": "#059669",
+                "borderColor": "#10B981",
+                "borderWidth": 2
+            },
+            "details": {
+                "function": "_persist_latest_turns()",
+                "timeout": "10 seconds (VOICE_PERSIST_TIMEOUT)",
+                "method": "persist_conversation(voice_context)",
+                "turns": "Last 2 turns (user + assistant)"
+            }
+        },
+        {
+            "id": "zep_memory",
+            "label": "Zep Memory Service",
+            "type": "core-service",
+            "icon": "brain",
+            "position": {
+                "x": 100,
+                "y": 700
+            },
+            "description": "Self-hosted Zep instance for episodic memory storage",
+            "style": {
+                "backgroundColor": "#10B981",
+                "borderColor": "#34D399",
+                "borderWidth": 3,
+                "glow": true
+            },
+            "details": {
+                "service": "ZepMemoryClient",
+                "method": "persist_conversation()",
+                "storage": "PostgreSQL with pgvector",
+                "format": "Zep Message format with metadata",
+                "metadata": {
+                    "agent_id": "elena|marcus",
+                    "timestamp": "ISO format",
+                    "turn_count": "Total conversation turns",
+                    "channel": "voice-websocket"
+                }
+            }
+        },
+        {
+            "id": "user_turn",
+            "label": "User Turn",
+            "type": "data-flow",
+            "icon": "user",
+            "position": {
+                "x": 250,
+                "y": 150
+            },
+            "description": "Completed user transcript from speech-to-text",
+            "style": {
+                "backgroundColor": "#3B82F6",
+                "borderColor": "#60A5FA",
+                "fontFamily": "monospace"
+            },
+            "details": {
+                "event": "CONVERSATION_ITEM_INPUT_AUDIO_TRANSCRIPTION_COMPLETED",
+                "role": "MessageRole.USER",
+                "content": "Final transcript text",
+                "stored_in": "voice_context.episodic.add_turn()"
+            }
+        },
+        {
+            "id": "assistant_turn",
+            "label": "Assistant Turn",
+            "type": "data-flow",
+            "icon": "robot",
+            "position": {
+                "x": 550,
+                "y": 150
+            },
+            "description": "Completed assistant response (text + audio transcript)",
+            "style": {
+                "backgroundColor": "#8B5CF6",
+                "borderColor": "#A78BFA",
+                "fontFamily": "monospace"
+            },
+            "details": {
+                "event": "RESPONSE_DONE",
+                "role": "MessageRole.ASSISTANT",
+                "content": "Combined text + audio transcript",
+                "agent_id": "elena|marcus",
+                "stored_in": "voice_context.episodic.add_turn()"
+            }
+        },
+        {
+            "id": "audio_input",
+            "label": "Audio Input",
+            "type": "data-flow",
+            "icon": "mic",
+            "position": {
+                "x": 100,
+                "y": 300
+            },
+            "description": "PCM16 audio chunks from browser microphone",
+            "style": {
+                "backgroundColor": "#EF4444",
+                "borderColor": "#F87171",
+                "fontFamily": "monospace"
+            },
+            "details": {
+                "format": "PCM16, 24kHz",
+                "encoding": "Base64 in WebSocket message",
+                "message": "{\"type\": \"audio\", \"data\": \"<base64>\"}"
+            }
+        },
+        {
+            "id": "audio_output",
+            "label": "Audio Output",
+            "type": "data-flow",
+            "icon": "speaker",
+            "position": {
+                "x": 700,
+                "y": 300
+            },
+            "description": "PCM16 audio chunks from Azure VoiceLive",
+            "style": {
+                "backgroundColor": "#10B981",
+                "borderColor": "#34D399",
+                "fontFamily": "monospace"
+            },
+            "details": {
+                "format": "PCM16, 24kHz",
+                "event": "RESPONSE_AUDIO_DELTA",
+                "encoding": "Base64 in WebSocket message",
+                "message": "{\"type\": \"audio\", \"data\": \"<base64>\", \"format\": \"audio/wav\"}"
+            }
+        },
+        {
+            "id": "session_manager",
+            "label": "Session Manager",
+            "type": "component",
+            "icon": "users",
+            "position": {
+                "x": 400,
+                "y": 650
+            },
+            "description": "Manages VoiceLive WebSocket sessions and agent switching",
+            "style": {
+                "backgroundColor": "#6366F1",
+                "borderColor": "#818CF8"
+            },
+            "details": {
+                "class": "VoiceLiveSessionManager",
+                "sessions": "In-memory session storage",
+                "features": [
+                    "Session creation",
+                    "Agent switching (elena/marcus)",
+                    "Session cleanup on disconnect"
+                ]
+            }
+        },
+        {
+            "id": "voice_config",
+            "label": "Voice Configuration",
+            "type": "config",
+            "icon": "settings",
+            "position": {
+                "x": 700,
+                "y": 550
+            },
+            "description": "Agent voice settings and instructions",
+            "style": {
+                "backgroundColor": "#F59E0B",
+                "borderColor": "#FBBF24"
+            },
+            "details": {
+                "elena": {
+                    "voice": "en-US-Ava:DragonHDLatestNeural",
+                    "personality": "Warm, professional, Miami accent"
+                },
+                "marcus": {
+                    "voice": "en-US-GuyNeural",
+                    "personality": "Confident, energetic, Pacific Northwest"
+                },
+                "source": "backend/voice/voicelive_service.py"
+            }
+        }
+    ],
+    "connections": [
+        {
+            "from": "browser_frontend",
+            "to": "backend_websocket",
+            "label": "WebSocket Connection\nwss://.../api/v1/voice/voicelive/{session_id}",
+            "style": {
+                "strokeColor": "#60A5FA",
+                "strokeWidth": 3,
+                "animated": true,
+                "dashed": false
+            }
+        },
+        {
+            "from": "backend_websocket",
+            "to": "azure_voicelive",
+            "label": "VoiceLive SDK Connection\nazure-ai-voicelive.connect()",
+            "style": {
+                "strokeColor": "#A78BFA",
+                "strokeWidth": 3,
+                "animated": true,
+                "dashed": false
+            }
+        },
+        {
+            "from": "audio_input",
+            "to": "backend_websocket",
+            "label": "Audio Chunks\n{\"type\": \"audio\", \"data\": \"<base64>\"}",
+            "style": {
+                "strokeColor": "#F87171",
+                "strokeWidth": 2,
+                "animated": true
+            }
+        },
+        {
+            "from": "backend_websocket",
+            "to": "azure_voicelive",
+            "label": "Audio Stream\ninput_audio_buffer.append()",
+            "style": {
+                "strokeColor": "#F87171",
+                "strokeWidth": 2,
+                "animated": true
+            }
+        },
+        {
+            "from": "azure_voicelive",
+            "to": "backend_websocket",
+            "label": "Audio Stream\nRESPONSE_AUDIO_DELTA",
+            "style": {
+                "strokeColor": "#34D399",
+                "strokeWidth": 2,
+                "animated": true
+            }
+        },
+        {
+            "from": "backend_websocket",
+            "to": "audio_output",
+            "label": "Audio Chunks\n{\"type\": \"audio\", \"data\": \"<base64>\"}",
+            "style": {
+                "strokeColor": "#34D399",
+                "strokeWidth": 2,
+                "animated": true
+            }
+        },
+        {
+            "from": "audio_output",
+            "to": "browser_frontend",
+            "label": "Playback",
+            "style": {
+                "strokeColor": "#34D399",
+                "strokeWidth": 2,
+                "animated": true
+            }
+        },
+        {
+            "from": "azure_voicelive",
+            "to": "event_processor",
+            "label": "VoiceLive Events\nServerEventType.*",
+            "style": {
+                "strokeColor": "#FBBF24",
+                "strokeWidth": 2,
+                "animated": true
+            }
+        },
+        {
+            "from": "event_processor",
+            "to": "transcript_buffer",
+            "label": "Accumulate Deltas",
+            "style": {
+                "strokeColor": "#818CF8",
+                "strokeWidth": 2
+            }
+        },
+        {
+            "from": "transcript_buffer",
+            "to": "user_turn",
+            "label": "User Transcript\nCOMPLETED",
+            "style": {
+                "strokeColor": "#60A5FA",
+                "strokeWidth": 2,
+                "animated": true
+            }
+        },
+        {
+            "from": "transcript_buffer",
+            "to": "assistant_turn",
+            "label": "Assistant Transcript\nRESPONSE_DONE",
+            "style": {
+                "strokeColor": "#A78BFA",
+                "strokeWidth": 2,
+                "animated": true
+            }
+        },
+        {
+            "from": "user_turn",
+            "to": "enterprise_context",
+            "label": "Add Turn\nvoice_context.episodic.add_turn()",
+            "style": {
+                "strokeColor": "#F472B6",
+                "strokeWidth": 2
+            }
+        },
+        {
+            "from": "assistant_turn",
+            "to": "enterprise_context",
+            "label": "Add Turn\nvoice_context.episodic.add_turn()",
+            "style": {
+                "strokeColor": "#F472B6",
+                "strokeWidth": 2
+            }
+        },
+        {
+            "from": "enterprise_context",
+            "to": "memory_persist",
+            "label": "Persist Conversation\npersist_conversation(voice_context)",
+            "style": {
+                "strokeColor": "#10B981",
+                "strokeWidth": 3,
+                "animated": true,
+                "dashed": false
+            }
+        },
+        {
+            "from": "memory_persist",
+            "to": "zep_memory",
+            "label": "Store Turns\nZepMemoryClient.persist_conversation()",
+            "style": {
+                "strokeColor": "#10B981",
+                "strokeWidth": 3,
+                "animated": true,
+                "dashed": false
+            }
+        },
+        {
+            "from": "event_processor",
+            "to": "browser_frontend",
+            "label": "UI Updates\n{\"type\": \"transcription\", ...}",
+            "style": {
+                "strokeColor": "#FBBF24",
+                "strokeWidth": 2,
+                "animated": true
+            }
+        },
+        {
+            "from": "voice_config",
+            "to": "azure_voicelive",
+            "label": "Session Config\nvoice, instructions, VAD",
+            "style": {
+                "strokeColor": "#FBBF24",
+                "strokeWidth": 2,
+                "dashed": true
+            }
+        },
+        {
+            "from": "session_manager",
+            "to": "backend_websocket",
+            "label": "Session Management",
+            "style": {
+                "strokeColor": "#818CF8",
+                "strokeWidth": 2,
+                "dashed": true
+            }
+        }
+    ],
+    "annotations": [
+        {
+            "id": "audio_flow",
+            "target": "audio_input",
+            "text": "Audio flows in real-time:\nBrowser → Backend → Azure\n24kHz PCM16 format",
+            "position": "left"
+        },
+        {
+            "id": "transcript_flow",
+            "target": "user_turn",
+            "text": "Transcripts extracted from\nVoiceLive events and stored\nin EnterpriseContext",
+            "position": "top"
+        },
+        {
+            "id": "memory_flow",
+            "target": "zep_memory",
+            "text": "Completed turns (user + assistant)\npersisted to Zep episodic memory\nfor long-term context",
+            "position": "bottom"
+        },
+        {
+            "id": "async_note",
+            "target": "memory_persist",
+            "text": "Memory persistence is async\nwith 10s timeout - non-blocking\nfor real-time audio",
+            "position": "right"
+        },
+        {
+            "id": "api_version",
+            "target": "azure_voicelive",
+            "text": "API Version: 2025-10-01\n140+ languages\nNeural HD voices\nImproved VAD",
+            "position": "top"
+        }
+    ],
+    "legend": [
+        {
+            "type": "client",
+            "label": "Client (Browser)",
+            "color": "#3B82F6"
+        },
+        {
+            "type": "service",
+            "label": "Backend Service",
+            "color": "#10B981"
+        },
+        {
+            "type": "cloud-service",
+            "label": "Azure Cloud Service",
+            "color": "#8B5CF6"
+        },
+        {
+            "type": "core-service",
+            "label": "Core Service (Zep)",
+            "color": "#059669"
+        },
+        {
+            "type": "data-model",
+            "label": "Data Model",
+            "color": "#EC4899"
+        },
+        {
+            "type": "data-flow",
+            "label": "Data Flow",
+            "color": "#6366F1"
+        }
+    ],
+    "scenario_callouts": [
+        {
+            "id": "scenario_voice_conversation",
+            "title": "Example: Voice Conversation Flow",
+            "steps": [
+                "1. User speaks → Browser captures audio (PCM16, 24kHz)",
+                "2. Audio sent via WebSocket → Backend receives and forwards to Azure VoiceLive",
+                "3. Azure processes audio → Returns transcript deltas and audio response",
+                "4. Backend accumulates transcripts → Creates user turn on completion",
+                "5. Assistant response completes → Creates assistant turn",
+                "6. Both turns added to EnterpriseContext.episodic",
+                "7. Background task persists conversation → Zep stores in episodic memory",
+                "8. Future conversations can retrieve this context via Zep search"
+            ],
+            "position": {
+                "x": 800,
+                "y": 200
+            }
+        },
+        {
+            "id": "scenario_memory_retrieval",
+            "title": "Memory Retrieval in Future Sessions",
+            "steps": [
+                "1. New voice session starts → EnterpriseContext created",
+                "2. Context enrichment → Zep search retrieves relevant facts",
+                "3. Facts injected into agent instructions → Personalized conversation",
+                "4. Voice session continues with enriched context"
+            ],
+            "position": {
+                "x": 800,
+                "y": 600
+            }
+        }
+    ],
+    "metadata": {
+        "generator": "Nano Banana Pro",
+        "created": "2025-12-27",
+        "author": "Engram Team",
+        "purpose": "VoiceLive WebSocket Proxy Architecture with Zep Memory Ingestion",
+        "sourceDocument": "docs/sop/voicelive-configuration.md",
+        "codeReference": [
+            "backend/api/routers/voice.py",
+            "backend/voice/voicelive_service.py",
+            "backend/memory/client.py",
+            "backend/core/context.py"
+        ],
+        "architecture": "WebSocket Proxy (Production)",
+        "api_version": "2025-10-01",
+        "features": [
+            "Real-time bidirectional audio",
+            "Automatic transcript extraction",
+            "Episodic memory persistence",
+            "Agent switching support",
+            "Non-blocking memory operations"
+        ]
+    }
+}
+

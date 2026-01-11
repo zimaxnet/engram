@@ -1,0 +1,563 @@
+{
+    "title": "Document Ingestion Strategy",
+    "subtitle": "Tri-Search Architecture for Enterprise Knowledge",
+    "version": "1.0",
+    "theme": "dark",
+    "layout": "flow",
+    "gtm_alignment": {
+        "research_paper": "Engram_Context_Engineering_GTM_Research_Paper_v2",
+        "section": "Appendix A: Pilot Blueprint and Metrics",
+        "pilot_inputs": {
+            "corpus_requirement": "10,000+ documents across at least 5 source types",
+            "source_types": [
+                {
+                    "id": "policies",
+                    "name": "Policies",
+                    "description": "Governance documents, procedures, compliance",
+                    "examples": [
+                        "SOPs",
+                        "HR Policies",
+                        "Security Guidelines"
+                    ],
+                    "status": "implemented",
+                    "implementation": "PDF/DOCX via Unstructured partition"
+                },
+                {
+                    "id": "tickets",
+                    "name": "Tickets",
+                    "description": "Issue trackers, case records, support requests",
+                    "examples": [
+                        "ServiceNow",
+                        "Jira",
+                        "Zendesk"
+                    ],
+                    "status": "planned",
+                    "implementation": "API connector → Session episodes"
+                },
+                {
+                    "id": "pdfs",
+                    "name": "PDFs",
+                    "description": "Dense documents, reports, research papers",
+                    "examples": [
+                        "Annual Reports",
+                        "Whitepapers",
+                        "Contracts"
+                    ],
+                    "status": "implemented",
+                    "implementation": "Unstructured hi_res partition with OCR"
+                },
+                {
+                    "id": "wikis",
+                    "name": "Wikis",
+                    "description": "Knowledge bases, documentation portals",
+                    "examples": [
+                        "Confluence",
+                        "SharePoint",
+                        "Notion"
+                    ],
+                    "status": "implemented",
+                    "implementation": "Wiki connector → doc-wiki-* sessions"
+                },
+                {
+                    "id": "code",
+                    "name": "Code",
+                    "description": "Source files, configurations, documentation",
+                    "examples": [
+                        "GitHub repos",
+                        "GitLab",
+                        "Azure DevOps"
+                    ],
+                    "status": "planned",
+                    "implementation": "Git integration → Code-aware chunking"
+                }
+            ]
+        }
+    },
+    "architecture": {
+        "layers": [
+            {
+                "id": "keyword_layer",
+                "name": "Keyword Search (BM25)",
+                "color": "#F59E0B",
+                "technology": "Zep Sessions",
+                "storage_pattern": "doc-upload-{uuid}",
+                "method": "memory_client.add_memory()",
+                "retrieval": "Full-text search, phrase matching",
+                "strengths": [
+                    "Exact matches",
+                    "Acronyms",
+                    "Technical terms"
+                ],
+                "weaknesses": [
+                    "No semantic understanding"
+                ]
+            },
+            {
+                "id": "vector_layer",
+                "name": "Vector Search (Semantic)",
+                "color": "#10B981",
+                "technology": "pgvector + Azure OpenAI",
+                "storage_pattern": "memory_embeddings table",
+                "method": "store_with_embedding()",
+                "retrieval": "Cosine similarity search",
+                "embedding_model": "text-embedding-3-small",
+                "embedding_dimensions": 1536,
+                "strengths": [
+                    "Conceptual similarity",
+                    "Paraphrase matching"
+                ],
+                "weaknesses": [
+                    "May miss exact terms"
+                ]
+            },
+            {
+                "id": "graph_layer",
+                "name": "Graph Search (Knowledge)",
+                "color": "#8B5CF6",
+                "technology": "Zep Facts (Graphiti)",
+                "storage_pattern": "User facts with metadata",
+                "method": "memory_client.add_fact()",
+                "retrieval": "Entity relationships, temporal facts",
+                "strengths": [
+                    "Multi-hop reasoning",
+                    "Relationships",
+                    "Temporal queries"
+                ],
+                "weaknesses": [
+                    "Requires entity extraction"
+                ]
+            }
+        ],
+        "fusion": {
+            "algorithm": "Reciprocal Rank Fusion (RRF)",
+            "description": "Merges ranked results from all three layers without manual weight tuning",
+            "formula": "RRF(d) = Σ 1/(k + r(d)) for each ranking r",
+            "k_constant": 60
+        }
+    },
+    "nodes": [
+        {
+            "id": "document_upload",
+            "label": "Document Upload",
+            "type": "trigger",
+            "icon": "upload",
+            "position": {
+                "x": 400,
+                "y": 50
+            },
+            "description": "PDF, DOCX, TXT, MD via /api/v1/etl/ingest",
+            "style": {
+                "backgroundColor": "#3B82F6",
+                "borderColor": "#60A5FA"
+            }
+        },
+        {
+            "id": "unstructured_processor",
+            "label": "Unstructured Processor",
+            "type": "processor",
+            "icon": "document",
+            "position": {
+                "x": 400,
+                "y": 150
+            },
+            "description": "Layout-aware partition + semantic chunking",
+            "details": {
+                "operations": [
+                    "partition() - Detect document structure",
+                    "chunk_by_title() - Semantic chunking (1000 chars max)",
+                    "Metadata extraction - Page numbers, filetype"
+                ]
+            },
+            "style": {
+                "backgroundColor": "#6366F1",
+                "borderColor": "#818CF8",
+                "glow": true
+            }
+        },
+        {
+            "id": "chunk_output",
+            "label": "Text Chunks",
+            "type": "data",
+            "icon": "stack",
+            "position": {
+                "x": 400,
+                "y": 250
+            },
+            "description": "List of {text, metadata} dicts",
+            "style": {
+                "backgroundColor": "#4B5563",
+                "borderColor": "#6B7280"
+            }
+        },
+        {
+            "id": "tri_indexer",
+            "label": "Tri-Indexer",
+            "type": "orchestrator",
+            "icon": "git-branch",
+            "position": {
+                "x": 400,
+                "y": 350
+            },
+            "description": "Background task indexing to all 3 layers",
+            "style": {
+                "backgroundColor": "#EC4899",
+                "borderColor": "#F472B6",
+                "glow": true
+            }
+        },
+        {
+            "id": "keyword_index",
+            "label": "Keyword Layer",
+            "type": "storage",
+            "layer": "keyword",
+            "icon": "search",
+            "position": {
+                "x": 200,
+                "y": 450
+            },
+            "description": "Zep sessions with chunk messages",
+            "details": {
+                "method": "add_memory(session_id, messages)",
+                "pattern": "doc-upload-{uuid}",
+                "enables": "BM25 full-text search"
+            },
+            "style": {
+                "backgroundColor": "#D97706",
+                "borderColor": "#F59E0B"
+            }
+        },
+        {
+            "id": "vector_index",
+            "label": "Vector Layer",
+            "type": "storage",
+            "layer": "vector",
+            "icon": "chart-bar",
+            "position": {
+                "x": 400,
+                "y": 450
+            },
+            "description": "pgvector embeddings for semantic search",
+            "details": {
+                "method": "store_with_embedding()",
+                "table": "memory_embeddings",
+                "dimensions": 1536,
+                "model": "text-embedding-3-small"
+            },
+            "style": {
+                "backgroundColor": "#059669",
+                "borderColor": "#10B981"
+            }
+        },
+        {
+            "id": "graph_index",
+            "label": "Graph Layer",
+            "type": "storage",
+            "layer": "graph",
+            "icon": "network",
+            "position": {
+                "x": 600,
+                "y": 450
+            },
+            "description": "Zep facts for knowledge graph",
+            "details": {
+                "method": "add_fact(user_id, fact, metadata)",
+                "enables": "Entity relationships, multi-hop queries"
+            },
+            "style": {
+                "backgroundColor": "#7C3AED",
+                "borderColor": "#8B5CF6"
+            }
+        },
+        {
+            "id": "hybrid_search",
+            "label": "Hybrid Search (RRF)",
+            "type": "retrieval",
+            "icon": "sparkles",
+            "position": {
+                "x": 400,
+                "y": 550
+            },
+            "description": "Reciprocal Rank Fusion combines all results",
+            "details": {
+                "method": "search_memory(query)",
+                "fusion": "RRF with k=60",
+                "output": "Unified ranked results with provenance"
+            },
+            "style": {
+                "backgroundColor": "#EC4899",
+                "borderColor": "#F472B6",
+                "glow": true
+            }
+        },
+        {
+            "id": "context_layer3",
+            "label": "Layer 3: Semantic Knowledge",
+            "type": "context-layer",
+            "icon": "brain",
+            "position": {
+                "x": 400,
+                "y": 650
+            },
+            "description": "Populates SemanticKnowledge in EnterpriseContext",
+            "details": {
+                "retrieved_facts": "Document chunks with scores",
+                "entity_context": "Extracted entities from documents",
+                "retrieval_scores": "Relevance ranking per source"
+            },
+            "style": {
+                "backgroundColor": "#10B981",
+                "borderColor": "#34D399",
+                "borderWidth": 3
+            }
+        },
+        {
+            "id": "agent_response",
+            "label": "Agent Response",
+            "type": "output",
+            "icon": "chat",
+            "position": {
+                "x": 400,
+                "y": 750
+            },
+            "description": "Elena/Marcus respond with grounded context",
+            "style": {
+                "backgroundColor": "#06B6D4",
+                "borderColor": "#22D3EE"
+            }
+        }
+    ],
+    "connections": [
+        {
+            "from": "document_upload",
+            "to": "unstructured_processor",
+            "label": "Raw bytes",
+            "style": {
+                "strokeColor": "#60A5FA",
+                "animated": true
+            }
+        },
+        {
+            "from": "unstructured_processor",
+            "to": "chunk_output",
+            "label": "partition + chunk",
+            "style": {
+                "strokeColor": "#818CF8"
+            }
+        },
+        {
+            "from": "chunk_output",
+            "to": "tri_indexer",
+            "label": "Background task",
+            "style": {
+                "strokeColor": "#F472B6",
+                "animated": true
+            }
+        },
+        {
+            "from": "tri_indexer",
+            "to": "keyword_index",
+            "label": "add_memory()",
+            "style": {
+                "strokeColor": "#F59E0B"
+            }
+        },
+        {
+            "from": "tri_indexer",
+            "to": "vector_index",
+            "label": "store_with_embedding()",
+            "style": {
+                "strokeColor": "#10B981"
+            }
+        },
+        {
+            "from": "tri_indexer",
+            "to": "graph_index",
+            "label": "add_fact()",
+            "style": {
+                "strokeColor": "#8B5CF6"
+            }
+        },
+        {
+            "from": "keyword_index",
+            "to": "hybrid_search",
+            "label": "BM25 results",
+            "style": {
+                "strokeColor": "#F59E0B",
+                "strokeDash": "5,5"
+            }
+        },
+        {
+            "from": "vector_index",
+            "to": "hybrid_search",
+            "label": "Semantic results",
+            "style": {
+                "strokeColor": "#10B981",
+                "strokeDash": "5,5"
+            }
+        },
+        {
+            "from": "graph_index",
+            "to": "hybrid_search",
+            "label": "Graph results",
+            "style": {
+                "strokeColor": "#8B5CF6",
+                "strokeDash": "5,5"
+            }
+        },
+        {
+            "from": "hybrid_search",
+            "to": "context_layer3",
+            "label": "Unified ranking",
+            "style": {
+                "strokeColor": "#34D399",
+                "animated": true
+            }
+        },
+        {
+            "from": "context_layer3",
+            "to": "agent_response",
+            "label": "to_llm_context()",
+            "style": {
+                "strokeColor": "#22D3EE"
+            }
+        }
+    ],
+    "annotations": [
+        {
+            "id": "gtm_note",
+            "target": "document_upload",
+            "text": "GTM Pilot: 10,000+ docs\nacross 5 source types",
+            "position": "right"
+        },
+        {
+            "id": "unstructured_note",
+            "target": "unstructured_processor",
+            "text": "Layout-aware\nProvenance preserved",
+            "position": "left"
+        },
+        {
+            "id": "rrf_note",
+            "target": "hybrid_search",
+            "text": "RRF: No manual weights\nRobust fusion",
+            "position": "right"
+        },
+        {
+            "id": "metrics_note",
+            "target": "context_layer3",
+            "text": "Hit@k improvement\nFaithfulness grounding",
+            "position": "left"
+        }
+    ],
+    "connector_roadmap": {
+        "phase1_current": {
+            "name": "File Upload",
+            "status": "implemented",
+            "connectors": [
+                {
+                    "name": "Manual Upload",
+                    "types": [
+                        "PDF",
+                        "DOCX",
+                        "TXT",
+                        "MD"
+                    ]
+                }
+            ]
+        },
+        "phase2_planned": {
+            "name": "Enterprise Connectors",
+            "status": "planned",
+            "connectors": [
+                {
+                    "name": "SharePoint",
+                    "types": [
+                        "policies",
+                        "wikis"
+                    ],
+                    "priority": "high"
+                },
+                {
+                    "name": "Confluence",
+                    "types": [
+                        "wikis"
+                    ],
+                    "priority": "high"
+                },
+                {
+                    "name": "GitHub",
+                    "types": [
+                        "code"
+                    ],
+                    "priority": "medium"
+                },
+                {
+                    "name": "ServiceNow",
+                    "types": [
+                        "tickets"
+                    ],
+                    "priority": "medium"
+                },
+                {
+                    "name": "Azure Blob",
+                    "types": [
+                        "all"
+                    ],
+                    "priority": "high"
+                }
+            ]
+        },
+        "phase3_future": {
+            "name": "Real-time Sync",
+            "status": "future",
+            "capabilities": [
+                "Webhook-based incremental updates",
+                "Bi-temporal tracking (valid time + transaction time)",
+                "Contradiction detection for updated facts"
+            ]
+        }
+    },
+    "metrics_alignment": {
+        "retrieval": {
+            "metrics": [
+                "Hit@1",
+                "Hit@3",
+                "Context Precision",
+                "Context Recall"
+            ],
+            "tri_search_benefit": "Multiple retrieval paths improve first-result accuracy"
+        },
+        "faithfulness": {
+            "metrics": [
+                "Groundedness",
+                "Citation Correctness"
+            ],
+            "tri_search_benefit": "Provenance metadata enables accurate citations"
+        },
+        "governance": {
+            "metrics": [
+                "Audit Completeness",
+                "Policy Filter Effectiveness"
+            ],
+            "tri_search_benefit": "User-scoped facts prevent cross-tenant leakage"
+        },
+        "performance": {
+            "metrics": [
+                "p50 Retrieval Latency",
+                "Token Cost"
+            ],
+            "tri_search_benefit": "Parallel indexing, RRF fusion is O(n)"
+        }
+    },
+    "metadata": {
+        "generator": "Engram Context Engineering Platform",
+        "created": "2026-01-02",
+        "author": "Engram Team",
+        "purpose": "Detailed diagram for document ingestion strategy aligned with GTM pilot requirements",
+        "source_documents": [
+            "docs/Engram_Context_Engineering_GTM_Research_Paper_v2.html",
+            "docs/4-layer-context-schema-story.md",
+            "backend/etl/ingestion_service.py"
+        ],
+        "format_version": "1.0"
+    }
+}
